@@ -270,13 +270,11 @@ function main() {
     writeFileSync(join(specOut, 'meta.json'), `${JSON.stringify(buildSpecificationsMeta(), null, 2)}\n`);
   }
 
-  // Root navigation — five dropdown sections
+  // Root navigation — five dropdown sections (no title here; avoids duplicate sidebar header)
   writeFileSync(
     join(OUT, 'meta.json'),
     `${JSON.stringify(
       {
-        title: 'OpenTide',
-        description: 'DetectionOps engine documentation',
         pages: ['index', 'specifications', ...OPENTIDE_SECTIONS],
       },
       null,

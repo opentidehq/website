@@ -1,12 +1,13 @@
 import { docs, blogPosts } from 'collections/server';
 import { loader } from 'fumadocs-core/source';
+import { lucideIconsPlugin } from 'fumadocs-core/source/plugins/lucide-icons';
 import { toFumadocsSource } from 'fumadocs-mdx/runtime/server';
 import { docsContentRoute, docsImageRoute, docsRoute } from './shared';
 
 export const source = loader({
   baseUrl: docsRoute,
   source: docs.toFumadocsSource(),
-  plugins: [],
+  plugins: [lucideIconsPlugin()],
 });
 
 export const blog = loader({

@@ -4,7 +4,6 @@ export const appDescription =
 export const docsRoute = '/docs';
 export const docsImageRoute = '/og/docs';
 export const docsContentRoute = '/llms.mdx/docs';
-// Resolved at deploy time from GitHub Pages (private repos use *.pages.github.io).
 export const siteUrl = 'https://congenial-winner-o8y3gq9.pages.github.io';
 
 export const gitConfig = {
@@ -17,7 +16,6 @@ export const navLinks = [
   { label: 'Home', href: '/' },
   { label: 'Docs', href: '/docs' },
   { label: 'Blog', href: '/blog' },
-  { label: 'Registry', href: '/registry' },
 ] as const;
 
 export const ecosystemLinks = [

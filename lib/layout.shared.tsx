@@ -1,10 +1,30 @@
 import type { BaseLayoutProps } from 'fumadocs-ui/layouts/shared';
 import { appName, gitConfig, navLinks } from './shared';
 
+function BrandTitle() {
+  return (
+    <span className="flex items-center gap-2 font-semibold">
+      <span
+        className="inline-flex size-7 items-center justify-center rounded-full text-xs font-bold text-[#003399] dark:text-[#003399]"
+        style={{
+          background: 'linear-gradient(135deg, #FFCC00 0%, #FFE566 50%, #FFCC00 100%)',
+        }}
+        aria-hidden
+      >
+        OT
+      </span>
+      <span className="bg-gradient-to-r from-[#003399] to-[#4d7fd4] bg-clip-text text-transparent dark:from-[#5b8fd9] dark:to-[#FFCC00]">
+        {appName}
+      </span>
+    </span>
+  );
+}
+
 export function baseOptions(): BaseLayoutProps {
   return {
     nav: {
-      title: appName,
+      title: <BrandTitle />,
+      url: '/',
     },
     links: [
       ...navLinks.map((link) => ({
