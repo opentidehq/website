@@ -37,6 +37,8 @@ function abgr(hex: string) {
   return v;
 }
 
+const BLACK = abgr('#000000');
+
 export function TideDitherScene({ className }: { className?: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const mouseRef = useRef({ x: 0.5, y: 0.5, down: false });
@@ -122,6 +124,8 @@ export function TideDitherScene({ className }: { className?: string }) {
       const field = buf[ping];
       const stride = w;
 
+      pixels.fill(BLACK);
+
       for (let row = 0; row < rows; row++) {
         const ny = row / rows;
         for (let col = 0; col < cols; col++) {
@@ -164,20 +168,21 @@ export function TideDitherScene({ className }: { className?: string }) {
     const resize = () => {
       const parent = canvas.parentElement;
       if (!parent) return;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const nw = parent.clientWidth;
       const nh = parent.clientHeight;
       if (nw < 1 || nh < 1) return;
       w = nw;
       h = nh;
-      canvas.width = Math.floor(w * dpr);
-      canvas.height = Math.floor(h * dpr);
+      // putImageData ignores the transform matrix — keep canvas pixels 1:1 with ImageData.
+      canvas.width = w;
+      canvas.height = h;
       canvas.style.width = `${w}px`;
       canvas.style.height = `${h}px`;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
       imageData = ctx.createImageData(w, h);
       const buf8 = imageData.data;
-      pixels = new Uint32Array(buf8.buffer, buf8.byteOffset, buf8.byteLength / 4);
+      pixels = new Uint32Array(buf8.buffer, buf8.byteOffset, w * h);
+      pixels.fill(BLACK);
     };
 
     const onDown = (e: PointerEvent) => {

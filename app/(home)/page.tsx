@@ -101,50 +101,50 @@ const spectrumBullets = [
 export default function HomePage() {
   return (
     <div className="landing relative overflow-x-hidden">
-      <section className="px-4 pt-5 pb-2 md:px-6 md:pt-8">
-        <div className="landing-hero-shell landing-fade-in mx-auto max-w-[1400px]">
-          <div className="grid lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:min-h-[min(72vh,720px)]">
-            <div className="flex flex-col justify-center px-6 py-10 md:px-10 md:py-14 lg:py-16">
-              <div className="mb-4 flex flex-wrap gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--eu-yellow)]/45 bg-[var(--eu-yellow)]/10 px-3 py-1 text-xs font-semibold text-[var(--eu-yellow)]">
+      <section className="flex min-h-[calc(100dvh-3.5rem)] flex-col px-4 pt-2 pb-2 md:px-6">
+        <div className="landing-hero-shell landing-fade-in mx-auto flex min-h-0 w-full max-w-[1400px] flex-1 flex-col">
+          <div className="grid min-h-0 flex-1 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
+            <div className="flex flex-col justify-center px-5 py-5 md:px-8 md:py-6 lg:py-7">
+              <div className="mb-2 flex flex-wrap gap-1.5">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--eu-yellow)]/45 bg-[var(--eu-yellow)]/10 px-2.5 py-0.5 text-[11px] font-semibold text-[var(--eu-yellow)]">
                   EUPL-1.2 · forever free
                 </span>
-                <span className="rounded-full border border-white/10 px-3 py-1 text-xs text-[var(--landing-subtle)]">
+                <span className="rounded-full border border-white/10 px-2.5 py-0.5 text-[11px] text-[var(--landing-subtle)]">
                   open source engine
                 </span>
               </div>
-              <div className="mb-6 inline-flex w-fit items-center gap-2 rounded-full border border-white/10 bg-black px-3 py-1 text-xs font-medium text-[var(--landing-subtle)]">
-                <Waves className="size-3.5 text-[var(--eu-yellow)]" aria-hidden />
+              <div className="mb-3 inline-flex w-fit items-center gap-2 rounded-full border border-white/10 bg-black px-2.5 py-0.5 text-[11px] font-medium text-[var(--landing-subtle)]">
+                <Waves className="size-3 text-[var(--eu-yellow)]" aria-hidden />
                 normative spec · open DetectionOps engine
               </div>
-              <h1 className="text-[clamp(2.35rem,5.8vw,4.25rem)] font-bold leading-[1.05] tracking-[-0.035em] text-balance">
+              <h1 className="text-[clamp(1.85rem,4.2vw,3.15rem)] font-bold leading-[1.06] tracking-[-0.035em] text-balance">
                 Make detection engineering{' '}
                 <span className="text-[var(--landing-accent)]">better and faster</span>
                 <span className="text-[var(--landing-ink)]"> — with a standard.</span>
               </h1>
-              <p className="mt-6 max-w-lg text-base leading-relaxed text-[var(--landing-muted)] md:text-lg text-pretty">
+              <p className="mt-3 max-w-lg text-sm leading-relaxed text-[var(--landing-muted)] md:text-[15px] text-pretty">
                 <OpentideName className="font-medium text-[var(--landing-ink)]" /> is the structured framework
                 and specification for DetectionOps: normative objects, honest validation, and deploy
                 across platforms — human-led or agent-assisted.
               </p>
-              <div className="mt-9 flex flex-wrap gap-3">
-                <Link href="/docs/usage/installation/" className="landing-btn-primary group">
+              <div className="mt-5 flex flex-wrap gap-2.5">
+                <Link href="/docs/usage/installation/" className="landing-btn-primary group text-sm">
                   Getting started
-                  <ArrowRight className="size-4 transition group-hover:translate-x-0.5" aria-hidden />
+                  <ArrowRight className="size-3.5 transition group-hover:translate-x-0.5" aria-hidden />
                 </Link>
-                <Link href="/docs/mcp/" className="landing-btn-secondary">
-                  <Bot className="size-4" aria-hidden />
+                <Link href="/docs/mcp/" className="landing-btn-secondary text-sm">
+                  <Bot className="size-3.5" aria-hidden />
                   MCP reference
                 </Link>
               </div>
             </div>
 
-            <div className="relative min-h-[300px] border-t border-white/[0.06] sm:min-h-[360px] lg:min-h-0 lg:border-t-0 lg:border-l lg:border-white/[0.06]">
+            <div className="relative min-h-[160px] border-t border-white/[0.06] sm:min-h-[200px] lg:min-h-0 lg:border-t-0 lg:border-l lg:border-white/[0.06]">
               <TideDitherScene className="absolute inset-0" />
             </div>
           </div>
 
-          <div className="border-t border-white/[0.06] bg-black p-4 md:p-6">
+          <div className="shrink-0 border-t border-white/[0.06] bg-black p-3 md:p-4">
             <HeroInstall />
             <HeroTerminal />
           </div>
