@@ -138,7 +138,7 @@ function stripDuplicateH1(content) {
   const title = titleMatch[1].trim();
   let body = content.slice(end + 5);
   const h1Match = body.match(/^#\s+(.+)$/m);
-  if (h1Match && h1Match[1].trim() === title) {
+  if (h1Match && h1Match[1].trim().toLowerCase() === title.toLowerCase()) {
     body = body.replace(/^#\s+.+?\n+/, '');
   }
   return `---\n${frontmatter}\n---\n${body}`;

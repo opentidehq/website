@@ -36,8 +36,11 @@ export function DocsRootSwitcher() {
           'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--eu-yellow)]',
         )}
       >
-        <div className="size-9 shrink-0 empty:hidden md:size-5">
-          {resolveLucideIcon(selected.icon, 'size-full [&_svg]:size-full max-md:p-1.5 max-md:rounded-md max-md:border max-md:bg-fd-secondary')}
+        <div
+          className="flex size-9 shrink-0 items-center justify-center rounded-md md:size-7"
+          style={{ backgroundColor: selected.iconBg, color: selected.iconColor }}
+        >
+          {resolveLucideIcon(selected.icon, 'size-4 [&_svg]:size-4')}
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium">{selected.title}</p>
@@ -58,8 +61,11 @@ export function DocsRootSwitcher() {
               onClick={() => setOpen(false)}
               className="flex items-center gap-2 rounded-lg p-1.5 hover:bg-fd-accent hover:text-fd-accent-foreground focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[var(--eu-yellow)]"
             >
-              <div className="size-9 shrink-0 empty:hidden md:mb-auto md:size-5">
-                {resolveLucideIcon(tab.icon, 'size-full [&_svg]:size-full max-md:p-1.5 max-md:rounded-md max-md:border max-md:bg-fd-secondary')}
+              <div
+                className="flex size-9 shrink-0 items-center justify-center rounded-md md:mb-auto md:size-7"
+                style={{ backgroundColor: tab.iconBg, color: tab.iconColor }}
+              >
+                {resolveLucideIcon(tab.icon, 'size-4 [&_svg]:size-4')}
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-medium leading-none">{tab.title}</p>
