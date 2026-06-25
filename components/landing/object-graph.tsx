@@ -2,182 +2,271 @@
 
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
-type NodeId = 'intel' | 'threat' | 'objective' | 'rule';
+type NodeType = 'intel' | 'threat' | 'objective' | 'rule';
 
-const nodes: {
-  id: NodeId;
+type GraphNode = {
+  id: string;
+  type: NodeType;
   label: string;
-  schema: string;
-  path: string;
+  sub: string;
   x: number;
   y: number;
-  color: string;
-  summary: string;
-  detail: string;
-  example: string;
-}[] = [
-  {
-    id: 'intel',
-    label: 'Intel',
-    schema: 'feeds',
-    path: 'intel/',
-    x: 12,
-    y: 50,
-    color: '#71717a',
-    summary: 'Threat intelligence and context that informs what to detect.',
-    detail:
-      'CVE advisories, actor reports, and internal findings flow into threat vector definitions — grounding detection work in real risk.',
-    example: 'Actor profile · CVE-2024-XXXX · sector brief',
-  },
-  {
-    id: 'threat',
-    label: 'Threat',
-    schema: 'threat::1.0',
-    path: 'objects/threats/',
-    x: 32,
-    y: 50,
-    color: '#003399',
-    summary: 'Threat vector (TVM) definitions — the adversary behaviour you care about.',
-    detail:
-      'Threat objects capture techniques, assets, and narrative scope. Objectives and rules chain back to threats for traceability.',
-    example: 'name: "Credential access via LSASS"\nmetadata:\n  schema: threat::1.0',
-  },
-  {
-    id: 'objective',
-    label: 'Objective',
-    schema: 'objective::1.0',
-    path: 'objects/objectives/',
-    x: 58,
-    y: 50,
-    color: '#1a4fb5',
-    summary: 'Detection objectives and signals — what “good detection” means here.',
-    detail:
-      'Objectives bridge threat intent to concrete detection logic. Multiple rules can satisfy one objective; validation checks references.',
-    example: 'signals: [process_access, dump_creation]\nchains_to: threat uuid',
-  },
-  {
-    id: 'rule',
-    label: 'Rule',
-    schema: 'rule::1.0',
-    path: 'objects/rules/',
-    x: 84,
-    y: 50,
-    color: '#ffcc00',
-    summary: 'MDR rules with per-platform queries, schedules, and deploy configs.',
-    detail:
-      'Rules are the deployable unit. opentide validates queries per platform honestly, generates schemas, and dry-run deploys to SIEMs.',
-    example: 'platforms:\n  sentinel: { query: "...", enabled: true }',
-  },
+};
+
+type GraphEdge = { from: string; to: string; label?: string };
+
+const TYPE_COLOR: Record<NodeType, string> = {
+  intel: '#71717a',
+  threat: '#003399',
+  objective: '#1a4fb5',
+  rule: '#ffcc00',
+};
+
+const nodes: GraphNode[] = [
+  { id: 'intel-cve', type: 'intel', label: 'CVE-2024-1709', sub: 'ConnectWise advisory', x: 14, y: 28 },
+  { id: 'intel-actor', type: 'intel', label: 'UNC5537', sub: 'MSP sector brief', x: 14, y: 72 },
+  { id: 'threat-gw', type: 'threat', label: 'Gateway exploit', sub: 'threat::1.0', x: 38, y: 50 },
+  { id: 'obj-lateral', type: 'objective', label: 'Lateral movement prep', sub: 'objective::1.0', x: 62, y: 30 },
+  { id: 'obj-cred', type: 'objective', label: 'Credential access', sub: 'objective::1.0', x: 62, y: 70 },
+  { id: 'rule-lsass', type: 'rule', label: 'LSASS dump', sub: 'rule::1.0', x: 86, y: 50 },
 ];
 
-const edges: [NodeId, NodeId][] = [
-  ['intel', 'threat'],
-  ['threat', 'objective'],
-  ['objective', 'rule'],
+const edges: GraphEdge[] = [
+  { from: 'intel-cve', to: 'threat-gw', label: 'informs' },
+  { from: 'intel-actor', to: 'threat-gw', label: 'attributes' },
+  { from: 'threat-gw', to: 'obj-lateral' },
+  { from: 'threat-gw', to: 'obj-cred' },
+  { from: 'obj-cred', to: 'rule-lsass', label: 'satisfied by' },
 ];
+
+const previews: Record<
+  string,
+  { path: string; schema: string; title: string; body: string; yaml: string; links: string[] }
+> = {
+  'intel-cve': {
+    path: 'intel/advisories/',
+    schema: 'intel feed',
+    title: 'CVE-2024-1709',
+    body: 'CISA advisory on ConnectWise ScreenConnect auth bypass. Feeds the gateway exploitation threat vector and prioritises detection objectives for MSP environments.',
+    yaml: `source: CISA AA24-073A
+type: cve_advisory
+published: 2024-02-21
+cves:
+  - CVE-2024-1709
+sectors: [msp, it_services]
+severity: critical
+chains_to:
+  - threat: gateway-exploitation`,
+    links: ['ConnectWise RCE', 'T1190 exploitation'],
+  },
+  'intel-actor': {
+    path: 'intel/actors/',
+    schema: 'intel feed',
+    title: 'UNC5537',
+    body: 'Threat actor cluster targeting MSP tooling. Linked to ScreenConnect abuse and follow-on credential theft — grounds objective tuning for managed service providers.',
+    yaml: `name: UNC5537
+type: threat_actor
+motivation: financial
+sectors: [msp]
+ttps: [T1190, T1003, T1021]
+feeds_threat:
+  - gateway-exploitation`,
+    links: ['MSP targeting', 'Tooling abuse'],
+  },
+  'threat-gw': {
+    path: 'objects/threats/',
+    schema: 'threat::1.0',
+    title: 'Gateway exploitation',
+    body: 'Threat vector for initial access via exposed management gateways. Objectives chain here; rules inherit ATT&CK coverage from this node.',
+    yaml: `name: Gateway exploitation
+metadata:
+  schema: threat::1.0
+  version: 1.0.0
+  uuid: 8f3c2a1b-…
+techniques: [T1190]
+assets: [edge_gateway, vpn]`,
+    links: ['T1190', '2 objectives'],
+  },
+  'obj-lateral': {
+    path: 'objects/objectives/',
+    schema: 'objective::1.0',
+    title: 'Lateral movement prep',
+    body: 'Detection objective for post-exploitation staging before pivot. Signals include new service creation and unusual RDP patterns.',
+    yaml: `name: Lateral movement prep
+metadata:
+  schema: objective::1.0
+chains_to:
+  threat: 8f3c2a1b-…
+signals:
+  - remote_service_create
+  - rdp_anomaly`,
+    links: ['Staging behaviour', '0 rules yet'],
+  },
+  'obj-cred': {
+    path: 'objects/objectives/',
+    schema: 'objective::1.0',
+    title: 'Credential access',
+    body: 'Objective covering LSASS and memory dump patterns after gateway compromise. Satisfied by the LSASS dump rule deployed to Sentinel.',
+    yaml: `name: Credential access
+metadata:
+  schema: objective::1.0
+chains_to:
+  threat: 8f3c2a1b-…
+signals:
+  - process_access
+  - dump_creation`,
+    links: ['1 rule', 'Sentinel + Defender'],
+  },
+  'rule-lsass': {
+    path: 'objects/rules/',
+    schema: 'rule::1.0',
+    title: 'LSASS dump',
+    body: 'Deployable MDR rule with Sentinel KQL and Defender queries. Validates honestly per platform — dry-run before production push.',
+    yaml: `name: Suspicious LSASS access
+metadata:
+  schema: rule::1.0
+  version: 1.2.0
+chains_to:
+  objective: a1b2c3d4-…
+platforms:
+  sentinel:
+    query: |
+      DeviceProcessEvents
+      | where …
+    enabled: true`,
+    links: ['Sentinel', 'Defender', 'dry-run OK'],
+  },
+};
+
+function edgePath(x1: number, y1: number, x2: number, y2: number) {
+  const mx = (x1 + x2) / 2;
+  return `M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`;
+}
 
 export function ObjectGraph() {
-  const [selected, setSelected] = useState<NodeId>('threat');
-  const active = nodes.find((n) => n.id === selected)!;
+  const [selected, setSelected] = useState('intel-cve');
+  const nodeMap = useMemo(() => new Map(nodes.map((n) => [n.id, n])), []);
+  const active = previews[selected];
+  const activeNode = nodeMap.get(selected)!;
+
+  const litEdge = (e: GraphEdge) => selected === e.from || selected === e.to;
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
-      <div className="landing-surface-card overflow-hidden p-4 md:p-6">
-        <svg
-          viewBox="0 0 100 100"
-          className="h-auto w-full min-h-[220px]"
-          role="img"
-          aria-label="Object graph: Intel to Threat to Objective to Rule"
-        >
+    <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr] lg:items-stretch">
+      <div className="landing-surface-card flex min-h-[340px] flex-col p-4 md:p-5">
+        <svg viewBox="0 0 100 100" className="min-h-[280px] w-full flex-1" role="img" aria-label="Knowledge graph">
           <defs>
-            <marker id="arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-              <path d="M0,0 L6,3 L0,6 Z" fill="#52525b" />
+            <marker id="kg-arrow" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto">
+              <path d="M0,0 L5,2.5 L0,5 Z" fill="#52525b" />
             </marker>
           </defs>
-          {edges.map(([from, to]) => {
-            const a = nodes.find((n) => n.id === from)!;
-            const b = nodes.find((n) => n.id === to)!;
-            const lit = selected === from || selected === to;
+          {edges.map((e) => {
+            const a = nodeMap.get(e.from)!;
+            const b = nodeMap.get(e.to)!;
+            const lit = litEdge(e);
             return (
-              <line
-                key={`${from}-${to}`}
-                x1={a.x + 6}
-                y1={a.y}
-                x2={b.x - 6}
-                y2={b.y}
-                stroke={lit ? '#ffcc00' : '#3f3f46'}
-                strokeWidth={lit ? 0.6 : 0.35}
-                markerEnd="url(#arrow)"
+              <path
+                key={`${e.from}-${e.to}`}
+                d={edgePath(a.x + 5, a.y, b.x - 5, b.y)}
+                fill="none"
+                stroke={lit ? '#ffcc00' : '#27272a'}
+                strokeWidth={lit ? 0.45 : 0.3}
+                markerEnd="url(#kg-arrow)"
                 className="transition-all duration-300"
               />
             );
           })}
           {nodes.map((node) => {
             const on = selected === node.id;
+            const dim =
+              selected !== node.id &&
+              !edges.some((e) => litEdge(e) && (e.from === node.id || e.to === node.id));
             return (
               <g
                 key={node.id}
-                className="cursor-pointer"
+                className={`cursor-pointer transition-opacity duration-300 ${dim ? 'opacity-40' : 'opacity-100'}`}
                 onClick={() => setSelected(node.id)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
+                onKeyDown={(ev) => {
+                  if (ev.key === 'Enter' || ev.key === ' ') {
+                    ev.preventDefault();
                     setSelected(node.id);
                   }
                 }}
                 role="button"
                 tabIndex={0}
                 aria-pressed={on}
-                aria-label={`${node.label}: ${node.summary}`}
               >
-                <circle
-                  cx={node.x}
-                  cy={node.y}
-                  r={on ? 7.5 : 6}
-                  fill={on ? node.color : '#0a0a0a'}
-                  stroke={on ? '#ffcc00' : node.color}
-                  strokeWidth={on ? 0.8 : 0.5}
+                <rect
+                  x={node.x - 9}
+                  y={node.y - 5}
+                  width={18}
+                  height={10}
+                  rx={2}
+                  fill={on ? TYPE_COLOR[node.type] : '#0a0a0a'}
+                  stroke={on ? '#ffcc00' : TYPE_COLOR[node.type]}
+                  strokeWidth={on ? 0.55 : 0.35}
                   className="transition-all duration-300"
                 />
                 <text
                   x={node.x}
-                  y={node.y + 14}
+                  y={node.y + 0.5}
                   textAnchor="middle"
-                  className="fill-[#a1a1aa] text-[4px] font-medium"
+                  dominantBaseline="middle"
+                  className="fill-white text-[3.2px] font-semibold"
                   style={{ fontFamily: 'var(--font-sans), system-ui, sans-serif' }}
                 >
                   {node.label}
+                </text>
+                <text
+                  x={node.x}
+                  y={node.y + 8}
+                  textAnchor="middle"
+                  className="fill-[#71717a] text-[2.6px]"
+                  style={{ fontFamily: 'var(--font-mono), monospace' }}
+                >
+                  {node.sub}
                 </text>
               </g>
             );
           })}
         </svg>
-        <p className="mt-3 text-center text-xs text-[var(--landing-subtle)]">
-          Click a node · Intel → Threat → Objective → Rule
-        </p>
+        <div className="mt-2 flex flex-wrap gap-3 border-t border-white/[0.06] pt-3 text-[10px] text-[var(--landing-subtle)]">
+          {(['intel', 'threat', 'objective', 'rule'] as NodeType[]).map((t) => (
+            <span key={t} className="inline-flex items-center gap-1.5">
+              <span className="size-2 rounded-sm" style={{ backgroundColor: TYPE_COLOR[t] }} />
+              {t}
+            </span>
+          ))}
+        </div>
       </div>
 
-      <div className="landing-surface-card flex h-full min-h-[280px] flex-col p-6 transition-all duration-300">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="font-mono text-[10px] uppercase tracking-wider text-[var(--landing-subtle)]">
-              {active.path}
-            </p>
-            <h3 className="mt-1 text-2xl font-bold" style={{ color: active.color }}>
-              {active.label}
-            </h3>
-            <p className="mt-1 font-mono text-xs text-[var(--eu-yellow)]">{active.schema}</p>
-          </div>
+      <div className="landing-surface-card flex min-h-[340px] flex-col p-5 md:p-6">
+        <p className="font-mono text-[10px] uppercase tracking-wider text-[var(--landing-subtle)]">
+          {active.path}
+        </p>
+        <h3 className="mt-1 text-2xl font-bold" style={{ color: TYPE_COLOR[activeNode.type] }}>
+          {active.title}
+        </h3>
+        <p className="mt-1 font-mono text-xs text-[var(--eu-yellow)]">{active.schema}</p>
+        <p className="mt-4 flex-1 text-sm leading-relaxed text-[var(--landing-muted)]">{active.body}</p>
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {active.links.map((tag) => (
+            <span
+              key={tag}
+              className="rounded-md border border-white/[0.08] bg-black px-2 py-0.5 font-mono text-[10px] text-[var(--landing-subtle)]"
+            >
+              {tag}
+            </span>
+          ))}
         </div>
-        <p className="mt-4 text-sm leading-relaxed text-[var(--landing-muted)]">{active.detail}</p>
-        <pre className="mt-4 flex-1 overflow-x-auto rounded-lg border border-white/[0.06] bg-black p-4 font-mono text-[11px] leading-relaxed text-[var(--landing-subtle)]">
-          {active.example}
+        <pre className="mt-4 max-h-[180px] overflow-auto rounded-lg border border-white/[0.06] bg-black p-4 font-mono text-[10px] leading-relaxed text-zinc-400 sm:text-[11px]">
+          {active.yaml}
         </pre>
         <Link
           href="/docs/usage/concepts/object-model/"
-          className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-[var(--landing-accent)] transition hover:gap-2"
+          className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-[var(--landing-accent)]"
         >
           Object model docs <ArrowRight className="size-3.5" />
         </Link>
