@@ -140,6 +140,7 @@ html > body[data-scroll-locked] {
   --landing-muted: #a1a1aa;
   --landing-subtle: #71717a;
   --landing-accent: var(--eu-yellow);
+  --landing-blue: var(--eu-blue);
   --landing-dim: #52525b;
 
   font-family: var(--font-sans), system-ui, sans-serif;
@@ -304,4 +305,8 @@ html > body[data-scroll-locked] {
   background: var(--landing-surface-deep);
   border-radius: 1.25rem;
   overflow: hidden;
+}
+
+.landing-pipeline-card {
+  will-change: transform;
 }

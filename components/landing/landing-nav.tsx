@@ -63,7 +63,15 @@ export function LandingNav({ children }: { children: ReactNode }) {
       <main className="flex-1">{children}</main>
       <footer className="border-t border-white/10 bg-[var(--landing-surface-deep)]">
         <div className="mx-auto flex max-w-[1400px] flex-col items-center justify-between gap-4 px-4 py-10 text-sm text-[var(--landing-subtle)] md:flex-row md:px-6">
-          <p>© {new Date().getFullYear()} opentide · EUPL-1.2 · Specs CC-BY-4.0</p>
+          <p>
+            © {new Date().getFullYear()}{' '}
+            <span>
+              open<span className="text-[var(--eu-yellow)]">tide</span>
+            </span>
+            {' · '}
+            <span className="text-[var(--eu-yellow)]">EUPL-1.2</span>
+            {' · forever free · Specs CC-BY-4.0'}
+          </p>
           <div className="flex flex-wrap items-center justify-center gap-6">
             <Link href="/docs/usage/" className="transition hover:text-[var(--landing-accent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--landing-accent)]">
               Docs

@@ -50,8 +50,8 @@ export function OpentideWordmark({ className }: { className?: string }) {
     <span className={`inline-flex items-center gap-2.5 ${className ?? ''}`}>
       <OpentideMark size={26} className="text-[var(--eu-yellow)]" />
       <span className="font-semibold tracking-[-0.03em]">
-        <span className="text-[var(--eu-yellow)]">open</span>
-        <span>tide</span>
+        <span>open</span>
+        <span className="text-[var(--eu-yellow)]">tide</span>
       </span>
     </span>
   );

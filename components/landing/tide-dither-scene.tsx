@@ -11,8 +11,9 @@ const BAYER = [
   [15, 7, 13, 5],
 ];
 
-/** EU yellow ramp on pure black — no blue. */
-const RAMP = ['#000000', '#141408', '#2a2808', '#524a10', '#8a7a18', '#ffcc00'] as const;
+const RAMP_SKY = ['#000000', '#030303', '#080808'] as const;
+const RAMP_DEEP = ['#000000', '#000510', '#000814', '#001028', '#001a4d', '#003399'] as const;
+const RAMP_FOAM = ['#0a0a08', '#2a2808', '#665c00', '#c9a000', '#ffcc00', '#ffe566'] as const;
 
 export function TideDitherScene({ className }: { className?: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -72,7 +73,7 @@ export function TideDitherScene({ className }: { className?: string }) {
       const { x: mx, y: my, vx, vy, active } = mouseRef.current;
 
       if (active && !reducedMotion) {
-        ripple(mx, my, 0.9 + Math.min(1.2, Math.hypot(vx, vy) * 8), 6);
+        ripple(mx, my, 0.85 + Math.min(1, Math.hypot(vx, vy) * 6), 7);
       }
 
       for (let y = 1; y < rows - 1; y++) {
@@ -84,53 +85,71 @@ export function TideDitherScene({ className }: { className?: string }) {
             height[idx(x, y - 1)] +
             height[idx(x, y + 1)] -
             height[i] * 4;
-          vel[i] += lap * 0.42;
-          vel[i] *= 0.978;
+          vel[i] += lap * 0.4;
+          vel[i] *= 0.98;
         }
       }
 
       for (let i = 0; i < size; i++) {
         height[i] += vel[i];
-        height[i] *= 0.992;
+        height[i] *= 0.993;
       }
 
       if (!reducedMotion) {
-        ripple(0.12 + Math.sin(t * 0.55) * 0.1, 0.55 + Math.cos(t * 0.41) * 0.08, 0.12, 4);
-        ripple(0.88 + Math.cos(t * 0.48) * 0.08, 0.48 + Math.sin(t * 0.37) * 0.1, 0.1, 4);
+        ripple(0.08 + Math.sin(t * 0.5) * 0.06, 0.72, 0.14, 5);
+        ripple(0.92 + Math.cos(t * 0.44) * 0.05, 0.68, 0.12, 5);
       }
     };
 
-    const sampleField = (x: number, y: number) => {
-      if (!height) return 0;
-      const nx = x / cols;
-      const ny = y / rows;
-      const i = idx(
-        Math.min(cols - 2, Math.max(1, Math.floor(nx * (cols - 2)) + 1)),
-        Math.min(rows - 2, Math.max(1, Math.floor(ny * (rows - 2)) + 1)),
-      );
-      const wave =
-        height[i] +
-        Math.sin(nx * 9 + t * 1.4) * 0.06 +
-        Math.sin(ny * 6 - t * 0.9) * 0.04;
+    const tideSurface = (nx: number, col: number) => {
+      if (!height) return 0.38;
+      const gx = Math.min(cols - 2, Math.max(1, col));
+      const gy = Math.floor(rows * 0.38);
+      const i = idx(gx, gy);
+      const swell =
+        height[i] * 0.12 +
+        Math.sin(nx * 11 + t * 1.3) * 0.028 +
+        Math.sin(nx * 5.5 - t * 0.85) * 0.016 +
+        Math.cos(nx * 2.2 + t * 0.4) * 0.01;
+      return 0.36 + swell;
+    };
+
+    const pickRamp = (nx: number, ny: number, col: number) => {
+      const surface = tideSurface(nx, col);
+      const depth = ny - surface;
       const { x: mx, y: my, active } = mouseRef.current;
       const dist = Math.hypot(nx - mx, ny - my);
-      const glow = active ? Math.max(0, 1 - dist * 2.2) * 0.35 : 0;
-      const vignette = 1 - Math.pow(Math.hypot(nx - 0.5, ny - 0.5) * 1.15, 2) * 0.35;
-      return Math.min(1, Math.max(0, (wave + 0.5) * 0.55 * vignette + glow));
+      const glow = active ? Math.max(0, 1 - dist * 2) * 0.25 : 0;
+
+      if (depth < -0.04) {
+        return { ramp: RAMP_SKY, v: 0.05 + glow * 0.3 };
+      }
+      if (depth < 0.035) {
+        const crest = 1 - Math.abs(depth) / 0.035;
+        return { ramp: RAMP_FOAM, v: Math.min(1, crest * 0.85 + glow) };
+      }
+      const deep = Math.min(1, depth * 2.8 + 0.15 + glow * 0.2);
+      return { ramp: RAMP_DEEP, v: deep };
+    };
+
+    const dither = (v: number, x: number, y: number, ramp: readonly string[]) => {
+      const threshold = BAYER[y % 4][x % 4] / 16;
+      const level = Math.min(
+        ramp.length - 1,
+        Math.max(0, Math.floor((v + (v > threshold ? 0.06 : -0.06)) * ramp.length)),
+      );
+      return ramp[level];
     };
 
     const draw = () => {
       if (!height || w === 0) return;
 
-      ctx.fillStyle = '#000000';
-      ctx.fillRect(0, 0, w, h);
-
       for (let y = 0; y < rows; y++) {
         for (let x = 0; x < cols; x++) {
-          const v = sampleField(x, y);
-          const threshold = BAYER[y % 4][x % 4] / 16;
-          const level = Math.min(RAMP.length - 1, Math.floor((v + (v > threshold ? 0.08 : -0.08)) * RAMP.length));
-          ctx.fillStyle = RAMP[level];
+          const nx = x / cols;
+          const ny = y / rows;
+          const { ramp, v } = pickRamp(nx, ny, x);
+          ctx.fillStyle = dither(v, x, y, ramp);
           ctx.fillRect(x * PIXEL, y * PIXEL, PIXEL, PIXEL);
         }
       }

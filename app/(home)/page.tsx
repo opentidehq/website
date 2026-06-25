@@ -6,18 +6,18 @@ import {
   CheckCircle2,
   Code,
   FileText,
-  GitBranch,
-  Layers,
-  Rocket,
-  Shield,
   Terminal,
   Waves,
   UserRound,
   Sparkles,
+  Circle,
 } from 'lucide-react';
+import { OpentideName } from '@/components/brand/opentide-name';
 import { TideDitherScene } from '@/components/landing/tide-dither-scene';
 import { HeroTerminal } from '@/components/landing/hero-terminal';
 import { PipelineFlow } from '@/components/landing/pipeline-flow';
+import { ObjectGraph } from '@/components/landing/object-graph';
+import { WorkflowStudio } from '@/components/landing/workflow-studio';
 import { McpTerminalDemo } from '@/components/landing/mcp-terminal-demo';
 import { ecosystemLinks } from '@/lib/shared';
 import type { Metadata } from 'next';
@@ -28,37 +28,6 @@ export const metadata: Metadata = {
   description:
     'Structure detection engineering end to end. Human-in-the-loop or fully agentic — validate, generate, deploy, and document rules across seven platforms.',
 };
-
-const pipeline = [
-  {
-    label: 'Validate',
-    icon: Shield,
-    desc: 'Schema, query, and platform honesty checks',
-    color: '#ffcc00',
-    bg: 'rgba(255, 204, 0, 0.12)',
-  },
-  {
-    label: 'Generate',
-    icon: Layers,
-    desc: 'Schemas, templates, and indexes from your repo',
-    color: '#e6b800',
-    bg: 'rgba(255, 204, 0, 0.08)',
-  },
-  {
-    label: 'Deploy',
-    icon: Rocket,
-    desc: 'Seven platforms, dry-run before production',
-    color: '#fff0a3',
-    bg: 'rgba(255, 204, 0, 0.15)',
-  },
-  {
-    label: 'Document',
-    icon: FileText,
-    desc: 'Published narratives for analysts and auditors',
-    color: '#c9a000',
-    bg: 'rgba(255, 204, 0, 0.1)',
-  },
-];
 
 const surfaces = [
   {
@@ -109,6 +78,19 @@ const surfaces = [
   },
 ];
 
+const features = [
+  'Strict schema validation',
+  'Dry-run deploy',
+  'MCP agent tools',
+  'Seven SIEM platforms',
+  'Normative specifications',
+  'CI/CD pipelines',
+  'Human-in-the-loop gates',
+  'Cross-object chaining',
+  'Schema generation',
+  'Published narratives',
+];
+
 const platforms = [
   'Microsoft Sentinel',
   'Defender for Endpoint',
@@ -133,8 +115,16 @@ export default function HomePage() {
         <div className="landing-hero-shell landing-fade-in mx-auto max-w-[1400px]">
           <div className="grid lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:min-h-[min(72vh,720px)]">
             <div className="flex flex-col justify-center px-6 py-10 md:px-10 md:py-14 lg:py-16">
-              <div className="mb-6 inline-flex w-fit items-center gap-2 rounded-full border border-[var(--landing-accent)]/30 bg-black px-3 py-1 text-xs font-medium text-[var(--landing-accent)]">
-                <Waves className="size-3.5" aria-hidden />
+              <div className="mb-4 flex flex-wrap gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--eu-yellow)]/45 bg-[var(--eu-yellow)]/10 px-3 py-1 text-xs font-semibold text-[var(--eu-yellow)]">
+                  EUPL-1.2 · forever free
+                </span>
+                <span className="rounded-full border border-white/10 px-3 py-1 text-xs text-[var(--landing-subtle)]">
+                  open source engine
+                </span>
+              </div>
+              <div className="mb-6 inline-flex w-fit items-center gap-2 rounded-full border border-white/10 bg-black px-3 py-1 text-xs font-medium text-[var(--landing-subtle)]">
+                <Waves className="size-3.5 text-[var(--eu-yellow)]" aria-hidden />
                 the DetectionOps engine for detection-as-code
               </div>
               <h1 className="text-[clamp(2.35rem,5.8vw,4.25rem)] font-bold leading-[1.05] tracking-[-0.035em] text-balance">
@@ -143,7 +133,7 @@ export default function HomePage() {
                 <span className="text-[var(--landing-ink)]">, your way.</span>
               </h1>
               <p className="mt-6 max-w-lg text-base leading-relaxed text-[var(--landing-muted)] md:text-lg text-pretty">
-                <span className="text-[var(--landing-accent)]">opentide</span> validates, generates,
+                <OpentideName className="font-medium text-[var(--landing-ink)]" /> validates, generates,
                 deploys, and documents rules across seven platforms. Human-led, agent-assisted, or
                 fully autonomous — you set the balance.
               </p>
@@ -171,15 +161,17 @@ export default function HomePage() {
       </section>
 
       <section
-        id="platforms"
         className="border-y border-white/10 bg-[var(--landing-surface-deep)] py-4"
-        aria-label="Supported platforms"
+        aria-label="Product features"
       >
         <div className="landing-marquee-wrap overflow-hidden">
-          <div className="landing-marquee flex gap-12 whitespace-nowrap text-sm font-medium text-[var(--landing-subtle)]" aria-hidden>
-            {[...platforms, ...platforms].map((name, i) => (
+          <div
+            className="landing-marquee flex gap-12 whitespace-nowrap text-sm font-medium text-[var(--landing-subtle)]"
+            aria-hidden
+          >
+            {[...features, ...features].map((name, i) => (
               <span key={`${name}-${i}`} className="inline-flex items-center gap-2">
-                <GitBranch className="size-3.5 text-[var(--landing-accent)]" />
+                <Circle className="size-2 fill-[var(--eu-yellow)] text-[var(--eu-yellow)]" />
                 {name}
               </span>
             ))}
@@ -195,7 +187,35 @@ export default function HomePage() {
           Draft to deployed — every stage validated, every platform capability honest. The tide
           carries your content forward; you steer how much is human and how much is agentic.
         </p>
-        <PipelineFlow steps={pipeline} />
+        <PipelineFlow />
+      </section>
+
+      <section className="landing-section border-t border-white/10 bg-[var(--landing-surface-deep)]">
+        <div className="mx-auto max-w-[1400px] px-4 md:px-6">
+          <h2 className="text-3xl font-bold tracking-[-0.02em] md:text-4xl text-balance">
+            Objects chain into a graph
+          </h2>
+          <p className="mt-4 max-w-2xl text-[var(--landing-subtle)] text-pretty">
+            Intel informs threats. Threats drive objectives. Objectives become deployable rules —
+            traceable end to end in your repo.
+          </p>
+          <div className="mt-12">
+            <ObjectGraph />
+          </div>
+        </div>
+      </section>
+
+      <section className="landing-section mx-auto max-w-[1400px] px-4 md:px-6">
+        <h2 className="text-3xl font-bold tracking-[-0.02em] md:text-4xl text-balance">
+          IDE, CLI, and agents — one workflow
+        </h2>
+        <p className="mt-4 max-w-2xl text-[var(--landing-subtle)] text-pretty">
+          Edit YAML in your editor, validate in the terminal, let MCP handle the rest. Same engine,
+          every surface.
+        </p>
+        <div className="mt-10">
+          <WorkflowStudio />
+        </div>
       </section>
 
       <section className="landing-section border-t border-white/10 bg-[var(--landing-surface-deep)]">
@@ -267,7 +287,7 @@ export default function HomePage() {
               You set the autonomy level
             </h2>
             <p className="mt-4 leading-relaxed text-[var(--landing-subtle)] text-pretty">
-              DetectionOps is not all-or-nothing. opentide structures the work so engineers,
+              DetectionOps is not all-or-nothing. <OpentideName /> structures the work so engineers,
               reviewers, and agents collaborate on the same objects — with MCP, skills, and specs
               built in from day one.
             </p>
@@ -291,7 +311,7 @@ export default function HomePage() {
       </section>
 
       <section className="landing-section border-t border-white/10 bg-[var(--landing-surface-deep)]">
-        <div className="mx-auto max-w-6xl px-4 text-center">
+        <div className="mx-auto max-w-[1400px] px-4 text-center md:px-6">
           <h2 className="text-3xl font-bold tracking-[-0.02em] md:text-4xl text-balance">
             Seven platforms. Honest validation.
           </h2>
@@ -319,7 +339,9 @@ export default function HomePage() {
       </section>
 
       <section className="landing-section mx-auto max-w-[1400px] px-4 md:px-6">
-        <h2 className="text-center text-3xl font-bold tracking-[-0.02em]">The opentide ecosystem</h2>
+        <h2 className="text-center text-3xl font-bold tracking-[-0.02em]">
+          The <OpentideName /> ecosystem
+        </h2>
         <ul className="mt-12 grid list-none gap-4 p-0 md:grid-cols-3">
           {ecosystemLinks.map((repo, i) => (
             <li key={repo.name} className="landing-card" style={{ '--i': i } as CSSProperties}>
@@ -339,12 +361,13 @@ export default function HomePage() {
 
       <section className="border-t border-white/10 bg-[var(--landing-surface-raised)] py-24 md:py-32">
         <div className="mx-auto max-w-3xl px-4 text-center">
+          <p className="mb-4 text-sm font-semibold text-[var(--eu-yellow)]">EUPL-1.2 · forever free</p>
           <h2 className="text-3xl font-bold tracking-[-0.02em] md:text-4xl text-balance">
             Set the standard for DetectionOps
           </h2>
           <p className="mt-6 text-lg text-[var(--landing-muted)] text-pretty">
-            Bring your rules, your reviewers, and your agents. opentide structures the flow — you
-            choose how much of the tide is human and how much runs on its own.
+            Bring your rules, your reviewers, and your agents. <OpentideName /> structures the flow —
+            you choose how much of the tide is human and how much runs on its own.
           </p>
           <div className="mt-10 flex flex-wrap justify-center gap-4">
             <Link
