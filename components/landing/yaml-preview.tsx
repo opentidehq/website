@@ -4,31 +4,7 @@ import { useMemo, useState } from 'react';
 
 type Token = { text: string; className: string; field?: string };
 
-const FIELD_DOCS: Record<string, string> = {
-  name: 'Human-readable title for the object instance.',
-  'metadata.schema': 'Structural revision — selects Pydantic model and JSON Schema (e.g. rule::1.0).',
-  'metadata.version': 'Business semver for this instance, independent of schema revision.',
-  'metadata.uuid': 'Stable identifier used for chaining and registry lookup.',
-  'metadata.tlp': 'Traffic Light Protocol classification (clear, green, amber, red).',
-  schema: 'Structural revision identifier (threat::1.0, objective::1.0, rule::1.0).',
-  version: 'Business version of the object instance.',
-  uuid: 'Unique identifier — referenced by chains_to in downstream objects.',
-  tlp: 'TLP marking governing sharing boundaries.',
-  detection_model: 'UUID of objective this rule implements (rule::1.0).',
-  configurations: 'Typed per-platform configuration blocks (prefer over legacy platforms).',
-  techniques: 'MITRE ATT&CK technique IDs covered by this threat.',
-  assets: 'Asset classes in scope (endpoints, gateways, identity, etc.).',
-  signals: 'Observable behaviours that indicate the objective is met.',
-  platforms: 'Per-SIEM deploy configuration — query, schedule, enabled flag.',
-  sentinel: 'Microsoft Sentinel / Defender XDR KQL configuration block.',
-  defender: 'Microsoft Defender for Endpoint advanced hunting block.',
-  query: 'Platform-native query text — validated only where honestly supported.',
-  enabled: 'Whether this platform config is active on deploy.',
-  criticality: 'Threat criticality vocabulary (threat::1.0, required).',
-  composition: 'Objective composition strategy block (objective::1.0).',
-  threats: 'Threat vector UUIDs referenced by this objective.',
-  defender_for_endpoint: 'Defender for Endpoint configuration block.',
-};
+import { FIELD_DOCS } from '@/components/landing/yaml-preview-field-docs';
 
 function tokenizeYaml(yaml: string): Token[][] {
   return yaml.split('\n').map((line) => {
@@ -95,7 +71,7 @@ export function YamlPreview({
     <div className={`flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-white/[0.06] bg-black ${className ?? ''}`}>
       <div className="flex items-center justify-between border-b border-white/[0.06] px-3 py-2">
         <span className="font-mono text-[10px] text-zinc-500">{path}</span>
-        <span className="font-mono text-[9px] text-zinc-600">hover keys for field docs</span>
+        <span className="font-mono text-[9px] text-zinc-600">hover keys for hints</span>
       </div>
       <pre className="flex-1 overflow-auto p-4 font-mono text-[10px] leading-[1.7] sm:text-[11px]">
         {lines.map((lineTokens, li) => (
@@ -127,7 +103,7 @@ export function YamlPreview({
       </pre>
       <div className="min-h-[2.5rem] border-t border-white/[0.06] px-3 py-2">
         <p className="font-mono text-[9px] leading-relaxed text-zinc-500">
-          {hint ?? 'Hover a highlighted key to see field documentation.'}
+          {hint ?? 'Hover a highlighted key for a short explanation.'}
         </p>
       </div>
     </div>

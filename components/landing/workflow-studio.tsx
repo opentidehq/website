@@ -1,86 +1,173 @@
 'use client';
 
-import { Bot, ChevronRight, Files, Terminal } from 'lucide-react';
-import { parseDiffFromFile } from '@pierre/diffs';
-import { File, FileDiff } from '@pierre/diffs/react';
+import { Files, Bot, Terminal, FileText } from 'lucide-react';
+import { File } from '@pierre/diffs/react';
 import { FileTree, useFileTree, useFileTreeSelector } from '@pierre/trees/react';
 import { useEffect, useMemo, useState } from 'react';
-import { usePrefersReducedMotion } from '@/lib/hooks/use-prefers-reduced-motion';
-import {
-  DEMO_FILES,
-  DEMO_PATHS,
-  DEMO_REPO,
-  LSASS_RULE_PREVIOUS,
-  type DemoPath,
-} from '@/lib/landing/demo-registry';
+import { AgentTracePanel, type AgentEvent } from '@/components/landing/agent-trace-panel';
+import { DEMO_FILES, DEMO_PATHS, DEMO_REPO, type DemoPath } from '@/lib/landing/demo-registry';
 
-type Phase = 'edit' | 'validate' | 'generate' | 'deploy';
+const STEPS = [
+  'intel',
+  'threat',
+  'objective',
+  'rule',
+  'validate',
+  'generate',
+  'deploy',
+] as const;
 
-const phases: Phase[] = ['edit', 'validate', 'generate', 'deploy'];
+type Step = (typeof STEPS)[number];
 
-const phaseFile: Record<Phase, DemoPath> = {
-  edit: 'objects/rules/lsass-memory-access.yaml',
-  validate: 'objects/objectives/credential-access.yaml',
+const stepFile: Record<Step, DemoPath> = {
+  intel: 'intel/advisories/cve-2024-1709.md',
+  threat: 'objects/threats/gateway-exploitation.yaml',
+  objective: 'objects/objectives/credential-access.yaml',
+  rule: 'objects/rules/lsass-memory-access.yaml',
+  validate: 'objects/rules/lsass-memory-access.yaml',
   generate: '.opentide/schemas/rule.1.0.schema.json',
   deploy: 'objects/rules/lsass-memory-access.yaml',
 };
 
-const phaseScripts: Record<
-  Phase,
-  { cmd: string; out: string[]; agent: { thought: string; tool: string; result: string }[] }
+const stepLabel: Record<Step, string> = {
+  intel: 'Ingest intel',
+  threat: 'Draft threat',
+  objective: 'Define objective',
+  rule: 'Author rule',
+  validate: 'Validate repo',
+  generate: 'Generate schemas',
+  deploy: 'Deploy dry-run',
+};
+
+const stepScripts: Record<
+  Step,
+  { events: AgentEvent[]; cmd: string; out: string[] }
 > = {
-  edit: {
-    cmd: 'opentide validate --file objects/rules/lsass-memory-access.yaml',
-    out: ['✓ schema rule::1.0', '✓ detection_model reference valid', '0 errors'],
-    agent: [
+  intel: {
+    events: [
       {
-        thought: 'Map LSASS rule to credential-access objective via detection_model UUID.',
-        tool: 'lookup(uuid="00000000-0000-4000-8002-000000000001")',
-        result: 'objective::1.0 · Credential access via LSASS',
+        kind: 'reasoning',
+        text: 'CISA AA24-073A describes ScreenConnect auth bypass on exposed gateways. Map to initial-access threat and credential-access follow-on.',
       },
       {
-        thought: 'Add defender_for_endpoint configuration block alongside Sentinel.',
-        tool: 'write_file(objects/rules/lsass-memory-access.yaml)',
-        result: 'configurations.defender_for_endpoint enabled',
+        kind: 'mcp',
+        tool: 'read_file',
+        input: 'intel/advisories/cve-2024-1709.md',
+        output: 'parsed CVE-2024-1709 · T1190 · LSASS follow-on',
       },
     ],
+    cmd: 'opentide document --intel intel/advisories/cve-2024-1709.md',
+    out: ['→ extracted T1190, T1003.001 · ready for object drafting'],
+  },
+  threat: {
+    events: [
+      {
+        kind: 'reasoning',
+        text: 'Create threat::1.0 from advisory — edge gateway terrain, High severity, ATT&CK T1190/T1133.',
+      },
+      {
+        kind: 'mcp',
+        tool: 'write_file',
+        input: 'objects/threats/gateway-exploitation.yaml',
+        output: 'threat uuid 00000000-…010 · schema valid',
+      },
+      {
+        kind: 'cli',
+        command: 'opentide validate --file objects/threats/gateway-exploitation.yaml',
+        output: '✓ threat::1.0 · 0 errors',
+      },
+    ],
+    cmd: 'opentide validate --file objects/threats/gateway-exploitation.yaml',
+    out: ['✓ schema threat::1.0', '✓ att&ck techniques', '0 errors'],
+  },
+  objective: {
+    events: [
+      {
+        kind: 'reasoning',
+        text: 'Credential dumping is the likely next step after gateway foothold. Link objective to threat UUID and define LSASS process-access signal.',
+      },
+      {
+        kind: 'mcp',
+        tool: 'write_file',
+        input: 'objects/objectives/credential-access.yaml',
+        output: 'objective links threat …010 · 1 signal defined',
+      },
+    ],
+    cmd: 'opentide validate --file objects/objectives/credential-access.yaml',
+    out: ['✓ objective::1.0', '✓ cross-object threat reference', '0 errors'],
+  },
+  rule: {
+    events: [
+      {
+        kind: 'reasoning',
+        text: 'Implement objective via detection_model UUID. Add Sentinel KQL and Defender for Endpoint configurations.',
+      },
+      {
+        kind: 'mcp',
+        tool: 'write_file',
+        input: 'objects/rules/lsass-memory-access.yaml',
+        output: 'rule links objective …001 · sentinel + defender configs',
+      },
+    ],
+    cmd: 'opentide validate --file objects/rules/lsass-memory-access.yaml',
+    out: ['✓ rule::1.0', '✓ detection_model reference', '0 errors'],
   },
   validate: {
-    cmd: 'opentide validate --strict',
-    out: [
-      '✓ schema · uuid-format · id-uniqueness',
-      '✓ cross-object references',
-      '✓ 0 blocking errors',
-    ],
-    agent: [
+    events: [
       {
-        thought: 'Run full validation pipeline before merge — strict mode treats warnings as failures.',
-        tool: 'validate(strict=true)',
-        result: '8 objects · sentinel KQL honest',
+        kind: 'reasoning',
+        text: 'Run strict validation across the full registry before merge — schema, UUID format, and cross-object references.',
+      },
+      {
+        kind: 'mcp',
+        tool: 'validate',
+        input: 'strict=true',
+        output: '4 objects · 0 blocking · sentinel KQL honest',
+      },
+      {
+        kind: 'cli',
+        command: 'opentide validate --strict',
+        output: '✓ cross-object references',
       },
     ],
+    cmd: 'opentide validate --strict',
+    out: ['✓ schema · uuid-format · id-uniqueness', '✓ cross-object references', '0 blocking errors'],
   },
   generate: {
+    events: [
+      {
+        kind: 'reasoning',
+        text: 'Refresh JSON Schema and IDE templates from Pydantic models so editors and agents share the same contract.',
+      },
+      {
+        kind: 'mcp',
+        tool: 'generate',
+        output: 'rule.1.0.schema.json · rule.1.0.template.yaml',
+      },
+    ],
     cmd: 'opentide generate',
     out: ['→ .opentide/schemas/rule.1.0.schema.json', '→ .opentide/templates/rule.1.0.template.yaml'],
-    agent: [
-      {
-        thought: 'Refresh JSON Schema and IDE templates from Pydantic models.',
-        tool: 'generate()',
-        result: 'schemas + templates updated',
-      },
-    ],
   },
   deploy: {
-    cmd: 'opentide deploy --platform sentinel --dry-run',
-    out: ['✓ dry-run: 1 rule would deploy', '0 blocked'],
-    agent: [
+    events: [
       {
-        thought: 'Human approved — dry-run deploy LSASS rule to Sentinel workspace.',
-        tool: 'deploy(dry_run=true, platform="sentinel")',
-        result: 'staging plan ready · 0 syntax fakes',
+        kind: 'reasoning',
+        text: 'Human approved — dry-run deploy LSASS rule to Sentinel workspace. No syntax fakes.',
+      },
+      {
+        kind: 'mcp',
+        tool: 'deploy',
+        input: 'dry_run=true, platform=sentinel',
+        output: '1 rule would deploy · staging plan ready',
+      },
+      {
+        kind: 'cli',
+        command: 'opentide deploy --platform sentinel --dry-run',
+        output: '✓ dry-run complete',
       },
     ],
+    cmd: 'opentide deploy --platform sentinel --dry-run',
+    out: ['✓ dry-run: 1 rule would deploy to Sentinel', '0 blocked'],
   },
 };
 
@@ -90,134 +177,34 @@ const codeOptions = {
   overflow: 'scroll' as const,
 };
 
-function EditorPane({ phase, path }: { phase: Phase; path: DemoPath }) {
+function EditorPane({ path }: { path: DemoPath }) {
   const contents = DEMO_FILES[path];
   const file = useMemo(
-    () => ({ name: path.split('/').pop() ?? path, contents, cacheKey: `${path}-${phase}` }),
-    [path, contents, phase],
+    () => ({ name: path.split('/').pop() ?? path, contents, cacheKey: path }),
+    [path, contents],
   );
-
-  if (phase === 'deploy' && path === 'objects/rules/lsass-memory-access.yaml') {
-    const fileDiff = parseDiffFromFile(
-      { name: 'lsass-memory-access.yaml', contents: LSASS_RULE_PREVIOUS, cacheKey: 'lsass-old' },
-      { name: 'lsass-memory-access.yaml', contents, cacheKey: 'lsass-new' },
-    );
-    return <FileDiff fileDiff={fileDiff} options={codeOptions} disableWorkerPool className="h-full min-h-0" />;
-  }
-
   return <File file={file} options={codeOptions} disableWorkerPool className="h-full min-h-0" />;
 }
 
-type PhaseScript = (typeof phaseScripts)[Phase];
-
-function WorkflowPhasePanels({
-  phase,
-  script,
-}: {
-  phase: Phase;
-  script: PhaseScript;
-}) {
-  const reduced = usePrefersReducedMotion();
-  const [typedCmd, setTypedCmd] = useState(reduced ? script.cmd : '');
-  const [showOut, setShowOut] = useState(reduced);
-  const [visibleAgent, setVisibleAgent] = useState(reduced ? script.agent.length : 0);
-
-  useEffect(() => {
-    if (reduced) return;
-
-    let ci = 0;
-    let ai = 0;
-    const typeTimer = window.setInterval(() => {
-      ci += 1;
-      setTypedCmd(script.cmd.slice(0, ci));
-      if (ci >= script.cmd.length) window.clearInterval(typeTimer);
-    }, 22);
-
-    const outTimer = window.setTimeout(() => setShowOut(true), 900);
-    const agentTimer = window.setInterval(() => {
-      ai += 1;
-      setVisibleAgent(ai);
-      if (ai >= script.agent.length) window.clearInterval(agentTimer);
-    }, 700);
-
-    return () => {
-      window.clearInterval(typeTimer);
-      window.clearTimeout(outTimer);
-      window.clearInterval(agentTimer);
-    };
-  }, [reduced, script]);
-
+function MarkdownPane({ path }: { path: DemoPath }) {
+  const text = DEMO_FILES[path];
   return (
-    <>
-      <div className="flex min-h-[280px] flex-col bg-[var(--landing-surface-deep)] lg:min-h-0">
-        <div className="flex items-center gap-2 border-b border-white/[0.06] px-3 py-2">
-          <Bot className="size-4 text-[var(--eu-yellow)]" aria-hidden />
-          <span className="font-mono text-[11px] font-medium text-[var(--landing-ink)]">opentide-mcp</span>
-          <span className="ml-auto rounded-full bg-[var(--eu-yellow)]/10 px-2 py-0.5 font-mono text-[9px] text-[var(--eu-yellow)]">
-            {phase}
-          </span>
-        </div>
-        <div className="flex-1 space-y-2.5 overflow-auto p-3">
-          {script.agent.slice(0, visibleAgent).map((step, i) => (
-            <div
-              key={`${phase}-${i}`}
-              className="rounded-lg border border-white/[0.08] bg-[var(--landing-bg)]/70 p-3"
-            >
-              <p className="font-mono text-[11px] leading-relaxed text-[var(--landing-muted)]">
-                <span className="font-semibold text-[var(--eu-yellow)]">Reasoning</span>
-                <br />
-                {step.thought}
-              </p>
-              <p className="mt-2 flex items-start gap-1.5 font-mono text-[10px] text-[var(--landing-ink)]">
-                <ChevronRight className="mt-0.5 size-3.5 shrink-0 text-[var(--eu-yellow)]" aria-hidden />
-                {step.tool}
-              </p>
-              <p className="mt-1.5 font-mono text-[10px] text-emerald-400/90">{step.result}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="border-t border-white/[0.06] bg-[var(--landing-bg)] col-span-full">
-        <div className="flex items-center gap-2 border-b border-white/[0.06] px-3 py-1.5">
-          <Terminal className="size-3 text-[var(--landing-subtle)]" aria-hidden />
-          <span className="font-mono text-[10px] text-[var(--landing-muted)]">Terminal</span>
-        </div>
-        <div className="min-h-[96px] overflow-auto px-3 py-2.5 font-mono text-[11px] leading-relaxed">
-          <p>
-            <span className="text-[var(--eu-yellow)]">❯</span>{' '}
-            <span className="text-[var(--landing-subtle)]">$ </span>
-            <span className="text-[var(--landing-ink)]">{typedCmd}</span>
-            {!showOut && (
-              <span className="ml-0.5 inline-block h-[1em] w-[6px] animate-pulse bg-[var(--eu-yellow)] align-middle" />
-            )}
-          </p>
-          {showOut && (
-            <div className="mt-1.5 space-y-0.5">
-              {script.out.map((line) => (
-                <p key={line} className="text-emerald-500/90">
-                  {line}
-                </p>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    </>
+    <pre className="h-full overflow-auto p-4 font-mono text-[11px] leading-relaxed text-zinc-300 whitespace-pre-wrap">
+      {text}
+    </pre>
   );
 }
 
 export function WorkflowStudio() {
-  const [phaseIdx, setPhaseIdx] = useState(0);
-
-  const phase = phases[phaseIdx];
-  const script = phaseScripts[phase];
-  const autoPath = phaseFile[phase];
+  const [stepIdx, setStepIdx] = useState(0);
+  const step = STEPS[stepIdx];
+  const script = stepScripts[step];
+  const autoPath = stepFile[step];
 
   const { model } = useFileTree({
     paths: [...DEMO_PATHS],
     initialExpansion: 'open',
-    initialExpandedPaths: ['objects', 'objects/threats', 'objects/objectives', 'objects/rules', '.opentide'],
+    initialExpandedPaths: ['intel', 'intel/advisories', 'objects', 'objects/threats', 'objects/objectives', 'objects/rules', '.opentide'],
     initialSelectedPaths: [autoPath],
   });
 
@@ -227,6 +214,7 @@ export function WorkflowStudio() {
 
   const activePath = (selectedPaths[0] as DemoPath | undefined) ?? autoPath;
   const activeFile = DEMO_FILES[activePath] ? activePath : autoPath;
+  const isMarkdown = activeFile.endsWith('.md');
 
   useEffect(() => {
     model.getItem(autoPath)?.select();
@@ -236,26 +224,34 @@ export function WorkflowStudio() {
   useEffect(() => {
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (reduced) return;
-    const id = window.setInterval(() => setPhaseIdx((i) => (i + 1) % phases.length), 7500);
+    const id = window.setInterval(() => setStepIdx((i) => (i + 1) % STEPS.length), 8500);
     return () => window.clearInterval(id);
   }, []);
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap gap-2">
-        {phases.map((p, i) => (
-          <button
-            key={p}
-            type="button"
-            onClick={() => setPhaseIdx(i)}
-            className={`rounded-full px-3 py-1 font-mono text-[10px] capitalize transition ${
-              phaseIdx === i
-                ? 'bg-[var(--eu-yellow)]/15 text-[var(--eu-yellow)] ring-1 ring-[var(--eu-yellow)]/30'
-                : 'text-[var(--landing-subtle)] hover:bg-white/[0.04]'
-            }`}
-          >
-            {p}
-          </button>
+      <div className="flex flex-wrap items-center gap-1.5">
+        {STEPS.map((s, i) => (
+          <div key={s} className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => setStepIdx(i)}
+              className={`rounded-full px-2.5 py-1 font-mono text-[9px] transition ${
+                stepIdx === i
+                  ? 'bg-[var(--eu-yellow)]/15 text-[var(--eu-yellow)] ring-1 ring-[var(--eu-yellow)]/30'
+                  : stepIdx > i
+                    ? 'text-[var(--landing-muted)]'
+                    : 'text-[var(--landing-subtle)] hover:bg-white/[0.04]'
+              }`}
+            >
+              {stepLabel[s]}
+            </button>
+            {i < STEPS.length - 1 && (
+              <span className="text-[var(--landing-subtle)]" aria-hidden>
+                →
+              </span>
+            )}
+          </div>
         ))}
       </div>
 
@@ -270,8 +266,9 @@ export function WorkflowStudio() {
         </div>
 
         <div className="grid min-h-[min(72vh,620px)] grid-rows-[1fr_auto]">
-          <div className="grid min-h-0 lg:grid-cols-[40px_190px_1fr_minmax(260px,0.48fr)]">
+          <div className="grid min-h-0 lg:grid-cols-[40px_200px_1fr_minmax(280px,0.5fr)]">
             <div className="hidden flex-col items-center gap-3 border-r border-white/[0.06] bg-[var(--landing-bg)] py-3 lg:flex">
+              <FileText className="size-4 text-zinc-400" aria-hidden />
               <Files className="size-4 text-[var(--eu-yellow)]" aria-hidden />
               <Bot className="size-4 text-[var(--landing-accent)]" aria-hidden />
               <Terminal className="size-4 text-[var(--landing-subtle)]" aria-hidden />
@@ -291,11 +288,17 @@ export function WorkflowStudio() {
                 </span>
               </div>
               <div className="min-h-0 flex-1 overflow-auto p-1">
-                <EditorPane phase={phase} path={activeFile} />
+                {isMarkdown ? <MarkdownPane path={activeFile} /> : <EditorPane path={activeFile} />}
               </div>
             </div>
 
-            <WorkflowPhasePanels key={phase} phase={phase} script={script} />
+            <AgentTracePanel
+              key={step}
+              label={stepLabel[step]}
+              events={script.events}
+              terminalCmd={script.cmd}
+              terminalOut={script.out}
+            />
           </div>
         </div>
       </div>

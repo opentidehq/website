@@ -187,8 +187,8 @@ export default function HomePage() {
             Objects chain into a graph
           </h2>
           <p className="mt-4 max-w-2xl text-[var(--landing-subtle)] text-pretty">
-            Threats, objectives, and rules form a registry graph — one chain highlighted among many
-            objects in your repo.
+            Intel informs threats. Threats drive objectives. Rules deploy the detection — one chain
+            highlighted among everything else in your repo.
           </p>
           <div className="mt-12">
             <ObjectGraph />
@@ -201,8 +201,8 @@ export default function HomePage() {
           IDE, CLI, and agents — one workflow
         </h2>
         <p className="mt-4 max-w-2xl text-[var(--landing-subtle)] text-pretty">
-          Edit YAML in your editor, validate in the terminal, let MCP handle the rest. Same engine,
-          every surface.
+          From CISA advisory to deployable rules — one scenario, with MCP reasoning, CLI validation,
+          and the same engine throughout.
         </p>
         <div className="mt-10">
           <WorkflowStudio />

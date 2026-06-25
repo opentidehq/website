@@ -1,8 +1,7 @@
-/** Spec-aligned sample registry — fields match threat::1.0, objective::1.0, rule::1.0 */
+/** Spec-aligned sample registry — single CVE → threat → objective → rule scenario */
 
 export const DEMO_REPO = 'detection-repo';
 
-/** UUIDs from specifications/fixtures (cross-object chain) */
 export const UUID = {
   threatGateway: '00000000-0000-4000-8001-000000000010',
   objectiveCredential: '00000000-0000-4000-8002-000000000001',
@@ -11,12 +10,10 @@ export const UUID = {
 } as const;
 
 export const DEMO_PATHS = [
+  'intel/advisories/cve-2024-1709.md',
   'objects/threats/gateway-exploitation.yaml',
   'objects/objectives/credential-access.yaml',
   'objects/rules/lsass-memory-access.yaml',
-  'objects/threats/ransomware-staging.yaml',
-  'objects/objectives/lateral-movement.yaml',
-  'objects/rules/suspicious-powershell.yaml',
   '.opentide/schemas/rule.1.0.schema.json',
   '.opentide/templates/rule.1.0.template.yaml',
 ] as const;
@@ -24,6 +21,22 @@ export const DEMO_PATHS = [
 export type DemoPath = (typeof DEMO_PATHS)[number];
 
 export const DEMO_FILES: Record<DemoPath, string> = {
+  'intel/advisories/cve-2024-1709.md': `# CVE-2024-1709 — ConnectWise ScreenConnect
+
+**Source:** CISA AA24-073A · Published 2024-02-21
+
+ConnectWise ScreenConnect 23.9.7 and prior contain an authentication bypass
+allowing unauthenticated remote code execution on exposed gateway hosts.
+
+## Recommended detection focus
+
+- Initial access via exposed remote management gateways (T1190)
+- Credential access following foothold — LSASS dumping (T1003.001)
+
+## References
+
+- https://www.cisa.gov/news-events/cybersecurity-advisories/aa24-073a
+`,
   'objects/threats/gateway-exploitation.yaml': `name: Gateway exploitation (CVE-2024-1709)
 criticality: High
 
@@ -127,87 +140,11 @@ configurations:
     scheduling: 1H
     alert:
       category: CredentialAccess`,
-  'objects/threats/ransomware-staging.yaml': `name: Ransomware staging
-criticality: Medium
-
-metadata:
-  uuid: 00000000-0000-4000-8001-000000000099
-  schema: threat::1.0
-  version: 1
-  tlp: clear
-
-threat:
-  description: Pre-encryption staging behaviour on endpoints
-  severity: Medium
-  impact: Data Breach
-  leverage: Medium
-  viability: Medium
-  terrain: Endpoint
-  att&ck:
-    - T1486`,
-  'objects/objectives/lateral-movement.yaml': `name: Lateral movement
-
-metadata:
-  uuid: 00000000-0000-4000-8002-000000000099
-  schema: objective::1.0
-  version: 1
-  tlp: clear
-
-composition:
-  strategy: synergetic
-  description: Remote service and RDP anomalies
-
-objective:
-  priority: Medium
-  type: Threat
-  description: Detect lateral movement staging
-  composition:
-    strategy: synergetic
-    description: Corroborate remote execution signals
-  threats:
-    - ${UUID.threatGateway}
-  signals:
-    - name: Remote service creation
-      uuid: 00000000-0000-4000-8099-000000000099
-      description: New service on remote host
-      severity: Medium
-      methodology: analytics
-      entities:
-        - host
-      data:
-        availability: Partial
-        requirements: Windows event logs`,
-  'objects/rules/suspicious-powershell.yaml': `name: Suspicious PowerShell
-
-metadata:
-  uuid: 00000000-0000-4000-8003-000000000099
-  schema: rule::1.0
-  version: 1
-  tlp: clear
-
-description: Encoded PowerShell execution patterns
-status: STAGING
-severity: Medium
-techniques:
-  - T1059.001
-detection_model: 00000000-0000-4000-8002-000000000099
-
-configurations:
-  sentinel:
-    enabled: true
-    name: Suspicious PowerShell
-    query: |
-      DeviceProcessEvents
-      | where FileName has "powershell"
-    scheduling:
-      frequency: PT1H
-      lookback: PT2H
-    alert:
-      title: Suspicious PowerShell`,
   '.opentide/schemas/rule.1.0.schema.json': `{
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "rule.1.0.schema.json",
-  "title": "rule::1.0"
+  "title": "rule::1.0",
+  "description": "Generated from Pydantic models"
 }`,
   '.opentide/templates/rule.1.0.template.yaml': `name: "New rule"
 metadata:
@@ -228,26 +165,31 @@ configurations:
       # KQL`,
 };
 
-export const LSASS_RULE_PREVIOUS = `name: LSASS memory access
-
-metadata:
-  uuid: ${UUID.ruleLsass}
-  schema: rule::1.0
-  version: 1
-  tlp: clear
-
-description: Suspicious handle access to LSASS
-status: STAGING
-severity: High
-techniques:
-  - T1003.001
-detection_model: ${UUID.objectiveCredential}
-
-configurations:
-  sentinel:
-    enabled: true
-    name: LSASS memory access
-    query: |
-      DeviceProcessEvents
-      | where ActionType == "ProcessAccess"
-`;
+/** Human-readable blurbs for graph detail panel */
+export const OBJECT_BLURBS: Record<string, { title: string; kind: string; blurb: string; note?: string }> = {
+  intel: {
+    title: 'CVE-2024-1709 advisory',
+    kind: 'Threat intelligence',
+    blurb:
+      'External advisory ingested from CISA — the starting point before any opentide objects exist. Analysts or agents translate this into structured threats, objectives, and rules.',
+    note: 'CISA AA24-073A · ConnectWise ScreenConnect auth bypass',
+  },
+  threat: {
+    title: 'Gateway exploitation',
+    kind: 'Threat',
+    blurb:
+      'Describes the attack scenario you care about — how severe it is, where it hits your environment, and which MITRE techniques apply. Objectives link back here to show why a detection exists.',
+  },
+  objective: {
+    title: 'Credential access',
+    kind: 'Detection objective',
+    blurb:
+      'States what “good detection” means for this scenario: which behaviours to look for, how signals combine, and which threat it covers. Rules implement objectives — they do not replace them.',
+  },
+  rule: {
+    title: 'LSASS memory access',
+    kind: 'Detection rule',
+    blurb:
+      'The query you actually run in Sentinel or Defender. Linked to the credential-access objective so every alert traces back to the threat narrative.',
+  },
+};
