@@ -2,9 +2,9 @@
 
 import { useEffect, useRef } from 'react';
 
-/** 2D wave tank + 8×8 Bayer ordered dither — full-canvas, no tide clip */
-const PIXEL = 1;
-const SIM = 128;
+/** Wave tank + Bayer dither — ImageData render for 60fps, soft reactivity */
+const PIXEL = 2;
+const SIM = 96;
 
 const BAYER8 = [
   [0, 32, 8, 40, 2, 34, 10, 42],
@@ -26,9 +26,21 @@ const FOAM = [
 ] as const;
 const SKY = ['#000000', '#010101', '#030303', '#060606'] as const;
 
+const hexAbgr = new Map<string, number>();
+function toAbgr(hex: string) {
+  let v = hexAbgr.get(hex);
+  if (v !== undefined) return v;
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  v = (255 << 24) | (b << 16) | (g << 8) | r;
+  hexAbgr.set(hex, v);
+  return v;
+}
+
 export function TideDitherScene({ className }: { className?: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const mouseRef = useRef({ x: 0.5, y: 0.5, active: false });
+  const mouseRef = useRef({ x: 0.5, y: 0.5, active: false, frame: 0 });
 
   useEffect(() => {
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -45,10 +57,12 @@ export function TideDitherScene({ className }: { className?: string }) {
     let h = 0;
     let raf = 0;
     let t = 0;
+    let imageData: ImageData | null = null;
+    let pixels: Uint32Array | null = null;
 
     const idx = (x: number, y: number) => y * SIM + x;
 
-    const splash = (nx: number, ny: number, power: number, radius = 3) => {
+    const splash = (nx: number, ny: number, power: number, radius = 4) => {
       const cur = buf[ping];
       const cx = Math.floor(nx * (SIM - 4)) + 2;
       const cy = Math.floor(ny * (SIM - 4)) + 2;
@@ -59,10 +73,16 @@ export function TideDitherScene({ className }: { className?: string }) {
           if (x < 1 || y < 1 || x >= SIM - 1 || y >= SIM - 1) continue;
           const d = Math.hypot(dx, dy);
           if (d > radius) continue;
-          const f = (1 - d / radius) ** 2.5;
+          const f = (1 - d / radius) ** 2.2;
           cur[idx(x, y)] += power * f;
         }
       }
+    };
+
+    const seedRipples = () => {
+      splash(0.35, 0.55, 0.35, 5);
+      splash(0.65, 0.45, 0.3, 5);
+      splash(0.5, 0.7, 0.25, 4);
     };
 
     const step = () => {
@@ -78,36 +98,38 @@ export function TideDitherScene({ className }: { className?: string }) {
               cur[idx(x, y + 1)]) /
               2 -
             next[i];
-          next[i] *= 0.995;
+          next[i] *= 0.994;
         }
       }
       ping = 1 - ping;
 
-      const { x: mx, y: my, active } = mouseRef.current;
-      if (active && !reducedMotion) splash(mx, my, 1.0, 3);
+      const { x: mx, y: my, active, frame } = mouseRef.current;
+      if (active && !reducedMotion && frame % 2 === 0) splash(mx, my, 0.55, 3);
 
       if (!reducedMotion) {
-        splash(0.5 + Math.sin(t * 0.22) * 0.28, 0.5 + Math.cos(t * 0.18) * 0.18, 0.07, 3);
-        splash(0.2 + Math.sin(t * 0.15) * 0.06, 0.45, 0.05, 2);
-        splash(0.8 + Math.cos(t * 0.17) * 0.06, 0.55, 0.05, 2);
+        splash(0.5 + Math.sin(t * 0.55) * 0.32, 0.48 + Math.cos(t * 0.47) * 0.22, 0.14, 4);
+        splash(0.22 + Math.sin(t * 0.41) * 0.1, 0.62, 0.09, 3);
+        splash(0.78 + Math.cos(t * 0.38) * 0.1, 0.38, 0.09, 3);
+        splash(0.5 + Math.sin(t * 0.9) * 0.15, 0.55 + Math.cos(t * 0.7) * 0.12, 0.06, 2);
       }
     };
 
     const dither = (v: number, col: number, row: number, ramp: readonly string[]) => {
       const th = BAYER8[row % 8][col % 8] / 64;
-      const jitter = ((BAYER8[(row + 3) % 8][(col + 5) % 8] / 64) - 0.5) * 0.06;
+      const jitter = ((BAYER8[(row + 3) % 8][(col + 5) % 8] / 64) - 0.5) * 0.05;
       const lv = Math.min(
         ramp.length - 1,
-        Math.max(0, Math.floor((v + jitter + (v > th ? 0.03 : -0.03)) * ramp.length)),
+        Math.max(0, Math.floor((v + jitter + (v > th ? 0.025 : -0.025)) * ramp.length)),
       );
       return ramp[lv];
     };
 
     const draw = () => {
-      if (w === 0) return;
+      if (w === 0 || !pixels || !imageData) return;
       const cols = Math.ceil(w / PIXEL);
       const rows = Math.ceil(h / PIXEL);
       const field = buf[ping];
+      const { x: mx, y: my, active } = mouseRef.current;
 
       for (let row = 0; row < rows; row++) {
         for (let col = 0; col < cols; col++) {
@@ -121,27 +143,28 @@ export function TideDitherScene({ className }: { className?: string }) {
           const dx = field[idx(sx - 1, sy)] - field[idx(sx + 1, sy)];
           const dy = field[idx(sx, sy - 1)] - field[idx(sx, sy + 1)];
           const slope = Math.hypot(dx, dy);
+          const glow = active ? Math.max(0, 1 - Math.hypot(nx - mx, ny - my) * 2.4) * 0.18 : 0;
 
-          const { x: mx, y: my, active } = mouseRef.current;
-          const glow = active ? Math.max(0, 1 - Math.hypot(nx - mx, ny - my) * 2.2) * 0.28 : 0;
-
-          const ambient = 0.22 + ny * 0.12;
-          const energy = wave * 0.28 + slope * 0.42 + glow;
+          const ambient = 0.2 + ny * 0.11;
+          const energy = wave * 0.26 + slope * 0.38 + glow;
           const v = ambient + energy;
 
           let ramp: readonly string[];
-          if (ny < 0.08 && Math.abs(wave) < 0.05) {
-            ramp = SKY;
-          } else if (slope > 0.18 || wave > 0.22) {
-            ramp = FOAM;
-          } else {
-            ramp = DEEP;
-          }
+          if (ny < 0.08 && Math.abs(wave) < 0.05) ramp = SKY;
+          else if (slope > 0.16 || wave > 0.2) ramp = FOAM;
+          else ramp = DEEP;
 
-          ctx.fillStyle = dither(Math.min(1, Math.max(0, v)), col, row, ramp);
-          ctx.fillRect(col * PIXEL, row * PIXEL, PIXEL, PIXEL);
+          const color = toAbgr(dither(Math.min(1, Math.max(0, v)), col, row, ramp));
+          for (let py = 0; py < PIXEL; py++) {
+            for (let px = 0; px < PIXEL; px++) {
+              const x = col * PIXEL + px;
+              const y = row * PIXEL + py;
+              if (x < w && y < h) pixels[y * w + x] = color;
+            }
+          }
         }
       }
+      ctx.putImageData(imageData, 0, 0);
     };
 
     const resize = () => {
@@ -156,16 +179,19 @@ export function TideDitherScene({ className }: { className?: string }) {
       canvas.style.width = `${w}px`;
       canvas.style.height = `${h}px`;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      imageData = ctx.createImageData(w, h);
+      pixels = new Uint32Array(imageData.data.buffer);
     };
 
     const onPointer = (e: PointerEvent) => {
       const rect = canvas.getBoundingClientRect();
-      mouseRef.current = {
-        x: (e.clientX - rect.left) / rect.width,
-        y: (e.clientY - rect.top) / rect.height,
-        active: true,
-      };
-      if (!reducedMotion) splash(mouseRef.current.x, mouseRef.current.y, 1.1, 3);
+      mouseRef.current.x = (e.clientX - rect.left) / rect.width;
+      mouseRef.current.y = (e.clientY - rect.top) / rect.height;
+      mouseRef.current.active = true;
+      mouseRef.current.frame += 1;
+      if (!reducedMotion && e.type === 'pointerdown') {
+        splash(mouseRef.current.x, mouseRef.current.y, 0.7, 4);
+      }
     };
 
     const onLeave = () => {
@@ -175,13 +201,15 @@ export function TideDitherScene({ className }: { className?: string }) {
     const loop = () => {
       if (!reducedMotion) {
         step();
-        t += 0.006;
+        step();
+        t += 0.014;
       }
       draw();
       raf = requestAnimationFrame(loop);
     };
 
     resize();
+    seedRipples();
     loop();
 
     canvas.addEventListener('pointermove', onPointer);
