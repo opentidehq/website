@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { baseOptions } from '@/lib/layout.shared';
-import { gitConfig } from '@/lib/shared';
+import { ecosystemLinks, gitConfig } from '@/lib/shared';
 import type { ReactNode } from 'react';
 
 function BrandMark() {
@@ -22,7 +22,7 @@ export function LandingNav({ children }: { children: ReactNode }) {
 
   return (
     <div className="landing flex min-h-screen flex-col">
-      <header className="sticky top-0 z-40 border-b border-white/10 bg-[var(--landing-bg)]/95">
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-[var(--landing-bg)]/95 backdrop-blur-sm">
         <div className="mx-auto flex h-14 max-w-[1400px] items-center justify-between gap-4 px-4 md:px-6">
           <Link href="/" className="shrink-0 rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--landing-accent)]">
             <BrandMark />
@@ -62,39 +62,89 @@ export function LandingNav({ children }: { children: ReactNode }) {
       </header>
       <main className="flex-1">{children}</main>
       <footer className="border-t border-white/10 bg-[var(--landing-surface-deep)]">
-        <div className="mx-auto flex max-w-[1400px] flex-col items-center justify-between gap-4 px-4 py-10 text-sm text-[var(--landing-subtle)] md:flex-row md:px-6">
-          <p>
-            © {new Date().getFullYear()}{' '}
-            <span>
-              open<span className="text-[var(--eu-yellow)]">tide</span>
-            </span>
-            {' · '}
-            <span className="text-[var(--eu-yellow)]">EUPL-1.2</span>
-            {' · forever free · Specs CC-BY-4.0'}
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-6">
-            <Link href="/docs/usage/" className="transition hover:text-[var(--landing-accent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--landing-accent)]">
-              Docs
-            </Link>
-            <Link href="/blog/" className="transition hover:text-[var(--landing-accent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--landing-accent)]">
-              Blog
-            </Link>
-            <a
-              href={`https://github.com/${gitConfig.user}/${gitConfig.repo}`}
-              className="transition hover:text-[var(--landing-accent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--landing-accent)]"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              GitHub
-            </a>
-            <a
-              href="https://pypi.org/project/opentide/"
-              className="transition hover:text-[var(--landing-accent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--landing-accent)]"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              PyPI
-            </a>
+        <div className="mx-auto max-w-[1400px] px-4 py-12 md:px-6">
+          <div className="grid gap-10 md:grid-cols-[1.2fr_1fr_1fr]">
+            <div>
+              <p className="text-lg font-semibold">
+                open<span className="text-[var(--eu-yellow)]">tide</span>
+              </p>
+              <p className="mt-3 max-w-sm text-sm leading-relaxed text-[var(--landing-subtle)]">
+                The DetectionOps engine — structure detection engineering from intel to deploy.
+                EUPL-1.2, forever free.
+              </p>
+              <p className="mt-4 font-mono text-[10px] text-[var(--landing-dim)]">
+                Specs CC-BY-4.0 · PyPI · MCP-ready
+              </p>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-[var(--landing-muted)]">Product</p>
+              <ul className="mt-4 space-y-2 text-sm text-[var(--landing-subtle)]">
+                <li>
+                  <Link href="/docs/usage/" className="transition hover:text-[var(--landing-accent)]">
+                    Documentation
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/docs/mcp/" className="transition hover:text-[var(--landing-accent)]">
+                    MCP reference
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/docs/usage/concepts/platforms/" className="transition hover:text-[var(--landing-accent)]">
+                    Platform matrix
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/blog/" className="transition hover:text-[var(--landing-accent)]">
+                    Blog
+                  </Link>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-[var(--landing-muted)]">Ecosystem</p>
+              <ul className="mt-4 space-y-2 text-sm text-[var(--landing-subtle)]">
+                {ecosystemLinks.map((repo) => (
+                  <li key={repo.name}>
+                    <a
+                      href={repo.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="transition hover:text-[var(--landing-accent)]"
+                    >
+                      {repo.name}
+                    </a>
+                  </li>
+                ))}
+                <li>
+                  <a
+                    href={`https://github.com/${gitConfig.user}/${gitConfig.repo}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="transition hover:text-[var(--landing-accent)]"
+                  >
+                    GitHub
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="https://pypi.org/project/opentide/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="transition hover:text-[var(--landing-accent)]"
+                  >
+                    PyPI
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-white/[0.06] pt-6 text-xs text-[var(--landing-dim)] md:flex-row">
+            <p>
+              © {new Date().getFullYear()} opentide ·{' '}
+              <span className="text-[var(--eu-yellow)]">EUPL-1.2</span> · forever free
+            </p>
+            <p className="font-mono text-[10px]">DetectionOps — your tide, your autonomy level</p>
           </div>
         </div>
       </footer>

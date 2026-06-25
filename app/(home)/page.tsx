@@ -18,7 +18,8 @@ import { HeroTerminal } from '@/components/landing/hero-terminal';
 import { PipelineFlow } from '@/components/landing/pipeline-flow';
 import { ObjectGraph } from '@/components/landing/object-graph';
 import { WorkflowStudio } from '@/components/landing/workflow-studio';
-import { McpTerminalDemo } from '@/components/landing/mcp-terminal-demo';
+import { AutonomySpectrum } from '@/components/landing/autonomy-spectrum';
+import { PlatformGrid } from '@/components/landing/platform-grid';
 import { ecosystemLinks } from '@/lib/shared';
 import type { Metadata } from 'next';
 import type { CSSProperties } from 'react';
@@ -26,7 +27,7 @@ import type { CSSProperties } from 'react';
 export const metadata: Metadata = {
   title: 'opentide — The DetectionOps Engine',
   description:
-    'Structure detection engineering end to end. Human-in-the-loop or fully agentic — validate, generate, deploy, and document rules across seven platforms.',
+    'Structure detection engineering end to end. Human-in-the-loop or fully agentic — validate, generate, deploy, and document rules across platforms.',
 };
 
 const surfaces = [
@@ -82,23 +83,13 @@ const features = [
   'Strict schema validation',
   'Dry-run deploy',
   'MCP agent tools',
-  'Seven SIEM platforms',
+  'Multi-platform native',
   'Normative specifications',
   'CI/CD pipelines',
   'Human-in-the-loop gates',
   'Cross-object chaining',
   'Schema generation',
   'Published narratives',
-];
-
-const platforms = [
-  'Microsoft Sentinel',
-  'Defender for Endpoint',
-  'Splunk ES',
-  'SentinelOne',
-  'Carbon Black',
-  'CrowdStrike',
-  'HarfangLab',
 ];
 
 const spectrumBullets = [
@@ -134,7 +125,7 @@ export default function HomePage() {
               </h1>
               <p className="mt-6 max-w-lg text-base leading-relaxed text-[var(--landing-muted)] md:text-lg text-pretty">
                 <OpentideName className="font-medium text-[var(--landing-ink)]" /> validates, generates,
-                deploys, and documents rules across seven platforms. Human-led, agent-assisted, or
+                deploys, and documents rules across platforms. Human-led, agent-assisted, or
                 fully autonomous — you set the balance.
               </p>
               <div className="mt-9 flex flex-wrap gap-3">
@@ -306,35 +297,25 @@ export default function HomePage() {
               Agentic setup guide <ArrowRight className="size-4" aria-hidden />
             </Link>
           </div>
-          <McpTerminalDemo />
+          <AutonomySpectrum />
         </div>
       </section>
 
       <section className="landing-section border-t border-white/10 bg-[var(--landing-surface-deep)]">
-        <div className="mx-auto max-w-[1400px] px-4 text-center md:px-6">
-          <h2 className="text-3xl font-bold tracking-[-0.02em] md:text-4xl text-balance">
-            Seven platforms. Honest validation.
-          </h2>
-          <p className="mx-auto mt-4 max-w-xl text-[var(--landing-subtle)] text-pretty">
-            We deploy everywhere we integrate. We only validate queries where the platform supports
-            it — never fake syntax checks.
-          </p>
-          <ul className="mt-12 flex flex-wrap justify-center gap-3">
-            {platforms.map((p) => (
-              <li
-                key={p}
-                className="rounded-full border border-white/10 bg-[var(--landing-surface)] px-4 py-2 text-sm text-[var(--landing-muted)]"
-              >
-                {p}
-              </li>
-            ))}
-          </ul>
-          <Link
-            href="/docs/usage/concepts/platforms/"
-            className="mt-8 inline-flex items-center gap-2 text-sm font-medium text-[var(--landing-muted)] transition hover:text-[var(--landing-accent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--landing-accent)]"
-          >
-            Full capability matrix <ArrowRight className="size-4" aria-hidden />
-          </Link>
+        <div className="mx-auto max-w-[1400px] px-4 md:px-6">
+          <div className="max-w-2xl">
+            <h2 className="text-3xl font-bold tracking-[-0.02em] md:text-4xl text-balance">
+              Multi-platform native by design
+            </h2>
+            <p className="mt-4 text-[var(--landing-subtle)] text-pretty">
+              opentide is built as an expandable standard — not a fixed integration list. Deploy
+              everywhere we connect today; add adapters as your stack grows. We only validate queries
+              where the platform honestly supports it — never fake syntax checks.
+            </p>
+          </div>
+          <div className="mt-12">
+            <PlatformGrid />
+          </div>
         </div>
       </section>
 
