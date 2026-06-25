@@ -82,7 +82,7 @@ export function PipelineFlow() {
             </button>
             {i < steps.length - 1 && (
               <div className="flex w-10 shrink-0 items-center justify-center self-center" aria-hidden>
-                <div className="relative h-px w-full bg-gradient-to-r from-[var(--eu-blue)] via-[var(--eu-blue)]/40 to-[var(--eu-yellow)]">
+                <div className="relative h-px w-full bg-gradient-to-r from-[var(--eu-yellow)]/20 via-[var(--eu-yellow)]/55 to-[var(--eu-yellow)]">
                   <span
                     className={`absolute right-0 top-1/2 size-1.5 -translate-y-1/2 rounded-full bg-[var(--eu-yellow)] transition-transform duration-300 ${
                       active === i ? 'scale-150' : ''

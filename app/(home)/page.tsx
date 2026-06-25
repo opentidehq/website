@@ -49,8 +49,8 @@ const spectrumBullets = [
 export default function HomePage() {
   return (
     <div className="landing relative overflow-x-hidden bg-black">
-      <section className="relative flex min-h-[calc(100dvh-3.5rem)] flex-col px-4 md:px-6">
-        <div className="landing-hero-shell landing-fade-in relative mx-auto flex w-full max-w-[1400px] flex-1 flex-col overflow-hidden">
+      <section className="relative px-4 pt-2 md:px-6 md:pt-4">
+        <div className="landing-hero-shell landing-fade-in relative mx-auto w-full max-w-[1400px] overflow-hidden">
           <div
             className="pointer-events-none absolute inset-0 flex items-center justify-center"
             aria-hidden
@@ -60,8 +60,8 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="relative z-10 grid flex-1 items-center lg:grid-cols-[minmax(0,1fr)_minmax(0,0.55fr)]">
-            <div className="px-5 py-8 md:px-10 md:py-10 lg:py-12">
+          <div className="relative z-10 grid min-h-[min(72vh,640px)] items-center lg:grid-cols-[minmax(0,1fr)_minmax(0,0.55fr)]">
+            <div className="px-5 py-10 md:px-10 md:py-12 lg:py-14">
               <div className="mb-2 flex flex-wrap gap-1.5">
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--eu-yellow)]/45 bg-black/40 px-2.5 py-0.5 text-[11px] font-semibold text-[var(--eu-yellow)] backdrop-blur-sm">
                   EUPL-1.2 · forever free
@@ -98,10 +98,10 @@ export default function HomePage() {
             </div>
             <div className="hidden lg:block" aria-hidden />
           </div>
-
-          <HeroPitch />
         </div>
       </section>
+
+      <HeroPitch />
 
       <section className="border-y border-white/10 py-4" aria-label="Product features">
         <div className="landing-marquee-wrap overflow-hidden">
@@ -143,7 +143,7 @@ export default function HomePage() {
             Intel informs threats. Threats drive objectives. Rules deploy the detection — one chain
             highlighted among everything else in your repo.
           </p>
-          <div className="mt-12">
+          <div className="mt-10 max-h-[min(520px,70vh)]">
             <ObjectGraph />
           </div>
         </div>

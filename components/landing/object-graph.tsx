@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { ArrowRight, Crosshair, FileText, Shield, Target } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { YamlPreview } from '@/components/landing/yaml-preview';
 import { DEMO_FILES, OBJECT_BLURBS } from '@/lib/landing/demo-registry';
 import { usePrefersReducedMotion } from '@/lib/hooks/use-prefers-reduced-motion';
@@ -21,7 +21,7 @@ type GraphNode = {
 const TYPE_COLOR: Record<NodeType, string> = {
   intel: '#a1a1aa',
   threat: '#ef4444',
-  objective: '#003399',
+  objective: '#c9a000',
   rule: '#22c55e',
 };
 
@@ -32,16 +32,18 @@ const TYPE_ICON = {
   rule: Shield,
 } as const;
 
-/** Fixed layout — percentages stable across resizes */
+/** Fluid layout — primary chain plus background examples */
 const nodes: GraphNode[] = [
-  { id: 'intel', type: 'intel', label: 'CVE-2024-1709', x: 14, y: 31, chain: true },
-  { id: 'threat', type: 'threat', label: 'Gateway exploit', x: 34, y: 31, chain: true },
-  { id: 'objective', type: 'objective', label: 'Credential access', x: 58, y: 31, chain: true },
-  { id: 'rule', type: 'rule', label: 'LSASS access', x: 82, y: 31, chain: true },
-  { id: 't-bg1', type: 'threat', label: 'Phishing', x: 22, y: 58, chain: false },
-  { id: 't-bg2', type: 'threat', label: 'Ransomware', x: 42, y: 58, chain: false },
-  { id: 'o-bg1', type: 'objective', label: 'Persistence', x: 62, y: 58, chain: false },
-  { id: 'r-bg1', type: 'rule', label: 'PowerShell', x: 82, y: 58, chain: false },
+  { id: 'intel', type: 'intel', label: 'CVE-2024-1709', x: 11, y: 24, chain: true },
+  { id: 'intel-bg', type: 'intel', label: 'UNC5537', x: 11, y: 52, chain: false },
+  { id: 'threat', type: 'threat', label: 'Gateway exploit', x: 30, y: 38, chain: true },
+  { id: 'threat-bg', type: 'threat', label: 'Phishing', x: 28, y: 62, chain: false },
+  { id: 'objective', type: 'objective', label: 'Credential access', x: 54, y: 30, chain: true },
+  { id: 'objective-bg', type: 'objective', label: 'Lateral prep', x: 54, y: 56, chain: false },
+  { id: 'rule', type: 'rule', label: 'LSASS access', x: 78, y: 38, chain: true },
+  { id: 'rule-bg1', type: 'rule', label: 'PowerShell', x: 76, y: 58, chain: false },
+  { id: 'rule-bg2', type: 'rule', label: 'RDP brute', x: 88, y: 22, chain: false },
+  { id: 't-bg2', type: 'threat', label: 'Ransomware', x: 42, y: 18, chain: false },
 ];
 
 const CHAIN_IDS = ['intel', 'threat', 'objective', 'rule'] as const;
@@ -53,8 +55,11 @@ const chainEdges = [
 ];
 
 const bgEdges = [
-  { from: 't-bg1', to: 'o-bg1' },
-  { from: 't-bg2', to: 'r-bg1' },
+  { from: 'intel-bg', to: 'threat' },
+  { from: 'threat-bg', to: 'objective-bg' },
+  { from: 'objective-bg', to: 'rule-bg1' },
+  { from: 't-bg2', to: 'threat' },
+  { from: 'rule-bg2', to: 'objective' },
 ];
 
 const previews: Record<
@@ -85,7 +90,9 @@ const previews: Record<
 
 function edgePath(x1: number, y1: number, x2: number, y2: number) {
   const mx = (x1 + x2) / 2;
-  return `M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`;
+  const my = (y1 + y2) / 2;
+  const bend = (y2 - y1) * 0.15;
+  return `M ${x1} ${y1} C ${mx} ${y1 + bend}, ${mx} ${y2 - bend}, ${x2} ${y2}`;
 }
 
 function chainAdjacent(id: string, selected: string) {
@@ -98,24 +105,12 @@ function chainAdjacent(id: string, selected: string) {
 
 export function ObjectGraph() {
   const reduced = usePrefersReducedMotion();
-  const [selected, setSelected] = useState<string>('objective');
+  const [selected, setSelected] = useState<string>('threat');
   const nodeMap = useMemo(() => new Map(nodes.map((n) => [n.id, n])), []);
 
-  const active = previews[selected] ?? previews.objective;
+  const active = previews[selected] ?? previews.threat;
   const meta = OBJECT_BLURBS[active.blurbKey];
-  const activeNode = nodeMap.get(selected) ?? nodeMap.get('objective')!;
-
-  useEffect(() => {
-    if (reduced) return;
-    const id = window.setInterval(() => {
-      setSelected((cur) => {
-        const i = CHAIN_IDS.indexOf(cur as (typeof CHAIN_IDS)[number]);
-        const next = i < 0 ? 0 : (i + 1) % CHAIN_IDS.length;
-        return CHAIN_IDS[next];
-      });
-    }, 3200);
-    return () => window.clearInterval(id);
-  }, [reduced]);
+  const activeNode = nodeMap.get(selected) ?? nodeMap.get('threat')!;
 
   const isChainEdge = (from: string, to: string) =>
     chainEdges.some((e) => e.from === from && e.to === to);
@@ -126,12 +121,12 @@ export function ObjectGraph() {
   };
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[minmax(0,0.44fr)_minmax(0,0.56fr)] lg:items-stretch">
-      <div className="landing-surface-card relative flex min-h-[340px] flex-col overflow-hidden p-4 md:p-5">
+    <div className="grid max-h-[min(520px,70vh)] gap-5 overflow-hidden lg:grid-cols-[minmax(0,0.44fr)_minmax(0,0.56fr)] lg:items-stretch">
+      <div className="landing-surface-card relative flex max-h-[280px] min-h-0 flex-col overflow-hidden p-4 md:max-h-[300px] md:p-5">
         <svg
-          viewBox="0 0 100 70"
+          viewBox="0 0 100 72"
           preserveAspectRatio="xMidYMid meet"
-          className="h-[300px] w-full shrink-0"
+          className="h-full max-h-[240px] w-full shrink-0"
           role="img"
           aria-label="Object chain graph"
         >
@@ -153,13 +148,13 @@ export function ObjectGraph() {
             return (
               <path
                 key={`${e.from}-${e.to}`}
-                d={edgePath(a.x + 4.5, a.y, b.x - 4.5, b.y)}
+                d={edgePath(a.x + 4.2, a.y, b.x - 4.2, b.y)}
                 fill="none"
                 stroke={lit ? '#ffcc00' : chain ? '#2a2a2a' : '#141414'}
-                strokeWidth={lit ? 0.55 : 0.25}
+                strokeWidth={lit ? 0.5 : 0.22}
                 strokeDasharray={lit && !reduced ? '2 1.5' : undefined}
                 className="transition-colors duration-500"
-                style={{ opacity: chain ? 1 : 0.35 }}
+                style={{ opacity: chain ? 1 : 0.3 }}
               >
                 {lit && !reduced && (
                   <animate
@@ -180,12 +175,12 @@ export function ObjectGraph() {
             const lit = on || adj;
             const dim = !node.chain;
             const Icon = TYPE_ICON[node.type];
-            const r = on ? 5.2 : node.chain ? 4.6 : 3.8;
+            const r = on ? 4.8 : node.chain ? 4.2 : 3.4;
 
             return (
               <g
                 key={node.id}
-                className={`cursor-pointer ${dim ? 'opacity-[0.18]' : lit ? 'opacity-100' : 'opacity-40'} transition-opacity duration-500`}
+                className={`cursor-pointer ${dim ? 'opacity-[0.16]' : lit ? 'opacity-100' : 'opacity-35'} transition-opacity duration-500`}
                 onClick={() => previews[node.id] && setSelected(node.id)}
                 role="button"
                 tabIndex={previews[node.id] ? 0 : -1}
@@ -201,17 +196,17 @@ export function ObjectGraph() {
                   <circle
                     cx={node.x}
                     cy={node.y}
-                    r={r + 1.8}
+                    r={r + 1.6}
                     fill="none"
                     stroke="#ffcc00"
-                    strokeWidth={0.35}
-                    opacity={on ? 0.9 : 0.45}
+                    strokeWidth={0.32}
+                    opacity={on ? 0.85 : 0.4}
                     filter="url(#chain-glow)"
                   >
                     {!reduced && (
                       <animate
                         attributeName="opacity"
-                        values={on ? '0.55;0.95;0.55' : '0.3;0.55;0.3'}
+                        values={on ? '0.5;0.9;0.5' : '0.25;0.5;0.25'}
                         dur="2.4s"
                         repeatCount="indefinite"
                       />
@@ -224,18 +219,18 @@ export function ObjectGraph() {
                   r={r}
                   fill={on ? TYPE_COLOR[node.type] : 'var(--landing-surface)'}
                   stroke={lit && node.chain ? '#ffcc00' : TYPE_COLOR[node.type]}
-                  strokeWidth={on ? 0.55 : 0.35}
+                  strokeWidth={on ? 0.5 : 0.3}
                 />
                 <foreignObject
-                  x={node.x - 3}
-                  y={node.y - 3}
-                  width={6}
-                  height={6}
+                  x={node.x - 2.8}
+                  y={node.y - 2.8}
+                  width={5.6}
+                  height={5.6}
                   className="pointer-events-none overflow-visible"
                 >
                   <div className="flex h-full w-full items-center justify-center">
                     <Icon
-                      className="size-[10px]"
+                      className="size-[9px]"
                       style={{ color: on ? 'var(--landing-ink)' : TYPE_COLOR[node.type] }}
                       strokeWidth={2.2}
                     />
@@ -243,10 +238,10 @@ export function ObjectGraph() {
                 </foreignObject>
                 <text
                   x={node.x}
-                  y={node.y + 10}
+                  y={node.y + 9}
                   textAnchor="middle"
                   dominantBaseline="middle"
-                  className="fill-[var(--landing-ink)] text-[3px] font-medium"
+                  className="fill-[var(--landing-ink)] text-[2.8px] font-medium"
                 >
                   {node.label}
                 </text>
@@ -254,12 +249,12 @@ export function ObjectGraph() {
             );
           })}
         </svg>
-        <p className="mt-2 text-center text-[10px] text-[var(--landing-subtle)]">
-          Intel → threat → objective → rule
+        <p className="mt-1 shrink-0 text-left text-[10px] text-[var(--landing-subtle)]">
+          Click a chain node — intel → threat → objective → rule
         </p>
       </div>
 
-      <div className="landing-surface-card flex min-h-[340px] flex-col overflow-hidden">
+      <div className="landing-surface-card flex min-h-0 max-h-[280px] flex-col overflow-hidden md:max-h-[300px]">
         <div className="shrink-0 border-b border-white/[0.06] p-4 md:p-5">
           <p className="font-mono text-[10px] uppercase tracking-wider text-[var(--landing-subtle)]">
             {meta.kind}
@@ -273,11 +268,11 @@ export function ObjectGraph() {
           )}
         </div>
         {active.path.endsWith('.md') ? (
-          <pre className="flex-1 overflow-auto border-t border-white/[0.06] bg-black p-4 font-mono text-[10px] leading-relaxed text-zinc-400 whitespace-pre-wrap sm:text-[11px]">
+          <pre className="min-h-0 flex-1 overflow-auto border-t border-white/[0.06] bg-black p-4 font-mono text-[10px] leading-relaxed whitespace-pre-wrap text-zinc-400 sm:text-[11px]">
             {active.yaml}
           </pre>
         ) : (
-          <YamlPreview yaml={active.yaml} path={active.path} className="flex-1 rounded-none border-0" />
+          <YamlPreview yaml={active.yaml} path={active.path} className="min-h-0 flex-1 rounded-none border-0" />
         )}
         <div className="shrink-0 border-t border-white/[0.06] p-4">
           <Link

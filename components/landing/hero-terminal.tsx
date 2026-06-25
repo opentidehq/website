@@ -1,10 +1,10 @@
 'use client';
 
-import { Fragment, useEffect, useState, type ReactElement } from 'react';
+import { Fragment, useEffect, useRef, useState, type ReactElement } from 'react';
 import { Check, Copy, Terminal } from 'lucide-react';
 import { usePrefersReducedMotion } from '@/lib/hooks/use-prefers-reduced-motion';
 
-const INSTALL_CMD = 'pip install "opentide[sentinel,cli,mcp]>=0.1"';
+const INSTALL_CMD = 'pip install opentide';
 const TICK_MS = 42;
 
 function TerminalAnimation() {
@@ -24,6 +24,7 @@ function TerminalAnimation() {
   const tEnd = tDeployOut + 2;
 
   const [tick, setTick] = useState(reduced ? tEnd : 0);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (reduced) return;
@@ -32,6 +33,12 @@ function TerminalAnimation() {
     }, TICK_MS);
     return () => window.clearInterval(id);
   }, [reduced, tEnd]);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
+  }, [tick]);
 
   const cursor = (on: boolean) =>
     on ? <span className="inline-block h-3.5 w-[7px] animate-pulse bg-[var(--eu-yellow)] align-middle" /> : null;
@@ -93,7 +100,7 @@ function TerminalAnimation() {
         {tick > tValidate + 2 && <span className="text-emerald-400/90">│ ✓ uuid-format · id-uniqueness</span>}
         {tick > tValidate + 3 && <span className="text-emerald-400/90">│ ✓ cross-object references</span>}
         {tick > tValidate + 4 && <span className="text-emerald-400/90">│ ✓ sentinel KQL honesty</span>}
-        {tick > tValidate + 5 && <span className="text-sky-300/85">0 blocking · 0 warnings</span>}
+        {tick > tValidate + 5 && <span className="text-[var(--eu-yellow)]/80">0 blocking · 0 warnings</span>}
       </Fragment>,
     );
   }
@@ -114,7 +121,7 @@ function TerminalAnimation() {
         {tick > tDeploy + 2 && (
           <span className="text-emerald-400/90">✓ LSASS memory access → Sentinel</span>
         )}
-        {tick > tDeploy + 3 && <span className="text-sky-300/85">Dry-run complete — 0 blocked</span>}
+        {tick > tDeploy + 3 && <span className="text-[var(--eu-yellow)]/80">Dry-run complete — 0 blocked</span>}
       </Fragment>,
     );
   }
@@ -127,12 +134,17 @@ function TerminalAnimation() {
 
   return (
     <div
-      className="relative p-3 text-[var(--landing-muted)]"
+      className="relative"
       onMouseEnter={() => tick >= tEnd && setTick(0)}
     >
-      <pre className="min-h-[240px] font-mono text-[11px] leading-[1.85] sm:text-xs">
-        <code className="grid gap-0.5">{lines}</code>
-      </pre>
+      <div
+        ref={scrollRef}
+        className="h-[260px] overflow-y-auto overflow-x-hidden p-3 text-[var(--landing-muted)] [scrollbar-width:thin]"
+      >
+        <pre className="font-mono text-[11px] leading-[1.85] sm:text-xs">
+          <code className="grid gap-0.5">{lines}</code>
+        </pre>
+      </div>
     </div>
   );
 }

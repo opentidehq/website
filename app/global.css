@@ -310,3 +310,25 @@ html > body[data-scroll-locked] {
 .landing-pipeline-card {
   will-change: transform;
 }
+
+.landing-pitch-reveal {
+  opacity: 0;
+  transform: translateY(0.35em);
+  transition:
+    opacity 0.65s cubic-bezier(0.25, 1, 0.5, 1),
+    transform 0.65s cubic-bezier(0.25, 1, 0.5, 1),
+    color 0.4s ease;
+}
+
+.landing-pitch-reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-pitch-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
