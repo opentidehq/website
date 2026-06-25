@@ -12,8 +12,8 @@ export const docTabs = [
     description: 'Structured DetectionOps — from scaffold to production',
     url: '/docs/usage/',
     icon: 'BookOpen' as const,
-    iconColor: '#f97316',
-    iconBg: 'rgba(249, 115, 22, 0.18)',
+    iconColor: '#ffcc00',
+    iconBg: 'rgba(255, 204, 0, 0.12)',
   },
   {
     key: 'specifications',
@@ -21,8 +21,8 @@ export const docTabs = [
     description: 'Normative contracts for humans, agents, and engines',
     url: '/docs/specifications/',
     icon: 'FileText' as const,
-    iconColor: '#a78bfa',
-    iconBg: 'rgba(167, 139, 250, 0.18)',
+    iconColor: '#e6b800',
+    iconBg: 'rgba(255, 204, 0, 0.08)',
   },
   {
     key: 'cli',
@@ -30,8 +30,8 @@ export const docTabs = [
     description: 'DetectionOps in terminals, pipelines, and runbooks',
     url: '/docs/cli/',
     icon: 'Terminal' as const,
-    iconColor: '#34d399',
-    iconBg: 'rgba(52, 211, 153, 0.18)',
+    iconColor: '#fff0a3',
+    iconBg: 'rgba(255, 204, 0, 0.1)',
   },
   {
     key: 'mcp',
@@ -39,8 +39,8 @@ export const docTabs = [
     description: 'Agent-native tools with honest validation output',
     url: '/docs/mcp/',
     icon: 'Bot' as const,
-    iconColor: '#38bdf8',
-    iconBg: 'rgba(56, 189, 248, 0.18)',
+    iconColor: '#ffcc00',
+    iconBg: 'rgba(255, 204, 0, 0.14)',
   },
   {
     key: 'sdk',
@@ -48,7 +48,7 @@ export const docTabs = [
     description: 'Embed DetectionOps in your own orchestration',
     url: '/docs/sdk/',
     icon: 'Code' as const,
-    iconColor: '#f472b6',
-    iconBg: 'rgba(244, 114, 182, 0.18)',
+    iconColor: '#c9a000',
+    iconBg: 'rgba(255, 204, 0, 0.09)',
   },
 ] as const;

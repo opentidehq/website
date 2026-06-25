@@ -1,24 +1,11 @@
+import { OpentideWordmark } from '@/components/brand/opentide-mark';
 import type { BaseLayoutProps } from 'fumadocs-ui/layouts/shared';
-import { appName, gitConfig, navLinks } from './shared';
-
-function BrandTitle() {
-  return (
-    <span className="flex items-center gap-2 font-semibold">
-      <span
-        className="inline-flex size-7 items-center justify-center rounded-full bg-[#ffcc00] text-xs font-bold text-[#003399]"
-        aria-hidden
-      >
-        OT
-      </span>
-      <span className="text-[#003399] dark:text-[#5b8fd9]">{appName}</span>
-    </span>
-  );
-}
+import { gitConfig, navLinks } from './shared';
 
 export function baseOptions(): BaseLayoutProps {
   return {
     nav: {
-      title: <BrandTitle />,
+      title: <OpentideWordmark />,
       url: '/',
     },
     links: [

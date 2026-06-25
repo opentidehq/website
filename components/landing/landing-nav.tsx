@@ -23,7 +23,7 @@ export function LandingNav({ children }: { children: ReactNode }) {
   return (
     <div className="landing flex min-h-screen flex-col">
       <header className="sticky top-0 z-40 border-b border-white/10 bg-[var(--landing-bg)]/95">
-        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4">
+        <div className="mx-auto flex h-14 max-w-[1400px] items-center justify-between gap-4 px-4 md:px-6">
           <Link href="/" className="shrink-0 rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--landing-accent)]">
             <BrandMark />
           </Link>
@@ -62,8 +62,8 @@ export function LandingNav({ children }: { children: ReactNode }) {
       </header>
       <main className="flex-1">{children}</main>
       <footer className="border-t border-white/10 bg-[var(--landing-surface-deep)]">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 py-10 text-sm text-[var(--landing-subtle)] md:flex-row">
-          <p>© {new Date().getFullYear()} OpenTide · EUPL-1.2 · Specs CC-BY-4.0</p>
+        <div className="mx-auto flex max-w-[1400px] flex-col items-center justify-between gap-4 px-4 py-10 text-sm text-[var(--landing-subtle)] md:flex-row md:px-6">
+          <p>© {new Date().getFullYear()} opentide · EUPL-1.2 · Specs CC-BY-4.0</p>
           <div className="flex flex-wrap items-center justify-center gap-6">
             <Link href="/docs/usage/" className="transition hover:text-[var(--landing-accent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--landing-accent)]">
               Docs

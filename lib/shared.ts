@@ -1,4 +1,4 @@
-export const appName = 'OpenTide';
+export const appName = 'opentide';
 export const appDescription =
   'The DetectionOps engine for detection-as-code — validate, generate, deploy, and document rules across seven security platforms.';
 export const docsRoute = '/docs';

@@ -132,16 +132,15 @@ html > body[data-scroll-locked] {
 }
 
 .landing {
-  --landing-bg: #000814;
-  --landing-surface-deep: #000b1f;
-  --landing-surface: #001028;
-  --landing-surface-raised: #0d1526;
-  --landing-ink: #e8f0ff;
-  --landing-muted: #b8cce8;
-  --landing-subtle: #8fa8d4;
-  --landing-brand: var(--eu-blue);
+  --landing-bg: #000000;
+  --landing-surface-deep: #050505;
+  --landing-surface: #0a0a0a;
+  --landing-surface-raised: #111111;
+  --landing-ink: #fafafa;
+  --landing-muted: #a1a1aa;
+  --landing-subtle: #71717a;
   --landing-accent: var(--eu-yellow);
-  --landing-foam: #7ec8e3;
+  --landing-dim: #52525b;
 
   font-family: var(--font-sans), system-ui, sans-serif;
   background-color: var(--landing-bg);
@@ -195,7 +194,7 @@ html > body[data-scroll-locked] {
 
 .landing-btn-secondary:hover {
   border-color: var(--landing-accent);
-  background-color: #002266;
+  background-color: #141414;
 }
 
 .landing-btn-secondary:focus-visible {
@@ -273,8 +272,6 @@ html > body[data-scroll-locked] {
   .landing-fade-in,
   .landing-card,
   .landing-marquee,
-  .landing-wave-a,
-  .landing-wave-b,
   .landing-scroll-cue {
     animation: none;
   }
@@ -283,4 +280,28 @@ html > body[data-scroll-locked] {
     animation: none;
     opacity: 0.3;
   }
+}
+
+/* Hero terminal — shiki output */
+.hero-terminal-body pre,
+.hero-terminal-pre {
+  margin: 0;
+  padding: 0;
+  background: transparent !important;
+  overflow: visible;
+}
+
+.hero-terminal-body code,
+.hero-terminal-code {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: inherit;
+  line-height: inherit;
+  background: transparent !important;
+}
+
+.landing-hero-shell {
+  border: 1px solid rgb(255 255 255 / 0.08);
+  background: var(--landing-surface-deep);
+  border-radius: 1.25rem;
+  overflow: hidden;
 }

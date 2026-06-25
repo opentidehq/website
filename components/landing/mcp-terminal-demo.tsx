@@ -24,13 +24,13 @@ export function McpTerminalDemo() {
   }, []);
 
   return (
-    <div className="rounded-2xl border border-[var(--landing-brand)]/50 bg-[var(--landing-surface)] p-8">
+    <div className="rounded-2xl border border-white/[0.08] bg-[var(--landing-surface)] p-8">
       <div className="flex items-center gap-2">
         <span className="relative flex size-2.5" aria-hidden>
           <span className="landing-mcp-ping absolute inline-flex size-full rounded-full bg-[var(--landing-accent)] opacity-40" />
           <span className="relative inline-flex size-2.5 rounded-full bg-[var(--landing-accent)]" />
         </span>
-        <p className="font-mono text-sm text-[var(--landing-foam)]">opentide-mcp · connected</p>
+        <p className="font-mono text-sm text-[var(--landing-muted)]">opentide-mcp · connected</p>
       </div>
       <div className="mt-6 space-y-3 font-mono text-xs text-[var(--landing-muted)]">
         {lines.map((line, i) => (
@@ -40,8 +40,8 @@ export function McpTerminalDemo() {
               i < visible ? 'opacity-100' : 'opacity-0'
             } ${
               line.highlight
-                ? 'bg-[var(--landing-brand)]/40 text-[var(--landing-accent)] ring-[var(--landing-brand)]/60'
-                : 'bg-[var(--landing-bg)] ring-white/5'
+                ? 'bg-[var(--landing-accent)]/10 text-[var(--landing-accent)] ring-[var(--landing-accent)]/25'
+                : 'bg-black ring-white/[0.06]'
             }`}
           >
             {line.text}

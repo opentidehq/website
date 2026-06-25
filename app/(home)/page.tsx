@@ -6,7 +6,6 @@ import {
   CheckCircle2,
   Code,
   FileText,
-  ChevronDown,
   GitBranch,
   Layers,
   Rocket,
@@ -16,7 +15,8 @@ import {
   UserRound,
   Sparkles,
 } from 'lucide-react';
-import { TideFluidScene } from '@/components/landing/tide-fluid-scene';
+import { TideDitherScene } from '@/components/landing/tide-dither-scene';
+import { HeroTerminal } from '@/components/landing/hero-terminal';
 import { PipelineFlow } from '@/components/landing/pipeline-flow';
 import { McpTerminalDemo } from '@/components/landing/mcp-terminal-demo';
 import { ecosystemLinks } from '@/lib/shared';
@@ -24,7 +24,7 @@ import type { Metadata } from 'next';
 import type { CSSProperties } from 'react';
 
 export const metadata: Metadata = {
-  title: 'OpenTide — The DetectionOps Engine',
+  title: 'opentide — The DetectionOps Engine',
   description:
     'Structure detection engineering end to end. Human-in-the-loop or fully agentic — validate, generate, deploy, and document rules across seven platforms.',
 };
@@ -34,29 +34,29 @@ const pipeline = [
     label: 'Validate',
     icon: Shield,
     desc: 'Schema, query, and platform honesty checks',
-    color: '#22d3ee',
-    bg: 'rgba(34, 211, 238, 0.15)',
+    color: '#ffcc00',
+    bg: 'rgba(255, 204, 0, 0.12)',
   },
   {
     label: 'Generate',
     icon: Layers,
     desc: 'Schemas, templates, and indexes from your repo',
-    color: '#a78bfa',
-    bg: 'rgba(167, 139, 250, 0.15)',
+    color: '#e6b800',
+    bg: 'rgba(255, 204, 0, 0.08)',
   },
   {
     label: 'Deploy',
     icon: Rocket,
     desc: 'Seven platforms, dry-run before production',
-    color: '#fb923c',
-    bg: 'rgba(251, 146, 60, 0.15)',
+    color: '#fff0a3',
+    bg: 'rgba(255, 204, 0, 0.15)',
   },
   {
     label: 'Document',
     icon: FileText,
     desc: 'Published narratives for analysts and auditors',
-    color: '#4ade80',
-    bg: 'rgba(74, 222, 128, 0.15)',
+    color: '#c9a000',
+    bg: 'rgba(255, 204, 0, 0.1)',
   },
 ];
 
@@ -67,8 +67,8 @@ const surfaces = [
     description: 'Scaffold repos, wire CI, and run structured workflows — solo or with agents.',
     href: '/docs/usage/installation/',
     icon: BookOpen,
-    iconColor: '#f97316',
-    iconBg: 'rgba(249, 115, 22, 0.18)',
+    iconColor: '#ffcc00',
+    iconBg: 'rgba(255, 204, 0, 0.12)',
     featured: true,
   },
   {
@@ -77,8 +77,8 @@ const surfaces = [
     description: 'Objects, vocabularies, governance — the contract humans and agents share.',
     href: '/docs/specifications/',
     icon: FileText,
-    iconColor: '#a78bfa',
-    iconBg: 'rgba(167, 139, 250, 0.18)',
+    iconColor: '#e6b800',
+    iconBg: 'rgba(255, 204, 0, 0.08)',
   },
   {
     title: 'CLI',
@@ -86,8 +86,8 @@ const surfaces = [
     description: 'Same commands in your shell, CI, and incident runbooks.',
     href: '/docs/cli/',
     icon: Terminal,
-    iconColor: '#34d399',
-    iconBg: 'rgba(52, 211, 153, 0.18)',
+    iconColor: '#fff0a3',
+    iconBg: 'rgba(255, 204, 0, 0.1)',
   },
   {
     title: 'MCP',
@@ -95,8 +95,8 @@ const surfaces = [
     description: 'Structured tool output for assistants — no hallucinated pass/fail.',
     href: '/docs/mcp/',
     icon: Bot,
-    iconColor: '#38bdf8',
-    iconBg: 'rgba(56, 189, 248, 0.18)',
+    iconColor: '#ffcc00',
+    iconBg: 'rgba(255, 204, 0, 0.14)',
   },
   {
     title: 'SDK',
@@ -104,8 +104,8 @@ const surfaces = [
     description: 'Python registry API for orchestration you already own.',
     href: '/docs/sdk/',
     icon: Code,
-    iconColor: '#f472b6',
-    iconBg: 'rgba(244, 114, 182, 0.18)',
+    iconColor: '#c9a000',
+    iconBg: 'rgba(255, 204, 0, 0.09)',
   },
 ];
 
@@ -129,65 +129,45 @@ const spectrumBullets = [
 export default function HomePage() {
   return (
     <div className="landing relative overflow-x-hidden">
-      <section className="relative flex min-h-[92vh] flex-col justify-end overflow-hidden">
-        <TideFluidScene className="absolute inset-0 h-full min-h-[480px] w-full" />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[var(--landing-bg)] to-transparent" aria-hidden />
-        <div className="relative z-10 mx-auto w-full max-w-6xl px-4 pb-14 pt-28 md:pb-20 md:pt-32">
-          <div className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
-            <div>
-              <div className="landing-fade-in mb-6 inline-flex items-center gap-2 rounded-full border border-[var(--landing-accent)]/40 bg-[var(--landing-surface-raised)] px-3 py-1 text-xs font-medium text-[var(--landing-accent)]">
+      <section className="px-4 pt-5 pb-2 md:px-6 md:pt-8">
+        <div className="landing-hero-shell landing-fade-in mx-auto max-w-[1400px]">
+          <div className="grid lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:min-h-[min(72vh,720px)]">
+            <div className="flex flex-col justify-center px-6 py-10 md:px-10 md:py-14 lg:py-16">
+              <div className="mb-6 inline-flex w-fit items-center gap-2 rounded-full border border-[var(--landing-accent)]/30 bg-black px-3 py-1 text-xs font-medium text-[var(--landing-accent)]">
                 <Waves className="size-3.5" aria-hidden />
-                DetectionOps engine
+                the DetectionOps engine for detection-as-code
               </div>
-              <h1 className="text-[clamp(2.25rem,5.5vw,3.75rem)] font-bold leading-[1.08] tracking-[-0.02em] text-balance">
+              <h1 className="text-[clamp(2.35rem,5.8vw,4.25rem)] font-bold leading-[1.05] tracking-[-0.035em] text-balance">
                 Structure{' '}
                 <span className="text-[var(--landing-accent)]">detection engineering</span>
+                <span className="text-[var(--landing-ink)]">, your way.</span>
               </h1>
-              <p className="mt-6 max-w-xl text-lg leading-relaxed text-[var(--landing-muted)] md:text-xl text-pretty">
-                OpenTide is the DetectionOps layer for detection-as-code — validate, generate,
-                deploy, and document rules across seven platforms. Human-led, agent-assisted, or
-                fully autonomous: you choose the balance.
+              <p className="mt-6 max-w-lg text-base leading-relaxed text-[var(--landing-muted)] md:text-lg text-pretty">
+                <span className="text-[var(--landing-accent)]">opentide</span> validates, generates,
+                deploys, and documents rules across seven platforms. Human-led, agent-assisted, or
+                fully autonomous — you set the balance.
               </p>
-              <div className="mt-10 flex flex-wrap gap-4">
+              <div className="mt-9 flex flex-wrap gap-3">
                 <Link href="/docs/usage/installation/" className="landing-btn-primary group">
-                  Start DetectionOps
+                  Getting started
                   <ArrowRight className="size-4 transition group-hover:translate-x-0.5" aria-hidden />
                 </Link>
                 <Link href="/docs/mcp/" className="landing-btn-secondary">
                   <Bot className="size-4" aria-hidden />
-                  Wire up agents
+                  MCP reference
                 </Link>
               </div>
             </div>
 
-            <div className="landing-fade-in landing-delay-2 rounded-xl border border-white/10 bg-[var(--landing-surface-deep)]/95 p-1 shadow-lg shadow-black/40">
-              <div className="flex items-center gap-2 border-b border-white/10 px-4 py-3">
-                <span className="size-2.5 rounded-full bg-[#ff5f57]" aria-hidden />
-                <span className="size-2.5 rounded-full bg-[#febc2e]" aria-hidden />
-                <span className="size-2.5 rounded-full bg-[#28c840]" aria-hidden />
-                <span className="ml-2 font-mono text-xs text-[var(--landing-foam)]">detection-repo</span>
-              </div>
-              <pre className="overflow-x-auto p-4 font-mono text-[11px] leading-relaxed text-[var(--landing-muted)] sm:text-xs md:text-sm">
-                <code>{`$ pip install "opentide[sentinel,cli,mcp]>=0.1"
-$ export OPENTIDE_REPO_ROOT=./rules
-
-$ opentide setup --yes --platform sentinel
-$ opentide generate
-$ opentide validate --strict
-$ opentide deploy --platform sentinel --dry-run
-
-✓ 142 rules · 0 errors · 7 platforms indexed`}</code>
-              </pre>
+            <div className="relative min-h-[300px] border-t border-white/[0.06] sm:min-h-[360px] lg:min-h-0 lg:border-t-0 lg:border-l lg:border-white/[0.06]">
+              <TideDitherScene className="absolute inset-0" />
             </div>
           </div>
+
+          <div className="border-t border-white/[0.06] bg-black p-4 md:p-6">
+            <HeroTerminal />
+          </div>
         </div>
-        <a
-          href="#platforms"
-          className="landing-scroll-cue absolute bottom-8 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-1 rounded-full p-3 text-[var(--landing-subtle)] transition hover:text-[var(--landing-accent)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--landing-accent)]"
-        >
-          <span className="sr-only">Scroll to platforms</span>
-          <ChevronDown className="size-5" aria-hidden />
-        </a>
       </section>
 
       <section
@@ -207,7 +187,7 @@ $ opentide deploy --platform sentinel --dry-run
         </div>
       </section>
 
-      <section className="landing-section mx-auto max-w-6xl px-4">
+      <section className="landing-section mx-auto max-w-[1400px] px-4 md:px-6">
         <h2 className="text-center text-3xl font-bold tracking-[-0.02em] text-balance md:text-4xl">
           One DetectionOps pipeline
         </h2>
@@ -219,7 +199,7 @@ $ opentide deploy --platform sentinel --dry-run
       </section>
 
       <section className="landing-section border-t border-white/10 bg-[var(--landing-surface-deep)]">
-        <div className="mx-auto max-w-6xl px-4">
+        <div className="mx-auto max-w-[1400px] px-4 md:px-6">
           <h2 className="text-3xl font-bold tracking-[-0.02em] md:text-4xl">Five surfaces, one engine</h2>
           <p className="mt-4 max-w-2xl text-[var(--landing-subtle)] text-pretty">
             Specs for authors, CLI for pipelines, MCP for agents — all running the same
@@ -253,7 +233,7 @@ $ opentide deploy --platform sentinel --dry-run
                       className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${
                         s.featured
                           ? 'bg-[var(--landing-accent)]/20 text-[var(--landing-accent)]'
-                          : 'bg-white/10 text-[var(--landing-foam)]'
+                          : 'bg-white/[0.06] text-[var(--landing-muted)]'
                       }`}
                     >
                       {s.tag}
@@ -263,7 +243,7 @@ $ opentide deploy --platform sentinel --dry-run
                     {s.title}
                   </h3>
                   <p className="mt-2 text-sm leading-relaxed text-[var(--landing-subtle)]">{s.description}</p>
-                  <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-[var(--landing-foam)] group-hover:text-[var(--landing-accent)]">
+                  <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-[var(--landing-subtle)] group-hover:text-[var(--landing-accent)]">
                     Explore <ArrowRight className="size-3.5" aria-hidden />
                   </span>
                 </div>
@@ -273,7 +253,7 @@ $ opentide deploy --platform sentinel --dry-run
         </div>
       </section>
 
-      <section className="landing-section mx-auto max-w-6xl px-4">
+      <section className="landing-section mx-auto max-w-[1400px] px-4 md:px-6">
         <div className="grid items-center gap-12 lg:grid-cols-2">
           <div>
             <div className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-[var(--landing-accent)]">
@@ -287,7 +267,7 @@ $ opentide deploy --platform sentinel --dry-run
               You set the autonomy level
             </h2>
             <p className="mt-4 leading-relaxed text-[var(--landing-subtle)] text-pretty">
-              DetectionOps is not all-or-nothing. OpenTide structures the work so engineers,
+              DetectionOps is not all-or-nothing. opentide structures the work so engineers,
               reviewers, and agents collaborate on the same objects — with MCP, skills, and specs
               built in from day one.
             </p>
@@ -301,7 +281,7 @@ $ opentide deploy --platform sentinel --dry-run
             </ul>
             <Link
               href="/docs/usage/workflows/agentic-setup/"
-              className="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-[var(--landing-foam)] transition hover:text-[var(--landing-accent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--landing-accent)]"
+              className="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-[var(--landing-muted)] transition hover:text-[var(--landing-accent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--landing-accent)]"
             >
               Agentic setup guide <ArrowRight className="size-4" aria-hidden />
             </Link>
@@ -331,15 +311,15 @@ $ opentide deploy --platform sentinel --dry-run
           </ul>
           <Link
             href="/docs/usage/concepts/platforms/"
-            className="mt-8 inline-flex items-center gap-2 text-sm font-medium text-[var(--landing-foam)] transition hover:text-[var(--landing-accent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--landing-accent)]"
+            className="mt-8 inline-flex items-center gap-2 text-sm font-medium text-[var(--landing-muted)] transition hover:text-[var(--landing-accent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--landing-accent)]"
           >
             Full capability matrix <ArrowRight className="size-4" aria-hidden />
           </Link>
         </div>
       </section>
 
-      <section className="landing-section mx-auto max-w-6xl px-4">
-        <h2 className="text-center text-3xl font-bold tracking-[-0.02em]">The OpenTide ecosystem</h2>
+      <section className="landing-section mx-auto max-w-[1400px] px-4 md:px-6">
+        <h2 className="text-center text-3xl font-bold tracking-[-0.02em]">The opentide ecosystem</h2>
         <ul className="mt-12 grid list-none gap-4 p-0 md:grid-cols-3">
           {ecosystemLinks.map((repo, i) => (
             <li key={repo.name} className="landing-card" style={{ '--i': i } as CSSProperties}>
@@ -363,7 +343,7 @@ $ opentide deploy --platform sentinel --dry-run
             Set the standard for DetectionOps
           </h2>
           <p className="mt-6 text-lg text-[var(--landing-muted)] text-pretty">
-            Bring your rules, your reviewers, and your agents. OpenTide structures the flow — you
+            Bring your rules, your reviewers, and your agents. opentide structures the flow — you
             choose how much of the tide is human and how much runs on its own.
           </p>
           <div className="mt-10 flex flex-wrap justify-center gap-4">
@@ -378,7 +358,7 @@ $ opentide deploy --platform sentinel --dry-run
               href="https://pypi.org/project/opentide/"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-lg border border-white/20 bg-[var(--landing-bg)] px-8 py-3.5 text-sm font-semibold text-[var(--landing-muted)] transition hover:border-[var(--landing-foam)]/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--landing-accent)]"
+              className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-black px-8 py-3.5 text-sm font-semibold text-[var(--landing-muted)] transition hover:border-white/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--landing-accent)]"
             >
               Install from PyPI
             </a>

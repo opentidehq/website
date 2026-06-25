@@ -18,8 +18,8 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: 'OpenTide',
-    template: '%s | OpenTide',
+    default: 'opentide',
+    template: '%s | opentide',
   },
   description:
     'The DetectionOps engine for detection-as-code — validate, generate, deploy, and document rules across seven security platforms.',
