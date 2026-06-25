@@ -1,8 +1,9 @@
 ---
-title: OpenTide Spec Index
-description: One-page index of active normative spec versions. There is no framework-wide version — each row is independently versioned.
+title: OpenTide spec index
+description: One-page index of active normative spec versions — each spec is independently versioned.
 ---
-# OpenTide Spec Index
+
+# OpenTide spec index
 
 One-page index of active normative spec versions. There is no framework-wide version — each row is independently versioned.
 

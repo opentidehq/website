@@ -14,7 +14,7 @@ export const gitConfig = {
 
 export const navLinks = [
   { label: 'Home', href: '/' },
-  { label: 'Docs', href: '/docs' },
+  { label: 'Docs', href: '/docs/usage/' },
   { label: 'Blog', href: '/blog' },
 ] as const;
 

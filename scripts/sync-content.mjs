@@ -72,8 +72,8 @@ function extractTitleAndDescription(body) {
       ?.split('\n')
       .map((l) => l.trim())
       .filter(Boolean)[0]
-      ?.slice(0, 200) ??
-    firstPara?.slice(0, 200) ??
+      ?.slice(0, 320) ??
+    firstPara?.slice(0, 320) ??
     `OpenTide normative specification — ${title}`;
 
   return { title, description };
@@ -99,7 +99,7 @@ function transformSpecFrontmatter(content, relPath) {
   }
 
   if (/^title:\s/m.test(frontmatter)) {
-    return content;
+    return postProcessMarkdown(content);
   }
 
   const { title, description } = extractTitleAndDescription(body);
@@ -118,11 +118,56 @@ function transformSpecFrontmatter(content, relPath) {
     fumadocsLines.push(frontmatter.trim());
   }
 
-  return `---\n${fumadocsLines.join('\n')}\n---\n${body}`;
+  return postProcessMarkdown(`---\n${fumadocsLines.join('\n')}\n---\n${body}`);
 }
 
 function h1InBody(body) {
   return /^#\s+/m.test(body);
+}
+
+const SPECS_BLOB = 'https://github.com/OpenTideHQ/specifications/blob/main';
+const OPENTIDE_BLOB = 'https://github.com/OpenTideHQ/opentide/blob/development/docs';
+
+function stripDuplicateH1(content) {
+  if (!content.startsWith('---\n')) return content;
+  const end = content.indexOf('\n---\n', 4);
+  if (end === -1) return content;
+  const frontmatter = content.slice(4, end);
+  const titleMatch = frontmatter.match(/^title:\s*"?([^"\n]+)"?/m);
+  if (!titleMatch) return content;
+  const title = titleMatch[1].trim();
+  let body = content.slice(end + 5);
+  const h1Match = body.match(/^#\s+(.+)$/m);
+  if (h1Match && h1Match[1].trim() === title) {
+    body = body.replace(/^#\s+.+?\n+/, '');
+  }
+  return `---\n${frontmatter}\n---\n${body}`;
+}
+
+function rewritePublishedLinks(content) {
+  return content
+    .replace(/\]\(\.\.\/\.\.\/fixtures\//g, `](${SPECS_BLOB}/fixtures/`)
+    .replace(/\]\(\.\.\/fixtures\//g, `](${SPECS_BLOB}/fixtures/`)
+    .replace(/\]\(\.\.\/\.\.\/schemas\//g, `](${SPECS_BLOB}/schemas/`)
+    .replace(/https:\/\/github\.com\/OpenTide\/opentide/g, 'https://github.com/OpenTideHQ/opentide')
+    .replace(/\]\(\.\.\/\.\.\/internal\//g, `](${OPENTIDE_BLOB}/internal/`)
+    .replace(/\]\(\.agents\//g, '](https://github.com/OpenTideHQ/opentide/blob/development/.agents/')
+    .replace(/\]\(\.github\//g, '](https://github.com/OpenTideHQ/specifications/blob/main/.github/');
+}
+
+function postProcessMarkdown(content) {
+  return rewritePublishedLinks(stripDuplicateH1(content));
+}
+
+function postProcessMarkdownTree(dir) {
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const p = join(dir, entry.name);
+    if (entry.isDirectory()) postProcessMarkdownTree(p);
+    else if (entry.name.endsWith('.md')) {
+      const raw = readFileSync(p, 'utf8');
+      writeFileSync(p, postProcessMarkdown(raw));
+    }
+  }
 }
 
 function syncMarkdownTree(srcDir, destDir, { exclude = [] } = {}) {
@@ -236,10 +281,6 @@ function main() {
   }
   mkdirSync(OUT, { recursive: true });
 
-  // Docs home
-  cpSync(join(opentideDocs, 'index.md'), join(OUT, 'index.md'));
-
-  // Four opentide sections
   for (const section of OPENTIDE_SECTIONS) {
     copyDir(join(opentideDocs, section), join(OUT, section));
   }
@@ -270,12 +311,12 @@ function main() {
     writeFileSync(join(specOut, 'meta.json'), `${JSON.stringify(buildSpecificationsMeta(), null, 2)}\n`);
   }
 
-  // Root navigation — five dropdown sections (no title here; avoids duplicate sidebar header)
+  // Root navigation — five root sections only (Usage first; no docs index wrapper)
   writeFileSync(
     join(OUT, 'meta.json'),
     `${JSON.stringify(
       {
-        pages: ['index', 'specifications', ...OPENTIDE_SECTIONS],
+        pages: ['usage', 'specifications', 'cli', 'mcp', 'sdk'],
       },
       null,
       2,
@@ -283,6 +324,7 @@ function main() {
   );
 
   const pageCount = countFiles(OUT, (f) => f.endsWith('.md'));
+  postProcessMarkdownTree(OUT);
   console.log(`sync-content: wrote ${pageCount} markdown pages to content/docs/`);
 }
 

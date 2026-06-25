@@ -7,18 +7,18 @@ export const euYellowHsl = '48 100% 50%';
 
 export const docTabs = [
   {
-    key: 'specifications',
-    title: 'Specifications',
-    description: 'Normative specs for authors, maintainers, and agents',
-    url: '/docs/specifications/',
-    icon: 'FileText' as const,
-  },
-  {
     key: 'usage',
     title: 'Usage',
     description: 'Setup, workflows, and day-to-day detection engineering',
     url: '/docs/usage/',
     icon: 'BookOpen' as const,
+  },
+  {
+    key: 'specifications',
+    title: 'Specifications',
+    description: 'Normative specs for authors, maintainers, and agents',
+    url: '/docs/specifications/',
+    icon: 'FileText' as const,
   },
   {
     key: 'cli',

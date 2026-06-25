@@ -1,6 +1,6 @@
 ---
 title: Metaschema keywords
-description: OpenTide extends JSON Schema generation with `tide.*` keywords in Pydantic metaschema. At generation time, `gen_json_schema()` walks the metaschema depth-first and resolves each keyword into standard 
+description: OpenTide extends JSON Schema generation with `tide.*` keywords in Pydantic metaschema. At generation time, `gen_json_schema()` walks the metaschema depth-first and resolves each keyword into standard JSON Schema constructs. Keywords are stripped from emitted client-facing schemas via `strip_framework_keywords()`.
 spec: metaschema-keywords
 version: "1.0"
 schema_id: null

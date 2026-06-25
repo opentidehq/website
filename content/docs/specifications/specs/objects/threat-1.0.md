@@ -69,9 +69,9 @@ No object-level configuration overrides. Vocabulary values are canonical in `voc
 
 ## Examples
 
-- Valid: [fixtures/valid/threat-1.0.yaml](../../fixtures/valid/threat-1.0.yaml)
-- Invalid (missing threat body): [fixtures/invalid/threat-missing-body.yaml](../../fixtures/invalid/threat-missing-body.yaml)
-- Cross-reference: [fixtures/cross-object/objective-references-threat.yaml](../../fixtures/cross-object/objective-references-threat.yaml)
+- Valid: [fixtures/valid/threat-1.0.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/valid/threat-1.0.yaml)
+- Invalid (missing threat body): [fixtures/invalid/threat-missing-body.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/invalid/threat-missing-body.yaml)
+- Cross-reference: [fixtures/cross-object/objective-references-threat.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/cross-object/objective-references-threat.yaml)
 
 ## History
 

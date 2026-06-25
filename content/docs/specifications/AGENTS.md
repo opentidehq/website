@@ -1,7 +1,12 @@
 ---
-title: Agent guide — OpenTide specifications
-description: Instructions for AI agents working in this repository.
+title: Agent guide
+description: How AI agents should read, propose, and apply OpenTide normative specifications.
 ---
+
+<Callout type="info">
+This guide targets contributors to the [specifications](https://github.com/OpenTideHQ/specifications) repository. Detection engineers reading [opentide.org](https://opentide.org) should start with [Specifications](/docs/specifications/) and [Usage](/docs/usage/).
+</Callout>
+
 # Agent guide — OpenTide specifications
 
 Instructions for AI agents working in this repository.
@@ -32,7 +37,7 @@ Non-trivial or breaking changes require an RFC before spec edits:
 
 1. Read the user's issue or request
 2. Check [rfcs/](rfcs/) for related accepted RFCs
-3. Use the [publish-rfc skill](.agents/skills/publish-rfc/SKILL.md) or copy [rfcs/0000-template.md](rfcs/0000-template.md)
+3. Use the [publish-rfc skill](https://github.com/OpenTideHQ/opentide/blob/development/.agents/skills/publish-rfc/SKILL.md) or copy [rfcs/0000-template.md](rfcs/0000-template.md)
 4. Number the RFC sequentially (next after highest existing number)
 5. Update specs, fixtures, `SPECS.md`, and `CHANGELOG.md` in the same PR as the RFC (or follow-up after acceptance per maintainer guidance)
 6. Reference the RFC number in the PR description
@@ -72,8 +77,8 @@ Canonical `.vocab.toml` files live here. opentide copies them at build into `dat
 
 ## Issue and PR templates
 
-- Issues: [.github/ISSUE_TEMPLATE/spec-change.yml](.github/ISSUE_TEMPLATE/spec-change.yml)
-- PRs: [.github/PULL_REQUEST_TEMPLATE/spec-change.md](.github/PULL_REQUEST_TEMPLATE/spec-change.md)
+- Issues: [.github/ISSUE_TEMPLATE/spec-change.yml](https://github.com/OpenTideHQ/specifications/blob/main/.github/ISSUE_TEMPLATE/spec-change.yml)
+- PRs: [.github/PULL_REQUEST_TEMPLATE/spec-change.md](https://github.com/OpenTideHQ/specifications/blob/main/.github/PULL_REQUEST_TEMPLATE/spec-change.md)
 
 ## llms.txt
 

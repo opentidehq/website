@@ -1,6 +1,6 @@
 ---
 title: Versioning
-description: OpenTide separates **structural schema revisions** from **object instance versions**. Schema revisions select the validation model and generated JSON Schema artifact; instance versions track business 
+description: OpenTide separates **structural schema revisions** from **object instance versions**. Schema revisions select the validation model and generated JSON Schema artifact; instance versions track business content evolution in git.
 spec: versioning
 version: "1.0"
 schema_id: null
@@ -62,8 +62,8 @@ Path defaults are configured in bundled `paths.toml`; clients MAY override via [
 
 ## Examples
 
-- Valid rule declaring `schema: rule::1.0`: [fixtures/valid/rule-1.0.yaml](../fixtures/valid/rule-1.0.yaml)
-- Invalid unknown schema: [fixtures/invalid/rule-unknown-schema.yaml](../fixtures/invalid/rule-unknown-schema.yaml)
+- Valid rule declaring `schema: rule::1.0`: [fixtures/valid/rule-1.0.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/valid/rule-1.0.yaml)
+- Invalid unknown schema: [fixtures/invalid/rule-unknown-schema.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/invalid/rule-unknown-schema.yaml)
 
 ## History
 

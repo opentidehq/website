@@ -9,7 +9,6 @@ const inter = Inter({
   variable: '--font-sans',
   display: 'swap',
 });
-
 const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],
   variable: '--font-mono',

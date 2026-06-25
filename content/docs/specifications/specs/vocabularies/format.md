@@ -16,7 +16,7 @@ OpenTide vocabularies are TOML files (`.vocab.toml`) defining allowed enum value
 
 ## Requirements
 
-- Every vocabulary file MUST validate against [schemas/vocabulary.schema.json](../../schemas/vocabulary.schema.json).
+- Every vocabulary file MUST validate against [schemas/vocabulary.schema.json](https://github.com/OpenTideHQ/specifications/blob/main/schemas/vocabulary.schema.json).
 - Every vocabulary file MUST declare `name` and `field` at the top level.
 - Entry keys MUST be declared in `[[keys]]` tables unless using `stages` for scoped vocabularies.
 - Clients MUST NOT override vocabulary files in `.opentide/configurations/`; extensions use `schema.toml` `[[vocabulary.*]]` entries only.
@@ -97,7 +97,7 @@ The sync script is an opentide build concern; this spec defines the data contrac
 ## Examples
 
 - Canonical TLP vocabulary: [vocabularies/tlp.vocab.toml](../../vocabularies/tlp.vocab.toml)
-- JSON Schema: [schemas/vocabulary.schema.json](../../schemas/vocabulary.schema.json)
+- JSON Schema: [schemas/vocabulary.schema.json](https://github.com/OpenTideHQ/specifications/blob/main/schemas/vocabulary.schema.json)
 
 ## History
 

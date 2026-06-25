@@ -7,6 +7,10 @@ description: Configure MCP servers and agent skills so AI assistants work safely
 
 OpenTide ships first-class scaffolding for AI agents: an MCP server for catalogue access and validation, plus portable agent skills.
 
+<Callout type="warn">
+`validate_query` and `run_query` MCP tools are **stubs** — they return success without parsing. Use `opentide validate query --platform …` via CLI for real query syntax checks. Prefer `validation_report` for structured agent feedback.
+</Callout>
+
 ## MCP server
 
 Install the MCP extra and configure your editor:

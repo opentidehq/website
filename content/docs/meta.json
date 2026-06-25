@@ -1,8 +1,7 @@
 {
   "pages": [
-    "index",
-    "specifications",
     "usage",
+    "specifications",
     "cli",
     "mcp",
     "sdk"

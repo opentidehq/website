@@ -48,20 +48,19 @@ Use `--platform`, not legacy `--system`.
 ### 1. Install
 
 ```bash
-pip install "opentide[sentinel,defender,cli]>=0.1"
+pip install "opentide[sentinel,splunk,cli]>=0.1"
 ```
 
-| Extra | Platform |
-|-------|----------|
-| `sentinel` | Microsoft Sentinel |
-| `defender` | Defender for Endpoint |
-| `splunk` | Splunk |
-| `crowdstrike` | CrowdStrike |
-| `carbon-black` | Carbon Black Cloud |
-| `sentinel-one` | SentinelOne |
-| `harfanglab` | HarfangLab |
+| Extra | Adds |
+|-------|------|
 | `cli` | `opentide` command |
-| `mcp` | `opentide-mcp` |
+| `mcp` | `opentide-mcp` server |
+| `sentinel` | Sentinel plugin (no extra deps) |
+| `splunk` | Splunk plugin + SDK dependencies |
+| `crowdstrike` | CrowdStrike plugin |
+| `carbon-black` | Carbon Black plugin + SDK |
+
+All seven `--platform` plugins ship with the base package — see [Installation](../installation.md).
 
 ### 2. Remove submodule
 
@@ -154,6 +153,6 @@ See [CLI migrate](../../cli/migrate.md).
 
 ## Related
 
-- [Behaviour inventory (internal)](../../internal/behaviour-inventory.md) — legacy vs new behaviour mapping
+- [Behaviour inventory (internal)](https://github.com/OpenTideHQ/opentide/blob/development/docs/internal/behaviour-inventory.md) — legacy vs new behaviour mapping
 - [Repository setup](../repository-setup.md)
 - [CLI migrate](../../cli/migrate.md)

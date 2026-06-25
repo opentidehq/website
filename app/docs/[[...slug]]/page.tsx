@@ -1,4 +1,5 @@
 import { getPageImage, getPageMarkdownUrl, source } from '@/lib/source';
+import { DocsUsageRedirect } from '@/components/docs/docs-usage-redirect';
 import {
   DocsBody,
   DocsDescription,
@@ -31,6 +32,9 @@ function getGithubUrl(slug: string[] | undefined, pagePath: string) {
 
 export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
   const params = await props.params;
+  if (!params.slug?.length) {
+    return <DocsUsageRedirect />;
+  }
   const page = source.getPage(params.slug);
   if (!page) notFound();
 
@@ -58,7 +62,7 @@ export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
 }
 
 export async function generateStaticParams() {
-  return source.generateParams();
+  return [{ slug: [] }, ...source.generateParams()];
 }
 
 export async function generateMetadata(

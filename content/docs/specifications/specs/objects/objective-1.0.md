@@ -111,9 +111,9 @@ No object-level configuration overrides. See [configuration.md](../configuration
 
 ## Examples
 
-- Valid: [fixtures/valid/objective-1.0.yaml](../../fixtures/valid/objective-1.0.yaml)
-- Invalid (no signals): [fixtures/invalid/objective-no-signals.yaml](../../fixtures/invalid/objective-no-signals.yaml)
-- Cross-reference: [fixtures/cross-object/rule-references-objective.yaml](../../fixtures/cross-object/rule-references-objective.yaml)
+- Valid: [fixtures/valid/objective-1.0.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/valid/objective-1.0.yaml)
+- Invalid (no signals): [fixtures/invalid/objective-no-signals.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/invalid/objective-no-signals.yaml)
+- Cross-reference: [fixtures/cross-object/rule-references-objective.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/cross-object/rule-references-objective.yaml)
 
 ## History
 

@@ -3,16 +3,24 @@ import {
   ArrowRight,
   BookOpen,
   Bot,
+  CheckCircle2,
   Code,
   FileText,
-  Search,
-  ShieldCheck,
+  ChevronDown,
+  GitBranch,
+  Layers,
+  Rocket,
+  Shield,
   Terminal,
-  Workflow,
-  Zap,
+  Waves,
 } from 'lucide-react';
+import { TidePixelScene } from '@/components/landing/tide-pixel-scene';
+import { WaveDivider } from '@/components/landing/wave-divider';
+import { PipelineFlow } from '@/components/landing/pipeline-flow';
+import { McpTerminalDemo } from '@/components/landing/mcp-terminal-demo';
 import { ecosystemLinks } from '@/lib/shared';
 import type { Metadata } from 'next';
+import type { CSSProperties } from 'react';
 
 export const metadata: Metadata = {
   title: 'OpenTide — The DetectionOps Engine',
@@ -20,282 +28,318 @@ export const metadata: Metadata = {
     'Validate, generate, deploy, and document detection rules across seven security platforms. Agent-native with MCP, CLI, SDK, and normative specifications.',
 };
 
+const pipeline = [
+  { label: 'Validate', icon: Shield, desc: 'Strict schema and query checks' },
+  { label: 'Generate', icon: Layers, desc: 'Schemas, templates, indexes' },
+  { label: 'Deploy', icon: Rocket, desc: 'Seven platforms, dry-run safe' },
+  { label: 'Document', icon: FileText, desc: 'Published rule narratives' },
+];
+
 const surfaces = [
   {
     title: 'Usage',
-    description: 'Setup, workflows, and day-to-day detection engineering',
+    tag: 'Start here',
+    description: 'Install, scaffold repos, and run DetectionOps workflows end to end.',
     href: '/docs/usage/installation/',
     icon: BookOpen,
-    accent: 'text-[#003399] dark:text-[#5b8fd9]',
-  },
-  {
-    title: 'CLI',
-    description: 'Operators and CI pipelines — validate, deploy, generate',
-    href: '/docs/cli/',
-    icon: Terminal,
-    accent: 'text-[#003399] dark:text-[#5b8fd9]',
-  },
-  {
-    title: 'MCP',
-    description: 'Agent server for Cursor, VS Code, and AI assistants',
-    href: '/docs/mcp/',
-    icon: Bot,
-    accent: 'text-[#FFCC00]',
-  },
-  {
-    title: 'SDK',
-    description: 'Embed OpenTide in Python applications',
-    href: '/docs/sdk/',
-    icon: Code,
-    accent: 'text-[#003399] dark:text-[#5b8fd9]',
+    featured: true,
   },
   {
     title: 'Specifications',
-    description: 'Normative specs for objects, vocabularies, and governance',
+    tag: 'Normative',
+    description: 'Objects, vocabularies, governance — the contract agents and engines share.',
     href: '/docs/specifications/',
     icon: FileText,
-    accent: 'text-[#FFCC00]',
   },
-];
-
-const agentSteps = [
   {
-    step: '01',
-    title: 'Setup MCP',
-    description: 'Run opentide setup to scaffold MCP config and agent skills for your detection repo.',
+    title: 'CLI',
+    tag: 'CI/CD',
+    description: 'The same commands locally, in pipelines, and in incident runbooks.',
+    href: '/docs/cli/',
+    icon: Terminal,
+  },
+  {
+    title: 'MCP',
+    tag: 'Agents',
+    description: 'Catalogue search, validation reports, and dry-run deploy for assistants.',
+    href: '/docs/mcp/',
     icon: Bot,
   },
   {
-    step: '02',
-    title: 'Search catalogue',
-    description: 'Agents query the object index, schemas, and platform matrix via MCP resources.',
-    icon: Search,
-  },
-  {
-    step: '03',
-    title: 'Validate safely',
-    description: 'Structured validation reports — strict mode, query checks, and honest platform limits.',
-    icon: ShieldCheck,
-  },
-  {
-    step: '04',
-    title: 'Dry-run deploy',
-    description: 'Preview deployment payloads before anything touches production SIEMs.',
-    icon: Zap,
+    title: 'SDK',
+    tag: 'Embed',
+    description: 'Python registry API for tools that orchestrate detection content.',
+    href: '/docs/sdk/',
+    icon: Code,
   },
 ];
 
 const platforms = [
-  { name: 'Microsoft Sentinel', deploy: true, validate: true },
-  { name: 'Defender for Endpoint', deploy: true, validate: true },
-  { name: 'Splunk ES', deploy: true, validate: true },
-  { name: 'SentinelOne', deploy: true, validate: true },
-  { name: 'Carbon Black Cloud', deploy: true, validate: true },
-  { name: 'CrowdStrike Falcon', deploy: true, validate: false },
-  { name: 'HarfangLab', deploy: true, validate: false },
+  'Microsoft Sentinel',
+  'Defender for Endpoint',
+  'Splunk ES',
+  'SentinelOne',
+  'Carbon Black',
+  'CrowdStrike',
+  'HarfangLab',
+];
+
+const agentBullets = [
+  'MCP tools return structured validation — never hallucinated pass/fail',
+  'Portable agent skills scaffolded with opentide setup',
+  'Platform matrix exposed as resources for honest capability checks',
+  'Dry-run deploy before any production SIEM touch',
 ];
 
 export default function HomePage() {
   return (
-    <div className="flex flex-col">
-      <section className="relative overflow-hidden border-b border-fd-border">
-        <div
-          className="absolute inset-0 opacity-30 dark:opacity-40"
-          style={{
-            background:
-              'radial-gradient(ellipse 80% 60% at 50% -10%, #003399 0%, transparent 55%), radial-gradient(ellipse 50% 40% at 90% 20%, #FFCC00 0%, transparent 45%)',
-          }}
-        />
-        <div className="container mx-auto px-4 py-24 md:py-32 relative">
-          <div className="max-w-3xl">
-            <p className="text-sm font-medium text-[#FFCC00] mb-4 tracking-wide uppercase">
-              DetectionOps
-            </p>
-            <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6">
-              The engine for{' '}
-              <span className="eu-gradient-text">detection-as-code</span>
-            </h1>
-            <p className="text-lg md:text-xl text-fd-muted-foreground mb-8 leading-relaxed">
-              OpenTide validates, generates, deploys, and documents detection rules across seven
-              security platforms. Built for engineers and the agents that assist them — with MCP,
-              skills, and normative specifications.
-            </p>
-            <div className="flex flex-wrap gap-4">
-              <Link
-                href="/docs/usage/installation/"
-                className="inline-flex items-center gap-2 rounded-lg bg-[#003399] px-5 py-2.5 text-sm font-medium text-white hover:bg-[#1a4fb5] transition-colors eu-glow"
-              >
-                Get started
-                <ArrowRight className="size-4" />
-              </Link>
-              <Link
-                href="/docs/mcp/"
-                className="inline-flex items-center gap-2 rounded-lg border border-[#FFCC00]/40 bg-[#FFCC00]/10 px-5 py-2.5 text-sm font-medium text-fd-foreground hover:bg-[#FFCC00]/20 transition-colors"
-              >
-                <Bot className="size-4 text-[#FFCC00]" />
-                For agents
-              </Link>
+    <div className="landing relative overflow-x-hidden">
+      <section className="relative flex min-h-[92vh] flex-col justify-end overflow-hidden">
+        <TidePixelScene className="absolute inset-0 h-full min-h-[480px] w-full" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-[var(--landing-bg)]" aria-hidden />
+        <div className="relative z-10 mx-auto w-full max-w-6xl px-4 pb-14 pt-28 md:pb-20 md:pt-32">
+          <div className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
+            <div>
+              <div className="landing-fade-in mb-6 inline-flex items-center gap-2 rounded-full border border-[var(--landing-accent)]/40 bg-[var(--landing-surface-raised)] px-3 py-1 text-xs font-medium text-[var(--landing-accent)]">
+                <Waves className="size-3.5" aria-hidden />
+                DetectionOps engine
+              </div>
+              <h1 className="text-[clamp(2.25rem,5.5vw,3.75rem)] font-bold leading-[1.08] tracking-[-0.02em] text-balance">
+                Ride the tide of{' '}
+                <span className="text-[var(--landing-accent)]">detection-as-code</span>
+              </h1>
+              <p className="mt-6 max-w-xl text-lg leading-relaxed text-[var(--landing-muted)] md:text-xl text-pretty">
+                OpenTide validates, generates, deploys, and documents rules across seven
+                platforms — with MCP, skills, and specs built for engineers and the agents beside
+                them.
+              </p>
+              <div className="mt-10 flex flex-wrap gap-4">
+                <Link href="/docs/usage/installation/" className="landing-btn-primary group">
+                  Get started
+                  <ArrowRight className="size-4 transition group-hover:translate-x-0.5" aria-hidden />
+                </Link>
+                <Link href="/docs/mcp/" className="landing-btn-secondary">
+                  <Bot className="size-4" aria-hidden />
+                  Wire up agents
+                </Link>
+              </div>
+            </div>
+
+            <div className="landing-fade-in landing-delay-2 rounded-xl border border-[var(--landing-brand)]/30 bg-[var(--landing-surface-deep)]/95 p-1 shadow-lg shadow-black/40">
+              <div className="flex items-center gap-2 border-b border-white/10 px-4 py-3">
+                <span className="size-2.5 rounded-full bg-[#ff5f57]" aria-hidden />
+                <span className="size-2.5 rounded-full bg-[#febc2e]" aria-hidden />
+                <span className="size-2.5 rounded-full bg-[#28c840]" aria-hidden />
+                <span className="ml-2 font-mono text-xs text-[var(--landing-foam)]">detection-repo</span>
+              </div>
+              <pre className="overflow-x-auto p-4 font-mono text-[11px] leading-relaxed text-[var(--landing-muted)] sm:text-xs md:text-sm">
+                <code>{`$ pip install "opentide[sentinel,cli,mcp]>=0.1"
+$ export OPENTIDE_REPO_ROOT=./rules
+
+$ opentide setup --yes --platform sentinel
+$ opentide generate
+$ opentide validate --strict
+$ opentide deploy --platform sentinel --dry-run
+
+✓ 142 rules · 0 errors · 7 platforms indexed`}</code>
+              </pre>
             </div>
           </div>
         </div>
+        <WaveDivider className="relative z-10 -mb-px text-[var(--landing-brand)]" />
+        <a
+          href="#platforms"
+          className="landing-scroll-cue absolute bottom-8 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-1 rounded-full p-3 text-[var(--landing-subtle)] transition hover:text-[var(--landing-accent)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--landing-accent)]"
+        >
+          <span className="sr-only">Scroll to platforms</span>
+          <ChevronDown className="size-5" aria-hidden />
+        </a>
       </section>
 
-      <section className="container mx-auto px-4 py-16 md:py-20">
-        <div className="grid md:grid-cols-2 gap-12 items-center">
-          <div>
-            <h2 className="text-2xl md:text-3xl font-bold mb-4">Five minutes to your first validate</h2>
-            <p className="text-fd-muted-foreground leading-relaxed">
-              Install from PyPI, point at your detection repository, generate framework artifacts,
-              and run strict validation. Same workflow in CI, locally, or through an MCP-connected
-              agent.
-            </p>
+      <section
+        id="platforms"
+        className="border-y border-[var(--landing-brand)]/30 bg-[var(--landing-surface-deep)] py-4"
+        aria-label="Supported platforms"
+      >
+        <div className="landing-marquee-wrap overflow-hidden">
+          <div className="landing-marquee flex gap-12 whitespace-nowrap text-sm font-medium text-[var(--landing-subtle)]" aria-hidden>
+            {[...platforms, ...platforms].map((name, i) => (
+              <span key={`${name}-${i}`} className="inline-flex items-center gap-2">
+                <GitBranch className="size-3.5 text-[var(--landing-accent)]" />
+                {name}
+              </span>
+            ))}
           </div>
-          <pre className="rounded-xl border border-fd-border bg-fd-muted/50 p-6 text-sm overflow-x-auto font-mono leading-relaxed">
-            <code>{`pip install "opentide[sentinel,cli,mcp]>=0.1"
-export OPENTIDE_REPO_ROOT=/path/to/detection-repo
-
-opentide setup --yes --platform sentinel --ci github
-opentide generate
-opentide validate --strict
-opentide deploy --platform sentinel --dry-run`}</code>
-          </pre>
         </div>
       </section>
 
-      <section className="border-y border-fd-border bg-fd-muted/30">
-        <div className="container mx-auto px-4 py-16 md:py-20">
-          <h2 className="text-2xl md:text-3xl font-bold mb-2 text-center">One engine, five surfaces</h2>
-          <p className="text-fd-muted-foreground text-center mb-12 max-w-2xl mx-auto">
-            Pick the interface that matches your workflow — from terminal operators to autonomous
-            agents.
+      <section className="landing-section mx-auto max-w-6xl px-4">
+        <h2 className="text-center text-3xl font-bold tracking-[-0.02em] text-balance md:text-4xl">
+          Everything flows in one direction
+        </h2>
+        <p className="mx-auto mt-4 max-w-2xl text-center text-[var(--landing-subtle)] text-pretty">
+          Like the tide, your content moves from draft to deployed — validated at every stage,
+          never faking platform capabilities.
+        </p>
+        <PipelineFlow steps={pipeline} />
+      </section>
+
+      <WaveDivider className="text-[var(--landing-surface-raised)]" />
+
+      <section className="landing-section border-t border-[var(--landing-brand)]/20 bg-[var(--landing-surface-deep)]">
+        <div className="mx-auto max-w-6xl px-4">
+          <h2 className="text-3xl font-bold tracking-[-0.02em] md:text-4xl">Five surfaces, one engine</h2>
+          <p className="mt-4 max-w-2xl text-[var(--landing-subtle)] text-pretty">
+            Pick the door that matches your job — specs for authors, MCP for agents, CLI for
+            pipelines.
           </p>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {surfaces.map((surface) => (
+          <div className="mt-12 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {surfaces.map((s, i) => (
               <Link
-                key={surface.title}
-                href={surface.href}
-                className="group rounded-xl border border-fd-border bg-fd-background p-6 hover:border-[#003399]/50 hover:shadow-lg hover:shadow-[#003399]/10 transition-all"
+                key={s.title}
+                href={s.href}
+                className={`landing-card group focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--landing-accent)] ${
+                  s.featured ? 'md:col-span-2 lg:col-span-2' : ''
+                }`}
+                style={{ '--i': i } as CSSProperties}
               >
-                <surface.icon className={`size-8 mb-4 ${surface.accent}`} />
-                <h3 className="font-semibold text-lg mb-2 group-hover:text-[#5b8fd9] transition-colors">
-                  {surface.title}
-                </h3>
-                <p className="text-sm text-fd-muted-foreground">{surface.description}</p>
+                <div
+                  className={`landing-surface-card h-full p-6 transition ${
+                    s.featured
+                      ? 'border-[var(--landing-accent)]/30 bg-[var(--landing-surface-raised)] hover:border-[var(--landing-accent)]/60'
+                      : 'hover:border-[var(--landing-accent)]/40 hover:bg-[var(--landing-surface-raised)]'
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <s.icon className="size-8 text-[var(--landing-accent)]" aria-hidden />
+                    <span
+                      className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${
+                        s.featured
+                          ? 'bg-[var(--landing-accent)]/20 text-[var(--landing-accent)]'
+                          : 'bg-[var(--landing-brand)]/50 text-[var(--landing-foam)]'
+                      }`}
+                    >
+                      {s.tag}
+                    </span>
+                  </div>
+                  <h3 className="mt-4 text-xl font-semibold transition-colors group-hover:text-[var(--landing-accent)]">
+                    {s.title}
+                  </h3>
+                  <p className="mt-2 text-sm leading-relaxed text-[var(--landing-subtle)]">{s.description}</p>
+                  <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-[var(--landing-foam)] group-hover:text-[var(--landing-accent)]">
+                    Explore <ArrowRight className="size-3.5" aria-hidden />
+                  </span>
+                </div>
               </Link>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="container mx-auto px-4 py-16 md:py-20">
-        <div className="flex items-center gap-3 mb-2">
-          <Workflow className="size-6 text-[#FFCC00]" />
-          <h2 className="text-2xl md:text-3xl font-bold">Agent-native by design</h2>
-        </div>
-        <p className="text-fd-muted-foreground mb-12 max-w-2xl">
-          OpenTide ships MCP servers, portable agent skills, and structured tool responses so AI
-          assistants work safely with detection content — never guessing validation results.
-        </p>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {agentSteps.map((item) => (
-            <div key={item.step} className="relative">
-              <span className="text-4xl font-bold text-[#003399]/20 dark:text-[#FFCC00]/20 absolute -top-2 -left-1">
-                {item.step}
-              </span>
-              <div className="pt-8 pl-4">
-                <item.icon className="size-5 text-[#FFCC00] mb-3" />
-                <h3 className="font-semibold mb-2">{item.title}</h3>
-                <p className="text-sm text-fd-muted-foreground">{item.description}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="mt-10">
-          <Link
-            href="/docs/usage/workflows/agentic-setup/"
-            className="inline-flex items-center gap-2 text-sm font-medium text-[#5b8fd9] hover:underline"
-          >
-            Read the agentic setup guide
-            <ArrowRight className="size-4" />
-          </Link>
+      <section className="landing-section mx-auto max-w-6xl px-4">
+        <div className="grid items-center gap-12 lg:grid-cols-2">
+          <div>
+            <h2 className="text-3xl font-bold tracking-[-0.02em] md:text-4xl text-balance">
+              Built for the assistants in your IDE
+            </h2>
+            <p className="mt-4 leading-relaxed text-[var(--landing-subtle)] text-pretty">
+              OpenTide does not bolt AI on after the fact. MCP servers, portable skills, and
+              structured tool responses are first-class — so agents work safely with live detection
+              content.
+            </p>
+            <ul className="mt-8 space-y-4">
+              {agentBullets.map((item) => (
+                <li key={item} className="flex gap-3 text-sm text-[var(--landing-muted)]">
+                  <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-[var(--landing-accent)]" aria-hidden />
+                  {item}
+                </li>
+              ))}
+            </ul>
+            <Link
+              href="/docs/usage/workflows/agentic-setup/"
+              className="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-[var(--landing-foam)] transition hover:text-[var(--landing-accent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--landing-accent)]"
+            >
+              Agentic setup guide <ArrowRight className="size-4" aria-hidden />
+            </Link>
+          </div>
+          <McpTerminalDemo />
         </div>
       </section>
 
-      <section className="border-y border-fd-border bg-fd-muted/30">
-        <div className="container mx-auto px-4 py-16 md:py-20">
-          <h2 className="text-2xl md:text-3xl font-bold mb-2 text-center">
+      <section className="landing-section border-t border-[var(--landing-brand)]/20 bg-[var(--landing-surface-deep)]">
+        <div className="mx-auto max-w-6xl px-4 text-center">
+          <h2 className="text-3xl font-bold tracking-[-0.02em] md:text-4xl text-balance">
             Seven platforms. Honest validation.
           </h2>
-          <p className="text-fd-muted-foreground text-center mb-10 max-w-2xl mx-auto">
-            OpenTide deploys to seven platforms and validates queries on five. CrowdStrike and
-            HarfangLab never get fake syntax checks.
+          <p className="mx-auto mt-4 max-w-xl text-[var(--landing-subtle)] text-pretty">
+            We deploy everywhere we integrate. We only validate queries where the platform supports
+            it — never fake syntax checks.
           </p>
-          <div className="overflow-x-auto">
-            <table className="w-full max-w-3xl mx-auto text-sm">
-              <thead>
-                <tr className="border-b border-fd-border">
-                  <th className="text-left py-3 px-4 font-medium">Platform</th>
-                  <th className="text-center py-3 px-4 font-medium">Deploy</th>
-                  <th className="text-center py-3 px-4 font-medium">Query validate</th>
-                </tr>
-              </thead>
-              <tbody>
-                {platforms.map((p) => (
-                  <tr key={p.name} className="border-b border-fd-border/50">
-                    <td className="py-3 px-4">{p.name}</td>
-                    <td className="text-center py-3 px-4 text-[#FFCC00]">{p.deploy ? '✓' : '—'}</td>
-                    <td className="text-center py-3 px-4">
-                      {p.validate ? (
-                        <span className="text-[#FFCC00]">✓</span>
-                      ) : (
-                        <span className="text-fd-muted-foreground">unsupported</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <p className="text-center mt-6">
-            <Link href="/docs/usage/concepts/platforms/" className="text-sm text-[#5b8fd9] hover:underline">
-              Full capability matrix →
-            </Link>
-          </p>
+          <ul className="mt-12 flex flex-wrap justify-center gap-3">
+            {platforms.map((p) => (
+              <li
+                key={p}
+                className="rounded-full border border-white/10 bg-[var(--landing-surface)] px-4 py-2 text-sm text-[var(--landing-muted)]"
+              >
+                {p}
+              </li>
+            ))}
+          </ul>
+          <Link
+            href="/docs/usage/concepts/platforms/"
+            className="mt-8 inline-flex items-center gap-2 text-sm font-medium text-[var(--landing-foam)] transition hover:text-[var(--landing-accent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--landing-accent)]"
+          >
+            Full capability matrix <ArrowRight className="size-4" aria-hidden />
+          </Link>
         </div>
       </section>
 
-      <section className="container mx-auto px-4 py-16 md:py-20">
-        <h2 className="text-2xl md:text-3xl font-bold mb-10 text-center">Ecosystem</h2>
-        <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-          {ecosystemLinks.map((repo) => (
+      <section className="landing-section mx-auto max-w-6xl px-4">
+        <h2 className="text-center text-3xl font-bold tracking-[-0.02em]">The OpenTide ecosystem</h2>
+        <ul className="mt-12 grid list-none gap-4 p-0 md:grid-cols-3">
+          {ecosystemLinks.map((repo, i) => (
+            <li key={repo.name} className="landing-card" style={{ '--i': i } as CSSProperties}>
+              <a
+                href={repo.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="landing-surface-card block h-full p-6 transition hover:border-[var(--landing-brand)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--landing-accent)]"
+              >
+                <h3 className="text-lg font-semibold">{repo.name}</h3>
+                <p className="mt-2 text-sm text-[var(--landing-subtle)]">{repo.description}</p>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="relative overflow-hidden border-t border-[var(--landing-brand)]/30 bg-[var(--landing-surface-raised)] py-24 md:py-32">
+        <WaveDivider className="absolute inset-x-0 top-0 -translate-y-full text-[var(--landing-surface-raised)]" />
+        <div className="relative mx-auto max-w-3xl px-4 text-center">
+          <h2 className="text-3xl font-bold tracking-[-0.02em] md:text-4xl text-balance">
+            Set the standard for DetectionOps
+          </h2>
+          <p className="mt-6 text-lg text-[var(--landing-muted)] text-pretty">
+            The tide is rising. Bring your rules, your agents, and your specs — we will meet you at
+            the shore.
+          </p>
+          <div className="mt-10 flex flex-wrap justify-center gap-4">
+            <Link
+              href="/docs/usage/"
+              className="inline-flex items-center gap-2 rounded-lg bg-[var(--landing-accent)] px-8 py-3.5 text-sm font-bold text-[var(--landing-bg)] transition hover:bg-[#ffe566] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+            >
+              Explore documentation
+              <ArrowRight className="size-4" aria-hidden />
+            </Link>
             <a
-              key={repo.name}
-              href={repo.href}
+              href="https://pypi.org/project/opentide/"
               target="_blank"
               rel="noopener noreferrer"
-              className="rounded-xl border border-fd-border p-6 hover:border-[#003399]/50 transition-colors"
+              className="inline-flex items-center gap-2 rounded-lg border border-white/20 bg-[var(--landing-bg)] px-8 py-3.5 text-sm font-semibold text-[var(--landing-muted)] transition hover:border-[var(--landing-foam)]/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--landing-accent)]"
             >
-              <h3 className="font-semibold mb-2">{repo.name}</h3>
-              <p className="text-sm text-fd-muted-foreground">{repo.description}</p>
+              Install from PyPI
             </a>
-          ))}
-        </div>
-      </section>
-
-      <section className="border-t border-fd-border">
-        <div className="container mx-auto px-4 py-16 text-center">
-          <h2 className="text-2xl md:text-3xl font-bold mb-4">Set the standard for DetectionOps</h2>
-          <p className="text-fd-muted-foreground mb-8 max-w-xl mx-auto">
-            Start with the quickstart, wire up MCP for your agents, and explore normative
-            specifications — all from one place.
-          </p>
-          <Link
-            href="/docs/usage/"
-            className="inline-flex items-center gap-2 rounded-lg bg-[#003399] px-6 py-3 text-sm font-medium text-white hover:bg-[#1a4fb5] transition-colors"
-          >
-            Explore documentation
-            <ArrowRight className="size-4" />
-          </Link>
+          </div>
         </div>
       </section>
     </div>

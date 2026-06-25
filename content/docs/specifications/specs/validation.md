@@ -1,6 +1,6 @@
 ---
 title: Validation
-description: "OpenTide validates detection content through a structured pipeline: ID uniqueness, UUID format, Pydantic schema validation, vocabulary conformance, deprecated field warnings, and cross-object referenc"
+description: "OpenTide validates detection content through a structured pipeline: ID uniqueness, UUID format, Pydantic schema validation, vocabulary conformance, deprecated field warnings, and cross-object reference checks. Optional checks include CVE scanning and per-platform query validation."
 spec: validation
 version: "1.0"
 schema_id: null
@@ -107,10 +107,10 @@ Validation uses merged configuration for vocabulary and status enums. No separat
 
 | Fixture | Expected result |
 |---------|-----------------|
-| [fixtures/valid/rule-1.0.yaml](../fixtures/valid/rule-1.0.yaml) | Passes schema + UUID checks |
-| [fixtures/invalid/rule-bad-uuid.yaml](../fixtures/invalid/rule-bad-uuid.yaml) | Fails `uuid-format` |
-| [fixtures/invalid/rule-unknown-schema.yaml](../fixtures/invalid/rule-unknown-schema.yaml) | Fails `schema` |
-| [fixtures/cross-object/rule-references-objective.yaml](../fixtures/cross-object/rule-references-objective.yaml) | Passes when sibling objective fixture present |
+| [fixtures/valid/rule-1.0.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/valid/rule-1.0.yaml) | Passes schema + UUID checks |
+| [fixtures/invalid/rule-bad-uuid.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/invalid/rule-bad-uuid.yaml) | Fails `uuid-format` |
+| [fixtures/invalid/rule-unknown-schema.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/invalid/rule-unknown-schema.yaml) | Fails `schema` |
+| [fixtures/cross-object/rule-references-objective.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/cross-object/rule-references-objective.yaml) | Passes when sibling objective fixture present |
 
 ## History
 

@@ -1,6 +1,6 @@
 ---
 title: Configuration and overrides
-description: OpenTide merges bundled package configuration with optional client overrides from `.opentide/configurations/`. Deep merge applies at the TOML key level; later layers override earlier ones for scalar a
+description: OpenTide merges bundled package configuration with optional client overrides from `.opentide/configurations/`. Deep merge applies at the TOML key level; later layers override earlier ones for scalar and replaced subtrees.
 spec: configuration
 version: "1.0"
 schema_id: null

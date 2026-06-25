@@ -1,6 +1,6 @@
 ---
 title: Detection rule (MDR)
-description: "A detection rule (MDR — Managed Detection Rule) is the deployable unit of detection content: metadata, severity, ATT&CK techniques, platform-specific query configurations, optional response playbook, "
+description: "A detection rule (MDR — Managed Detection Rule) is the deployable unit of detection content: metadata, severity, ATT&CK techniques, platform-specific query configurations, optional response playbook, and lifecycle status. Schema identifier: `rule::1.0`."
 spec: rule
 version: "1.0"
 schema_id: rule::1.0
@@ -128,16 +128,16 @@ Vocabulary files are canonical in `vocabularies/` — not overridable. See [conf
 
 | Fixture | Demonstrates |
 |---------|--------------|
-| [fixtures/valid/rule-1.0.yaml](../../fixtures/valid/rule-1.0.yaml) | Minimal valid rule with Sentinel configuration |
-| [fixtures/cross-object/rule-references-objective.yaml](../../fixtures/cross-object/rule-references-objective.yaml) | `detection_model` → objective UUID |
+| [fixtures/valid/rule-1.0.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/valid/rule-1.0.yaml) | Minimal valid rule with Sentinel configuration |
+| [fixtures/cross-object/rule-references-objective.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/cross-object/rule-references-objective.yaml) | `detection_model` → objective UUID |
 
 ### Invalid fixtures
 
 | Fixture | Violation |
 |---------|-----------|
-| [fixtures/invalid/rule-missing-metadata.yaml](../../fixtures/invalid/rule-missing-metadata.yaml) | Missing required `metadata` |
-| [fixtures/invalid/rule-unknown-schema.yaml](../../fixtures/invalid/rule-unknown-schema.yaml) | Unregistered `metadata.schema` |
-| [fixtures/invalid/rule-bad-uuid.yaml](../../fixtures/invalid/rule-bad-uuid.yaml) | Non-UUIDv4 `metadata.uuid` |
+| [fixtures/invalid/rule-missing-metadata.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/invalid/rule-missing-metadata.yaml) | Missing required `metadata` |
+| [fixtures/invalid/rule-unknown-schema.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/invalid/rule-unknown-schema.yaml) | Unregistered `metadata.schema` |
+| [fixtures/invalid/rule-bad-uuid.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/invalid/rule-bad-uuid.yaml) | Non-UUIDv4 `metadata.uuid` |
 
 ## History
 

@@ -1,6 +1,6 @@
 ---
 title: Deployment lifecycle
-description: Defines rule deployment statuses, promotion strategy, proxy settings, and debug configuration. Shipped in bundled `deployment.toml`; clients MAY override via `.opentide/configurations/deployment.toml`
+description: Defines rule deployment statuses, promotion strategy, proxy settings, and debug configuration. Shipped in bundled `deployment.toml`; clients MAY override via `.opentide/configurations/deployment.toml`.
 spec: deployment
 version: "1.0"
 schema_id: null
@@ -99,7 +99,7 @@ Bundled `deployment.toml` ships in opentide. Override via `.opentide/configurati
 
 ## Examples
 
-Default rule status in fixtures: `STAGING` — see [fixtures/valid/rule-1.0.yaml](../fixtures/valid/rule-1.0.yaml).
+Default rule status in fixtures: `STAGING` — see [fixtures/valid/rule-1.0.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/valid/rule-1.0.yaml).
 
 ## History
 

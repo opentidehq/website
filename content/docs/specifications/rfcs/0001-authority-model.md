@@ -1,9 +1,7 @@
 ---
 title: "RFC 0001: Authority model and change process"
-description: "This RFC establishes the normative authority chain for OpenTide: markdown specs in the `specifications` repository are canonical; opentide Pydantic models implement them; JSON Schema is a generated ar"
+description: "This RFC establishes the normative authority chain for OpenTide: markdown specs in the `specifications` repository are canonical; opentide Pydantic models implement them; JSON Schema is a generated artifact for IDE validation. It also defines the Issue → RFC → spec → implementation change process."
 ---
-# RFC 0001: Authority model and change process
-
 - **RFC:** 0001
 - **Title:** Authority model and change process
 - **Status:** accepted

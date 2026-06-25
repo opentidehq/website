@@ -69,8 +69,8 @@ No client overrides for metadata structure. Template generation MAY pre-fill dat
 
 ## Examples
 
-- Valid metadata on a rule: [fixtures/valid/rule-1.0.yaml](../fixtures/valid/rule-1.0.yaml)
-- Invalid UUID: [fixtures/invalid/rule-bad-uuid.yaml](../fixtures/invalid/rule-bad-uuid.yaml)
+- Valid metadata on a rule: [fixtures/valid/rule-1.0.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/valid/rule-1.0.yaml)
+- Invalid UUID: [fixtures/invalid/rule-bad-uuid.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/invalid/rule-bad-uuid.yaml)
 
 ## History
 

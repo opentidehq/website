@@ -1,5 +1,10 @@
 import { defineConfig, defineCollections, defineDocs, frontmatterSchema } from 'fumadocs-mdx/config';
 import { metaSchema, pageSchema } from 'fumadocs-core/source/schema';
+import {
+  remarkMdxMermaid,
+  remarkNpm,
+  remarkSteps,
+} from 'fumadocs-core/mdx-plugins';
 import { z } from 'zod';
 
 export const docs = defineDocs({
@@ -27,5 +32,11 @@ export const blogPosts = defineCollections({
 });
 
 export default defineConfig({
-  mdxOptions: {},
+  mdxOptions: {
+    remarkPlugins: [
+      remarkMdxMermaid,
+      remarkSteps,
+      [remarkNpm, { persist: { id: 'package-manager' } }],
+    ],
+  },
 });
