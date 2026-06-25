@@ -5,6 +5,7 @@ import { parseDiffFromFile } from '@pierre/diffs';
 import { File, FileDiff } from '@pierre/diffs/react';
 import { FileTree, useFileTree, useFileTreeSelector } from '@pierre/trees/react';
 import { useEffect, useMemo, useState } from 'react';
+import { usePrefersReducedMotion } from '@/lib/hooks/use-prefers-reduced-motion';
 import {
   DEMO_FILES,
   DEMO_PATHS,
@@ -107,11 +108,107 @@ function EditorPane({ phase, path }: { phase: Phase; path: DemoPath }) {
   return <File file={file} options={codeOptions} disableWorkerPool className="h-full min-h-0" />;
 }
 
+type PhaseScript = (typeof phaseScripts)[Phase];
+
+function WorkflowPhasePanels({
+  phase,
+  script,
+}: {
+  phase: Phase;
+  script: PhaseScript;
+}) {
+  const reduced = usePrefersReducedMotion();
+  const [typedCmd, setTypedCmd] = useState(reduced ? script.cmd : '');
+  const [showOut, setShowOut] = useState(reduced);
+  const [visibleAgent, setVisibleAgent] = useState(reduced ? script.agent.length : 0);
+
+  useEffect(() => {
+    if (reduced) return;
+
+    let ci = 0;
+    let ai = 0;
+    const typeTimer = window.setInterval(() => {
+      ci += 1;
+      setTypedCmd(script.cmd.slice(0, ci));
+      if (ci >= script.cmd.length) window.clearInterval(typeTimer);
+    }, 22);
+
+    const outTimer = window.setTimeout(() => setShowOut(true), 900);
+    const agentTimer = window.setInterval(() => {
+      ai += 1;
+      setVisibleAgent(ai);
+      if (ai >= script.agent.length) window.clearInterval(agentTimer);
+    }, 700);
+
+    return () => {
+      window.clearInterval(typeTimer);
+      window.clearTimeout(outTimer);
+      window.clearInterval(agentTimer);
+    };
+  }, [reduced, script]);
+
+  return (
+    <>
+      <div className="flex min-h-[280px] flex-col bg-[var(--landing-surface-deep)] lg:min-h-0">
+        <div className="flex items-center gap-2 border-b border-white/[0.06] px-3 py-2">
+          <Bot className="size-4 text-[var(--eu-yellow)]" aria-hidden />
+          <span className="font-mono text-[11px] font-medium text-[var(--landing-ink)]">opentide-mcp</span>
+          <span className="ml-auto rounded-full bg-[var(--eu-yellow)]/10 px-2 py-0.5 font-mono text-[9px] text-[var(--eu-yellow)]">
+            {phase}
+          </span>
+        </div>
+        <div className="flex-1 space-y-2.5 overflow-auto p-3">
+          {script.agent.slice(0, visibleAgent).map((step, i) => (
+            <div
+              key={`${phase}-${i}`}
+              className="rounded-lg border border-white/[0.08] bg-[var(--landing-bg)]/70 p-3"
+            >
+              <p className="font-mono text-[11px] leading-relaxed text-[var(--landing-muted)]">
+                <span className="font-semibold text-[var(--eu-yellow)]">Reasoning</span>
+                <br />
+                {step.thought}
+              </p>
+              <p className="mt-2 flex items-start gap-1.5 font-mono text-[10px] text-[var(--landing-ink)]">
+                <ChevronRight className="mt-0.5 size-3.5 shrink-0 text-[var(--eu-yellow)]" aria-hidden />
+                {step.tool}
+              </p>
+              <p className="mt-1.5 font-mono text-[10px] text-emerald-400/90">{step.result}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="border-t border-white/[0.06] bg-[var(--landing-bg)] col-span-full">
+        <div className="flex items-center gap-2 border-b border-white/[0.06] px-3 py-1.5">
+          <Terminal className="size-3 text-[var(--landing-subtle)]" aria-hidden />
+          <span className="font-mono text-[10px] text-[var(--landing-muted)]">Terminal</span>
+        </div>
+        <div className="min-h-[96px] overflow-auto px-3 py-2.5 font-mono text-[11px] leading-relaxed">
+          <p>
+            <span className="text-[var(--eu-yellow)]">❯</span>{' '}
+            <span className="text-[var(--landing-subtle)]">$ </span>
+            <span className="text-[var(--landing-ink)]">{typedCmd}</span>
+            {!showOut && (
+              <span className="ml-0.5 inline-block h-[1em] w-[6px] animate-pulse bg-[var(--eu-yellow)] align-middle" />
+            )}
+          </p>
+          {showOut && (
+            <div className="mt-1.5 space-y-0.5">
+              {script.out.map((line) => (
+                <p key={line} className="text-emerald-500/90">
+                  {line}
+                </p>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
+
 export function WorkflowStudio() {
   const [phaseIdx, setPhaseIdx] = useState(0);
-  const [typedCmd, setTypedCmd] = useState('');
-  const [showOut, setShowOut] = useState(false);
-  const [visibleAgent, setVisibleAgent] = useState(0);
 
   const phase = phases[phaseIdx];
   const script = phaseScripts[phase];
@@ -135,41 +232,6 @@ export function WorkflowStudio() {
     model.getItem(autoPath)?.select();
     model.focusPath(autoPath);
   }, [autoPath, model]);
-
-  useEffect(() => {
-    setTypedCmd('');
-    setShowOut(false);
-    setVisibleAgent(0);
-
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reduced) {
-      setTypedCmd(script.cmd);
-      setShowOut(true);
-      setVisibleAgent(script.agent.length);
-      return;
-    }
-
-    let ci = 0;
-    let ai = 0;
-    const typeTimer = window.setInterval(() => {
-      ci += 1;
-      setTypedCmd(script.cmd.slice(0, ci));
-      if (ci >= script.cmd.length) window.clearInterval(typeTimer);
-    }, 22);
-
-    const outTimer = window.setTimeout(() => setShowOut(true), 900);
-    const agentTimer = window.setInterval(() => {
-      ai += 1;
-      setVisibleAgent(ai);
-      if (ai >= script.agent.length) window.clearInterval(agentTimer);
-    }, 700);
-
-    return () => {
-      window.clearInterval(typeTimer);
-      window.clearTimeout(outTimer);
-      window.clearInterval(agentTimer);
-    };
-  }, [phase, script]);
 
   useEffect(() => {
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -233,60 +295,7 @@ export function WorkflowStudio() {
               </div>
             </div>
 
-            <div className="flex min-h-[280px] flex-col bg-[var(--landing-surface-deep)] lg:min-h-0">
-              <div className="flex items-center gap-2 border-b border-white/[0.06] px-3 py-2">
-                <Bot className="size-4 text-[var(--eu-yellow)]" aria-hidden />
-                <span className="font-mono text-[11px] font-medium text-[var(--landing-ink)]">opentide-mcp</span>
-                <span className="ml-auto rounded-full bg-[var(--eu-yellow)]/10 px-2 py-0.5 font-mono text-[9px] text-[var(--eu-yellow)]">
-                  {phase}
-                </span>
-              </div>
-              <div className="flex-1 space-y-2.5 overflow-auto p-3">
-                {script.agent.slice(0, visibleAgent).map((step, i) => (
-                  <div
-                    key={`${phase}-${i}`}
-                    className="rounded-lg border border-white/[0.08] bg-[var(--landing-bg)]/70 p-3"
-                  >
-                    <p className="font-mono text-[11px] leading-relaxed text-[var(--landing-muted)]">
-                      <span className="font-semibold text-[var(--eu-yellow)]">Reasoning</span>
-                      <br />
-                      {step.thought}
-                    </p>
-                    <p className="mt-2 flex items-start gap-1.5 font-mono text-[10px] text-[var(--landing-ink)]">
-                      <ChevronRight className="mt-0.5 size-3.5 shrink-0 text-[var(--eu-yellow)]" aria-hidden />
-                      {step.tool}
-                    </p>
-                    <p className="mt-1.5 font-mono text-[10px] text-emerald-400/90">{step.result}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="border-t border-white/[0.06] bg-[var(--landing-bg)]">
-            <div className="flex items-center gap-2 border-b border-white/[0.06] px-3 py-1.5">
-              <Terminal className="size-3 text-[var(--landing-subtle)]" aria-hidden />
-              <span className="font-mono text-[10px] text-[var(--landing-muted)]">Terminal</span>
-            </div>
-            <div className="min-h-[96px] overflow-auto px-3 py-2.5 font-mono text-[11px] leading-relaxed">
-              <p>
-                <span className="text-[var(--eu-yellow)]">❯</span>{' '}
-                <span className="text-[var(--landing-subtle)]">$ </span>
-                <span className="text-[var(--landing-ink)]">{typedCmd}</span>
-                {!showOut && (
-                  <span className="ml-0.5 inline-block h-[1em] w-[6px] animate-pulse bg-[var(--eu-yellow)] align-middle" />
-                )}
-              </p>
-              {showOut && (
-                <div className="mt-1.5 space-y-0.5">
-                  {script.out.map((line) => (
-                    <p key={line} className="text-emerald-500/90">
-                      {line}
-                    </p>
-                  ))}
-                </div>
-              )}
-            </div>
+            <WorkflowPhasePanels key={phase} phase={phase} script={script} />
           </div>
         </div>
       </div>

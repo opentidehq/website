@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { usePrefersReducedMotion } from '@/lib/hooks/use-prefers-reduced-motion';
 
 const lines = [
   { text: '→ search_rules(query="lateral movement")', delay: 0 },
@@ -9,19 +10,17 @@ const lines = [
 ];
 
 export function McpTerminalDemo() {
-  const [visible, setVisible] = useState(0);
+  const reduced = usePrefersReducedMotion();
+  const [animated, setAnimated] = useState(0);
+  const visible = reduced ? lines.length : animated;
 
   useEffect(() => {
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reduced) {
-      setVisible(lines.length);
-      return;
-    }
+    if (reduced) return;
     const timers = lines.map((line, i) =>
-      window.setTimeout(() => setVisible(i + 1), line.delay),
+      window.setTimeout(() => setAnimated(i + 1), line.delay),
     );
     return () => timers.forEach(clearTimeout);
-  }, []);
+  }, [reduced]);
 
   return (
     <div className="rounded-2xl border border-white/[0.08] bg-[var(--landing-surface)] p-8">

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { usePrefersReducedMotion } from '@/lib/hooks/use-prefers-reduced-motion';
 
 type Line =
   | { kind: 'cmd'; text: string }
@@ -19,23 +20,21 @@ const script: Line[] = [
 ];
 
 export function HeroTerminal() {
-  const [visible, setVisible] = useState(0);
+  const reduced = usePrefersReducedMotion();
+  const [animated, setAnimated] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const visible = reduced ? script.length : animated;
 
   useEffect(() => {
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reduced) {
-      setVisible(script.length);
-      return;
-    }
+    if (reduced) return;
     let i = 0;
     const id = window.setInterval(() => {
       i += 1;
-      setVisible(i);
+      setAnimated(i);
       if (i >= script.length) window.clearInterval(id);
     }, 480);
     return () => window.clearInterval(id);
-  }, []);
+  }, [reduced]);
 
   useEffect(() => {
     const el = scrollRef.current;
