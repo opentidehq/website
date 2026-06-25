@@ -1,296 +1,197 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useState, type ReactElement } from 'react';
+import { Check, Copy, Terminal } from 'lucide-react';
 import { usePrefersReducedMotion } from '@/lib/hooks/use-prefers-reduced-motion';
 
-type OutLine = { text: string; tone?: 'ok' | 'dim' | 'info' | 'warn' };
+const INSTALL_CMD = 'pip install "opentide[sentinel,cli,mcp]>=0.1"';
+const TICK_MS = 42;
 
-type Step =
-  | { kind: 'type'; command: string }
-  | { kind: 'pause'; ms: number }
-  | { kind: 'output'; lines: OutLine[]; staggerMs?: number }
-  | { kind: 'progress'; label: string; durationMs: number };
+function TerminalAnimation() {
+  const reduced = usePrefersReducedMotion();
+  const exportCmd = 'export OPENTIDE_REPO_ROOT=./detection-repo';
+  const setupCmd = 'opentide setup --yes --platform sentinel';
+  const validateCmd = 'opentide validate --strict';
+  const deployCmd = 'opentide deploy --platform sentinel --dry-run';
 
-const STEPS: Step[] = [
-  { kind: 'type', command: 'export OPENTIDE_REPO_ROOT=./detection-repo' },
-  { kind: 'pause', ms: 400 },
-  { kind: 'type', command: 'opentide setup --yes --platform sentinel' },
-  { kind: 'output', lines: [
-    { text: 'Scaffolding detection-repo…', tone: 'dim' },
-    { text: '✓ objects/ · .opentide/ · docs/', tone: 'ok' },
-    { text: '✓ sentinel platform linked', tone: 'ok' },
-  ], staggerMs: 280 },
-  { kind: 'pause', ms: 500 },
-  { kind: 'type', command: 'opentide validate --strict' },
-  { kind: 'progress', label: 'Validating 8 objects', durationMs: 1400 },
-  { kind: 'output', lines: [
-    { text: '  schema conformance', tone: 'dim' },
-    { text: '  ✓ uuid-format · id-uniqueness', tone: 'ok' },
-    { text: '  ✓ cross-object references', tone: 'ok' },
-    { text: '  ✓ sentinel KQL honesty', tone: 'ok' },
-    { text: '0 blocking · 0 warnings', tone: 'info' },
-  ], staggerMs: 220 },
-  { kind: 'pause', ms: 450 },
-  { kind: 'type', command: 'opentide generate' },
-  { kind: 'output', lines: [
-    { text: '→ rule.1.0.schema.json', tone: 'info' },
-    { text: '→ objective.1.0.schema.json', tone: 'info' },
-    { text: '→ rule.1.0.template.yaml', tone: 'info' },
-  ], staggerMs: 200 },
-  { kind: 'pause', ms: 500 },
-  { kind: 'type', command: 'opentide deploy --platform sentinel --dry-run' },
-  { kind: 'output', lines: [
-    { text: 'Plan: 1 rule · staging workspace', tone: 'dim' },
-    { text: '✓ LSASS memory access → Sentinel', tone: 'ok' },
-    { text: 'Dry-run complete — 0 blocked', tone: 'info' },
-  ], staggerMs: 300 },
-  { kind: 'pause', ms: 3200 },
-];
+  const tExport = exportCmd.length;
+  const tSetup = tExport + 3 + setupCmd.length;
+  const tSetupOut = tSetup + 4;
+  const tValidate = tSetupOut + 3 + validateCmd.length;
+  const tValidateOut = tValidate + 6;
+  const tDeploy = tValidateOut + 3 + deployCmd.length;
+  const tDeployOut = tDeploy + 4;
+  const tEnd = tDeployOut + 2;
 
-type RenderLine =
-  | { kind: 'cmd'; text: string; partial?: boolean }
-  | { kind: 'out'; line: OutLine; opacity: number }
-  | { kind: 'progress'; label: string; value: number };
+  const [tick, setTick] = useState(reduced ? tEnd : 0);
 
-function highlightCommand(cmd: string) {
-  const parts: { text: string; className: string }[] = [];
-  const tokens = cmd.match(/("[^"]+"|\S+)/g) ?? [cmd];
-  tokens.forEach((tok, i) => {
-    const prefix = i > 0 ? ' ' : '';
-    if (tok === 'export' || tok === 'opentide') {
-      parts.push({
-        text: prefix + tok,
-        className: tok === 'opentide' ? 'text-cyan-300/90' : 'text-violet-300/80',
-      });
-    } else if (tok.startsWith('--')) {
-      parts.push({ text: prefix + tok, className: 'text-[var(--eu-yellow)]/80' });
-    } else if (tok.startsWith('"')) {
-      parts.push({ text: prefix + tok, className: 'text-amber-200/80' });
-    } else if (tok === '=') {
-      parts.push({ text: prefix + tok, className: 'text-zinc-500' });
-    } else {
-      parts.push({ text: prefix + tok, className: 'text-zinc-300' });
-    }
-  });
-  return parts;
+  useEffect(() => {
+    if (reduced) return;
+    const id = window.setInterval(() => {
+      setTick((p) => (p >= tEnd ? 0 : p + 1));
+    }, TICK_MS);
+    return () => window.clearInterval(id);
+  }, [reduced, tEnd]);
+
+  const cursor = (on: boolean) =>
+    on ? <span className="inline-block h-3.5 w-[7px] animate-pulse bg-[var(--eu-yellow)] align-middle" /> : null;
+
+  const typeCmd = (cmd: string, start: number, end: number) => {
+    if (tick < start) return null;
+    const len = Math.min(cmd.length, tick - start);
+    return (
+      <>
+        {cmd.slice(0, len)}
+        {len < cmd.length && cursor(true)}
+      </>
+    );
+  };
+
+  const lines: ReactElement[] = [];
+
+  if (tick >= 1) {
+    lines.push(
+      <span key="export" className="text-zinc-300">
+        <span className="text-zinc-600">$ </span>
+        {typeCmd(exportCmd, 1, tExport)}
+      </span>,
+    );
+  }
+
+  if (tick >= tExport + 1) {
+    lines.push(
+      <span key="setup" className="text-zinc-300">
+        <span className="text-zinc-600">$ </span>
+        {typeCmd(setupCmd, tExport + 1, tSetup)}
+      </span>,
+    );
+  }
+
+  if (tick > tSetup) {
+    lines.push(
+      <Fragment key="setup-out">
+        {tick > tSetup + 1 && <span className="text-zinc-500">Scaffolding detection-repo…</span>}
+        {tick > tSetup + 2 && <span className="text-emerald-400/90">✓ objects/ · .opentide/ · docs/</span>}
+        {tick > tSetup + 3 && <span className="text-emerald-400/90">✓ sentinel platform linked</span>}
+      </Fragment>,
+    );
+  }
+
+  if (tick >= tSetupOut) {
+    lines.push(
+      <span key="validate" className="text-zinc-300">
+        <span className="text-zinc-600">$ </span>
+        {typeCmd(validateCmd, tSetupOut, tValidate)}
+      </span>,
+    );
+  }
+
+  if (tick > tValidate) {
+    lines.push(
+      <Fragment key="validate-out">
+        {tick > tValidate + 1 && <span className="text-zinc-500">◇ Validating 8 objects</span>}
+        {tick > tValidate + 2 && <span className="text-emerald-400/90">│ ✓ uuid-format · id-uniqueness</span>}
+        {tick > tValidate + 3 && <span className="text-emerald-400/90">│ ✓ cross-object references</span>}
+        {tick > tValidate + 4 && <span className="text-emerald-400/90">│ ✓ sentinel KQL honesty</span>}
+        {tick > tValidate + 5 && <span className="text-sky-300/85">0 blocking · 0 warnings</span>}
+      </Fragment>,
+    );
+  }
+
+  if (tick >= tValidateOut) {
+    lines.push(
+      <span key="deploy" className="text-zinc-300">
+        <span className="text-zinc-600">$ </span>
+        {typeCmd(deployCmd, tValidateOut, tDeploy)}
+      </span>,
+    );
+  }
+
+  if (tick > tDeploy) {
+    lines.push(
+      <Fragment key="deploy-out">
+        {tick > tDeploy + 1 && <span className="text-zinc-500">Plan: 1 rule · staging workspace</span>}
+        {tick > tDeploy + 2 && (
+          <span className="text-emerald-400/90">✓ LSASS memory access → Sentinel</span>
+        )}
+        {tick > tDeploy + 3 && <span className="text-sky-300/85">Dry-run complete — 0 blocked</span>}
+      </Fragment>,
+    );
+  }
+
+  if (tick > tDeployOut) {
+    lines.push(
+      <LaunchToast key="toast" className="absolute bottom-4 right-4 z-10 animate-in fade-in slide-in-from-top-4 duration-500" />,
+    );
+  }
+
+  return (
+    <div
+      className="relative p-3 text-[var(--landing-muted)]"
+      onMouseEnter={() => tick >= tEnd && setTick(0)}
+    >
+      <pre className="min-h-[240px] font-mono text-[11px] leading-[1.85] sm:text-xs">
+        <code className="grid gap-0.5">{lines}</code>
+      </pre>
+    </div>
+  );
 }
 
-const REDUCED_LINES: RenderLine[] = [
-  { kind: 'cmd', text: 'opentide validate --strict' },
-  { kind: 'out', line: { text: '0 blocking · 0 warnings', tone: 'info' }, opacity: 1 },
-  { kind: 'cmd', text: 'opentide deploy --platform sentinel --dry-run' },
-  { kind: 'out', line: { text: '✓ LSASS memory access → Sentinel', tone: 'ok' }, opacity: 1 },
-];
+function LaunchToast({ className }: { className?: string }) {
+  return (
+    <div
+      className={`overflow-hidden rounded-lg border border-white/10 bg-black/90 shadow-lg backdrop-blur-sm ${className ?? ''}`}
+    >
+      <p className="border-b border-white/10 px-3 py-1.5 text-center font-mono text-[10px] text-zinc-500">
+        detection-repo
+      </p>
+      <p className="px-3 py-2 text-xs text-zinc-300">Pipeline ready · 0 blocking</p>
+    </div>
+  );
+}
 
-function toneClass(tone?: OutLine['tone']) {
-  switch (tone) {
-    case 'ok':
-      return 'text-emerald-400/95';
-    case 'dim':
-      return 'text-zinc-500';
-    case 'info':
-      return 'text-sky-300/85';
-    case 'warn':
-      return 'text-amber-300/90';
-    default:
-      return 'text-zinc-400';
-  }
+function CopyInstallButton() {
+  const [copied, setCopied] = useState(false);
+
+  return (
+    <button
+      type="button"
+      className="shrink-0 rounded-lg border border-white/10 p-2 text-zinc-500 transition hover:border-[var(--eu-yellow)]/30 hover:text-[var(--eu-yellow)]"
+      aria-label="Copy install command"
+      onClick={() => {
+        void navigator.clipboard.writeText(INSTALL_CMD);
+        setCopied(true);
+        window.setTimeout(() => setCopied(false), 2000);
+      }}
+    >
+      {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+    </button>
+  );
 }
 
 export function HeroTerminal() {
-  const reduced = usePrefersReducedMotion();
-  const [lines, setLines] = useState<RenderLine[]>([]);
-  const displayLines = reduced ? REDUCED_LINES : lines;
-  const [cursorOn, setCursorOn] = useState(true);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const runId = useRef(0);
-
-  const scrollEnd = useCallback(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
-  }, []);
-
-  useEffect(() => {
-    if (reduced) return;
-
-    const id = ++runId.current;
-    let cancelled = false;
-
-    const sleep = (ms: number) =>
-      new Promise<void>((resolve) => {
-        window.setTimeout(resolve, ms);
-      });
-
-    const typeCommand = async (command: string) => {
-      setLines((prev) => [...prev, { kind: 'cmd', text: '', partial: true }]);
-      for (let i = 1; i <= command.length; i++) {
-        if (cancelled || runId.current !== id) return;
-        const slice = command.slice(0, i);
-        setLines((prev) => {
-          const next = [...prev];
-          const last = next.length - 1;
-          if (last >= 0 && next[last].kind === 'cmd') {
-            next[last] = { kind: 'cmd', text: slice, partial: i < command.length };
-          }
-          return next;
-        });
-        const ch = command[i - 1];
-        const delay = ch === ' ' ? 28 : 14 + Math.random() * 18;
-        await sleep(delay);
-      }
-      setLines((prev) => {
-        const next = [...prev];
-        const last = next.length - 1;
-        if (last >= 0 && next[last].kind === 'cmd') {
-          next[last] = { kind: 'cmd', text: command, partial: false };
-        }
-        return next;
-      });
-    };
-
-    const showOutput = async (outLines: OutLine[], staggerMs: number) => {
-      for (const line of outLines) {
-        if (cancelled || runId.current !== id) return;
-        setLines((prev) => [...prev, { kind: 'out', line, opacity: 0 }]);
-        await sleep(40);
-        setLines((prev) => {
-          const next = [...prev];
-          const last = next.length - 1;
-          if (last >= 0 && next[last].kind === 'out') {
-            next[last] = { ...next[last], opacity: 1 };
-          }
-          return next;
-        });
-        await sleep(staggerMs);
-      }
-    };
-
-    const showProgress = async (label: string, durationMs: number) => {
-      setLines((prev) => [...prev, { kind: 'progress', label, value: 0 }]);
-      const start = performance.now();
-      while (performance.now() - start < durationMs) {
-        if (cancelled || runId.current !== id) return;
-        const p = Math.min(1, (performance.now() - start) / durationMs);
-        setLines((prev) => {
-          const next = [...prev];
-          const idx = next.findIndex((l, i) => l.kind === 'progress' && i === next.length - 1);
-          if (idx >= 0 && next[idx].kind === 'progress') {
-            next[idx] = { ...next[idx], value: p };
-          }
-          return next;
-        });
-        await sleep(32);
-      }
-      setLines((prev) => prev.filter((l, i) => !(l.kind === 'progress' && i === prev.length - 1)));
-    };
-
-    const run = async () => {
-      while (!cancelled && runId.current === id) {
-        setLines([]);
-        for (const step of STEPS) {
-          if (cancelled || runId.current !== id) return;
-          if (step.kind === 'type') await typeCommand(step.command);
-          else if (step.kind === 'pause') await sleep(step.ms);
-          else if (step.kind === 'output') await showOutput(step.lines, step.staggerMs ?? 250);
-          else if (step.kind === 'progress') await showProgress(step.label, step.durationMs);
-        }
-      }
-    };
-
-    run();
-    return () => {
-      cancelled = true;
-    };
-  }, [reduced]);
-
-  useEffect(() => {
-    scrollEnd();
-  }, [displayLines, scrollEnd]);
-
-  useEffect(() => {
-    if (reduced) return;
-    const id = window.setInterval(() => setCursorOn((v) => !v), 530);
-    return () => window.clearInterval(id);
-  }, [reduced]);
-
-  const last = displayLines[displayLines.length - 1];
-  const showCursor = !reduced && last?.kind === 'cmd' && last.partial;
-
   return (
-    <div className="mx-auto max-w-3xl">
-      <p className="mb-4 text-center font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--landing-subtle)]">
-        Try it out
-      </p>
-      <div className="overflow-hidden rounded-2xl border border-white/[0.08] bg-[#080808] shadow-[0_32px_100px_-40px_rgba(0,0,0,0.95)]">
-        <div className="flex items-center gap-2 border-b border-white/[0.06] bg-[#0a0a0a] px-4 py-2.5">
-          <span className="size-2.5 rounded-full bg-[#ff5f57]" aria-hidden />
-          <span className="size-2.5 rounded-full bg-[#febc2e]" aria-hidden />
-          <span className="size-2.5 rounded-full bg-[#28c840]" aria-hidden />
-          <span className="ml-1 font-mono text-[11px] text-zinc-500">detection-repo</span>
-          <span className="ml-auto flex items-center gap-2 font-mono text-[10px] text-zinc-600">
-            <span className="size-1.5 rounded-full bg-emerald-500/80" />
-            zsh
-          </span>
+    <div className="mx-auto w-full max-w-[800px]">
+      <div className="rounded-2xl border border-white/10 bg-black p-2 shadow-[0_24px_80px_-32px_rgba(0,0,0,0.8)]">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch">
+          <h2 className="flex shrink-0 items-center justify-center rounded-xl border-2 border-[var(--eu-yellow)]/45 px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--eu-yellow)] sm:text-xs">
+            Try it out
+          </h2>
+          <div className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2">
+            <code className="min-w-0 flex-1 truncate font-mono text-[11px] text-zinc-300 sm:text-xs">
+              {INSTALL_CMD}
+            </code>
+            <CopyInstallButton />
+          </div>
         </div>
-        <div
-          ref={scrollRef}
-          className="h-[min(22rem,42vh)] overflow-y-auto overflow-x-hidden p-4 font-mono text-[11px] leading-[1.75] sm:text-xs"
-        >
-          {displayLines.map((line, i) => {
-            if (line.kind === 'cmd') {
-              return (
-                <p key={i} className="mb-1 text-zinc-300">
-                  <span className="text-[var(--eu-yellow)]">❯</span>{' '}
-                  <span className="text-zinc-600">$ </span>
-                  {highlightCommand(line.text).map((p, j) => (
-                    <span key={j} className={p.className}>
-                      {p.text}
-                    </span>
-                  ))}
-                  {showCursor && i === displayLines.length - 1 && (
-                    <span
-                      className={`ml-0.5 inline-block h-[1.05em] w-[7px] align-middle bg-[var(--eu-yellow)] transition-opacity duration-100 ${cursorOn ? 'opacity-100' : 'opacity-0'}`}
-                    />
-                  )}
-                </p>
-              );
-            }
-            if (line.kind === 'progress') {
-              return (
-                <div key={i} className="mb-2 pl-4">
-                  <p className="text-[10px] text-zinc-500">{line.label}</p>
-                  <div className="mt-1 h-1 w-full max-w-xs overflow-hidden rounded-full bg-zinc-800">
-                    <div
-                      className="h-full rounded-full bg-[var(--eu-yellow)]/70 transition-[width] duration-75 ease-out"
-                      style={{ width: `${line.value * 100}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            }
-            return (
-              <p
-                key={i}
-                className={`mb-0.5 pl-4 transition-all duration-300 ease-out ${toneClass(line.line.tone)}`}
-                style={{
-                  opacity: line.opacity,
-                  transform: line.opacity < 1 ? 'translateY(4px)' : 'translateY(0)',
-                }}
-              >
-                {line.line.text}
-              </p>
-            );
-          })}
-          {displayLines.length === 0 && !reduced && (
-            <span
-              className={`inline-block h-[1.05em] w-[7px] bg-[var(--eu-yellow)] ${cursorOn ? 'opacity-100' : 'opacity-0'}`}
-            />
-          )}
-        </div>
-        <div className="flex items-center justify-between border-t border-white/[0.06] bg-[#0a0a0a] px-4 py-2 font-mono text-[9px] text-zinc-600">
-          <span>opentide 0.1 · strict mode</span>
-          <span className="text-zinc-500">8 objects indexed</span>
+
+        <div className="relative mt-2 overflow-hidden rounded-xl border border-white/10 bg-white/[0.02] shadow-md">
+          <div className="flex items-center gap-2 border-b border-white/10 px-3 py-2 text-zinc-500">
+            <Terminal className="size-4" aria-hidden />
+            <span className="text-xs font-medium">Terminal</span>
+            <span className="ms-auto size-2 rounded-full bg-red-400/90" aria-hidden />
+          </div>
+          <TerminalAnimation />
         </div>
       </div>
     </div>

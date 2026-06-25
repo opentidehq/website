@@ -56,7 +56,7 @@ export function PipelineFlow() {
               <div
                 className={`landing-pipeline-card landing-surface-card h-full p-6 transition-all duration-300 ${
                   active === i
-                    ? 'scale-[1.03] border-[var(--landing-accent)]/50 bg-[var(--landing-surface-raised)] shadow-[0_0_40px_-12px_rgba(255,204,0,0.35)]'
+                    ? 'scale-[1.03] border-[var(--landing-accent)]/50 shadow-[0_0_40px_-12px_rgba(255,204,0,0.35)]'
                     : active !== null
                       ? 'opacity-60'
                       : 'hover:border-white/20'

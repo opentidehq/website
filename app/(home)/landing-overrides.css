@@ -1,0 +1,22 @@
+/* Landing: single true-black canvas — layout via borders, not background bands */
+.landing {
+  --landing-surface-deep: #000000;
+  --landing-surface: #000000;
+  --landing-surface-raised: #000000;
+}
+
+.landing .landing-surface-card {
+  background-color: transparent;
+}
+
+.landing .landing-hero-shell {
+  background: transparent;
+}
+
+.landing .landing-btn-secondary {
+  background-color: transparent;
+}
+
+.landing .landing-btn-secondary:hover {
+  background-color: rgb(255 255 255 / 0.03);
+}

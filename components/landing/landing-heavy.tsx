@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 function BlockSkeleton({ className }: { className?: string }) {
   return (
     <div
-      className={`animate-pulse rounded-xl border border-white/[0.06] bg-[var(--landing-surface)] ${className ?? ''}`}
+      className={`animate-pulse rounded-xl border border-white/[0.06] bg-black ${className ?? ''}`}
       aria-hidden
     />
   );

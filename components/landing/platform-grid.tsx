@@ -80,7 +80,7 @@ export function PlatformGrid() {
       <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         {platforms.map((p) => (
           <li key={p.id}>
-            <div className="group landing-surface-card flex h-full flex-col items-center gap-3 p-5 text-center transition hover:border-[var(--eu-yellow)]/25 hover:bg-[var(--landing-surface-raised)]">
+            <div className="group landing-surface-card flex h-full flex-col items-center gap-3 p-5 text-center transition hover:border-[var(--eu-yellow)]/25">
               <div className="flex size-12 items-center justify-center rounded-full bg-[var(--landing-bg)] ring-1 ring-white/[0.06] transition group-hover:ring-[var(--eu-yellow)]/20">
                 <PlatformLogo src={p.src} name={p.name} raster={p.raster} />
               </div>

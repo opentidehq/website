@@ -1,12 +1,8 @@
 import Link from 'next/link';
 import {
   ArrowRight,
-  BookOpen,
   Bot,
   CheckCircle2,
-  Code,
-  FileText,
-  Terminal,
   Waves,
   UserRound,
   Sparkles,
@@ -17,67 +13,18 @@ import { TideRippleScene } from '@/components/landing/tide-ripple-scene';
 import { HeroInstall } from '@/components/landing/hero-install';
 import { HeroPitch } from '@/components/landing/hero-pitch';
 import { HeroTerminal } from '@/components/landing/hero-terminal';
+import { FeatureShowcase } from '@/components/landing/feature-showcase';
 import { PipelineFlow } from '@/components/landing/pipeline-flow';
 import { WorkflowStudio, ObjectGraph, AutonomySpectrum } from '@/components/landing/landing-heavy';
 import { PlatformGrid } from '@/components/landing/platform-grid';
 import { ecosystemLinks } from '@/lib/shared';
 import type { Metadata } from 'next';
-import type { CSSProperties } from 'react';
 
 export const metadata: Metadata = {
   title: 'opentide — The DetectionOps Engine',
   description:
     'The normative standard for DetectionOps — validate, generate, deploy, and document rules with a structured framework that makes engineering faster and more reliable.',
 };
-
-const surfaces = [
-  {
-    title: 'Usage',
-    tag: 'DetectionOps',
-    description: 'Scaffold repos, wire CI, and run structured workflows — solo or with agents.',
-    href: '/docs/usage/installation/',
-    icon: BookOpen,
-    iconColor: '#ffcc00',
-    iconBg: 'rgba(255, 204, 0, 0.12)',
-    featured: true,
-  },
-  {
-    title: 'Specifications',
-    tag: 'Normative',
-    description: 'Objects, vocabularies, governance — the contract humans and agents share.',
-    href: '/docs/specifications/',
-    icon: FileText,
-    iconColor: '#e6b800',
-    iconBg: 'rgba(255, 204, 0, 0.08)',
-  },
-  {
-    title: 'CLI',
-    tag: 'Pipelines',
-    description: 'Same commands in your shell, CI, and incident runbooks.',
-    href: '/docs/cli/',
-    icon: Terminal,
-    iconColor: '#fff0a3',
-    iconBg: 'rgba(255, 204, 0, 0.1)',
-  },
-  {
-    title: 'MCP',
-    tag: 'Agents',
-    description: 'Structured tool output for assistants — no hallucinated pass/fail.',
-    href: '/docs/mcp/',
-    icon: Bot,
-    iconColor: '#ffcc00',
-    iconBg: 'rgba(255, 204, 0, 0.14)',
-  },
-  {
-    title: 'SDK',
-    tag: 'Embed',
-    description: 'Python registry API for orchestration you already own.',
-    href: '/docs/sdk/',
-    icon: Code,
-    iconColor: '#c9a000',
-    iconBg: 'rgba(255, 204, 0, 0.09)',
-  },
-];
 
 const features = [
   'Strict schema validation',
@@ -101,7 +48,7 @@ const spectrumBullets = [
 
 export default function HomePage() {
   return (
-    <div className="landing relative overflow-x-hidden">
+    <div className="landing relative overflow-x-hidden bg-black">
       <section className="relative flex min-h-[calc(100dvh-3.5rem)] flex-col px-4 md:px-6">
         <div className="landing-hero-shell landing-fade-in relative mx-auto flex w-full max-w-[1400px] flex-1 flex-col overflow-hidden">
           <div
@@ -116,7 +63,7 @@ export default function HomePage() {
           <div className="relative z-10 grid flex-1 items-center lg:grid-cols-[minmax(0,1fr)_minmax(0,0.55fr)]">
             <div className="px-5 py-8 md:px-10 md:py-10 lg:py-12">
               <div className="mb-2 flex flex-wrap gap-1.5">
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--eu-yellow)]/45 bg-[var(--eu-yellow)]/10 px-2.5 py-0.5 text-[11px] font-semibold text-[var(--eu-yellow)]">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--eu-yellow)]/45 bg-black/40 px-2.5 py-0.5 text-[11px] font-semibold text-[var(--eu-yellow)] backdrop-blur-sm">
                   EUPL-1.2 · forever free
                 </span>
                 <span className="rounded-full border border-white/10 bg-black/40 px-2.5 py-0.5 text-[11px] text-[var(--landing-subtle)] backdrop-blur-sm">
@@ -156,10 +103,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section
-        className="border-y border-white/10 bg-[var(--landing-surface-deep)] py-4"
-        aria-label="Product features"
-      >
+      <section className="border-y border-white/10 py-4" aria-label="Product features">
         <div className="landing-marquee-wrap overflow-hidden">
           <div
             className="landing-marquee flex gap-12 whitespace-nowrap text-sm font-medium text-[var(--landing-subtle)]"
@@ -186,11 +130,11 @@ export default function HomePage() {
         <PipelineFlow />
       </section>
 
-      <section className="landing-section border-t border-white/10 bg-black px-4 md:px-6">
+      <section className="landing-section border-t border-white/10 px-4 md:px-6">
         <HeroTerminal />
       </section>
 
-      <section className="landing-section border-t border-white/10 bg-[var(--landing-surface-deep)]">
+      <section className="landing-section border-t border-white/10">
         <div className="mx-auto max-w-[1400px] px-4 md:px-6">
           <h2 className="text-3xl font-bold tracking-[-0.02em] md:text-4xl text-balance">
             Objects chain into a graph
@@ -205,7 +149,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="landing-section mx-auto max-w-[1400px] px-4 md:px-6">
+      <section className="landing-section mx-auto max-w-[1400px] border-t border-white/10 px-4 md:px-6">
         <h2 className="text-3xl font-bold tracking-[-0.02em] md:text-4xl text-balance">
           IDE, CLI, and agents — one workflow
         </h2>
@@ -218,62 +162,21 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="landing-section border-t border-white/10 bg-[var(--landing-surface-deep)]">
+      <section className="landing-section border-t border-white/10">
         <div className="mx-auto max-w-[1400px] px-4 md:px-6">
-          <h2 className="text-3xl font-bold tracking-[-0.02em] md:text-4xl">Five surfaces, one engine</h2>
+          <h2 className="text-3xl font-bold tracking-[-0.02em] md:text-4xl text-balance">
+            Built for DetectionOps teams
+          </h2>
           <p className="mt-4 max-w-2xl text-[var(--landing-subtle)] text-pretty">
-            Specs for authors, CLI for pipelines, MCP for agents — all running the same
-            DetectionOps core.
+            Specs for authors, CLI for pipelines, MCP for agents — composable surfaces on one engine.
           </p>
-          <div className="mt-12 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {surfaces.map((s, i) => (
-              <Link
-                key={s.title}
-                href={s.href}
-                className={`landing-card group focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--landing-accent)] ${
-                  s.featured ? 'md:col-span-2 lg:col-span-2' : ''
-                }`}
-                style={{ '--i': i } as CSSProperties}
-              >
-                <div
-                  className={`landing-surface-card h-full p-6 transition ${
-                    s.featured
-                      ? 'border-[var(--landing-accent)]/25 bg-[var(--landing-surface-raised)] hover:border-[var(--landing-accent)]/50'
-                      : 'hover:border-white/20 hover:bg-[var(--landing-surface-raised)]'
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div
-                      className="inline-flex rounded-xl p-2.5 ring-1 ring-white/10"
-                      style={{ backgroundColor: s.iconBg, color: s.iconColor }}
-                    >
-                      <s.icon className="size-7" aria-hidden />
-                    </div>
-                    <span
-                      className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${
-                        s.featured
-                          ? 'bg-[var(--landing-accent)]/20 text-[var(--landing-accent)]'
-                          : 'bg-white/[0.06] text-[var(--landing-muted)]'
-                      }`}
-                    >
-                      {s.tag}
-                    </span>
-                  </div>
-                  <h3 className="mt-4 text-xl font-semibold transition-colors group-hover:text-[var(--landing-accent)]">
-                    {s.title}
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-[var(--landing-subtle)]">{s.description}</p>
-                  <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-[var(--landing-subtle)] group-hover:text-[var(--landing-accent)]">
-                    Explore <ArrowRight className="size-3.5" aria-hidden />
-                  </span>
-                </div>
-              </Link>
-            ))}
+          <div className="mt-12">
+            <FeatureShowcase />
           </div>
         </div>
       </section>
 
-      <section className="landing-section mx-auto max-w-[1400px] px-4 md:px-6">
+      <section className="landing-section mx-auto max-w-[1400px] border-t border-white/10 px-4 md:px-6">
         <div className="grid items-center gap-12 lg:grid-cols-2">
           <div>
             <div className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-[var(--landing-accent)]">
@@ -310,7 +213,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="landing-section border-t border-white/10 bg-[var(--landing-surface-deep)]">
+      <section className="landing-section border-t border-white/10">
         <div className="mx-auto max-w-[1400px] px-4 md:px-6">
           <div className="max-w-2xl">
             <h2 className="text-3xl font-bold tracking-[-0.02em] md:text-4xl text-balance">
@@ -328,13 +231,13 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="landing-section mx-auto max-w-[1400px] px-4 md:px-6">
+      <section className="landing-section mx-auto max-w-[1400px] border-t border-white/10 px-4 md:px-6">
         <h2 className="text-center text-3xl font-bold tracking-[-0.02em]">
           The <OpentideName /> ecosystem
         </h2>
         <ul className="mt-12 grid list-none gap-4 p-0 md:grid-cols-3">
-          {ecosystemLinks.map((repo, i) => (
-            <li key={repo.name} className="landing-card" style={{ '--i': i } as CSSProperties}>
+          {ecosystemLinks.map((repo) => (
+            <li key={repo.name}>
               <a
                 href={repo.href}
                 target="_blank"
@@ -349,7 +252,7 @@ export default function HomePage() {
         </ul>
       </section>
 
-      <section className="border-t border-white/10 bg-[var(--landing-surface-raised)] py-24 md:py-32">
+      <section className="border-t border-white/10 py-24 md:py-32">
         <div className="mx-auto max-w-3xl px-4 text-center">
           <p className="mb-4 text-sm font-semibold text-[var(--eu-yellow)]">EUPL-1.2 · forever free</p>
           <h2 className="text-3xl font-bold tracking-[-0.02em] md:text-4xl text-balance">
@@ -371,7 +274,7 @@ export default function HomePage() {
               href="https://pypi.org/project/opentide/"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-black px-8 py-3.5 text-sm font-semibold text-[var(--landing-muted)] transition hover:border-white/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--landing-accent)]"
+              className="inline-flex items-center gap-2 rounded-lg border border-white/10 px-8 py-3.5 text-sm font-semibold text-[var(--landing-muted)] transition hover:border-white/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--landing-accent)]"
             >
               Install from PyPI
             </a>

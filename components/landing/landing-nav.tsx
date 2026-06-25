@@ -12,7 +12,7 @@ function BrandMark() {
 
 function navClass(active: boolean) {
   return active
-    ? 'rounded-md bg-[var(--landing-surface-raised)] px-3 py-2 font-medium text-[var(--landing-ink)]'
+    ? 'rounded-md border border-white/10 px-3 py-2 font-medium text-[var(--landing-ink)]'
     : 'rounded-md px-3 py-2 text-[var(--landing-muted)] transition hover:bg-white/5 hover:text-[var(--landing-ink)]';
 }
 
@@ -61,7 +61,7 @@ export function LandingNav({ children }: { children: ReactNode }) {
         </div>
       </header>
       <main className="flex-1">{children}</main>
-      <footer className="border-t border-white/10 bg-[var(--landing-surface-deep)]">
+      <footer className="border-t border-white/10 bg-black">
         <div className="mx-auto max-w-[1400px] px-4 py-12 md:px-6">
           <div className="grid gap-10 md:grid-cols-[1.2fr_1fr_1fr]">
             <div>

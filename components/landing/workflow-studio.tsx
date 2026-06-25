@@ -255,7 +255,7 @@ export function WorkflowStudio() {
         ))}
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-white/[0.08] bg-[var(--landing-surface)] shadow-[0_12px_48px_-16px_rgba(0,0,0,0.85)]">
+      <div className="overflow-hidden rounded-xl border border-white/10 bg-black shadow-[0_12px_48px_-16px_rgba(0,0,0,0.85)]">
         <div className="flex items-center gap-2 border-b border-white/[0.06] bg-[var(--landing-bg)]/80 px-3 py-2">
           <span className="size-2 rounded-full bg-[#ff5f57]" aria-hidden />
           <span className="size-2 rounded-full bg-[#febc2e]" aria-hidden />
