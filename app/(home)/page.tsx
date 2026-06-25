@@ -15,6 +15,7 @@ import {
 import { OpentideName } from '@/components/brand/opentide-name';
 import { TideDitherScene } from '@/components/landing/tide-dither-scene';
 import { HeroInstall } from '@/components/landing/hero-install';
+import { HeroPitch } from '@/components/landing/hero-pitch';
 import { HeroTerminal } from '@/components/landing/hero-terminal';
 import { PipelineFlow } from '@/components/landing/pipeline-flow';
 import { WorkflowStudio, ObjectGraph, AutonomySpectrum } from '@/components/landing/landing-heavy';
@@ -101,9 +102,9 @@ const spectrumBullets = [
 export default function HomePage() {
   return (
     <div className="landing relative overflow-x-hidden">
-      <section className="flex min-h-[calc(100dvh-3.5rem)] flex-col px-4 pt-2 pb-2 md:px-6">
-        <div className="landing-hero-shell landing-fade-in mx-auto flex min-h-0 w-full max-w-[1400px] flex-1 flex-col">
-          <div className="grid min-h-0 flex-1 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
+      <section className="px-4 pt-2 pb-2 md:px-6">
+        <div className="landing-hero-shell landing-fade-in mx-auto w-full max-w-[1400px]">
+          <div className="grid lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:min-h-[min(52vh,520px)]">
             <div className="flex flex-col justify-center px-5 py-5 md:px-8 md:py-6 lg:py-7">
               <div className="mb-2 flex flex-wrap gap-1.5">
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--eu-yellow)]/45 bg-[var(--eu-yellow)]/10 px-2.5 py-0.5 text-[11px] font-semibold text-[var(--eu-yellow)]">
@@ -127,7 +128,8 @@ export default function HomePage() {
                 and specification for DetectionOps: normative objects, honest validation, and deploy
                 across platforms — human-led or agent-assisted.
               </p>
-              <div className="mt-5 flex flex-wrap gap-2.5">
+              <HeroInstall />
+              <div className="mt-4 flex flex-wrap gap-2.5">
                 <Link href="/docs/usage/installation/" className="landing-btn-primary group text-sm">
                   Getting started
                   <ArrowRight className="size-3.5 transition group-hover:translate-x-0.5" aria-hidden />
@@ -144,10 +146,8 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="shrink-0 border-t border-white/[0.06] bg-black p-3 md:p-4">
-            <HeroInstall />
-            <HeroTerminal />
-          </div>
+          <HeroPitch />
+          <HeroTerminal />
         </div>
       </section>
 

@@ -41,7 +41,6 @@ const BLACK = abgr('#000000');
 
 export function TideDitherScene({ className }: { className?: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const mouseRef = useRef({ x: 0.5, y: 0.5, down: false });
 
   useEffect(() => {
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -103,9 +102,6 @@ export function TideDitherScene({ className }: { className?: string }) {
         splash(0.28 + Math.sin(t * 0.22) * 0.08, 0.58, 0.05, 4);
         splash(0.72 + Math.cos(t * 0.24) * 0.08, 0.42, 0.05, 4);
       }
-
-      const { x: mx, y: my, down } = mouseRef.current;
-      if (down && !reduced) splash(mx, my, 0.22, 3);
     };
 
     const dither = (v: number, col: number, row: number, ramp: readonly string[]) => {
@@ -173,7 +169,6 @@ export function TideDitherScene({ className }: { className?: string }) {
       if (nw < 1 || nh < 1) return;
       w = nw;
       h = nh;
-      // putImageData ignores the transform matrix — keep canvas pixels 1:1 with ImageData.
       canvas.width = w;
       canvas.height = h;
       canvas.style.width = `${w}px`;
@@ -183,27 +178,6 @@ export function TideDitherScene({ className }: { className?: string }) {
       const buf8 = imageData.data;
       pixels = new Uint32Array(buf8.buffer, buf8.byteOffset, w * h);
       pixels.fill(BLACK);
-    };
-
-    const onDown = (e: PointerEvent) => {
-      const rect = canvas.getBoundingClientRect();
-      mouseRef.current = {
-        x: (e.clientX - rect.left) / rect.width,
-        y: (e.clientY - rect.top) / rect.height,
-        down: true,
-      };
-      if (!reduced) splash(mouseRef.current.x, mouseRef.current.y, 0.35, 4);
-    };
-
-    const onMove = (e: PointerEvent) => {
-      if (!mouseRef.current.down) return;
-      const rect = canvas.getBoundingClientRect();
-      mouseRef.current.x = (e.clientX - rect.left) / rect.width;
-      mouseRef.current.y = (e.clientY - rect.top) / rect.height;
-    };
-
-    const onUp = () => {
-      mouseRef.current.down = false;
     };
 
     const loop = () => {
@@ -221,19 +195,11 @@ export function TideDitherScene({ className }: { className?: string }) {
     splash(0.65, 0.5, 0.15, 5);
     loop();
 
-    canvas.addEventListener('pointerdown', onDown);
-    canvas.addEventListener('pointermove', onMove);
-    canvas.addEventListener('pointerup', onUp);
-    canvas.addEventListener('pointerleave', onUp);
     const ro = new ResizeObserver(resize);
     if (canvas.parentElement) ro.observe(canvas.parentElement);
 
     return () => {
       cancelAnimationFrame(raf);
-      canvas.removeEventListener('pointerdown', onDown);
-      canvas.removeEventListener('pointermove', onMove);
-      canvas.removeEventListener('pointerup', onUp);
-      canvas.removeEventListener('pointerleave', onUp);
       ro.disconnect();
     };
   }, []);
@@ -241,7 +207,7 @@ export function TideDitherScene({ className }: { className?: string }) {
   return (
     <canvas
       ref={canvasRef}
-      className={`${className ?? ''} block h-full w-full cursor-crosshair touch-none`}
+      className={`${className ?? ''} pointer-events-none block h-full w-full`}
       aria-hidden
       role="presentation"
       style={{ imageRendering: 'pixelated' }}
