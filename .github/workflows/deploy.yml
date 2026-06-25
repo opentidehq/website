@@ -18,8 +18,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Checkout opentide docs
+        uses: actions/checkout@v4
         with:
-          submodules: recursive
+          repository: OpenTideHQ/opentide
+          ref: docs/fumadocs-ready
+          path: vendor/opentide
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Checkout specifications
+        uses: actions/checkout@v4
+        with:
+          repository: OpenTideHQ/specifications
+          ref: main
+          path: vendor/specifications
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: pnpm/action-setup@v4
 

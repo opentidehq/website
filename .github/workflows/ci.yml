@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
@@ -15,8 +18,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Checkout opentide docs
+        uses: actions/checkout@v4
         with:
-          submodules: recursive
+          repository: OpenTideHQ/opentide
+          ref: docs/fumadocs-ready
+          path: vendor/opentide
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Checkout specifications
+        uses: actions/checkout@v4
+        with:
+          repository: OpenTideHQ/specifications
+          ref: main
+          path: vendor/specifications
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: pnpm/action-setup@v4
 
@@ -41,20 +58,39 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Checkout opentide docs
+        uses: actions/checkout@v4
         with:
-          submodules: recursive
+          repository: OpenTideHQ/opentide
+          ref: docs/fumadocs-ready
+          path: vendor/opentide
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Validate opentide documentation structure
         run: vendor/opentide/scripts/validate-docs.sh
-        working-directory: .
 
   build:
     runs-on: ubuntu-latest
     needs: [lint, validate-docs]
     steps:
       - uses: actions/checkout@v4
+
+      - name: Checkout opentide docs
+        uses: actions/checkout@v4
         with:
-          submodules: recursive
+          repository: OpenTideHQ/opentide
+          ref: docs/fumadocs-ready
+          path: vendor/opentide
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Checkout specifications
+        uses: actions/checkout@v4
+        with:
+          repository: OpenTideHQ/specifications
+          ref: main
+          path: vendor/specifications
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: pnpm/action-setup@v4
 
