@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { OpentideName } from '@/components/brand/opentide-name';
 import { TideDitherScene } from '@/components/landing/tide-dither-scene';
+import { HeroInstall } from '@/components/landing/hero-install';
 import { HeroTerminal } from '@/components/landing/hero-terminal';
 import { PipelineFlow } from '@/components/landing/pipeline-flow';
 import { WorkflowStudio, ObjectGraph, AutonomySpectrum } from '@/components/landing/landing-heavy';
@@ -25,7 +26,7 @@ import type { CSSProperties } from 'react';
 export const metadata: Metadata = {
   title: 'opentide — The DetectionOps Engine',
   description:
-    'Structure detection engineering end to end. Human-in-the-loop or fully agentic — validate, generate, deploy, and document rules across platforms.',
+    'The normative standard for DetectionOps — validate, generate, deploy, and document rules with a structured framework that makes engineering faster and more reliable.',
 };
 
 const surfaces = [
@@ -114,17 +115,17 @@ export default function HomePage() {
               </div>
               <div className="mb-6 inline-flex w-fit items-center gap-2 rounded-full border border-white/10 bg-black px-3 py-1 text-xs font-medium text-[var(--landing-subtle)]">
                 <Waves className="size-3.5 text-[var(--eu-yellow)]" aria-hidden />
-                the DetectionOps engine for detection-as-code
+                normative spec · open DetectionOps engine
               </div>
               <h1 className="text-[clamp(2.35rem,5.8vw,4.25rem)] font-bold leading-[1.05] tracking-[-0.035em] text-balance">
-                Structure{' '}
-                <span className="text-[var(--landing-accent)]">detection engineering</span>
-                <span className="text-[var(--landing-ink)]">, your way.</span>
+                Make detection engineering{' '}
+                <span className="text-[var(--landing-accent)]">better and faster</span>
+                <span className="text-[var(--landing-ink)]"> — with a standard.</span>
               </h1>
               <p className="mt-6 max-w-lg text-base leading-relaxed text-[var(--landing-muted)] md:text-lg text-pretty">
-                <OpentideName className="font-medium text-[var(--landing-ink)]" /> validates, generates,
-                deploys, and documents rules across platforms. Human-led, agent-assisted, or
-                fully autonomous — you set the balance.
+                <OpentideName className="font-medium text-[var(--landing-ink)]" /> is the structured framework
+                and specification for DetectionOps: normative objects, honest validation, and deploy
+                across platforms — human-led or agent-assisted.
               </p>
               <div className="mt-9 flex flex-wrap gap-3">
                 <Link href="/docs/usage/installation/" className="landing-btn-primary group">
@@ -144,6 +145,7 @@ export default function HomePage() {
           </div>
 
           <div className="border-t border-white/[0.06] bg-black p-4 md:p-6">
+            <HeroInstall />
             <HeroTerminal />
           </div>
         </div>
@@ -185,8 +187,8 @@ export default function HomePage() {
             Objects chain into a graph
           </h2>
           <p className="mt-4 max-w-2xl text-[var(--landing-subtle)] text-pretty">
-            Intel informs threats. Threats drive objectives. Objectives become deployable rules —
-            traceable end to end in your repo.
+            Threats, objectives, and rules form a registry graph — one chain highlighted among many
+            objects in your repo.
           </p>
           <div className="mt-12">
             <ObjectGraph />
