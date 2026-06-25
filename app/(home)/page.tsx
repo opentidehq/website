@@ -13,7 +13,7 @@ import {
   Circle,
 } from 'lucide-react';
 import { OpentideName } from '@/components/brand/opentide-name';
-import { TideDitherScene } from '@/components/landing/tide-dither-scene';
+import { TideRippleScene } from '@/components/landing/tide-ripple-scene';
 import { HeroInstall } from '@/components/landing/hero-install';
 import { HeroPitch } from '@/components/landing/hero-pitch';
 import { HeroTerminal } from '@/components/landing/hero-terminal';
@@ -102,19 +102,28 @@ const spectrumBullets = [
 export default function HomePage() {
   return (
     <div className="landing relative overflow-x-hidden">
-      <section className="px-4 pt-2 pb-2 md:px-6">
-        <div className="landing-hero-shell landing-fade-in mx-auto w-full max-w-[1400px]">
-          <div className="grid lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:min-h-[min(52vh,520px)]">
-            <div className="flex flex-col justify-center px-5 py-5 md:px-8 md:py-6 lg:py-7">
+      <section className="relative flex min-h-[calc(100dvh-3.5rem)] flex-col px-4 md:px-6">
+        <div className="landing-hero-shell landing-fade-in relative mx-auto flex w-full max-w-[1400px] flex-1 flex-col overflow-hidden">
+          <div
+            className="pointer-events-none absolute inset-0 flex items-center justify-center"
+            aria-hidden
+          >
+            <div className="aspect-square w-[min(92vw,58vh,640px)] max-w-full opacity-90">
+              <TideRippleScene className="h-full w-full" />
+            </div>
+          </div>
+
+          <div className="relative z-10 grid flex-1 items-center lg:grid-cols-[minmax(0,1fr)_minmax(0,0.55fr)]">
+            <div className="px-5 py-8 md:px-10 md:py-10 lg:py-12">
               <div className="mb-2 flex flex-wrap gap-1.5">
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--eu-yellow)]/45 bg-[var(--eu-yellow)]/10 px-2.5 py-0.5 text-[11px] font-semibold text-[var(--eu-yellow)]">
                   EUPL-1.2 · forever free
                 </span>
-                <span className="rounded-full border border-white/10 px-2.5 py-0.5 text-[11px] text-[var(--landing-subtle)]">
+                <span className="rounded-full border border-white/10 bg-black/40 px-2.5 py-0.5 text-[11px] text-[var(--landing-subtle)] backdrop-blur-sm">
                   open source engine
                 </span>
               </div>
-              <div className="mb-3 inline-flex w-fit items-center gap-2 rounded-full border border-white/10 bg-black px-2.5 py-0.5 text-[11px] font-medium text-[var(--landing-subtle)]">
+              <div className="mb-3 inline-flex w-fit items-center gap-2 rounded-full border border-white/10 bg-black/40 px-2.5 py-0.5 text-[11px] font-medium text-[var(--landing-subtle)] backdrop-blur-sm">
                 <Waves className="size-3 text-[var(--eu-yellow)]" aria-hidden />
                 normative spec · open DetectionOps engine
               </div>
@@ -140,14 +149,10 @@ export default function HomePage() {
                 </Link>
               </div>
             </div>
-
-            <div className="relative min-h-[160px] border-t border-white/[0.06] sm:min-h-[200px] lg:min-h-0 lg:border-t-0 lg:border-l lg:border-white/[0.06]">
-              <TideDitherScene className="absolute inset-0" />
-            </div>
+            <div className="hidden lg:block" aria-hidden />
           </div>
 
           <HeroPitch />
-          <HeroTerminal />
         </div>
       </section>
 
@@ -179,6 +184,10 @@ export default function HomePage() {
           carries your content forward; you steer how much is human and how much is agentic.
         </p>
         <PipelineFlow />
+      </section>
+
+      <section className="landing-section border-t border-white/10 bg-black px-4 md:px-6">
+        <HeroTerminal />
       </section>
 
       <section className="landing-section border-t border-white/10 bg-[var(--landing-surface-deep)]">
