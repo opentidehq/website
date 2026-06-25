@@ -4,8 +4,8 @@ export const appDescription =
 export const docsRoute = '/docs';
 export const docsImageRoute = '/og/docs';
 export const docsContentRoute = '/llms.mdx/docs';
-// Default GitHub Pages URL until opentide.org DNS is configured.
-export const siteUrl = 'https://opentidehq.github.io/website';
+// Resolved at deploy time from GitHub Pages (private repos use *.pages.github.io).
+export const siteUrl = 'https://congenial-winner-o8y3gq9.pages.github.io';
 
 export const gitConfig = {
   user: 'OpenTideHQ',

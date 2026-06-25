@@ -19,22 +19,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Checkout opentide docs
-        uses: actions/checkout@v4
-        with:
-          repository: OpenTideHQ/opentide
-          ref: docs/fumadocs-ready
-          path: vendor/opentide
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Checkout specifications
-        uses: actions/checkout@v4
-        with:
-          repository: OpenTideHQ/specifications
-          ref: main
-          path: vendor/specifications
-          token: ${{ secrets.GITHUB_TOKEN }}
-
       - uses: pnpm/action-setup@v4
 
       - uses: actions/setup-node@v4
@@ -44,13 +28,10 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - name: Sync documentation content
-        run: pnpm sync:content
+      - name: Build static site
+        run: pnpm build
         env:
-          OPENTIDE_DOCS_PATH: vendor/opentide/docs
-          SPECIFICATIONS_PATH: vendor/specifications
-
-      - run: pnpm build
+          SKIP_SYNC: '1'
 
       - uses: actions/upload-pages-artifact@v3
         with:

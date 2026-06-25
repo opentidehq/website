@@ -213,6 +213,10 @@ Implementation lives in the [opentide](https://github.com/OpenTideHQ/opentide) P
 }
 
 function main() {
+  if (process.env.SKIP_SYNC === '1') {
+    console.log('sync-content: skipped (SKIP_SYNC=1)');
+    return;
+  }
   const opentideDocs = resolvePath(
     'OPENTIDE_DOCS_PATH',
     ['vendor/opentide/docs', '../opentide/docs'],

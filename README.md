@@ -1,6 +1,6 @@
 # OpenTide Website
 
-Source for the OpenTide web presence — currently deployed at [opentidehq.github.io/website](https://opentidehq.github.io/website) ([opentide.org](https://opentide.org) DNS later).
+Source for the OpenTide web presence — deployed on GitHub Pages ([congenial-winner-o8y3gq9.pages.github.io](https://congenial-winner-o8y3gq9.pages.github.io); [opentide.org](https://opentide.org) DNS later).
 
 Built with [Next.js](https://nextjs.org/) and [Fumadocs](https://fumadocs.dev/), exported as a static site for GitHub Pages.
 
@@ -15,7 +15,7 @@ Built with [Next.js](https://nextjs.org/) and [Fumadocs](https://fumadocs.dev/),
 | Blog | This repo `content/blog/` | `/blog` |
 | Registry | Coming soon | `/registry` |
 
-Documentation prose is **not duplicated** in this repository. A sync script copies content from the opentide and specifications repos before each build.
+Documentation prose is synced from the opentide and specifications repos via `pnpm sync:content` and **committed** under `content/docs/` so private-repo CI can build without cross-repository access. After upstream doc changes, run sync and commit the diff.
 
 ## Local development
 

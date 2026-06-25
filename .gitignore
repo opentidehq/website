@@ -1,9 +1,8 @@
 # deps
 /node_modules
 
-# generated content
+# generated content (synced docs are committed for private-repo CI)
 .source
-/content/docs
 
 # test & build
 /coverage
