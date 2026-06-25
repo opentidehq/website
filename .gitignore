@@ -1,15 +1,36 @@
+# deps
+/node_modules
+
+# generated content
+.source
+/content/docs
+
+# test & build
+/coverage
+/.next/
+/out/
+/build
+*.tsbuildinfo
+
+# misc
 .DS_Store
-*.swp
-*.swo
-.idea/
-.vscode/
-*.log
+*.pem
+/.pnp
+.pnp.js
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# env
 .env
 .env.*
 !.env.example
-node_modules/
-dist/
-.next/
-.vercel/
-.output/
+.env*.local
+
+# others
+.vercel
+next-env.d.ts
 *.local
+
+# vendor submodules (tracked via git submodule)
+# vendor/

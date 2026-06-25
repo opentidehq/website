@@ -1,0 +1,36 @@
+name: Update documentation submodules
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  bump-submodules:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update submodules to latest
+        run: |
+          git submodule update --remote --merge vendor/opentide vendor/specifications
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Create pull request if submodules changed
+        uses: peter-evans/create-pull-request@v7
+        with:
+          title: 'chore: bump documentation submodules'
+          body: |
+            Automated weekly bump of opentide and specifications submodules.
+
+            Run `pnpm sync:content && pnpm build` locally to verify before merging.
+          branch: chore/bump-docs-submodules
+          commit-message: 'chore: bump documentation submodules'

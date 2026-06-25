@@ -1,0 +1,7 @@
+[submodule "vendor/opentide"]
+	path = vendor/opentide
+	url = https://github.com/OpenTideHQ/opentide.git
+	branch = docs/fumadocs-ready
+[submodule "vendor/specifications"]
+	path = vendor/specifications
+	url = https://github.com/OpenTideHQ/specifications.git

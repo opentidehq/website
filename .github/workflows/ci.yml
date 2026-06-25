@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Sync documentation content
+        run: pnpm sync:content
+        env:
+          OPENTIDE_DOCS_PATH: vendor/opentide/docs
+          SPECIFICATIONS_PATH: vendor/specifications
+
+      - run: pnpm lint
+
+      - run: pnpm types:check
+
+  validate-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Validate opentide documentation structure
+        run: vendor/opentide/scripts/validate-docs.sh
+        working-directory: .
+
+  build:
+    runs-on: ubuntu-latest
+    needs: [lint, validate-docs]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Sync documentation content
+        run: pnpm sync:content
+        env:
+          OPENTIDE_DOCS_PATH: vendor/opentide/docs
+          SPECIFICATIONS_PATH: vendor/specifications
+
+      - run: pnpm build
+
+      - name: Verify static export output
+        run: test -f out/index.html && test -f out/.nojekyll

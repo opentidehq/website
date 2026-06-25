@@ -1,19 +1,106 @@
 # OpenTide Website
 
-Source for the [OpenTide](https://github.com/OpenTideHQ/opentide) project website.
+Source for the OpenTide web presence — currently deployed at [opentidehq.github.io/website](https://opentidehq.github.io/website) ([opentide.org](https://opentide.org) DNS later).
 
-## Purpose
+Built with [Next.js](https://nextjs.org/) and [Fumadocs](https://fumadocs.dev/), exported as a static site for GitHub Pages.
 
-This repository will host the public-facing OpenTide web presence — landing pages, documentation entry points, and related static assets.
+## What's here
 
-## Status
+| Section | Source | Path |
+|---------|--------|------|
+| Landing page | This repo | `/` |
+| Documentation | Synced at build time | `/docs` |
+| Specifications | [specifications](https://github.com/OpenTideHQ/specifications) repo | `/docs/specifications` |
+| Usage, CLI, MCP, SDK | [opentide](https://github.com/OpenTideHQ/opentide) `docs/` | `/docs/{usage,cli,mcp,sdk}` |
+| Blog | This repo `content/blog/` | `/blog` |
+| Registry | Coming soon | `/registry` |
 
-Scaffold only. Site implementation is not started yet.
+Documentation prose is **not duplicated** in this repository. A sync script copies content from the opentide and specifications repos before each build.
+
+## Local development
+
+### Prerequisites
+
+- Node.js 22+
+- pnpm 10+
+
+### Monorepo layout (recommended)
+
+If you clone OpenTide repos as siblings:
+
+```
+OpenTide/
+├── opentide/
+├── specifications/
+└── website/    ← you are here
+```
+
+```bash
+pnpm install
+OPENTIDE_DOCS_PATH=../opentide/docs SPECIFICATIONS_PATH=../specifications pnpm dev
+```
+
+### Submodule layout (CI / production)
+
+```bash
+git submodule update --init --recursive
+pnpm install
+pnpm dev
+```
+
+Environment overrides (first match wins):
+
+| Variable | Default candidates |
+|----------|-------------------|
+| `OPENTIDE_DOCS_PATH` | `vendor/opentide/docs`, `../opentide/docs` |
+| `SPECIFICATIONS_PATH` | `vendor/specifications`, `../specifications` |
+
+## Scripts
+
+| Command | Description |
+|---------|-------------|
+| `pnpm dev` | Sync docs + start dev server |
+| `pnpm sync:content` | Copy opentide + specifications docs into `content/docs/` |
+| `pnpm build` | Sync + static export to `out/` |
+| `pnpm lint` | ESLint |
+| `pnpm types:check` | TypeScript + Fumadocs MDX types |
+
+## Writing a blog post
+
+Add an MDX file under `content/blog/`:
+
+```mdx
+---
+title: Your post title
+description: One sentence summary for listings and SEO.
+author: Your Name
+date: 2026-06-25
+tags:
+  - detectionops
+---
+
+Your content here.
+```
+
+Open a pull request. Posts appear at `/blog/<filename-without-extension>/`.
+
+## Deployment
+
+### Prerequisites
+
+1. **opentide** submodule tracks the `docs/fumadocs-ready` branch (Fumadocs-formatted docs).
+2. **specifications** content must exist in the [specifications](https://github.com/OpenTideHQ/specifications) repository — until published, local builds fall back to `../specifications` when the vendor submodule is empty.
+
+Pushes to `main` deploy to **GitHub Pages** via `.github/workflows/deploy.yml`.
+
+### Custom domain (opentide.org) — later
+
+When DNS is ready: add `public/CNAME` with `opentide.org`, set the custom domain in GitHub Pages settings, and update `siteUrl` in `lib/shared.ts`.
 
 ## Related repositories
 
-- **[opentide](https://github.com/OpenTideHQ/opentide)** — DetectionOps engine (PyPI package)
-- **[WikiTide](https://github.com/OpenTideHQ/WikiTide)** — Rendered ShareTide documentation
+- **[opentide](https://github.com/OpenTideHQ/opentide)** — DetectionOps engine (PyPI)
+- **[specifications](https://github.com/OpenTideHQ/specifications)** — Normative specs
 - **[ShareTide](https://github.com/OpenTideHQ/ShareTide)** — Community detection objects
 
 ## License
