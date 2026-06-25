@@ -15,7 +15,6 @@ import { HeroPitch } from '@/components/landing/hero-pitch';
 import { FeatureShowcase } from '@/components/landing/feature-showcase';
 import { PipelineFlow } from '@/components/landing/pipeline-flow';
 import { WorkflowStudio, ObjectGraph, AutonomySpectrum } from '@/components/landing/landing-heavy';
-import { PlatformGrid } from '@/components/landing/platform-grid';
 import { ecosystemLinks } from '@/lib/shared';
 import type { Metadata } from 'next';
 
@@ -50,13 +49,11 @@ export default function HomePage() {
     <div className="landing relative overflow-x-hidden bg-black">
       <section className="relative px-4 pt-2 md:px-6 md:pt-4">
         <div className="landing-hero-shell landing-fade-in relative mx-auto w-full max-w-[1400px] overflow-hidden">
-          <div className="absolute inset-0 flex items-center justify-center" aria-hidden>
-            <div className="aspect-square w-[min(95vw,62vh,720px)] max-w-full">
-              <TideRippleScene className="h-full w-full" />
-            </div>
+          <div className="absolute inset-0" aria-hidden>
+            <TideRippleScene className="h-full w-full" />
           </div>
 
-          <div className="relative z-10 grid min-h-[min(72vh,640px)] items-center lg:grid-cols-[minmax(0,1fr)_minmax(0,0.55fr)]">
+          <div className="relative z-10 grid min-h-[min(84vh,800px)] items-center lg:grid-cols-[minmax(0,1fr)_minmax(0,0.55fr)]">
             <div className="px-5 py-10 md:px-10 md:py-12 lg:py-14">
               <div className="mb-2 flex flex-wrap gap-1.5">
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--eu-yellow)]/45 bg-black/40 px-2.5 py-0.5 text-[11px] font-semibold text-[var(--eu-yellow)] backdrop-blur-sm">
@@ -135,7 +132,7 @@ export default function HomePage() {
             Intel informs threats. Threats drive objectives. Rules deploy the detection — one chain
             highlighted among everything else in your repo.
           </p>
-          <div className="mt-10 max-h-[min(520px,70vh)]">
+          <div className="mt-10">
             <ObjectGraph />
           </div>
         </div>
@@ -143,11 +140,11 @@ export default function HomePage() {
 
       <section className="landing-section mx-auto max-w-[1400px] px-4 md:px-6">
         <h2 className="text-3xl font-bold tracking-[-0.02em] md:text-4xl text-balance">
-          Agents, skills, and CI — one workflow
+          IDE, CLI, and agents — one workflow
         </h2>
         <p className="mt-4 max-w-2xl text-[var(--landing-subtle)] text-pretty">
-          From engineer prompt to deployable rules — MCP tools, bundled agent skills, CLI validation,
-          then GitHub Actions running the same pipeline in CI.
+          File tree, editor, agent trace, and terminal — one scenario stepping from intel to deploy,
+          with MCP skills and CLI validation at each stage.
         </p>
         <div className="mt-10">
           <WorkflowStudio />
@@ -202,24 +199,6 @@ export default function HomePage() {
             </Link>
           </div>
           <AutonomySpectrum />
-        </div>
-      </section>
-
-      <section className="landing-section">
-        <div className="mx-auto max-w-[1400px] px-4 md:px-6">
-          <div className="max-w-2xl">
-            <h2 className="text-3xl font-bold tracking-[-0.02em] md:text-4xl text-balance">
-              Multi-platform native by design
-            </h2>
-            <p className="mt-4 text-[var(--landing-subtle)] text-pretty">
-              opentide is built as an expandable standard — not a fixed integration list. Deploy
-              everywhere we connect today; add adapters as your stack grows. We only validate queries
-              where the platform honestly supports it — never fake syntax checks.
-            </p>
-          </div>
-          <div className="mt-12">
-            <PlatformGrid />
-          </div>
         </div>
       </section>
 

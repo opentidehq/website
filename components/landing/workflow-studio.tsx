@@ -1,303 +1,323 @@
 'use client';
 
-import { Bot, GitBranch, Terminal } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
-import { AgentEvent, EventCard } from '@/components/landing/agent-trace-panel';
-import { usePrefersReducedMotion } from '@/lib/hooks/use-prefers-reduced-motion';
+import { Files, Bot, Terminal, FileText } from 'lucide-react';
+import { File } from '@pierre/diffs/react';
+import { FileTree, useFileTree, useFileTreeSelector } from '@pierre/trees/react';
+import { useEffect, useMemo, useState } from 'react';
+import { AgentTracePanel, type AgentEvent } from '@/components/landing/agent-trace-panel';
+import { DEMO_FILES, DEMO_PATHS, DEMO_REPO, type DemoPath } from '@/lib/landing/demo-registry';
 
-const WORKFLOW_EVENTS: AgentEvent[] = [
-  {
-    kind: 'prompt',
-    text: 'Turn CISA AA24-073A into deployable Sentinel + Defender detections for our MSP fleet. Use strict validation and dry-run deploy.',
-  },
-  {
-    kind: 'skill',
-    skill: 'detection-engineering',
-    action: 'Load TVM → DOM → MDR sequencing and PR scope discipline',
-    detail: 'SKILL.md · OpenTideHQ/skills',
-  },
-  {
-    kind: 'reasoning',
-    text: 'ScreenConnect auth bypass (CVE-2024-1709) maps to gateway exploitation threat. Follow-on is credential access via LSASS — chain intel → threat → objective → rule.',
-  },
-  {
-    kind: 'skill',
-    skill: 'opentide-detection-rule',
-    action: 'Apply rule::1.0 schema, detection_model UUID, platform configs',
-    detail: 'normative MDR object contract',
-  },
-  {
-    kind: 'mcp',
-    tool: 'read_file',
-    input: 'intel/advisories/cve-2024-1709.md',
-    output: 'parsed CVE-2024-1709 · T1190 · T1003.001',
-  },
-  {
-    kind: 'skill',
-    skill: 'microsoft-sentinel',
-    action: 'KQL patterns for process access to LSASS',
-    detail: 'DeviceProcessEvents · honest query validation',
-  },
-  {
-    kind: 'mcp',
-    tool: 'write_file',
-    input: 'objects/threats/gateway-exploitation.yaml',
-    output: 'threat::1.0 · uuid …010 · schema valid',
-  },
-  {
-    kind: 'cli',
-    command: 'opentide validate --file objects/threats/gateway-exploitation.yaml',
-    output: '✓ threat::1.0 · 0 errors',
-  },
-  {
-    kind: 'skill',
-    skill: 'entra-id',
-    action: 'Cross-check identity telemetry for gateway foothold scenarios',
-    detail: 'sign-in logs · non-interactive patterns',
-  },
-  {
-    kind: 'mcp',
-    tool: 'write_file',
-    input: 'objects/objectives/credential-access.yaml',
-    output: 'objective links threat …010 · 1 signal',
-  },
-  {
-    kind: 'skill',
-    skill: 'defender-for-endpoint',
-    action: 'DeviceProcessEvents KQL for LSASS access objective',
-    detail: 'pairs with Sentinel config on same rule',
-  },
-  {
-    kind: 'mcp',
-    tool: 'write_file',
-    input: 'objects/rules/lsass-memory-access.yaml',
-    output: 'rule links objective …001 · sentinel + defender',
-  },
-  {
-    kind: 'reasoning',
-    text: 'Run strict validation across registry — schema, UUID v4, cross-object refs, and honest Sentinel KQL check before merge.',
-  },
-  {
-    kind: 'mcp',
-    tool: 'validate',
-    input: 'strict=true',
-    output: '8 objects · 0 blocking · sentinel KQL passed',
-  },
-  {
-    kind: 'cli',
-    command: 'opentide validate --strict',
-    output: '✓ uuid-format · cross-object · id-uniqueness',
-  },
-  {
-    kind: 'skill',
-    skill: 'github-actions',
-    action: 'Align generated workflow with setup ci discovery',
-    detail: 'validate query jobs per enabled platform TOML',
-  },
-  {
-    kind: 'mcp',
-    tool: 'generate',
-    output: 'schemas · templates · docs · exports refreshed',
-  },
-  {
-    kind: 'cli',
-    command: 'opentide generate',
-    output: '→ .opentide/schemas/ · docs/ · templates/',
-  },
-  {
-    kind: 'reasoning',
-    text: 'Human approved — dry-run deploy LSASS rule to Sentinel staging workspace. Promotion handled in deploy, not CI promote job.',
-  },
-  {
-    kind: 'skill',
-    skill: 'crowdstrike-falcon',
-    action: 'Skip query validation — platform honesty flag (can_validate=false)',
-    detail: 'deploy-only adapter · no fake syntax check',
-  },
-  {
-    kind: 'mcp',
-    tool: 'deploy',
-    input: 'dry_run=true, platform=sentinel',
-    output: '1 rule would deploy · staging plan ready',
-  },
-  {
-    kind: 'cli',
-    command: 'opentide deploy --platform sentinel --dry-run',
-    output: '✓ LSASS memory access → Sentinel · 0 blocked',
-  },
-];
+const STEPS = [
+  'intel',
+  'threat',
+  'objective',
+  'rule',
+  'validate',
+  'generate',
+  'deploy',
+] as const;
 
-type CiLine = { style: 'dim' | 'cmd' | 'ok' | 'header' | 'gh'; text: string };
+type Step = (typeof STEPS)[number];
 
-const CI_LINES: CiLine[] = [
-  { style: 'header', text: 'GitHub Actions · .github/workflows/opentide.yml' },
-  { style: 'gh', text: 'on: pull_request · push to main' },
-  { style: 'dim', text: '────────────────────────────────────────' },
-  { style: 'dim', text: 'Job: validate (ubuntu-latest · Python 3.14)' },
-  { style: 'cmd', text: 'pip install opentide[sentinel,cli]' },
-  { style: 'cmd', text: 'opentide generate' },
-  { style: 'ok', text: '✓ schemas · templates · docs generated' },
-  { style: 'cmd', text: 'opentide validate --strict' },
-  { style: 'ok', text: '✓ 8 objects · 0 blocking · 0 warnings' },
-  { style: 'cmd', text: 'opentide validate query --platform sentinel' },
-  { style: 'ok', text: '✓ KQL syntax honest · sentinel workspace dry check' },
-  { style: 'dim', text: '────────────────────────────────────────' },
-  { style: 'dim', text: 'Job: deploy-staging (needs: validate)' },
-  { style: 'cmd', text: 'opentide deploy --platform sentinel --dry-run' },
-  { style: 'ok', text: '✓ 1 rule staged · LSASS memory access' },
-  { style: 'gh', text: 'Workflow passed · 42s · detection-repo@feat/gateway-detections' },
-];
+const stepFile: Record<Step, DemoPath> = {
+  intel: 'intel/advisories/cve-2024-1709.md',
+  threat: 'objects/threats/gateway-exploitation.yaml',
+  objective: 'objects/objectives/credential-access.yaml',
+  rule: 'objects/rules/lsass-memory-access.yaml',
+  validate: 'objects/rules/lsass-memory-access.yaml',
+  generate: '.opentide/schemas/rule.1.0.schema.json',
+  deploy: 'objects/rules/lsass-memory-access.yaml',
+};
 
-const EVENT_MS = 420;
-const CI_CHAR_MS = 14;
-const PAUSE_BEFORE_CI_MS = 2200;
-const LOOP_PAUSE_MS = 4000;
+const stepLabel: Record<Step, string> = {
+  intel: 'Ingest intel',
+  threat: 'Draft threat',
+  objective: 'Define objective',
+  rule: 'Author rule',
+  validate: 'Validate repo',
+  generate: 'Generate schemas',
+  deploy: 'Deploy dry-run',
+};
+
+const stepScripts: Record<
+  Step,
+  { events: AgentEvent[]; cmd: string; out: string[] }
+> = {
+  intel: {
+    events: [
+      {
+        kind: 'prompt',
+        text: 'Turn CISA AA24-073A into deployable Sentinel detections — strict validation, dry-run deploy.',
+      },
+      {
+        kind: 'skill',
+        skill: 'detection-engineering',
+        action: 'Load TVM → DOM → MDR sequencing from advisory',
+        detail: 'SKILL.md · OpenTideHQ/skills',
+      },
+      {
+        kind: 'mcp',
+        tool: 'read_file',
+        input: 'intel/advisories/cve-2024-1709.md',
+        output: 'parsed CVE-2024-1709 · T1190 · T1003.001',
+      },
+    ],
+    cmd: 'opentide document --intel intel/advisories/cve-2024-1709.md',
+    out: ['→ extracted T1190, T1003.001 · ready for object drafting'],
+  },
+  threat: {
+    events: [
+      {
+        kind: 'reasoning',
+        text: 'ScreenConnect auth bypass maps to gateway exploitation — edge terrain, High severity, ATT&CK T1190.',
+      },
+      {
+        kind: 'mcp',
+        tool: 'write_file',
+        input: 'objects/threats/gateway-exploitation.yaml',
+        output: 'threat::1.0 · uuid …010 · schema valid',
+      },
+      {
+        kind: 'cli',
+        command: 'opentide validate --file objects/threats/gateway-exploitation.yaml',
+        output: '✓ threat::1.0 · 0 errors',
+      },
+    ],
+    cmd: 'opentide validate --file objects/threats/gateway-exploitation.yaml',
+    out: ['✓ schema threat::1.0', '✓ att&ck techniques', '0 errors'],
+  },
+  objective: {
+    events: [
+      {
+        kind: 'skill',
+        skill: 'opentide-detection-rule',
+        action: 'Link objective to threat UUID · define LSASS signal',
+        detail: 'normative MDR object contract',
+      },
+      {
+        kind: 'mcp',
+        tool: 'write_file',
+        input: 'objects/objectives/credential-access.yaml',
+        output: 'objective links threat …010 · 1 signal',
+      },
+    ],
+    cmd: 'opentide validate --file objects/objectives/credential-access.yaml',
+    out: ['✓ objective::1.0', '✓ cross-object threat reference', '0 errors'],
+  },
+  rule: {
+    events: [
+      {
+        kind: 'skill',
+        skill: 'microsoft-sentinel',
+        action: 'KQL for DeviceProcessEvents → LSASS access',
+        detail: 'honest query validation enabled',
+      },
+      {
+        kind: 'mcp',
+        tool: 'write_file',
+        input: 'objects/rules/lsass-memory-access.yaml',
+        output: 'rule links objective …001 · sentinel + defender',
+      },
+    ],
+    cmd: 'opentide validate --file objects/rules/lsass-memory-access.yaml',
+    out: ['✓ rule::1.0', '✓ detection_model reference', '0 errors'],
+  },
+  validate: {
+    events: [
+      {
+        kind: 'reasoning',
+        text: 'Strict validation across registry — schema, UUID v4, cross-object refs, honest Sentinel KQL.',
+      },
+      {
+        kind: 'mcp',
+        tool: 'validate',
+        input: 'strict=true',
+        output: '8 objects · 0 blocking · sentinel KQL passed',
+      },
+      {
+        kind: 'cli',
+        command: 'opentide validate --strict',
+        output: '✓ uuid-format · cross-object · id-uniqueness',
+      },
+    ],
+    cmd: 'opentide validate --strict',
+    out: ['✓ schema · uuid-format · id-uniqueness', '✓ cross-object references', '0 blocking errors'],
+  },
+  generate: {
+    events: [
+      {
+        kind: 'skill',
+        skill: 'github-actions',
+        action: 'Align CI workflow with setup ci discovery',
+        detail: 'validate query jobs per platform TOML',
+      },
+      {
+        kind: 'mcp',
+        tool: 'generate',
+        output: 'schemas · templates · docs refreshed',
+      },
+    ],
+    cmd: 'opentide generate',
+    out: ['→ .opentide/schemas/rule.1.0.schema.json', '→ .opentide/templates/rule.1.0.template.yaml'],
+  },
+  deploy: {
+    events: [
+      {
+        kind: 'reasoning',
+        text: 'Human approved — dry-run deploy LSASS rule to Sentinel staging. No fake syntax checks.',
+      },
+      {
+        kind: 'mcp',
+        tool: 'deploy',
+        input: 'dry_run=true, platform=sentinel',
+        output: '1 rule would deploy · staging plan ready',
+      },
+      {
+        kind: 'cli',
+        command: 'opentide deploy --platform sentinel --dry-run',
+        output: '✓ LSASS memory access → Sentinel · 0 blocked',
+      },
+    ],
+    cmd: 'opentide deploy --platform sentinel --dry-run',
+    out: ['✓ dry-run: 1 rule would deploy to Sentinel', '0 blocked'],
+  },
+};
+
+const codeOptions = {
+  theme: { dark: 'pierre-dark', light: 'pierre-dark' } as const,
+  disableFileHeader: true,
+  overflow: 'scroll' as const,
+};
+
+function EditorPane({ path }: { path: DemoPath }) {
+  const contents = DEMO_FILES[path];
+  const file = useMemo(
+    () => ({ name: path.split('/').pop() ?? path, contents, cacheKey: path }),
+    [path, contents],
+  );
+  return <File file={file} options={codeOptions} disableWorkerPool className="h-full min-h-0" />;
+}
+
+function MarkdownPane({ path }: { path: DemoPath }) {
+  const text = DEMO_FILES[path];
+  return (
+    <pre className="h-full overflow-auto p-4 font-mono text-[11px] leading-relaxed whitespace-pre-wrap text-zinc-300">
+      {text}
+    </pre>
+  );
+}
 
 export function WorkflowStudio() {
-  const reduced = usePrefersReducedMotion();
-  const [phase, setPhase] = useState<'agent' | 'ci'>(reduced ? 'ci' : 'agent');
-  const [visibleEvents, setVisibleEvents] = useState(reduced ? WORKFLOW_EVENTS.length : 0);
-  const [ciIndex, setCiIndex] = useState(reduced ? CI_LINES.length : 0);
-  const [ciChar, setCiChar] = useState(reduced ? CI_LINES[CI_LINES.length - 1]?.text.length ?? 0 : 0);
-  const traceRef = useRef<HTMLDivElement>(null);
-  const termRef = useRef<HTMLDivElement>(null);
+  const [stepIdx, setStepIdx] = useState(0);
+  const step = STEPS[stepIdx];
+  const script = stepScripts[step];
+  const autoPath = stepFile[step];
+
+  const { model } = useFileTree({
+    paths: [...DEMO_PATHS],
+    initialExpansion: 'open',
+    initialExpandedPaths: [
+      'intel',
+      'intel/advisories',
+      'objects',
+      'objects/threats',
+      'objects/objectives',
+      'objects/rules',
+      '.opentide',
+    ],
+    initialSelectedPaths: [autoPath],
+  });
+
+  const selectedPaths = useFileTreeSelector(model, (m) => m.getSelectedPaths(), (a, b) =>
+    a.length === b.length && a.every((p, i) => p === b[i]),
+  );
+
+  const activePath = (selectedPaths[0] as DemoPath | undefined) ?? autoPath;
+  const activeFile = DEMO_FILES[activePath] ? activePath : autoPath;
+  const isMarkdown = activeFile.endsWith('.md');
 
   useEffect(() => {
+    model.getItem(autoPath)?.select();
+    model.focusPath(autoPath);
+  }, [autoPath, model]);
+
+  useEffect(() => {
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (reduced) return;
-
-    if (phase === 'agent') {
-      if (visibleEvents >= WORKFLOW_EVENTS.length) {
-        const t = window.setTimeout(() => setPhase('ci'), PAUSE_BEFORE_CI_MS);
-        return () => window.clearTimeout(t);
-      }
-      const t = window.setTimeout(() => setVisibleEvents((n) => n + 1), EVENT_MS);
-      return () => window.clearTimeout(t);
-    }
-
-    const line = CI_LINES[ciIndex];
-    if (!line) {
-      const t = window.setTimeout(() => {
-        setPhase('agent');
-        setVisibleEvents(0);
-        setCiIndex(0);
-        setCiChar(0);
-      }, LOOP_PAUSE_MS);
-      return () => window.clearTimeout(t);
-    }
-
-    if (ciChar < line.text.length) {
-      const t = window.setTimeout(() => setCiChar((c) => c + 1), CI_CHAR_MS);
-      return () => window.clearTimeout(t);
-    }
-
-    const t = window.setTimeout(() => {
-      setCiIndex((i) => i + 1);
-      setCiChar(0);
-    }, line.style === 'cmd' ? 280 : 120);
-    return () => window.clearTimeout(t);
-  }, [reduced, phase, visibleEvents, ciIndex, ciChar]);
-
-  useEffect(() => {
-    const el = phase === 'agent' ? traceRef.current : termRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
-  }, [phase, visibleEvents, ciIndex, ciChar]);
-
-  const ciLineStyle = (style: CiLine['style']) => {
-    switch (style) {
-      case 'header':
-        return 'text-[var(--eu-yellow)] font-semibold';
-      case 'gh':
-        return 'text-zinc-300';
-      case 'cmd':
-        return 'text-zinc-300';
-      case 'ok':
-        return 'text-emerald-400/90';
-      default:
-        return 'text-zinc-600';
-    }
-  };
+    const id = window.setInterval(() => setStepIdx((i) => (i + 1) % STEPS.length), 9000);
+    return () => window.clearInterval(id);
+  }, []);
 
   return (
-    <div className="overflow-hidden rounded-xl border border-white/10 bg-black shadow-[0_12px_48px_-16px_rgba(0,0,0,0.85)]">
-      <div className="flex items-center gap-2 border-b border-white/[0.06] bg-[var(--landing-bg)]/80 px-3 py-2">
-        <span className="size-2 rounded-full bg-[#ff5f57]" aria-hidden />
-        <span className="size-2 rounded-full bg-[#febc2e]" aria-hidden />
-        <span className="size-2 rounded-full bg-[#28c840]" aria-hidden />
-        <span className="ml-2 truncate font-mono text-[11px] text-[var(--landing-muted)]">
-          detection-repo — agent workflow
-        </span>
-        <span
-          className={`ml-auto rounded-full px-2 py-0.5 font-mono text-[9px] ${
-            phase === 'ci'
-              ? 'bg-[var(--eu-yellow)]/15 text-[var(--eu-yellow)]'
-              : 'bg-white/5 text-[var(--landing-subtle)]'
-          }`}
-        >
-          {phase === 'ci' ? 'GitHub Actions' : 'Agent + skills'}
-        </span>
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-1.5">
+        {STEPS.map((s, i) => (
+          <div key={s} className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => setStepIdx(i)}
+              className={`rounded-full px-2.5 py-1 font-mono text-[9px] transition ${
+                stepIdx === i
+                  ? 'bg-[var(--eu-yellow)]/15 text-[var(--eu-yellow)] ring-1 ring-[var(--eu-yellow)]/30'
+                  : stepIdx > i
+                    ? 'text-[var(--landing-muted)]'
+                    : 'text-[var(--landing-subtle)] hover:bg-white/[0.04]'
+              }`}
+            >
+              {stepLabel[s]}
+            </button>
+            {i < STEPS.length - 1 && (
+              <span className="text-[var(--landing-subtle)]" aria-hidden>
+                →
+              </span>
+            )}
+          </div>
+        ))}
       </div>
 
-      <div className="grid min-h-[480px] grid-rows-[1fr_200px]">
-        <div
-          className={`flex min-h-0 flex-col bg-black transition-opacity duration-500 ${
-            phase === 'agent' ? 'opacity-100' : 'pointer-events-none opacity-25'
-          }`}
-        >
-          <div className="flex shrink-0 items-center gap-2 border-b border-white/[0.06] px-3 py-2">
-            <Bot className="size-4 text-[var(--eu-yellow)]" aria-hidden />
-            <span className="font-mono text-[11px] font-medium text-[var(--landing-ink)]">
-              Agent trace
-            </span>
-            <span className="ml-auto font-mono text-[9px] text-[var(--landing-subtle)]">
-              {visibleEvents}/{WORKFLOW_EVENTS.length} events
-            </span>
-          </div>
-          <div ref={traceRef} className="min-h-0 flex-1 space-y-2 overflow-y-auto p-3 [scrollbar-width:thin]">
-            {WORKFLOW_EVENTS.slice(0, visibleEvents).map((event, i) => (
-              <EventCard key={`${event.kind}-${i}`} event={event} />
-            ))}
-          </div>
+      <div className="overflow-hidden rounded-xl border border-white/10 bg-black shadow-[0_12px_48px_-16px_rgba(0,0,0,0.85)]">
+        <div className="flex items-center gap-2 border-b border-white/[0.06] bg-black/80 px-3 py-2">
+          <span className="size-2 rounded-full bg-[#ff5f57]" aria-hidden />
+          <span className="size-2 rounded-full bg-[#febc2e]" aria-hidden />
+          <span className="size-2 rounded-full bg-[#28c840]" aria-hidden />
+          <span className="ml-2 truncate font-mono text-[11px] text-[var(--landing-muted)]">
+            {DEMO_REPO} — {activeFile}
+          </span>
         </div>
 
-        <div className="border-t border-white/[0.06] bg-[var(--landing-bg)]">
-          <div className="flex items-center gap-2 border-b border-white/[0.06] px-3 py-1.5">
-            {phase === 'ci' ? (
-              <GitBranch className="size-3.5 text-[var(--eu-yellow)]" aria-hidden />
-            ) : (
-              <Terminal className="size-3 text-[var(--landing-subtle)]" aria-hidden />
-            )}
-            <span className="font-mono text-[10px] text-[var(--landing-muted)]">
-              {phase === 'ci' ? 'GitHub Actions · opentide.yml' : 'Terminal — waiting for CI…'}
-            </span>
-          </div>
-          <div
-            ref={termRef}
-            className="h-[calc(200px-2rem)] overflow-y-auto px-3 py-2.5 font-mono text-[11px] leading-relaxed [scrollbar-width:thin]"
-          >
-            {phase === 'ci' ? (
-              <div className="space-y-0.5">
-                {CI_LINES.slice(0, ciIndex).map((line, i) => (
-                  <p key={i} className={ciLineStyle(line.style)}>
-                    {line.style === 'cmd' && <span className="text-[var(--eu-yellow)]">$ </span>}
-                    {line.text}
-                  </p>
-                ))}
-                {CI_LINES[ciIndex] && (
-                  <p className={ciLineStyle(CI_LINES[ciIndex].style)}>
-                    {CI_LINES[ciIndex].style === 'cmd' && (
-                      <span className="text-[var(--eu-yellow)]">$ </span>
-                    )}
-                    {CI_LINES[ciIndex].text.slice(0, ciChar)}
-                    <span className="ml-0.5 inline-block h-[1em] w-[6px] animate-pulse bg-[var(--eu-yellow)] align-middle" />
-                  </p>
-                )}
-              </div>
-            ) : (
-              <p className="text-zinc-600">
-                Agent drafting complete — CI pipeline will run validate → query → deploy-staging…
+        <div className="grid min-h-[min(52vh,500px)] max-h-[min(56vh,540px)] lg:grid-cols-[40px_200px_1fr_minmax(260px,0.46fr)]">
+          <div className="hidden flex-col items-center gap-3 border-r border-white/[0.06] bg-black py-3 lg:flex">
+              <FileText className="size-4 text-zinc-400" aria-hidden />
+              <Files className="size-4 text-[var(--eu-yellow)]" aria-hidden />
+              <Bot className="size-4 text-[var(--landing-accent)]" aria-hidden />
+              <Terminal className="size-4 text-[var(--landing-subtle)]" aria-hidden />
+            </div>
+
+            <div className="hidden min-h-0 border-r border-white/[0.06] bg-black/50 lg:block">
+              <p className="border-b border-white/[0.06] px-3 py-2 font-mono text-[9px] uppercase tracking-wider text-[var(--landing-subtle)]">
+                Explorer
               </p>
-            )}
-          </div>
+              <FileTree model={model} className="h-[calc(100%-2rem)] min-h-0 text-xs" />
+            </div>
+
+            <div className="flex min-h-[200px] min-w-0 flex-col border-r border-white/[0.06] bg-black">
+              <div className="border-b border-white/[0.06] px-2 py-1.5">
+                <span className="inline-block border-b border-[var(--eu-yellow)] px-2 font-mono text-[10px] text-[var(--landing-ink)]">
+                  {activeFile.split('/').pop()}
+                </span>
+              </div>
+              <div className="min-h-0 flex-1 overflow-auto p-1">
+                {isMarkdown ? <MarkdownPane path={activeFile} /> : <EditorPane path={activeFile} />}
+              </div>
+            </div>
+
+            <AgentTracePanel
+              key={step}
+              label={stepLabel[step]}
+              events={script.events}
+              terminalCmd={script.cmd}
+              terminalOut={script.out}
+            />
         </div>
       </div>
     </div>

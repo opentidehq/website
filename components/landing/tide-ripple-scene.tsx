@@ -77,14 +77,14 @@ export function TideRippleScene({ className }: { className?: string }) {
       if (active && !reduced) splash(mx, my, 0.18, 5);
 
       if (!reduced) {
-        const cx = 0.5 + Math.sin(t * 0.35) * 0.08;
-        const cy = 0.5 + Math.cos(t * 0.28) * 0.07;
-        splash(cx, cy, 0.14, 7);
-        if (Math.sin(t * 0.85) > 0.88) splash(cx, cy, 0.09, 5);
-        splash(0.28 + Math.sin(t * 0.31) * 0.06, 0.55, 0.07, 4);
-        splash(0.72 + Math.cos(t * 0.26) * 0.06, 0.45, 0.07, 4);
-        if (Math.sin(t * 1.2) > 0.96) {
-          splash(0.5, 0.5, 0.11, 9);
+        const cx = 0.5 + Math.sin(t * 0.18) * 0.1;
+        const cy = 0.5 + Math.cos(t * 0.14) * 0.09;
+        splash(cx, cy, 0.13, 8);
+        if (Math.sin(t * 0.42) > 0.9) splash(cx, cy, 0.08, 5);
+        splash(0.28 + Math.sin(t * 0.16) * 0.08, 0.55, 0.06, 5);
+        splash(0.72 + Math.cos(t * 0.13) * 0.08, 0.45, 0.06, 5);
+        if (Math.sin(t * 0.58) > 0.97) {
+          splash(0.5, 0.5, 0.1, 10);
         }
       }
     };
@@ -132,7 +132,7 @@ export function TideRippleScene({ className }: { className?: string }) {
           const slope = Math.hypot(dx, dy);
 
           const dist = Math.hypot(nx - 0.5, ny - 0.5);
-          const vignette = 1 - Math.min(1, dist * 0.95) ** 1.4;
+          const vignette = 1 - Math.min(1, dist * 0.55) ** 1.1;
 
           const { x: mx, y: my, active } = mouseRef.current;
           const pointerGlow = active
@@ -152,9 +152,9 @@ export function TideRippleScene({ className }: { className?: string }) {
         ctx.save();
         ctx.globalCompositeOperation = 'screen';
         for (let ring = 0; ring < 4; ring++) {
-          const phase = t * 0.45 + ring * 1.2;
-          const radius = ((phase % 1) * 0.45 + 0.06) * Math.min(cx, cy) * 2;
-          const alpha = (1 - (phase % 1)) * 0.09;
+          const phase = t * 0.22 + ring * 1.2;
+          const radius = ((phase % 1) * 0.52 + 0.04) * Math.min(cx, cy) * 2;
+          const alpha = (1 - (phase % 1)) * 0.08;
           ctx.beginPath();
           ctx.arc(cx, cy, radius, 0, Math.PI * 2);
           ctx.strokeStyle = `rgba(255, 204, 0, ${alpha})`;
@@ -198,7 +198,7 @@ export function TideRippleScene({ className }: { className?: string }) {
     const loop = () => {
       if (!reduced) {
         step();
-        t += 0.022;
+        t += 0.011;
       }
       draw();
       raf = requestAnimationFrame(loop);

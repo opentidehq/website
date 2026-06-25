@@ -121,12 +121,12 @@ export function ObjectGraph() {
   };
 
   return (
-    <div className="grid max-h-[min(520px,70vh)] gap-5 overflow-hidden lg:grid-cols-[minmax(0,0.44fr)_minmax(0,0.56fr)] lg:items-stretch">
-      <div className="landing-surface-card relative flex max-h-[280px] min-h-0 flex-col overflow-hidden p-4 md:max-h-[300px] md:p-5">
+    <div className="grid gap-5 lg:grid-cols-2 lg:items-stretch lg:h-[400px]">
+      <div className="landing-surface-card relative flex h-[340px] flex-col overflow-hidden p-4 md:p-5 lg:h-full">
         <svg
           viewBox="0 0 100 72"
           preserveAspectRatio="xMidYMid meet"
-          className="h-full max-h-[240px] w-full shrink-0"
+          className="min-h-0 w-full flex-1"
           role="img"
           aria-label="Object chain graph"
         >
@@ -254,7 +254,7 @@ export function ObjectGraph() {
         </p>
       </div>
 
-      <div className="landing-surface-card flex min-h-0 max-h-[280px] flex-col overflow-hidden md:max-h-[300px]">
+      <div className="landing-surface-card flex h-[340px] flex-col overflow-hidden lg:h-full">
         <div className="shrink-0 border-b border-white/[0.06] p-4 md:p-5">
           <p className="font-mono text-[10px] uppercase tracking-wider text-[var(--landing-subtle)]">
             {meta.kind}
