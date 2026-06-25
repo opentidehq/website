@@ -325,10 +325,41 @@ html > body[data-scroll-locked] {
   transform: translateY(0);
 }
 
+.landing-pitch-line .landing-pitch-highlight {
+  opacity: 0;
+  filter: blur(3px);
+  transition:
+    opacity 0.5s cubic-bezier(0.25, 1, 0.5, 1),
+    filter 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.landing-pitch-line.is-visible .landing-pitch-highlight {
+  opacity: 1;
+  filter: blur(0);
+}
+
+.landing-pitch-line.is-visible .landing-pitch-highlight:nth-of-type(1) {
+  transition-delay: 0ms;
+}
+.landing-pitch-line.is-visible .landing-pitch-highlight:nth-of-type(2) {
+  transition-delay: 90ms;
+}
+.landing-pitch-line.is-visible .landing-pitch-highlight:nth-of-type(3) {
+  transition-delay: 180ms;
+}
+.landing-pitch-line.is-visible .landing-pitch-highlight:nth-of-type(4) {
+  transition-delay: 270ms;
+}
+.landing-pitch-line.is-visible .landing-pitch-highlight:nth-of-type(5) {
+  transition-delay: 360ms;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .landing-pitch-reveal {
+  .landing-pitch-reveal,
+  .landing-pitch-line .landing-pitch-highlight {
     opacity: 1;
     transform: none;
+    filter: none;
     transition: none;
   }
 }

@@ -12,7 +12,6 @@ import { OpentideName } from '@/components/brand/opentide-name';
 import { TideRippleScene } from '@/components/landing/tide-ripple-scene';
 import { HeroInstall } from '@/components/landing/hero-install';
 import { HeroPitch } from '@/components/landing/hero-pitch';
-import { HeroTerminal } from '@/components/landing/hero-terminal';
 import { FeatureShowcase } from '@/components/landing/feature-showcase';
 import { PipelineFlow } from '@/components/landing/pipeline-flow';
 import { WorkflowStudio, ObjectGraph, AutonomySpectrum } from '@/components/landing/landing-heavy';
@@ -51,11 +50,8 @@ export default function HomePage() {
     <div className="landing relative overflow-x-hidden bg-black">
       <section className="relative px-4 pt-2 md:px-6 md:pt-4">
         <div className="landing-hero-shell landing-fade-in relative mx-auto w-full max-w-[1400px] overflow-hidden">
-          <div
-            className="pointer-events-none absolute inset-0 flex items-center justify-center"
-            aria-hidden
-          >
-            <div className="aspect-square w-[min(92vw,58vh,640px)] max-w-full opacity-90">
+          <div className="absolute inset-0 flex items-center justify-center" aria-hidden>
+            <div className="aspect-square w-[min(95vw,62vh,720px)] max-w-full">
               <TideRippleScene className="h-full w-full" />
             </div>
           </div>
@@ -103,7 +99,7 @@ export default function HomePage() {
 
       <HeroPitch />
 
-      <section className="border-y border-white/10 py-4" aria-label="Product features">
+      <section className="py-4" aria-label="Product features">
         <div className="landing-marquee-wrap overflow-hidden">
           <div
             className="landing-marquee flex gap-12 whitespace-nowrap text-sm font-medium text-[var(--landing-subtle)]"
@@ -130,11 +126,7 @@ export default function HomePage() {
         <PipelineFlow />
       </section>
 
-      <section className="landing-section border-t border-white/10 px-4 md:px-6">
-        <HeroTerminal />
-      </section>
-
-      <section className="landing-section border-t border-white/10">
+      <section className="landing-section">
         <div className="mx-auto max-w-[1400px] px-4 md:px-6">
           <h2 className="text-3xl font-bold tracking-[-0.02em] md:text-4xl text-balance">
             Objects chain into a graph
@@ -149,20 +141,20 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="landing-section mx-auto max-w-[1400px] border-t border-white/10 px-4 md:px-6">
+      <section className="landing-section mx-auto max-w-[1400px] px-4 md:px-6">
         <h2 className="text-3xl font-bold tracking-[-0.02em] md:text-4xl text-balance">
-          IDE, CLI, and agents — one workflow
+          Agents, skills, and CI — one workflow
         </h2>
         <p className="mt-4 max-w-2xl text-[var(--landing-subtle)] text-pretty">
-          From CISA advisory to deployable rules — one scenario, with MCP reasoning, CLI validation,
-          and the same engine throughout.
+          From engineer prompt to deployable rules — MCP tools, bundled agent skills, CLI validation,
+          then GitHub Actions running the same pipeline in CI.
         </p>
         <div className="mt-10">
           <WorkflowStudio />
         </div>
       </section>
 
-      <section className="landing-section border-t border-white/10">
+      <section className="landing-section">
         <div className="mx-auto max-w-[1400px] px-4 md:px-6">
           <h2 className="text-3xl font-bold tracking-[-0.02em] md:text-4xl text-balance">
             Built for DetectionOps teams
@@ -176,7 +168,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="landing-section mx-auto max-w-[1400px] border-t border-white/10 px-4 md:px-6">
+      <section className="landing-section mx-auto max-w-[1400px] px-4 md:px-6">
         <div className="grid items-center gap-12 lg:grid-cols-2">
           <div>
             <div className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-[var(--landing-accent)]">
@@ -213,7 +205,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="landing-section border-t border-white/10">
+      <section className="landing-section">
         <div className="mx-auto max-w-[1400px] px-4 md:px-6">
           <div className="max-w-2xl">
             <h2 className="text-3xl font-bold tracking-[-0.02em] md:text-4xl text-balance">
@@ -231,7 +223,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="landing-section mx-auto max-w-[1400px] border-t border-white/10 px-4 md:px-6">
+      <section className="landing-section mx-auto max-w-[1400px] px-4 md:px-6">
         <h2 className="text-center text-3xl font-bold tracking-[-0.02em]">
           The <OpentideName /> ecosystem
         </h2>
@@ -252,7 +244,7 @@ export default function HomePage() {
         </ul>
       </section>
 
-      <section className="border-t border-white/10 py-24 md:py-32">
+      <section className="py-24 md:py-32">
         <div className="mx-auto max-w-3xl px-4 text-center">
           <p className="mb-4 text-sm font-semibold text-[var(--eu-yellow)]">EUPL-1.2 · forever free</p>
           <h2 className="text-3xl font-bold tracking-[-0.02em] md:text-4xl text-balance">
