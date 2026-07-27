@@ -23,7 +23,7 @@ Generic SaaS gradients, glassmorphism hero cards, identical icon+heading card gr
 ## Strategic principles
 
 - Inter + JetBrains Mono only; no display font drift
-- EU Pantone Reflex Blue `#003399` and Yellow `#FFCC00` as committed brand colors
-- One signature motion: pixel tide hero; CSS wave dividers elsewhere
+- Pantone Reflex Blue `#001489` (light) and Yellow `#FFCC00` (dark) as committed brand colors (light = white+blue, dark = black+yellow)
+- One signature motion: mouse-reactive smoke hero; restrained CSS elsewhere
 - Docs sidebar always shows root dropdown; Usage is the default entry
-- Honest platform capability messaging — never fake validation claims
+- Honest platform capability messaging; never fake validation claims

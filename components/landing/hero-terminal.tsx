@@ -121,7 +121,7 @@ function TerminalAnimation() {
         {tick > tDeploy + 2 && (
           <span className="text-emerald-400/90">✓ LSASS memory access → Sentinel</span>
         )}
-        {tick > tDeploy + 3 && <span className="text-[var(--eu-yellow)]/80">Dry-run complete — 0 blocked</span>}
+        {tick > tDeploy + 3 && <span className="text-[var(--eu-yellow)]/80">Dry-run complete: 0 blocked</span>}
       </Fragment>,
     );
   }

@@ -1,4 +1,4 @@
-/** Spec-aligned sample registry — single CVE → threat → objective → rule scenario */
+/** Spec-aligned sample registry: single CVE → threat → objective → rule scenario */
 
 export const DEMO_REPO = 'detection-repo';
 
@@ -21,7 +21,7 @@ export const DEMO_PATHS = [
 export type DemoPath = (typeof DEMO_PATHS)[number];
 
 export const DEMO_FILES: Record<DemoPath, string> = {
-  'intel/advisories/cve-2024-1709.md': `# CVE-2024-1709 — ConnectWise ScreenConnect
+  'intel/advisories/cve-2024-1709.md': `# CVE-2024-1709: ConnectWise ScreenConnect
 
 **Source:** CISA AA24-073A · Published 2024-02-21
 
@@ -31,7 +31,7 @@ allowing unauthenticated remote code execution on exposed gateway hosts.
 ## Recommended detection focus
 
 - Initial access via exposed remote management gateways (T1190)
-- Credential access following foothold — LSASS dumping (T1003.001)
+- Credential access following foothold: LSASS dumping (T1003.001)
 
 ## References
 
@@ -106,7 +106,7 @@ metadata:
   tlp: clear
 
 description: |
-  Suspicious handle access to LSASS — implements credential-access objective.
+  Suspicious handle access to LSASS. Implements credential-access objective.
 status: STAGING
 severity: High
 techniques:
@@ -171,20 +171,20 @@ export const OBJECT_BLURBS: Record<string, { title: string; kind: string; blurb:
     title: 'CVE-2024-1709 advisory',
     kind: 'Threat intelligence',
     blurb:
-      'External advisory ingested from CISA — the starting point before any opentide objects exist. Analysts or agents translate this into structured threats, objectives, and rules.',
+      'External advisory ingested from CISA: the starting point before any opentide objects exist. Analysts or agents translate this into structured threats, objectives, and rules.',
     note: 'CISA AA24-073A · ConnectWise ScreenConnect auth bypass',
   },
   threat: {
     title: 'Gateway exploitation',
     kind: 'Threat',
     blurb:
-      'Describes the attack scenario you care about — how severe it is, where it hits your environment, and which MITRE techniques apply. Objectives link back here to show why a detection exists.',
+      'Describes the attack scenario you care about: how severe it is, where it hits your environment, and which MITRE techniques apply. Objectives link back here to show why a detection exists.',
   },
   objective: {
     title: 'Credential access',
     kind: 'Detection objective',
     blurb:
-      'States what “good detection” means for this scenario: which behaviours to look for, how signals combine, and which threat it covers. Rules implement objectives — they do not replace them.',
+      'States what “good detection” means for this scenario: which behaviours to look for, how signals combine, and which threat it covers. Rules implement objectives. they do not replace them.',
   },
   rule: {
     title: 'LSASS memory access',

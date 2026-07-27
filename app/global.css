@@ -2,24 +2,40 @@
 @import 'fumadocs-ui/css/neutral.css';
 @import 'fumadocs-ui/css/preset.css';
 
-/* EU Pantone Reflex Blue #003399 · EU Yellow #FFCC00 */
+/* Pantone Reflex Blue #001489 · EU Yellow #FFCC00 — light=white+blue, dark=black+yellow */
 @theme {
   --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-mono), ui-monospace, 'JetBrains Mono', monospace;
 
-  --color-eu-blue: #003399;
+  --color-eu-blue: #001489;
   --color-eu-yellow: #ffcc00;
-  --color-eu-blue-muted: #1a4fb5;
+  --color-eu-blue-muted: #1a3a9e;
+  --color-yellow-lift: #ffe566;
 }
 
 :root {
-  --eu-blue: #003399;
+  --eu-blue: #001489;
   --eu-yellow: #ffcc00;
-  --eu-blue-hsl: 221 100% 30%;
+  --eu-blue-hsl: 231 100% 27%;
   --eu-yellow-hsl: 48 100% 50%;
+
+  /* Light: white surface + blue accent */
+  --brand-accent: var(--eu-blue);
+  --brand-accent-foreground: #ffffff;
+  --brand-mark-fill: var(--eu-blue);
+  --brand-mark-ink: #ffffff;
+  --color-fd-primary: hsl(var(--eu-blue-hsl));
+  --color-fd-primary-foreground: #ffffff;
+  --color-fd-ring: hsl(var(--eu-blue-hsl) / 0.35);
+  --color-fd-idea: hsl(var(--eu-blue-hsl));
 }
 
 .dark {
+  /* Dark: black surface + yellow accent */
+  --brand-accent: var(--eu-yellow);
+  --brand-accent-foreground: #000000;
+  --brand-mark-fill: var(--eu-yellow);
+  --brand-mark-ink: #000000;
   --color-fd-primary: hsl(var(--eu-yellow-hsl));
   --color-fd-primary-foreground: hsl(220 30% 6%);
   --color-fd-ring: hsl(var(--eu-yellow-hsl) / 0.35);
@@ -28,35 +44,35 @@
   --color-fd-muted: hsl(220 12% 14%);
 }
 
-/* Docs: yellow highlights, subtle surfaces — no heavy blue active blobs */
-.dark #nd-sidebar [data-active='true'] {
-  background-color: hsl(var(--eu-yellow-hsl) / 0.1) !important;
-  color: hsl(var(--eu-yellow-hsl)) !important;
+/* Docs active states track --brand-accent (blue light / yellow dark) */
+#nd-sidebar [data-active='true'] {
+  background-color: color-mix(in srgb, var(--brand-accent) 12%, transparent) !important;
+  color: var(--brand-accent) !important;
 }
 
-.dark #nd-sidebar [data-active='true']::before {
-  background-color: hsl(var(--eu-yellow-hsl)) !important;
+#nd-sidebar [data-active='true']::before {
+  background-color: var(--brand-accent) !important;
 }
 
-.dark a[data-active='true'].prose,
-.dark [data-toc] a[data-active='true'],
-.dark nav[data-toc] a[data-active='true'] {
-  color: hsl(var(--eu-yellow-hsl)) !important;
+a[data-active='true'].prose,
+[data-toc] a[data-active='true'],
+nav[data-toc] a[data-active='true'] {
+  color: var(--brand-accent) !important;
 }
 
-.dark [data-toc] a[data-active='true']::before,
-.dark nav[data-toc] a[data-active='true']::before {
-  background-color: hsl(var(--eu-yellow-hsl)) !important;
+[data-toc] a[data-active='true']::before,
+nav[data-toc] a[data-active='true']::before {
+  background-color: var(--brand-accent) !important;
   width: 2px;
 }
 
-.dark .text-fd-primary {
-  color: hsl(var(--eu-yellow-hsl));
+.text-fd-primary {
+  color: var(--brand-accent);
 }
 
-.dark [data-ot-root-switcher][data-state='open'],
-.dark [data-ot-root-switcher]:hover {
-  border-color: hsl(var(--eu-yellow-hsl) / 0.35);
+[data-ot-root-switcher][data-state='open'],
+[data-ot-root-switcher]:hover {
+  border-color: color-mix(in srgb, var(--brand-accent) 35%, transparent);
 }
 
 /* TOC: line highlight only — hide the sliding thumb dot */
@@ -65,7 +81,7 @@
 }
 
 #nd-toc .stroke-fd-primary {
-  stroke: hsl(var(--eu-yellow-hsl) / 0.55);
+  stroke: color-mix(in srgb, var(--brand-accent) 55%, transparent);
 }
 
 html {
@@ -79,7 +95,7 @@ html > body[data-scroll-locked] {
 
 /* Docs section switcher */
 #nd-sidebar [data-state='open'] [data-radix-collection-item] svg {
-  color: var(--eu-yellow);
+  color: var(--brand-accent);
 }
 
 #nd-sidebar .flex.flex-col.gap-3.p-4.pb-2 > [data-radix-popover-trigger]:not([data-ot-root-switcher]) {
@@ -137,11 +153,16 @@ html > body[data-scroll-locked] {
   --landing-surface: #0a0a0a;
   --landing-surface-raised: #111111;
   --landing-ink: #fafafa;
-  --landing-muted: #a1a1aa;
-  --landing-subtle: #71717a;
+  --landing-muted: #c4c4cc;
+  --landing-subtle: #9a9aa3;
   --landing-accent: var(--eu-yellow);
   --landing-blue: var(--eu-blue);
   --landing-dim: #52525b;
+  /* Landing is always black + yellow regardless of docs theme toggle */
+  --brand-accent: var(--eu-yellow);
+  --brand-accent-foreground: #000000;
+  --brand-mark-fill: var(--eu-yellow);
+  --brand-mark-ink: #000000;
 
   font-family: var(--font-sans), system-ui, sans-serif;
   background-color: var(--landing-bg);
@@ -169,7 +190,7 @@ html > body[data-scroll-locked] {
 }
 
 .landing-btn-primary:hover {
-  background-color: #ffe566;
+  background-color: var(--color-yellow-lift);
 }
 
 .landing-btn-primary:focus-visible {
@@ -300,66 +321,6 @@ html > body[data-scroll-locked] {
   background: transparent !important;
 }
 
-.landing-hero-shell {
-  border: 1px solid rgb(255 255 255 / 0.08);
-  background: var(--landing-surface-deep);
-  border-radius: 1.25rem;
-  overflow: hidden;
-}
-
 .landing-pipeline-card {
   will-change: transform;
-}
-
-.landing-pitch-reveal {
-  opacity: 0;
-  transform: translateY(0.35em);
-  transition:
-    opacity 0.65s cubic-bezier(0.25, 1, 0.5, 1),
-    transform 0.65s cubic-bezier(0.25, 1, 0.5, 1),
-    color 0.4s ease;
-}
-
-.landing-pitch-reveal.is-visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.landing-pitch-line .landing-pitch-highlight {
-  opacity: 0;
-  filter: blur(3px);
-  transition:
-    opacity 0.5s cubic-bezier(0.25, 1, 0.5, 1),
-    filter 0.5s cubic-bezier(0.25, 1, 0.5, 1);
-}
-
-.landing-pitch-line.is-visible .landing-pitch-highlight {
-  opacity: 1;
-  filter: blur(0);
-}
-
-.landing-pitch-line.is-visible .landing-pitch-highlight:nth-of-type(1) {
-  transition-delay: 0ms;
-}
-.landing-pitch-line.is-visible .landing-pitch-highlight:nth-of-type(2) {
-  transition-delay: 90ms;
-}
-.landing-pitch-line.is-visible .landing-pitch-highlight:nth-of-type(3) {
-  transition-delay: 180ms;
-}
-.landing-pitch-line.is-visible .landing-pitch-highlight:nth-of-type(4) {
-  transition-delay: 270ms;
-}
-.landing-pitch-line.is-visible .landing-pitch-highlight:nth-of-type(5) {
-  transition-delay: 360ms;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .landing-pitch-reveal,
-  .landing-pitch-line .landing-pitch-highlight {
-    opacity: 1;
-    transform: none;
-    filter: none;
-    transition: none;
-  }
 }

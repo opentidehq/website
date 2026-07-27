@@ -12,8 +12,8 @@ function BrandMark() {
 
 function navClass(active: boolean) {
   return active
-    ? 'rounded-md border border-white/10 px-3 py-2 font-medium text-[var(--landing-ink)]'
-    : 'rounded-md px-3 py-2 text-[var(--landing-muted)] transition hover:bg-white/5 hover:text-[var(--landing-ink)]';
+    ? 'px-3 py-2 font-medium text-[var(--landing-ink)]'
+    : 'px-3 py-2 text-[var(--landing-muted)] transition hover:text-[var(--landing-ink)]';
 }
 
 export function LandingNav({ children }: { children: ReactNode }) {
@@ -68,8 +68,8 @@ export function LandingNav({ children }: { children: ReactNode }) {
               <p className="text-lg font-semibold">
                 open<span className="text-[var(--eu-yellow)]">tide</span>
               </p>
-              <p className="mt-3 max-w-sm text-sm leading-relaxed text-[var(--landing-subtle)]">
-                The DetectionOps engine — structure detection engineering from intel to deploy.
+              <p className="mt-3 max-w-sm text-sm leading-relaxed text-[var(--landing-muted)]">
+                The DetectionOps engine. Structure detection engineering from intel to deploy.
                 EUPL-1.2, forever free.
               </p>
               <p className="mt-4 font-mono text-[10px] text-[var(--landing-dim)]">
@@ -144,7 +144,7 @@ export function LandingNav({ children }: { children: ReactNode }) {
               © {new Date().getFullYear()} opentide ·{' '}
               <span className="text-[var(--eu-yellow)]">EUPL-1.2</span> · forever free
             </p>
-            <p className="font-mono text-[10px]">DetectionOps — your tide, your autonomy level</p>
+            <p className="font-mono text-[10px]">DetectionOps: your tide, your autonomy level</p>
           </div>
         </div>
       </footer>

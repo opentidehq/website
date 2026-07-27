@@ -47,7 +47,7 @@ const stepScripts: Record<
     events: [
       {
         kind: 'prompt',
-        text: 'Turn CISA AA24-073A into deployable Sentinel detections — strict validation, dry-run deploy.',
+        text: 'Turn CISA AA24-073A into deployable Sentinel detections: strict validation, dry-run deploy.',
       },
       {
         kind: 'skill',
@@ -69,7 +69,7 @@ const stepScripts: Record<
     events: [
       {
         kind: 'reasoning',
-        text: 'ScreenConnect auth bypass maps to gateway exploitation — edge terrain, High severity, ATT&CK T1190.',
+        text: 'ScreenConnect auth bypass maps to gateway exploitation: edge terrain, High severity, ATT&CK T1190.',
       },
       {
         kind: 'mcp',
@@ -126,7 +126,7 @@ const stepScripts: Record<
     events: [
       {
         kind: 'reasoning',
-        text: 'Strict validation across registry — schema, UUID v4, cross-object refs, honest Sentinel KQL.',
+        text: 'Strict validation across registry: schema, UUID v4, cross-object refs, honest Sentinel KQL.',
       },
       {
         kind: 'mcp',
@@ -164,7 +164,7 @@ const stepScripts: Record<
     events: [
       {
         kind: 'reasoning',
-        text: 'Human approved — dry-run deploy LSASS rule to Sentinel staging. No fake syntax checks.',
+        text: 'Human approved: dry-run deploy LSASS rule to Sentinel staging. No fake syntax checks.',
       },
       {
         kind: 'mcp',
@@ -281,7 +281,7 @@ export function WorkflowStudio() {
           <span className="size-2 rounded-full bg-[#febc2e]" aria-hidden />
           <span className="size-2 rounded-full bg-[#28c840]" aria-hidden />
           <span className="ml-2 truncate font-mono text-[11px] text-[var(--landing-muted)]">
-            {DEMO_REPO} — {activeFile}
+            {DEMO_REPO} / {activeFile}
           </span>
         </div>
 

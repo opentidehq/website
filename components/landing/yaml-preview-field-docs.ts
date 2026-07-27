@@ -1,7 +1,7 @@
 export const FIELD_DOCS: Record<string, string> = {
   name: 'Short title analysts recognize in the repo and in deploy output.',
   'metadata.schema': 'Which object type this file is (threat, objective, or rule).',
-  'metadata.version': 'Version of this instance — bump when you change the content.',
+  'metadata.version': 'Version of this instance. Bump when you change the content.',
   'metadata.uuid': 'Stable ID used to link threats, objectives, and rules together.',
   'metadata.tlp': 'Sharing boundary (clear, green, amber, red).',
   schema: 'Object type revision.',

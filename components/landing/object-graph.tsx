@@ -32,7 +32,7 @@ const TYPE_ICON = {
   rule: Shield,
 } as const;
 
-/** Fluid layout — primary chain plus background examples */
+/** Fluid layout: primary chain plus background examples */
 const nodes: GraphNode[] = [
   { id: 'intel', type: 'intel', label: 'CVE-2024-1709', x: 11, y: 24, chain: true },
   { id: 'intel-bg', type: 'intel', label: 'UNC5537', x: 11, y: 52, chain: false },
@@ -250,7 +250,7 @@ export function ObjectGraph() {
           })}
         </svg>
         <p className="mt-1 shrink-0 text-left text-[10px] text-[var(--landing-subtle)]">
-          Click a chain node — intel → threat → objective → rule
+          Click a chain node: intel to threat to objective to rule
         </p>
       </div>
 

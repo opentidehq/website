@@ -1,9 +1,9 @@
-/** Platform logos — Azure-Sentinel, Elastic integrations, Splunk SOAR connector repos */
+/** Platform logos: Azure-Sentinel, Elastic integrations, Splunk SOAR connector repos */
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 
-/** Platform logos sourced from vendor/integration repos — see public/icons/platforms/README */
+/** Platform logos sourced from vendor/integration repos. See public/icons/platforms/README */
 const platforms = [
   {
     id: 'sentinel',

@@ -5,22 +5,17 @@ const INSTALL_CMD = 'pip install opentide';
 
 export function HeroInstall() {
   return (
-    <div className="mt-4 space-y-1.5">
-      <p className="font-mono text-[10px] uppercase tracking-wider text-[var(--landing-subtle)]">
-        Install from PyPI
-      </p>
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-        <code className="min-w-0 flex-1 truncate rounded-lg border border-[var(--eu-yellow)]/25 bg-[var(--eu-yellow)]/5 px-3 py-2 font-mono text-xs text-[var(--landing-ink)] sm:text-sm">
-          {INSTALL_CMD}
-        </code>
-        <Link
-          href="/docs/usage/installation/"
-          className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg border border-white/10 px-3 py-2 text-xs font-medium text-[var(--landing-muted)] transition hover:border-[var(--eu-yellow)]/30 hover:text-[var(--landing-ink)]"
-        >
-          Installation docs
-          <ArrowRight className="size-3.5" aria-hidden />
-        </Link>
-      </div>
+    <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-stretch">
+      <code className="flex min-w-0 flex-1 items-center rounded-lg border border-white/12 bg-black/50 px-4 py-3 font-mono text-sm text-[var(--landing-ink)] backdrop-blur-sm">
+        {INSTALL_CMD}
+      </code>
+      <Link
+        href="/docs/usage/installation/"
+        className="landing-btn-primary group inline-flex shrink-0 justify-center text-sm"
+      >
+        Get started
+        <ArrowRight className="size-3.5 transition group-hover:translate-x-0.5" aria-hidden />
+      </Link>
     </div>
   );
 }
