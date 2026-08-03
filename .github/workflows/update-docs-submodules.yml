@@ -17,6 +17,7 @@ jobs:
         with:
           # Parent repo only — private submodules use deploy keys below
           submodules: false
+          fetch-depth: 0
 
       - name: Configure SSH for private documentation submodules
         env:
@@ -59,22 +60,49 @@ jobs:
           git config submodule.vendor/specifications.url git@github.com-specifications:OpenTideHQ/specifications.git
 
       - name: Update submodules to latest
+        id: bump
         run: |
           set -euo pipefail
-          # Re-apply SSH remotes after any sync from .gitmodules HTTPS URLs
-          git config submodule.vendor/opentide.url git@github.com-opentide:OpenTideHQ/opentide.git
-          git config submodule.vendor/specifications.url git@github.com-specifications:OpenTideHQ/specifications.git
-          git submodule update --init --remote --merge vendor/opentide vendor/specifications
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Create pull request if submodules changed
-        uses: peter-evans/create-pull-request@v7
-        with:
-          title: 'chore: bump documentation submodules'
-          body: |
-            Automated weekly bump of opentide and specifications submodules.
+          git config submodule.vendor/opentide.url git@github.com-opentide:OpenTideHQ/opentide.git
+          git config submodule.vendor/specifications.url git@github.com-specifications:OpenTideHQ/specifications.git
+          git submodule update --init --remote --merge vendor/opentide vendor/specifications
 
-            Run `pnpm sync:content && pnpm build` locally to verify before merging.
-          branch: chore/bump-docs-submodules
-          commit-message: 'chore: bump documentation submodules'
+          if git diff --quiet -- vendor/opentide vendor/specifications; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "Submodules already up to date."
+            exit 0
+          fi
+
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+          git add vendor/opentide vendor/specifications
+          git commit -m "chore: bump documentation submodules"
+          git push -u origin "HEAD:refs/heads/chore/bump-docs-submodules" --force
+          echo "Pushed branch chore/bump-docs-submodules"
+
+      - name: Open or update pull request
+        if: steps.bump.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if gh pr view chore/bump-docs-submodules --json url --jq .url 2>/dev/null; then
+            echo "PR already exists for chore/bump-docs-submodules"
+            exit 0
+          fi
+
+          if gh pr create \
+            --base main \
+            --head chore/bump-docs-submodules \
+            --title "chore: bump documentation submodules" \
+            --body "Automated weekly bump of opentide and specifications submodules.
+
+          Run \`pnpm sync:content && pnpm build\` locally to verify before merging."; then
+            exit 0
+          fi
+
+          echo "::warning::Could not open a PR (org may block Actions from creating PRs). Branch is ready: chore/bump-docs-submodules"
+          echo "Open manually: https://github.com/OpenTideHQ/website/compare/main...chore/bump-docs-submodules?expand=1"
+          exit 0
