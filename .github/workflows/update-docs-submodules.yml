@@ -61,7 +61,9 @@ jobs:
       - name: Update submodules to latest
         run: |
           set -euo pipefail
-          git submodule sync -- vendor/opentide vendor/specifications
+          # Re-apply SSH remotes after any sync from .gitmodules HTTPS URLs
+          git config submodule.vendor/opentide.url git@github.com-opentide:OpenTideHQ/opentide.git
+          git config submodule.vendor/specifications.url git@github.com-specifications:OpenTideHQ/specifications.git
           git submodule update --init --remote --merge vendor/opentide vendor/specifications
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
