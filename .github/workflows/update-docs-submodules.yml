@@ -15,12 +15,54 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: recursive
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # Parent repo only — private submodules use deploy keys below
+          submodules: false
+
+      - name: Configure SSH for private documentation submodules
+        env:
+          BUNDLE: ${{ secrets.DOCS_SUBMODULES_SSH_KEYS }}
+        run: |
+          set -euo pipefail
+          if [ -z "${BUNDLE}" ]; then
+            echo "::error::Missing secret DOCS_SUBMODULES_SSH_KEYS (read-only deploy keys for opentide + specifications)."
+            exit 1
+          fi
+
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+          awk '/-----BEGIN OPENTIDE KEY-----/{f=1;next}/-----END OPENTIDE KEY-----/{f=0}f' \
+            <<<"$BUNDLE" > ~/.ssh/opentide
+          awk '/-----BEGIN SPECIFICATIONS KEY-----/{f=1;next}/-----END SPECIFICATIONS KEY-----/{f=0}f' \
+            <<<"$BUNDLE" > ~/.ssh/specifications
+          chmod 600 ~/.ssh/opentide ~/.ssh/specifications
+
+          ssh-keyscan -t ed25519,rsa github.com >> ~/.ssh/known_hosts 2>/dev/null
+
+          printf '%s\n' \
+            'Host github.com-opentide' \
+            '  HostName github.com' \
+            '  User git' \
+            '  IdentityFile ~/.ssh/opentide' \
+            '  IdentitiesOnly yes' \
+            '' \
+            'Host github.com-specifications' \
+            '  HostName github.com' \
+            '  User git' \
+            '  IdentityFile ~/.ssh/specifications' \
+            '  IdentitiesOnly yes' \
+            > ~/.ssh/config
+          chmod 600 ~/.ssh/config
+
+          # Local config only — keep committed .gitmodules on HTTPS for local clones
+          git config submodule.vendor/opentide.url git@github.com-opentide:OpenTideHQ/opentide.git
+          git config submodule.vendor/specifications.url git@github.com-specifications:OpenTideHQ/specifications.git
 
       - name: Update submodules to latest
         run: |
-          git submodule update --remote --merge vendor/opentide vendor/specifications
+          set -euo pipefail
+          git submodule sync -- vendor/opentide vendor/specifications
+          git submodule update --init --remote --merge vendor/opentide vendor/specifications
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
