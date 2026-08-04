@@ -1,4 +1,4 @@
-/** Spec-aligned sample registry: single CVE → threat → objective → rule scenario */
+/** Spec-aligned sample registry: prompt → threat → objective → rule scenario */
 
 export const DEMO_REPO = 'detection-repo';
 
@@ -9,8 +9,11 @@ export const UUID = {
   signalLsass: '00000000-0000-4000-8099-000000000001',
 } as const;
 
+/** Starting engineer brief — simulated as a prompt, not a repo folder. */
+export const SCENARIO_PROMPT =
+  'Turn CISA AA24-073A (CVE-2024-1709 ScreenConnect auth bypass → RCE) into deployable Sentinel detections: strict validation, dry-run deploy.';
+
 export const DEMO_PATHS = [
-  'intel/advisories/cve-2024-1709.md',
   'objects/threats/gateway-exploitation.yaml',
   'objects/objectives/credential-access.yaml',
   'objects/rules/lsass-memory-access.yaml',
@@ -20,31 +23,6 @@ export const DEMO_PATHS = [
 export type DemoPath = (typeof DEMO_PATHS)[number];
 
 export const DEMO_FILES: Record<DemoPath, string> = {
-  'intel/advisories/cve-2024-1709.md': `# CVE-2024-1709 — ConnectWise ScreenConnect
-
-> CISA AA24-073A · Published 2024-02-21 · TLP:CLEAR
-
-Authentication bypass in ScreenConnect ≤ 23.9.7 enables unauthenticated
-remote code execution on internet-exposed gateways.
-
-## Detection focus
-
-| Stage | Technique | What to watch |
-|-------|-----------|---------------|
-| Initial access | T1190 / T1133 | Anomalous gateway auth & RCE |
-| Follow-on | T1003.001 | LSASS dump after foothold |
-
-## Ingest checklist
-
-- [x] Advisory filed under \`intel/advisories/\`
-- [ ] Threat vector authored (\`threat::1.0\`)
-- [ ] Objective + signals defined
-- [ ] Platform rules linked via \`detection_model\`
-
-## References
-
-- https://www.cisa.gov/news-events/cybersecurity-advisories/aa24-073a
-`,
   'objects/threats/gateway-exploitation.yaml': `name: Gateway exploitation (CVE-2024-1709)
 criticality: High
 
@@ -202,12 +180,12 @@ export type ObjectBlurb = {
 /** Human-readable blurbs for graph detail panel */
 export const OBJECT_BLURBS: Record<string, ObjectBlurb> = {
   intel: {
-    title: 'CVE-2024-1709 advisory',
-    kind: 'Threat intelligence',
+    title: 'CISA AA24-073A brief',
+    kind: 'Engineer prompt',
     intent:
-      'Raw intake — not yet an OpenTide object. Captures the external narrative so authors and agents can translate it into a threat vector.',
+      'Starting brief — not an OpenTide object. The engineer (or agent) turns this narrative into a threat vector.',
     blurb:
-      'CISA AA24-073A lands in the repo as markdown under intel/. Nothing validates against a schema yet; this is the prompt that starts the chain.',
+      'External intel arrives as a prompt, not a folder in the object graph. Authoring starts when you write the first threat::1.0.',
     points: [
       'External source of truth (vendor / CISA / blog)',
       'Maps candidate ATT&CK techniques before authoring',
@@ -216,7 +194,7 @@ export const OBJECT_BLURBS: Record<string, ObjectBlurb> = {
     facts: [
       { label: 'Source', value: 'CISA AA24-073A' },
       { label: 'CVE', value: 'CVE-2024-1709' },
-      { label: 'Path', value: 'intel/advisories/' },
+      { label: 'Form', value: 'Prompt / brief' },
     ],
     next: 'Author a threat vector that scores severity, terrain, and ATT&CK.',
     note: 'ConnectWise ScreenConnect auth bypass → RCE',

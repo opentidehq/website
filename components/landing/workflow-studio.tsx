@@ -1,8 +1,6 @@
 'use client';
 
 import { Files, Bot, Terminal, FileText, Pause, Play } from 'lucide-react';
-import { File } from '@pierre/diffs/react';
-import { useTheme } from 'next-themes';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AgentTracePanel,
@@ -10,42 +8,49 @@ import {
   StudioTerminal,
   type AgentEvent,
 } from '@/components/landing/agent-trace-panel';
+import { StudioEditor, StudioEditorIdle } from '@/components/landing/studio-editor';
 import { StudioExplorer } from '@/components/landing/studio-explorer';
-import { DEMO_FILES, DEMO_PATHS, DEMO_REPO, type DemoPath } from '@/lib/landing/demo-registry';
+import {
+  DEMO_FILES,
+  DEMO_PATHS,
+  DEMO_REPO,
+  SCENARIO_PROMPT,
+  type DemoPath,
+} from '@/lib/landing/demo-registry';
 import { usePrefersReducedMotion } from '@/lib/hooks/use-prefers-reduced-motion';
 
-const STEPS = [
-  'intel',
-  'threat',
-  'objective',
-  'rule',
-  'validate',
-  'deploy',
-] as const;
+const STEPS = ['prompt', 'threat', 'objective', 'rule', 'validate', 'deploy'] as const;
 
 type Step = (typeof STEPS)[number];
-/** work = type file + stream agent events together; then terminal; then dwell. */
 type Phase = 'work' | 'terminal' | 'dwell';
 
-const stepFocus: Record<
-  Step,
-  { open: DemoPath; select: readonly DemoPath[]; expand: readonly string[] }
-> = {
-  intel: {
-    open: 'intel/advisories/cve-2024-1709.md',
-    select: ['intel/advisories/cve-2024-1709.md'],
-    expand: ['intel', 'intel/advisories'],
+type StepFocus = {
+  open: DemoPath | null;
+  /** Typewriter the open file; false = show full file immediately. */
+  type: boolean;
+  select: readonly DemoPath[];
+  expand: readonly string[];
+  /** Skip CLI pane for this step. */
+  skipTerminal?: boolean;
+};
+
+const stepFocus: Record<Step, StepFocus> = {
+  prompt: {
+    open: null,
+    type: false,
+    select: [],
+    expand: ['objects', 'objects/threats', 'objects/objectives', 'objects/rules'],
+    skipTerminal: true,
   },
   threat: {
     open: 'objects/threats/gateway-exploitation.yaml',
-    select: [
-      'intel/advisories/cve-2024-1709.md',
-      'objects/threats/gateway-exploitation.yaml',
-    ],
-    expand: ['intel', 'intel/advisories', 'objects', 'objects/threats'],
+    type: true,
+    select: ['objects/threats/gateway-exploitation.yaml'],
+    expand: ['objects', 'objects/threats'],
   },
   objective: {
     open: 'objects/objectives/credential-access.yaml',
+    type: true,
     select: [
       'objects/threats/gateway-exploitation.yaml',
       'objects/objectives/credential-access.yaml',
@@ -54,6 +59,7 @@ const stepFocus: Record<
   },
   rule: {
     open: 'objects/rules/lsass-memory-access.yaml',
+    type: true,
     select: [
       'objects/objectives/credential-access.yaml',
       'objects/rules/lsass-memory-access.yaml',
@@ -62,6 +68,7 @@ const stepFocus: Record<
   },
   validate: {
     open: 'objects/rules/lsass-memory-access.yaml',
+    type: false,
     select: [
       'objects/threats/gateway-exploitation.yaml',
       'objects/objectives/credential-access.yaml',
@@ -70,7 +77,8 @@ const stepFocus: Record<
     expand: ['objects', 'objects/threats', 'objects/objectives', 'objects/rules'],
   },
   deploy: {
-    open: 'objects/rules/lsass-memory-access.yaml',
+    open: '.opentide/configurations/platforms/sentinel.toml',
+    type: false,
     select: [
       'objects/rules/lsass-memory-access.yaml',
       '.opentide/configurations/platforms/sentinel.toml',
@@ -86,7 +94,7 @@ const stepFocus: Record<
 };
 
 const stepLabel: Record<Step, string> = {
-  intel: 'Ingest intel',
+  prompt: 'Start from prompt',
   threat: 'Draft threat',
   objective: 'Define objective',
   rule: 'Author rule',
@@ -95,46 +103,22 @@ const stepLabel: Record<Step, string> = {
 };
 
 const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string[] }> = {
-  intel: {
+  prompt: {
     events: [
-      {
-        kind: 'prompt',
-        text: 'Turn CISA AA24-073A into deployable Sentinel detections: strict validation, dry-run deploy.',
-      },
+      { kind: 'prompt', text: SCENARIO_PROMPT },
       {
         kind: 'reasoning',
-        text: 'Advisory cites ScreenConnect ≤ 23.9.7 auth bypass → unauth RCE on exposed gateways, then credential access inland.',
+        text: 'ScreenConnect ≤ 23.9.7 auth bypass → unauth RCE on exposed gateways, then credential access inland. Map to T1190 / T1133 → T1003.001.',
       },
       {
         kind: 'skill',
         skill: 'detection-engineering',
-        action: 'Map advisory stages to TVM → DOM → MDR object sequence',
-        detail: 'SKILL.md · OpenTideHQ/skills · prefer normative UUIDs over free text',
-      },
-      {
-        kind: 'mcp',
-        tool: 'read_file',
-        input: 'intel/advisories/cve-2024-1709.md',
-        output: 'CVE-2024-1709 · T1190 / T1133 · follow-on T1003.001',
-      },
-      {
-        kind: 'mcp',
-        tool: 'search_objects',
-        input: 'query="ScreenConnect" OR technique=T1190',
-        output: '0 existing threats · draft new gateway vector',
-      },
-      {
-        kind: 'cli',
-        command: 'opentide document --intel intel/advisories/cve-2024-1709.md',
-        output: 'extracted techniques · ready for object drafting',
+        action: 'Plan TVM → DOM → MDR object sequence from the brief',
+        detail: 'prefer normative UUIDs · no intel/ folder required',
       },
     ],
-    cmd: 'opentide document --intel intel/advisories/cve-2024-1709.md',
-    out: [
-      '→ parsed CISA AA24-073A (TLP:CLEAR)',
-      '→ techniques: T1190, T1133, T1003.001',
-      '→ next: author threat::1.0',
-    ],
+    cmd: '',
+    out: [],
   },
   threat: {
     events: [
@@ -146,7 +130,6 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
         kind: 'skill',
         skill: 'opentide-threat',
         action: 'Scaffold threat::1.0 with stable UUID and ATT&CK bindings',
-        detail: 'reject free-text technique IDs · require uuid v4',
       },
       {
         kind: 'mcp',
@@ -155,43 +138,30 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
         output: 'threat::1.0 · uuid …010 · fields complete',
       },
       {
-        kind: 'mcp',
-        tool: 'validate',
-        input: 'file=objects/threats/gateway-exploitation.yaml',
-        output: 'schema ok · att&ck ok · 0 errors',
-      },
-      {
         kind: 'cli',
         command: 'opentide validate --file objects/threats/gateway-exploitation.yaml',
         output: '✓ threat::1.0 · 0 errors',
       },
     ],
     cmd: 'opentide validate --file objects/threats/gateway-exploitation.yaml',
-    out: ['✓ schema threat::1.0', '✓ att&ck techniques [T1190, T1133]', '0 errors'],
+    out: ['✓ schema threat::1.0', '✓ att&ck [T1190, T1133]', '0 errors'],
   },
   objective: {
     events: [
       {
         kind: 'reasoning',
-        text: 'Follow-on risk is LSASS credential access after foothold — one objective, synergetic signals, link to threat UUID …010.',
+        text: 'Follow-on risk is LSASS credential access — one objective, synergetic signals, link threat …010.',
       },
       {
         kind: 'skill',
         skill: 'opentide-detection-rule',
         action: 'Compose objective::1.0 with signal + detection_model contract',
-        detail: 'priority=High · type=Threat · entities host/process',
       },
       {
         kind: 'mcp',
         tool: 'write_file',
         input: 'objects/objectives/credential-access.yaml',
-        output: 'objective links threat …010 · 1 signal (LSASS process access)',
-      },
-      {
-        kind: 'mcp',
-        tool: 'validate',
-        input: 'file=objects/objectives/credential-access.yaml strict=true',
-        output: 'cross-object threat ref ok · signal uuid ok',
+        output: 'objective links threat …010 · 1 signal',
       },
       {
         kind: 'cli',
@@ -200,35 +170,24 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
       },
     ],
     cmd: 'opentide validate --file objects/objectives/credential-access.yaml',
-    out: ['✓ objective::1.0', '✓ cross-object threat reference', '✓ signal uuid …001', '0 errors'],
+    out: ['✓ objective::1.0', '✓ cross-object threat ref', '0 errors'],
   },
   rule: {
     events: [
       {
-        kind: 'prompt',
-        text: 'Author an LSASS memory-access rule for Sentinel + Defender that implements the credential-access objective.',
-      },
-      {
         kind: 'skill',
         skill: 'microsoft-sentinel',
-        action: 'Draft KQL on DeviceProcessEvents → ProcessAccess → lsass.exe',
-        detail: 'exclude csrss/services · dual-platform configurations block',
+        action: 'Draft KQL: DeviceProcessEvents → ProcessAccess → lsass.exe',
       },
       {
         kind: 'reasoning',
-        text: 'One rule object, two configs: Sentinel scheduling PT1H/PT2H; Defender category CredentialAccess.',
+        text: 'One rule, two configs: Sentinel PT1H/PT2H; Defender category CredentialAccess.',
       },
       {
         kind: 'mcp',
         tool: 'write_file',
         input: 'objects/rules/lsass-memory-access.yaml',
-        output: 'rule::1.0 · detection_model → objective …001 · sentinel+defender',
-      },
-      {
-        kind: 'mcp',
-        tool: 'validate_query',
-        input: 'platform=sentinel',
-        output: 'KQL parse ok · DeviceProcessEvents bound',
+        output: 'rule::1.0 · detection_model → objective …001',
       },
       {
         kind: 'cli',
@@ -237,24 +196,13 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
       },
     ],
     cmd: 'opentide validate --file objects/rules/lsass-memory-access.yaml',
-    out: [
-      '✓ rule::1.0',
-      '✓ detection_model → objective …001',
-      '✓ sentinel KQL',
-      '0 errors',
-    ],
+    out: ['✓ rule::1.0', '✓ detection_model → objective …001', '✓ sentinel KQL'],
   },
   validate: {
     events: [
       {
         kind: 'reasoning',
-        text: 'Run registry-wide strict validation before any deploy: uuid v4, id uniqueness, cross-object refs, platform queries.',
-      },
-      {
-        kind: 'mcp',
-        tool: 'list_objects',
-        input: 'scope=registry',
-        output: '1 threat · 1 objective · 1 rule · 1 signal',
+        text: 'Registry-wide strict validation: uuid v4, id uniqueness, cross-object refs, platform queries.',
       },
       {
         kind: 'mcp',
@@ -263,40 +211,19 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
         output: '4 objects · 0 blocking · sentinel KQL passed',
       },
       {
-        kind: 'mcp',
-        tool: 'validate_query',
-        input: 'platform=defender_for_endpoint',
-        output: 'query ok · ActionType ProcessAccess',
-      },
-      {
         kind: 'cli',
         command: 'opentide validate --strict',
         output: '✓ uuid-format · cross-object · id-uniqueness',
       },
     ],
     cmd: 'opentide validate --strict',
-    out: [
-      '✓ schema · uuid-format · id-uniqueness',
-      '✓ cross-object references',
-      '✓ sentinel + defender queries',
-      '0 blocking errors',
-    ],
+    out: ['✓ schema · uuid-format · id-uniqueness', '✓ cross-object references', '0 blocking'],
   },
   deploy: {
     events: [
       {
-        kind: 'prompt',
-        text: 'Dry-run deploy the LSASS rule to Sentinel staging — no production write.',
-      },
-      {
         kind: 'reasoning',
-        text: 'Human gate passed. Read sentinel.toml workspace=soc-prod · dry_run_default=true.',
-      },
-      {
-        kind: 'mcp',
-        tool: 'read_file',
-        input: '.opentide/configurations/platforms/sentinel.toml',
-        output: 'enabled · workspace soc-prod · dry_run_default',
+        text: 'Human gate passed. sentinel.toml workspace=soc-prod · dry_run_default=true.',
       },
       {
         kind: 'mcp',
@@ -313,13 +240,11 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
     cmd: 'opentide deploy --platform sentinel --dry-run',
     out: [
       'plan: 1 create · 0 update · 0 delete',
-      '✓ dry-run: LSASS memory access → Sentinel (soc-prod)',
-      '0 blocked',
+      '✓ dry-run: LSASS → Sentinel (soc-prod)',
     ],
   },
 };
 
-/** Split events so prelude plays during typing; write lands at 100%; postlude after. */
 function splitScriptEvents(events: AgentEvent[]) {
   const writeIdx = events.findIndex(
     (e) => e.kind === 'mcp' && (e.tool === 'write_file' || e.tool === 'deploy'),
@@ -329,79 +254,14 @@ function splitScriptEvents(events: AgentEvent[]) {
       prelude: events.slice(0, writeIdx),
       hinge: 1,
       postlude: events.slice(writeIdx + 1),
-      hingeIndex: writeIdx,
     };
   }
-  // No write/deploy — stream ~half during typing, rest after
-  const hingeIndex = Math.max(1, Math.ceil(events.length * 0.55)) - 1;
+  const hingeIndex = Math.max(0, Math.ceil(events.length * 0.5) - 1);
   return {
     prelude: events.slice(0, hingeIndex + 1),
     hinge: 0,
     postlude: events.slice(hingeIndex + 1),
-    hingeIndex,
   };
-}
-
-function EditorPane({
-  path,
-  themeType,
-  chars,
-  showCursor,
-}: {
-  path: DemoPath;
-  themeType: 'light' | 'dark';
-  chars?: number;
-  showCursor?: boolean;
-}) {
-  const full = DEMO_FILES[path];
-  const contents =
-    chars == null ? full : full.slice(0, Math.min(Math.max(chars, 0), full.length));
-  const file = useMemo(
-    () => ({
-      name: path.split('/').pop() ?? path,
-      contents,
-      cacheKey: `${path}-${themeType}-${contents.length}`,
-    }),
-    [path, contents, themeType],
-  );
-  const options = useMemo(
-    () =>
-      ({
-        theme: { dark: 'pierre-dark', light: 'pierre-light' } as const,
-        themeType,
-        disableFileHeader: true,
-        overflow: 'scroll' as const,
-      }) as const,
-    [themeType],
-  );
-
-  const scrollRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const root = scrollRef.current;
-    if (!root) return;
-    const el =
-      root.querySelector<HTMLElement>('[data-diffs-scroll], .cm-scroller, pre, .overflow-auto') ??
-      root;
-    el.scrollTop = el.scrollHeight;
-  }, [contents.length]);
-
-  return (
-    <div ref={scrollRef} className="landing-code-scroll relative h-full min-h-0 overflow-auto">
-      <File
-        key={`${path}-${themeType}`}
-        file={file}
-        options={options}
-        disableWorkerPool
-        className="min-h-0"
-      />
-      {showCursor && chars != null && chars < full.length && (
-        <span
-          className="pointer-events-none absolute bottom-3 left-3 h-[1em] w-[7px] animate-pulse bg-[var(--landing-accent)]"
-          aria-hidden
-        />
-      )}
-    </div>
-  );
 }
 
 function ScenarioChrome({
@@ -518,8 +378,6 @@ function ScenarioChrome({
 
 export function WorkflowStudio() {
   const reduced = usePrefersReducedMotion();
-  const { resolvedTheme } = useTheme();
-  const themeType = resolvedTheme === 'dark' ? 'dark' : 'light';
   const [stepIdx, setStepIdx] = useState(0);
   const [phase, setPhase] = useState<Phase>(reduced ? 'dwell' : 'work');
   const [paused, setPaused] = useState(false);
@@ -529,14 +387,13 @@ export function WorkflowStudio() {
   const step = STEPS[stepIdx];
   const script = stepScripts[step];
   const focus = stepFocus[step];
-  const fullText = DEMO_FILES[focus.open];
+  const fullText = focus.open ? DEMO_FILES[focus.open] : '';
   const split = useMemo(() => splitScriptEvents(script.events), [script.events]);
 
-  // Reset when step changes (adjust-during-render)
   const [seenStep, setSeenStep] = useState(stepIdx);
   if (seenStep !== stepIdx) {
     setSeenStep(stepIdx);
-    setTypedChars(0);
+    setTypedChars(focus.type ? 0 : fullText.length);
     setVisibleEvents(0);
     setPhasePart(0);
     setPhase(reduced ? 'dwell' : 'work');
@@ -547,50 +404,94 @@ export function WorkflowStudio() {
     pausedRef.current = paused;
   }, [paused]);
 
-  // Unified work clock: typewriter + agent events stay in lockstep
   useEffect(() => {
     if (phase !== 'work') return;
+
+    const finishWork = () => {
+      setPhasePart(1);
+      if (focus.skipTerminal || !script.cmd) {
+        setPhase('dwell');
+      } else {
+        setPhase('terminal');
+      }
+    };
 
     if (reduced) {
       const frame = window.requestAnimationFrame(() => {
         setTypedChars(fullText.length);
         setVisibleEvents(script.events.length);
-        setPhasePart(1);
-        setPhase('terminal');
+        finishWork();
       });
       return () => window.cancelAnimationFrame(frame);
     }
 
-    const chunk = Math.max(2, Math.ceil(fullText.length / 90));
     const preludeLen = split.prelude.length;
-    const hingeTotal = preludeLen + split.hinge; // events unlocked by end of typing
+    const hingeTotal = preludeLen + split.hinge;
     let chars = typedChars;
     let events = visibleEvents;
+    let typeTimer = 0;
     let postTimer = 0;
-
-    const finishWork = () => {
-      setPhasePart(1);
-      setPhase('terminal');
-    };
+    let eventOnlyTimer = 0;
 
     const dripPostlude = () => {
+      if (events >= script.events.length) {
+        window.setTimeout(() => {
+          if (!pausedRef.current) finishWork();
+        }, 200);
+        return;
+      }
       postTimer = window.setInterval(() => {
         if (pausedRef.current) return;
         events += 1;
         setVisibleEvents(events);
-        const postDone = events - hingeTotal;
+        const postDone = Math.max(0, events - hingeTotal);
         const postTotal = Math.max(1, split.postlude.length);
         setPhasePart(0.72 + 0.28 * Math.min(1, postDone / postTotal));
         if (events >= script.events.length) {
           window.clearInterval(postTimer);
           window.setTimeout(() => {
             if (!pausedRef.current) finishWork();
-          }, 220);
+          }, 200);
         }
       }, EVENT_MS);
     };
 
-    // Already finished typing — only drip remaining events
+    // Prompt / read-only steps: no typewriter — stream events only
+    if (!focus.open || !focus.type) {
+      setTypedChars(fullText.length);
+      if (events >= script.events.length) {
+        finishWork();
+        return;
+      }
+      // Reveal first event immediately
+      if (events === 0 && script.events.length > 0) {
+        events = 1;
+        setVisibleEvents(1);
+        setPhasePart(1 / script.events.length);
+      }
+      eventOnlyTimer = window.setInterval(() => {
+        if (pausedRef.current) return;
+        if (events >= script.events.length) {
+          window.clearInterval(eventOnlyTimer);
+          finishWork();
+          return;
+        }
+        events += 1;
+        setVisibleEvents(events);
+        setPhasePart(events / script.events.length);
+        if (events >= script.events.length) {
+          window.clearInterval(eventOnlyTimer);
+          window.setTimeout(() => {
+            if (!pausedRef.current) finishWork();
+          }, 220);
+        }
+      }, EVENT_MS);
+      return () => {
+        window.clearInterval(eventOnlyTimer);
+        window.clearInterval(postTimer);
+      };
+    }
+
     if (chars >= fullText.length) {
       setTypedChars(fullText.length);
       if (events < hingeTotal) {
@@ -605,13 +506,13 @@ export function WorkflowStudio() {
       return () => window.clearInterval(postTimer);
     }
 
-    const typeTimer = window.setInterval(() => {
+    const chunk = Math.max(3, Math.ceil(fullText.length / 70));
+    typeTimer = window.setInterval(() => {
       if (pausedRef.current) return;
       chars = Math.min(fullText.length, chars + chunk);
       setTypedChars(chars);
-      const typeRatio = chars / fullText.length;
+      const typeRatio = chars / Math.max(fullText.length, 1);
 
-      // Unlock prelude proportionally while typing; hinge event at completion
       const targetDuringType =
         chars >= fullText.length
           ? hingeTotal
@@ -619,14 +520,12 @@ export function WorkflowStudio() {
               events,
               Math.min(preludeLen, Math.floor(typeRatio * Math.max(preludeLen, 1) + 0.001)),
             );
-      // Always show at least the first event once typing starts
       const nextEvents =
-        chars > 0 ? Math.max(targetDuringType, preludeLen > 0 ? Math.min(1, preludeLen) : 0) : 0;
+        chars > 0 ? Math.max(targetDuringType, preludeLen > 0 ? 1 : 0) : 0;
       if (nextEvents > events) {
         events = nextEvents;
         setVisibleEvents(events);
       }
-
       setPhasePart(typeRatio * 0.72);
 
       if (chars >= fullText.length) {
@@ -637,20 +536,20 @@ export function WorkflowStudio() {
         if (split.postlude.length === 0) {
           window.setTimeout(() => {
             if (!pausedRef.current) finishWork();
-          }, 280);
+          }, 240);
         } else {
           dripPostlude();
         }
       }
-    }, 28);
+    }, 24);
 
     return () => {
       window.clearInterval(typeTimer);
       window.clearInterval(postTimer);
+      window.clearInterval(eventOnlyTimer);
     };
-    // Resume from current counters when unpausing — omit to avoid restart loops.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, fullText, reduced, stepIdx, paused, script.events, split]);
+  }, [phase, fullText, reduced, stepIdx, paused, script.events, split, focus.open, focus.type, focus.skipTerminal, script.cmd]);
 
   const onTerminalComplete = useCallback(() => {
     setPhase('dwell');
@@ -661,29 +560,37 @@ export function WorkflowStudio() {
 
   useEffect(() => {
     if (paused || phase !== 'dwell') return;
-    const dwell = reduced ? 400 : 900;
+    const dwell = reduced ? 350 : 750;
     const id = window.setTimeout(() => {
       setStepIdx((i) => (i >= STEPS.length - 1 ? 0 : i + 1));
     }, dwell);
     return () => window.clearTimeout(id);
   }, [phase, stepIdx, paused, reduced]);
 
-  // Instant-fill when entering dwell via reduced motion mid-step
   useEffect(() => {
     if (phase !== 'dwell' && phase !== 'terminal') return;
     if (typedChars < fullText.length) setTypedChars(fullText.length);
     if (visibleEvents < script.events.length) setVisibleEvents(script.events.length);
   }, [phase, fullText.length, script.events.length, typedChars, visibleEvents]);
 
-  const typing = phase === 'work' && typedChars < fullText.length;
+  const typing = Boolean(focus.open && focus.type && phase === 'work' && typedChars < fullText.length);
   const phaseLabel =
     phase === 'work'
       ? typing
         ? 'Writing file…'
-        : 'Agent working…'
+        : focus.open
+          ? 'Agent working…'
+          : 'Reading brief…'
       : phase === 'terminal'
         ? 'Running CLI…'
         : 'Next stage…';
+
+  const editorContents =
+    focus.open == null
+      ? null
+      : focus.type
+        ? fullText.slice(0, typedChars)
+        : fullText;
 
   return (
     <div className="space-y-4">
@@ -702,14 +609,14 @@ export function WorkflowStudio() {
           <span className="size-2.5 rounded-full bg-[#febc2e]" aria-hidden />
           <span className="size-2.5 rounded-full bg-[#28c840]" aria-hidden />
           <span className="ml-2 truncate font-mono text-[11px] text-[var(--landing-subtle)]">
-            {DEMO_REPO} / {focus.open}
+            {focus.open ? `${DEMO_REPO} / ${focus.open}` : `${DEMO_REPO} · brief`}
           </span>
           <span className="ml-auto font-mono text-[9px] text-[var(--landing-dim)]">
             {paused ? 'Paused' : phaseLabel}
           </span>
         </div>
 
-        <div className="grid h-[min(58vh,560px)] grid-cols-1 lg:grid-cols-[40px_210px_minmax(0,1fr)_minmax(240px,0.42fr)]">
+        <div className="grid h-[min(58vh,560px)] grid-cols-1 lg:grid-cols-[40px_200px_minmax(0,1fr)_minmax(250px,0.42fr)]">
           <div className="hidden flex-col items-center gap-3 border-r border-[var(--landing-border-subtle)] bg-[var(--landing-surface-raised)] py-3 lg:flex">
             <Files className="size-4 text-[var(--landing-accent)]" aria-hidden />
             <FileText className="size-4 text-[var(--landing-dim)]" aria-hidden />
@@ -720,7 +627,7 @@ export function WorkflowStudio() {
           <div className="pointer-events-none hidden min-h-0 overflow-hidden border-r border-[var(--landing-border-subtle)] bg-[var(--landing-surface)] lg:block">
             <StudioExplorer
               paths={DEMO_PATHS}
-              open={focus.open}
+              open={focus.open ?? ''}
               selected={focus.select}
               expanded={focus.expand}
             />
@@ -728,29 +635,44 @@ export function WorkflowStudio() {
 
           <div className="flex min-h-0 min-w-0 flex-col overflow-hidden border-r border-[var(--landing-border-subtle)] bg-[var(--landing-bg)]">
             <div className="flex h-9 shrink-0 items-center bg-[var(--landing-surface)] px-2">
-              <span className="inline-block border-b-2 border-[var(--landing-accent)] px-2 pb-2 pt-1.5 font-mono text-[10px] text-[var(--landing-ink)]">
-                {focus.open.split('/').pop()}
-              </span>
+              {focus.open ? (
+                <span className="inline-block border-b-2 border-[var(--landing-accent)] px-2 pb-2 pt-1.5 font-mono text-[10px] text-[var(--landing-ink)]">
+                  {focus.open.split('/').pop()}
+                </span>
+              ) : (
+                <span className="px-2 font-mono text-[10px] text-[var(--landing-dim)]">No file open</span>
+              )}
             </div>
-            <div className="min-h-0 flex-1 overflow-hidden p-1">
-              <EditorPane
-                path={focus.open}
-                themeType={themeType}
-                chars={typedChars}
-                showCursor={!paused && typing}
-              />
+            <div className="min-h-0 flex-1 overflow-hidden">
+              {editorContents == null ? (
+                <StudioEditorIdle message="Brief in the agent trace — objects appear as the agent authors them." />
+              ) : (
+                <StudioEditor
+                  path={focus.open!}
+                  contents={editorContents}
+                  showCursor={!paused && typing}
+                />
+              )}
             </div>
 
-            <StudioTerminal
-              key={`${step}-term`}
-              cmd={script.cmd}
-              out={script.out}
-              armed={phase === 'terminal' || phase === 'dwell'}
-              paused={paused}
-              instant={reduced || phase === 'dwell'}
-              onProgress={phase === 'terminal' ? onTermProgress : undefined}
-              onComplete={phase === 'terminal' ? onTerminalComplete : undefined}
-            />
+            {script.cmd ? (
+              <StudioTerminal
+                key={`${step}-term`}
+                cmd={script.cmd}
+                out={script.out}
+                armed={phase === 'terminal' || phase === 'dwell'}
+                paused={paused}
+                instant={reduced || phase === 'dwell'}
+                onProgress={phase === 'terminal' ? onTermProgress : undefined}
+                onComplete={phase === 'terminal' ? onTerminalComplete : undefined}
+              />
+            ) : (
+              <div className="flex h-10 shrink-0 items-center border-t border-[var(--landing-border-subtle)] bg-[var(--landing-surface-deep)] px-3">
+                <span className="font-mono text-[10px] text-[var(--landing-dim)]">
+                  <span className="text-[var(--landing-accent)]">$</span> waiting for objects…
+                </span>
+              </div>
+            )}
           </div>
 
           <div className="flex min-h-0 flex-col overflow-hidden border-t border-[var(--landing-border-subtle)] max-lg:min-h-[220px] lg:border-t-0">

@@ -68,11 +68,10 @@ export default function HomePage() {
 
       <section className="landing-section mx-auto max-w-[1400px] px-4 md:px-6">
         <h2 className="text-3xl font-bold tracking-[-0.02em] md:text-4xl text-balance">
-          Author in the IDE. Validate in the terminal. Agents in the loop.
+          From brief to deployable rule — in one loop
         </h2>
         <p className="mt-4 max-w-2xl text-[var(--landing-muted)] text-pretty">
-          Watch a full DetectionOps scenario play through: file tree, editor, MCP skills, and CLI
-          output — end to end, on a loop.
+          Prompt in, objects out: agent skills write the graph, the CLI validates, dry-run deploys.
         </p>
         <div className="mt-10">
           <WorkflowStudio />
