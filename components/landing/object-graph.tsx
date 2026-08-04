@@ -97,59 +97,63 @@ function GraphCard({
     <button
       type="button"
       onClick={() => onSelect(id)}
-      className={`group relative isolate w-full rounded-2xl bg-[var(--landing-bg)] text-left shadow-[0_1px_0_var(--landing-border)] transition-[box-shadow] duration-300 ${
+      className={`group relative isolate w-full rounded-2xl border-2 bg-[var(--landing-bg)] text-left transition-[border-color,box-shadow] duration-300 ${
         active
-          ? `ring-2 ${style.ring} shadow-[0_8px_28px_-12px_color-mix(in_srgb,var(--landing-ink)_28%,transparent)]`
-          : 'hover:shadow-[0_8px_24px_-16px_color-mix(in_srgb,var(--landing-ink)_22%,transparent)]'
+          ? `${style.border} shadow-[0_8px_28px_-12px_color-mix(in_srgb,var(--landing-ink)_28%,transparent)]`
+          : 'border-[var(--landing-border)] hover:shadow-[0_8px_24px_-16px_color-mix(in_srgb,var(--landing-ink)_22%,transparent)]'
       }`}
       aria-current={active ? 'step' : undefined}
     >
-      {/* Inner clip so the ring sits outside and the fill meets the corners */}
-      <span className="relative block overflow-hidden rounded-2xl">
+      {/* Fill only — never clip icon/label (ring/scale used to get cut off here) */}
+      <span
+        className="pointer-events-none absolute inset-0 overflow-hidden rounded-[0.9rem]"
+        aria-hidden
+      >
         <span
           ref={active ? fillRef : undefined}
-          className={`pointer-events-none absolute inset-0 origin-left will-change-transform ${style.bar} ${
+          className={`absolute inset-0 origin-left will-change-transform ${style.bar} ${
             active ? 'opacity-[0.16]' : visited ? 'opacity-[0.1]' : 'opacity-0'
           }`}
           style={{ transform: `scaleX(${pct})` }}
-          aria-hidden
         />
+      </span>
 
-        <span className="relative z-[1] flex w-full items-center gap-2.5 px-3.5 py-3.5">
-          <span
-            className={`relative flex size-9 shrink-0 items-center justify-center rounded-xl transition duration-300 ${
-              active || visited
-                ? style.color
-                : 'bg-[color-mix(in_srgb,var(--landing-ink)_7%,transparent)] text-[var(--landing-subtle)]'
-            } ${active && !reduced ? 'scale-[1.04]' : ''}`}
-          >
-            <Icon className="size-3.5" aria-hidden />
-            {active && !paused && !reduced && (
-              <span className={`absolute inset-0 animate-ping rounded-xl opacity-20 ${style.bar}`} />
-            )}
-          </span>
-          <span className="min-w-0">
-            <span className="flex flex-wrap items-center gap-1.5">
-              <span
-                className={`font-mono text-[9px] uppercase tracking-[0.12em] ${
-                  active ? style.text : 'text-[var(--landing-dim)]'
-                }`}
-              >
-                {node.label}
-              </span>
-              {isTrigger && (
-                <span className="rounded-full bg-amber-400/20 px-1.5 py-px font-mono text-[8px] uppercase tracking-wider text-amber-800 dark:text-amber-300">
-                  not an object
-                </span>
-              )}
-            </span>
+      <span className="relative z-[1] flex w-full items-center gap-2.5 px-3.5 py-3.5">
+        <span
+          className={`relative flex size-9 shrink-0 items-center justify-center overflow-visible rounded-xl ${
+            active || visited
+              ? style.color
+              : 'bg-[color-mix(in_srgb,var(--landing-ink)_7%,transparent)] text-[var(--landing-subtle)]'
+          }`}
+        >
+          <Icon className="size-3.5 shrink-0" strokeWidth={2} aria-hidden />
+          {active && !paused && !reduced && (
             <span
-              className={`mt-0.5 block truncate text-sm font-semibold ${
-                active ? 'text-[var(--landing-ink)]' : 'text-[var(--landing-muted)]'
+              className={`pointer-events-none absolute inset-0 animate-ping rounded-xl opacity-20 ${style.bar}`}
+            />
+          )}
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="flex flex-wrap items-center gap-1.5">
+            <span
+              className={`font-mono text-[9px] uppercase tracking-[0.12em] ${
+                active ? style.text : 'text-[var(--landing-dim)]'
               }`}
             >
-              {node.short}
+              {node.label}
             </span>
+            {isTrigger && (
+              <span className="rounded-full bg-amber-400/20 px-1.5 py-0.5 font-mono text-[8px] uppercase tracking-wider text-amber-800 dark:text-amber-300">
+                not an object
+              </span>
+            )}
+          </span>
+          <span
+            className={`mt-0.5 block truncate text-sm font-semibold ${
+              active ? 'text-[var(--landing-ink)]' : 'text-[var(--landing-muted)]'
+            }`}
+          >
+            {node.short}
           </span>
         </span>
       </span>
@@ -300,7 +304,7 @@ export function ObjectGraph() {
   };
 
   return (
-    <div className="overflow-hidden rounded-2xl bg-[color-mix(in_srgb,var(--landing-ink)_4%,var(--landing-bg))]">
+    <div className="rounded-2xl bg-[color-mix(in_srgb,var(--landing-ink)_4%,var(--landing-bg))]">
       <div className="px-4 pt-5 md:px-6 md:pt-6">
         <div className="flex items-center justify-between gap-3">
           <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--landing-subtle)]">
@@ -328,9 +332,9 @@ export function ObjectGraph() {
           )}
         </div>
 
-        {/* Balanced horizontal graph — equal-weight columns */}
-        <div className="mt-5 overflow-x-auto pb-1">
-          <div className="flex min-w-[760px] items-stretch gap-0 md:min-w-0">
+        {/* Pad the graph so card borders aren't clipped by scroll/overflow */}
+        <div className="mt-5 overflow-x-auto py-1">
+          <div className="flex min-w-[760px] items-stretch gap-0 px-0.5 md:min-w-0">
             <div className="flex min-w-0 flex-1 flex-col justify-center">
               <GraphCard
                 id="trigger"
@@ -353,7 +357,7 @@ export function ObjectGraph() {
 
             <HArrow active={edgeActive(activeId, 'obj-oauth')} />
 
-            <div className="flex min-w-0 flex-[2.2] flex-col justify-center gap-2.5">
+            <div className="flex min-w-0 flex-[2.2] flex-col justify-center gap-3">
               <div className="flex items-center gap-0">
                 <span className="mr-1.5 hidden w-12 shrink-0 font-mono text-[8px] uppercase tracking-wider text-blue-600 dark:text-blue-400 lg:block">
                   A

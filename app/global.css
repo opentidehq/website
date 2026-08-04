@@ -441,20 +441,6 @@ html > body[data-scroll-locked] {
   }
 }
 
-/* Pierre file tree + diffs inherit landing theme in the IDE studio */
-.landing-studio-tree {
-  color: var(--landing-ink);
-}
-
-.landing-studio-tree::part(tree),
-.landing-studio-tree file-tree {
-  color: inherit;
-}
-
-.dark .landing .landing-studio-tree {
-  color-scheme: dark;
-}
-
 .landing-code-scroll,
 .landing-code-scroll pre {
   scrollbar-width: thin;

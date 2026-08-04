@@ -404,11 +404,11 @@ export const GRAPH_NODES: Record<GraphNodeId, GraphNodeMeta> = {
 /** Kind styling: amber trigger · red threat · blue objective · green rule (Tailwind tokens). */
 export const KIND_STYLE: Record<
   GraphKind,
-  { color: string; ring: string; soft: string; bar: string; text: string; line: string }
+  { color: string; border: string; soft: string; bar: string; text: string; line: string }
 > = {
   trigger: {
     color: 'bg-amber-400 text-amber-950',
-    ring: 'ring-amber-400/45',
+    border: 'border-amber-400',
     soft: 'bg-amber-400/15 text-amber-800 dark:text-amber-300',
     bar: 'bg-amber-400',
     text: 'text-amber-700 dark:text-amber-300',
@@ -416,7 +416,7 @@ export const KIND_STYLE: Record<
   },
   threat: {
     color: 'bg-red-500 text-white',
-    ring: 'ring-red-500/40',
+    border: 'border-red-500',
     soft: 'bg-red-500/15 text-red-700 dark:text-red-300',
     bar: 'bg-red-500',
     text: 'text-red-700 dark:text-red-300',
@@ -424,7 +424,7 @@ export const KIND_STYLE: Record<
   },
   objective: {
     color: 'bg-blue-600 text-white',
-    ring: 'ring-blue-500/40',
+    border: 'border-blue-500',
     soft: 'bg-blue-500/15 text-blue-700 dark:text-blue-300',
     bar: 'bg-blue-600',
     text: 'text-blue-700 dark:text-blue-300',
@@ -432,7 +432,7 @@ export const KIND_STYLE: Record<
   },
   rule: {
     color: 'bg-emerald-500 text-white',
-    ring: 'ring-emerald-500/40',
+    border: 'border-emerald-500',
     soft: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300',
     bar: 'bg-emerald-500',
     text: 'text-emerald-700 dark:text-emerald-300',

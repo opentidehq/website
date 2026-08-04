@@ -118,7 +118,7 @@ export function EventCard({ event, animate }: { event: AgentEvent; animate?: boo
   );
 }
 
-const EVENT_MS = 420;
+export const EVENT_MS = 420;
 
 function highlightCliCommand(cmd: string) {
   const tokens = cmd.split(/(\s+)/);
@@ -167,89 +167,32 @@ function highlightOutLine(line: string) {
   return <span className="text-[var(--landing-muted)]">{line}</span>;
 }
 
-/** Agent timeline — only runs when armed. Parent should remount via `key` on step change. */
+/**
+ * Agent timeline — controlled by parent for live sync with the editor.
+ * Parent remounts via `key` on step change.
+ */
 export function AgentTracePanel({
   label,
   events,
-  armed = true,
-  instant = false,
-  paused = false,
-  onComplete,
-  onProgress,
+  visibleCount,
+  animate = true,
 }: {
   label: string;
   events: AgentEvent[];
-  armed?: boolean;
-  instant?: boolean;
-  paused?: boolean;
-  onComplete?: () => void;
-  onProgress?: (ratio: number) => void;
+  /** How many leading events to show (0..events.length). */
+  visibleCount: number;
+  animate?: boolean;
 }) {
-  const reduced = usePrefersReducedMotion();
-  const showAll = reduced || instant;
-  const [visibleEvents, setVisibleEvents] = useState(showAll ? events.length : 0);
   const traceRef = useRef<HTMLDivElement>(null);
-  const doneRef = useRef(false);
-  const pausedRef = useRef(paused);
-  const visibleRef = useRef(visibleEvents);
-
-  useEffect(() => {
-    pausedRef.current = paused;
-  }, [paused]);
-
-  useEffect(() => {
-    visibleRef.current = visibleEvents;
-  }, [visibleEvents]);
-
-  useEffect(() => {
-    if (!armed) return;
-
-    if (showAll) {
-      const frame = window.requestAnimationFrame(() => {
-        setVisibleEvents(events.length);
-        onProgress?.(1);
-        if (!doneRef.current) {
-          doneRef.current = true;
-          onComplete?.();
-        }
-      });
-      return () => window.cancelAnimationFrame(frame);
-    }
-
-    let ei = visibleRef.current;
-    if (ei >= events.length) {
-      onProgress?.(1);
-      if (!doneRef.current) {
-        doneRef.current = true;
-        onComplete?.();
-      }
-      return;
-    }
-
-    const eventTimer = window.setInterval(() => {
-      if (pausedRef.current) return;
-      ei += 1;
-      setVisibleEvents(ei);
-      onProgress?.(ei / events.length);
-      if (ei >= events.length) {
-        window.clearInterval(eventTimer);
-        if (!doneRef.current) {
-          doneRef.current = true;
-          onComplete?.();
-        }
-      }
-    }, EVENT_MS);
-
-    return () => window.clearInterval(eventTimer);
-  }, [armed, showAll, events, onComplete, onProgress, paused]);
+  const shown = Math.max(0, Math.min(visibleCount, events.length));
 
   useEffect(() => {
     const el = traceRef.current;
     if (el) el.scrollTop = el.scrollHeight;
-  }, [visibleEvents]);
+  }, [shown]);
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-[var(--landing-surface)]">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[var(--landing-surface)]">
       <div className="flex h-9 shrink-0 items-center gap-2 border-b border-[var(--landing-border-subtle)] px-3">
         <Bot className="size-4 text-[var(--landing-accent)]" aria-hidden />
         <span className="font-mono text-[11px] font-medium text-[var(--landing-ink)]">Agent trace</span>
@@ -259,13 +202,13 @@ export function AgentTracePanel({
       </div>
       <div
         ref={traceRef}
-        className="landing-code-scroll min-h-0 flex-1 space-y-2 overflow-y-auto p-3"
+        className="landing-code-scroll min-h-0 flex-1 space-y-2 overflow-y-auto overflow-x-hidden overscroll-contain p-3"
       >
-        {!armed && (
-          <p className="font-mono text-[10px] text-[var(--landing-dim)]">Waiting for editor…</p>
+        {shown === 0 && (
+          <p className="font-mono text-[10px] text-[var(--landing-dim)]">Agent starting…</p>
         )}
-        {events.slice(0, visibleEvents).map((event, i) => (
-          <EventCard key={`${label}-${i}`} event={event} animate={!showAll} />
+        {events.slice(0, shown).map((event, i) => (
+          <EventCard key={`${label}-${i}`} event={event} animate={animate && i === shown - 1} />
         ))}
       </div>
     </div>

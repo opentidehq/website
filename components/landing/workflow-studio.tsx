@@ -2,14 +2,15 @@
 
 import { Files, Bot, Terminal, FileText, Pause, Play } from 'lucide-react';
 import { File } from '@pierre/diffs/react';
-import { FileTree, useFileTree, useFileTreeSelector } from '@pierre/trees/react';
 import { useTheme } from 'next-themes';
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AgentTracePanel,
+  EVENT_MS,
   StudioTerminal,
   type AgentEvent,
 } from '@/components/landing/agent-trace-panel';
+import { StudioExplorer } from '@/components/landing/studio-explorer';
 import { DEMO_FILES, DEMO_PATHS, DEMO_REPO, type DemoPath } from '@/lib/landing/demo-registry';
 import { usePrefersReducedMotion } from '@/lib/hooks/use-prefers-reduced-motion';
 
@@ -23,7 +24,8 @@ const STEPS = [
 ] as const;
 
 type Step = (typeof STEPS)[number];
-type Phase = 'typing' | 'trace' | 'terminal' | 'dwell';
+/** work = type file + stream agent events together; then terminal; then dwell. */
+type Phase = 'work' | 'terminal' | 'dwell';
 
 const stepFocus: Record<
   Step,
@@ -73,7 +75,13 @@ const stepFocus: Record<
       'objects/rules/lsass-memory-access.yaml',
       '.opentide/configurations/platforms/sentinel.toml',
     ],
-    expand: ['objects', 'objects/rules', '.opentide', '.opentide/configurations', '.opentide/configurations/platforms'],
+    expand: [
+      'objects',
+      'objects/rules',
+      '.opentide',
+      '.opentide/configurations',
+      '.opentide/configurations/platforms',
+    ],
   },
 };
 
@@ -311,6 +319,29 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
   },
 };
 
+/** Split events so prelude plays during typing; write lands at 100%; postlude after. */
+function splitScriptEvents(events: AgentEvent[]) {
+  const writeIdx = events.findIndex(
+    (e) => e.kind === 'mcp' && (e.tool === 'write_file' || e.tool === 'deploy'),
+  );
+  if (writeIdx >= 0) {
+    return {
+      prelude: events.slice(0, writeIdx),
+      hinge: 1,
+      postlude: events.slice(writeIdx + 1),
+      hingeIndex: writeIdx,
+    };
+  }
+  // No write/deploy — stream ~half during typing, rest after
+  const hingeIndex = Math.max(1, Math.ceil(events.length * 0.55)) - 1;
+  return {
+    prelude: events.slice(0, hingeIndex + 1),
+    hinge: 0,
+    postlude: events.slice(hingeIndex + 1),
+    hingeIndex,
+  };
+}
+
 function EditorPane({
   path,
   themeType,
@@ -346,19 +377,22 @@ function EditorPane({
 
   const scrollRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const el = scrollRef.current?.querySelector('[data-diffs-scroll], .cm-scroller, pre, .overflow-auto');
-    if (el) el.scrollTop = el.scrollHeight;
-    else if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    const root = scrollRef.current;
+    if (!root) return;
+    const el =
+      root.querySelector<HTMLElement>('[data-diffs-scroll], .cm-scroller, pre, .overflow-auto') ??
+      root;
+    el.scrollTop = el.scrollHeight;
   }, [contents.length]);
 
   return (
-    <div ref={scrollRef} className="relative h-full min-h-0">
+    <div ref={scrollRef} className="landing-code-scroll relative h-full min-h-0 overflow-auto">
       <File
         key={`${path}-${themeType}`}
         file={file}
         options={options}
         disableWorkerPool
-        className="h-full min-h-0"
+        className="min-h-0"
       />
       {showCursor && chars != null && chars < full.length && (
         <span
@@ -370,42 +404,18 @@ function EditorPane({
   );
 }
 
-function applyTreeFocus(
-  model: {
-    getSelectedPaths: () => readonly string[];
-    getItem: (path: string) => {
-      deselect: () => void;
-      select: () => void;
-      expand?: () => void;
-    } | null;
-    focusPath: (path: string) => void;
-    scrollToPath?: (path: string, opts?: { focus?: boolean }) => void;
-  },
-  focus: (typeof stepFocus)[Step],
-) {
-  for (const selected of [...model.getSelectedPaths()]) {
-    model.getItem(selected)?.deselect();
-  }
-  for (const dir of focus.expand) {
-    model.getItem(dir)?.expand?.();
-  }
-  for (const path of focus.select) {
-    model.getItem(path)?.select();
-  }
-  model.focusPath(focus.open);
-  model.scrollToPath?.(focus.open, { focus: false });
-}
-
 function ScenarioChrome({
   stepIdx,
   phasePart,
   phase,
+  typing,
   paused,
   onTogglePause,
 }: {
   stepIdx: number;
   phasePart: number;
   phase: Phase;
+  typing: boolean;
   paused: boolean;
   onTogglePause: () => void;
 }) {
@@ -413,20 +423,19 @@ function ScenarioChrome({
   const segmentProgress = (i: number) => {
     if (i < stepIdx) return 1;
     if (i > stepIdx) return 0;
-    if (phase === 'typing') return phasePart * 0.34;
-    if (phase === 'trace') return 0.34 + phasePart * 0.33;
+    if (phase === 'work') return phasePart * 0.67;
     if (phase === 'terminal') return 0.67 + phasePart * 0.33;
     return 1;
   };
 
   const phaseLabel =
-    phase === 'typing'
-      ? 'Writing file'
-      : phase === 'trace'
-        ? 'Agent working'
-        : phase === 'terminal'
-          ? 'Running CLI'
-          : 'Next stage';
+    phase === 'work'
+      ? typing
+        ? 'Writing file'
+        : 'Agent working'
+      : phase === 'terminal'
+        ? 'Running CLI'
+        : 'Next stage';
 
   return (
     <div className="space-y-3" aria-label="Scenario progress">
@@ -465,7 +474,6 @@ function ScenarioChrome({
         </button>
       </div>
 
-      {/* Continuous segmented timeline — no wrapping pills/arrows */}
       <div
         className="grid gap-1"
         style={{ gridTemplateColumns: `repeat(${STEPS.length}, minmax(0, 1fr))` }}
@@ -513,50 +521,25 @@ export function WorkflowStudio() {
   const { resolvedTheme } = useTheme();
   const themeType = resolvedTheme === 'dark' ? 'dark' : 'light';
   const [stepIdx, setStepIdx] = useState(0);
-  const [phase, setPhase] = useState<Phase>(reduced ? 'dwell' : 'typing');
+  const [phase, setPhase] = useState<Phase>(reduced ? 'dwell' : 'work');
   const [paused, setPaused] = useState(false);
   const [typedChars, setTypedChars] = useState(0);
+  const [visibleEvents, setVisibleEvents] = useState(0);
   const [phasePart, setPhasePart] = useState(0);
   const step = STEPS[stepIdx];
   const script = stepScripts[step];
   const focus = stepFocus[step];
   const fullText = DEMO_FILES[focus.open];
+  const split = useMemo(() => splitScriptEvents(script.events), [script.events]);
 
-  const { model } = useFileTree({
-    paths: [...DEMO_PATHS],
-    initialExpansion: 'open',
-    initialExpandedPaths: [
-      'intel',
-      'intel/advisories',
-      'objects',
-      'objects/threats',
-      'objects/objectives',
-      'objects/rules',
-      '.opentide',
-      '.opentide/configurations',
-      '.opentide/configurations/platforms',
-    ],
-    initialSelectedPaths: [...focus.select],
-  });
-
-  // Keep selector subscribed so tree re-renders when focus changes
-  useFileTreeSelector(
-    model,
-    (m) => m.getSelectedPaths(),
-    (a, b) => a.length === b.length && a.every((p, i) => p === b[i]),
-  );
-
-  useEffect(() => {
-    applyTreeFocus(model, focus);
-  }, [model, focus, stepIdx]);
-
-  // Reset typing when step changes (React-recommended adjust-during-render)
+  // Reset when step changes (adjust-during-render)
   const [seenStep, setSeenStep] = useState(stepIdx);
   if (seenStep !== stepIdx) {
     setSeenStep(stepIdx);
     setTypedChars(0);
+    setVisibleEvents(0);
     setPhasePart(0);
-    setPhase(reduced ? 'dwell' : 'typing');
+    setPhase(reduced ? 'dwell' : 'work');
   }
 
   const pausedRef = useRef(paused);
@@ -564,57 +547,118 @@ export function WorkflowStudio() {
     pausedRef.current = paused;
   }, [paused]);
 
-  // Typewriter for editor
+  // Unified work clock: typewriter + agent events stay in lockstep
   useEffect(() => {
-    if (phase !== 'typing') return;
+    if (phase !== 'work') return;
 
     if (reduced) {
       const frame = window.requestAnimationFrame(() => {
         setTypedChars(fullText.length);
+        setVisibleEvents(script.events.length);
         setPhasePart(1);
-        setPhase('trace');
+        setPhase('terminal');
       });
       return () => window.cancelAnimationFrame(frame);
     }
 
     const chunk = Math.max(2, Math.ceil(fullText.length / 90));
-    let n = typedChars;
-    let advanceTimer = 0;
-    const id = window.setInterval(() => {
+    const preludeLen = split.prelude.length;
+    const hingeTotal = preludeLen + split.hinge; // events unlocked by end of typing
+    let chars = typedChars;
+    let events = visibleEvents;
+    let postTimer = 0;
+
+    const finishWork = () => {
+      setPhasePart(1);
+      setPhase('terminal');
+    };
+
+    const dripPostlude = () => {
+      postTimer = window.setInterval(() => {
+        if (pausedRef.current) return;
+        events += 1;
+        setVisibleEvents(events);
+        const postDone = events - hingeTotal;
+        const postTotal = Math.max(1, split.postlude.length);
+        setPhasePart(0.72 + 0.28 * Math.min(1, postDone / postTotal));
+        if (events >= script.events.length) {
+          window.clearInterval(postTimer);
+          window.setTimeout(() => {
+            if (!pausedRef.current) finishWork();
+          }, 220);
+        }
+      }, EVENT_MS);
+    };
+
+    // Already finished typing — only drip remaining events
+    if (chars >= fullText.length) {
+      setTypedChars(fullText.length);
+      if (events < hingeTotal) {
+        events = hingeTotal;
+        setVisibleEvents(hingeTotal);
+      }
+      if (events >= script.events.length) {
+        finishWork();
+        return;
+      }
+      dripPostlude();
+      return () => window.clearInterval(postTimer);
+    }
+
+    const typeTimer = window.setInterval(() => {
       if (pausedRef.current) return;
-      n = Math.min(fullText.length, n + chunk);
-      setTypedChars(n);
-      setPhasePart(n / fullText.length);
-      if (n >= fullText.length) {
-        window.clearInterval(id);
-        advanceTimer = window.setTimeout(() => {
-          if (!pausedRef.current) setPhase('trace');
-        }, 280);
+      chars = Math.min(fullText.length, chars + chunk);
+      setTypedChars(chars);
+      const typeRatio = chars / fullText.length;
+
+      // Unlock prelude proportionally while typing; hinge event at completion
+      const targetDuringType =
+        chars >= fullText.length
+          ? hingeTotal
+          : Math.max(
+              events,
+              Math.min(preludeLen, Math.floor(typeRatio * Math.max(preludeLen, 1) + 0.001)),
+            );
+      // Always show at least the first event once typing starts
+      const nextEvents =
+        chars > 0 ? Math.max(targetDuringType, preludeLen > 0 ? Math.min(1, preludeLen) : 0) : 0;
+      if (nextEvents > events) {
+        events = nextEvents;
+        setVisibleEvents(events);
+      }
+
+      setPhasePart(typeRatio * 0.72);
+
+      if (chars >= fullText.length) {
+        window.clearInterval(typeTimer);
+        events = hingeTotal;
+        setVisibleEvents(hingeTotal);
+        setPhasePart(0.72);
+        if (split.postlude.length === 0) {
+          window.setTimeout(() => {
+            if (!pausedRef.current) finishWork();
+          }, 280);
+        } else {
+          dripPostlude();
+        }
       }
     }, 28);
 
     return () => {
-      window.clearInterval(id);
-      window.clearTimeout(advanceTimer);
+      window.clearInterval(typeTimer);
+      window.clearInterval(postTimer);
     };
-    // Resume from typedChars when unpausing — omit from deps to avoid restart loops.
+    // Resume from current counters when unpausing — omit to avoid restart loops.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, fullText, reduced, stepIdx, paused]);
-
-  const onTraceComplete = useCallback(() => {
-    setPhase('terminal');
-    setPhasePart(0);
-  }, []);
+  }, [phase, fullText, reduced, stepIdx, paused, script.events, split]);
 
   const onTerminalComplete = useCallback(() => {
     setPhase('dwell');
     setPhasePart(1);
   }, []);
 
-  const onTraceProgress = useCallback((r: number) => setPhasePart(r), []);
   const onTermProgress = useCallback((r: number) => setPhasePart(r), []);
 
-  // Auto-advance and loop the scenario
   useEffect(() => {
     if (paused || phase !== 'dwell') return;
     const dwell = reduced ? 400 : 900;
@@ -624,14 +668,22 @@ export function WorkflowStudio() {
     return () => window.clearTimeout(id);
   }, [phase, stepIdx, paused, reduced]);
 
+  // Instant-fill when entering dwell via reduced motion mid-step
+  useEffect(() => {
+    if (phase !== 'dwell' && phase !== 'terminal') return;
+    if (typedChars < fullText.length) setTypedChars(fullText.length);
+    if (visibleEvents < script.events.length) setVisibleEvents(script.events.length);
+  }, [phase, fullText.length, script.events.length, typedChars, visibleEvents]);
+
+  const typing = phase === 'work' && typedChars < fullText.length;
   const phaseLabel =
-    phase === 'typing'
-      ? 'Writing file…'
-      : phase === 'trace'
-        ? 'Agent working…'
-        : phase === 'terminal'
-          ? 'Running CLI…'
-          : 'Next stage…';
+    phase === 'work'
+      ? typing
+        ? 'Writing file…'
+        : 'Agent working…'
+      : phase === 'terminal'
+        ? 'Running CLI…'
+        : 'Next stage…';
 
   return (
     <div className="space-y-4">
@@ -639,6 +691,7 @@ export function WorkflowStudio() {
         stepIdx={stepIdx}
         phasePart={phasePart}
         phase={phase}
+        typing={typing}
         paused={paused}
         onTogglePause={() => setPaused((p) => !p)}
       />
@@ -656,7 +709,7 @@ export function WorkflowStudio() {
           </span>
         </div>
 
-        <div className="grid h-[min(58vh,560px)] grid-cols-1 lg:grid-cols-[40px_200px_minmax(0,1fr)_minmax(240px,0.4fr)]">
+        <div className="grid h-[min(58vh,560px)] grid-cols-1 lg:grid-cols-[40px_210px_minmax(0,1fr)_minmax(240px,0.42fr)]">
           <div className="hidden flex-col items-center gap-3 border-r border-[var(--landing-border-subtle)] bg-[var(--landing-surface-raised)] py-3 lg:flex">
             <Files className="size-4 text-[var(--landing-accent)]" aria-hidden />
             <FileText className="size-4 text-[var(--landing-dim)]" aria-hidden />
@@ -664,31 +717,16 @@ export function WorkflowStudio() {
             <Terminal className="size-4 text-[var(--landing-subtle)]" aria-hidden />
           </div>
 
-          <div
-            className="landing-studio-tree pointer-events-none hidden min-h-0 border-r border-[var(--landing-border-subtle)] bg-[var(--landing-surface)] opacity-90 lg:block"
-            aria-hidden
-            style={
-              {
-                colorScheme: themeType,
-                ['--trees-fg-override']: 'var(--landing-ink)',
-                ['--trees-fg-muted-override']: 'var(--landing-subtle)',
-                ['--trees-bg-override']: 'transparent',
-                ['--trees-bg-muted-override']: 'var(--landing-surface-raised)',
-                ['--trees-accent-override']: 'var(--landing-accent)',
-                ['--trees-border-color-override']: 'var(--landing-border-subtle)',
-                ['--trees-selected-bg-override']:
-                  'color-mix(in srgb, var(--landing-accent) 16%, transparent)',
-                ['--trees-selected-fg-override']: 'var(--landing-ink)',
-              } as CSSProperties
-            }
-          >
-            <p className="px-3 py-2 font-mono text-[9px] uppercase tracking-wider text-[var(--landing-subtle)]">
-              Explorer
-            </p>
-            <FileTree model={model} className="h-[calc(100%-2rem)] min-h-0 text-xs" />
+          <div className="pointer-events-none hidden min-h-0 overflow-hidden border-r border-[var(--landing-border-subtle)] bg-[var(--landing-surface)] lg:block">
+            <StudioExplorer
+              paths={DEMO_PATHS}
+              open={focus.open}
+              selected={focus.select}
+              expanded={focus.expand}
+            />
           </div>
 
-          <div className="flex min-h-0 min-w-0 flex-col border-r border-[var(--landing-border-subtle)] bg-[var(--landing-bg)]">
+          <div className="flex min-h-0 min-w-0 flex-col overflow-hidden border-r border-[var(--landing-border-subtle)] bg-[var(--landing-bg)]">
             <div className="flex h-9 shrink-0 items-center bg-[var(--landing-surface)] px-2">
               <span className="inline-block border-b-2 border-[var(--landing-accent)] px-2 pb-2 pt-1.5 font-mono text-[10px] text-[var(--landing-ink)]">
                 {focus.open.split('/').pop()}
@@ -698,12 +736,8 @@ export function WorkflowStudio() {
               <EditorPane
                 path={focus.open}
                 themeType={themeType}
-                chars={
-                  phase === 'typing' || phase === 'trace'
-                    ? typedChars
-                    : DEMO_FILES[focus.open].length
-                }
-                showCursor={!paused && phase === 'typing' && typedChars < fullText.length}
+                chars={typedChars}
+                showCursor={!paused && typing}
               />
             </div>
 
@@ -719,16 +753,15 @@ export function WorkflowStudio() {
             />
           </div>
 
-          <div className="min-h-0 border-t border-[var(--landing-border-subtle)] lg:border-t-0">
+          <div className="flex min-h-0 flex-col overflow-hidden border-t border-[var(--landing-border-subtle)] max-lg:min-h-[220px] lg:border-t-0">
             <AgentTracePanel
               key={`${step}-trace`}
               label={stepLabel[step]}
               events={script.events}
-              armed={phase === 'trace' || phase === 'terminal' || phase === 'dwell'}
-              paused={paused}
-              instant={reduced || phase === 'terminal' || phase === 'dwell'}
-              onProgress={phase === 'trace' ? onTraceProgress : undefined}
-              onComplete={phase === 'trace' ? onTraceComplete : undefined}
+              visibleCount={
+                phase === 'terminal' || phase === 'dwell' ? script.events.length : visibleEvents
+              }
+              animate={!reduced && phase === 'work'}
             />
           </div>
         </div>
