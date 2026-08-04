@@ -6,21 +6,23 @@ Pantone Reflex Blue `#001489` · EU Yellow `#FFCC00` · Inter SemiBold · Materi
 
 ## Theme mapping (site)
 
-| Mode | Surface | Accent |
-|------|---------|--------|
-| Light | white | blue `#001489` |
-| Dark | black | yellow `#FFCC00` |
+| Mode | Surface | Logo |
+|------|---------|------|
+| Light | white | `logo-normal` (blue pill) / `icon-normal` |
+| Dark | black | `logo-dark` (yellow pill) / `icon-dark` |
 
 ## Files
 
 | Prefix | What it is |
 |--------|------------|
-| `logo-{normal\|inverse}` | Pill logo — circle icon + **opentide** |
+| `logo-{normal\|inverse\|dark}` | Pill logo — circle icon + **opentide** |
 | `icon-{normal\|inverse\|dark}` | Circle icon mark / favicon |
 | `badge-{normal\|inverse}` | OTIDE ring seal badge |
+| `site-pill-{normal\|inverse}` | Globe + **opentide.org** |
+| `license-pill-{normal\|inverse}` | Gavel + **EUPL 1.2** |
 
-- **normal** — blue fill, white accent (light / brand block)
-- **inverse** — white fill, blue accent (on light surfaces)
-- **dark** — yellow fill, black accent (site dark mode companion; not in upstream pack)
+- **normal** — blue fill, white accent
+- **inverse** — white fill, blue accent
+- **dark** — yellow fill, black accent (site dark companion; derived for website use)
 
 PNGs: `{prefix}-{size}px.png` (height for pills/logo, square for badge/icon).

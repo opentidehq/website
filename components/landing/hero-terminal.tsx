@@ -41,7 +41,7 @@ function TerminalAnimation() {
   }, [tick]);
 
   const cursor = (on: boolean) =>
-    on ? <span className="inline-block h-3.5 w-[7px] animate-pulse bg-[var(--eu-yellow)] align-middle" /> : null;
+    on ? <span className="inline-block h-3.5 w-[7px] animate-pulse bg-[var(--landing-accent)] align-middle" /> : null;
 
   const typeCmd = (cmd: string, start: number, end: number) => {
     if (tick < start) return null;
@@ -100,7 +100,7 @@ function TerminalAnimation() {
         {tick > tValidate + 2 && <span className="text-emerald-400/90">│ ✓ uuid-format · id-uniqueness</span>}
         {tick > tValidate + 3 && <span className="text-emerald-400/90">│ ✓ cross-object references</span>}
         {tick > tValidate + 4 && <span className="text-emerald-400/90">│ ✓ sentinel KQL honesty</span>}
-        {tick > tValidate + 5 && <span className="text-[var(--eu-yellow)]/80">0 blocking · 0 warnings</span>}
+        {tick > tValidate + 5 && <span className="text-[var(--landing-accent)]/80">0 blocking · 0 warnings</span>}
       </Fragment>,
     );
   }
@@ -121,7 +121,7 @@ function TerminalAnimation() {
         {tick > tDeploy + 2 && (
           <span className="text-emerald-400/90">✓ LSASS memory access → Sentinel</span>
         )}
-        {tick > tDeploy + 3 && <span className="text-[var(--eu-yellow)]/80">Dry-run complete: 0 blocked</span>}
+        {tick > tDeploy + 3 && <span className="text-[var(--landing-accent)]/80">Dry-run complete: 0 blocked</span>}
       </Fragment>,
     );
   }
@@ -152,9 +152,9 @@ function TerminalAnimation() {
 function LaunchToast({ className }: { className?: string }) {
   return (
     <div
-      className={`overflow-hidden rounded-lg border border-white/10 bg-black/90 shadow-lg backdrop-blur-sm ${className ?? ''}`}
+      className={`overflow-hidden rounded-lg border border-[var(--landing-border)] bg-black/90 shadow-lg backdrop-blur-sm ${className ?? ''}`}
     >
-      <p className="border-b border-white/10 px-3 py-1.5 text-center font-mono text-[10px] text-zinc-500">
+      <p className="border-b border-[var(--landing-border)] px-3 py-1.5 text-center font-mono text-[10px] text-zinc-500">
         detection-repo
       </p>
       <p className="px-3 py-2 text-xs text-zinc-300">Pipeline ready · 0 blocking</p>
@@ -168,7 +168,7 @@ function CopyInstallButton() {
   return (
     <button
       type="button"
-      className="shrink-0 rounded-lg border border-white/10 p-2 text-zinc-500 transition hover:border-[var(--eu-yellow)]/30 hover:text-[var(--eu-yellow)]"
+      className="shrink-0 rounded-lg border border-[var(--landing-border)] p-2 text-zinc-500 transition hover:border-[var(--landing-accent)]/30 hover:text-[var(--landing-accent)]"
       aria-label="Copy install command"
       onClick={() => {
         void navigator.clipboard.writeText(INSTALL_CMD);
@@ -184,12 +184,12 @@ function CopyInstallButton() {
 export function HeroTerminal() {
   return (
     <div className="mx-auto w-full max-w-[800px]">
-      <div className="rounded-2xl border border-white/10 bg-black p-2 shadow-[0_24px_80px_-32px_rgba(0,0,0,0.8)]">
+      <div className="rounded-2xl border border-[var(--landing-border)] bg-black p-2 shadow-[0_24px_80px_-32px_rgba(0,0,0,0.8)]">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch">
-          <h2 className="flex shrink-0 items-center justify-center rounded-xl border-2 border-[var(--eu-yellow)]/45 px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--eu-yellow)] sm:text-xs">
+          <h2 className="flex shrink-0 items-center justify-center rounded-xl border-2 border-[var(--landing-accent)]/45 px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-wider text-[var(--landing-accent)] sm:text-xs">
             Try it out
           </h2>
-          <div className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2">
+          <div className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-[var(--landing-border)] bg-white/[0.03] px-3 py-2">
             <code className="min-w-0 flex-1 truncate font-mono text-[11px] text-zinc-300 sm:text-xs">
               {INSTALL_CMD}
             </code>
@@ -197,8 +197,8 @@ export function HeroTerminal() {
           </div>
         </div>
 
-        <div className="relative mt-2 overflow-hidden rounded-xl border border-white/10 bg-white/[0.02] shadow-md">
-          <div className="flex items-center gap-2 border-b border-white/10 px-3 py-2 text-zinc-500">
+        <div className="relative mt-2 overflow-hidden rounded-xl border border-[var(--landing-border)] bg-white/[0.02] shadow-md">
+          <div className="flex items-center gap-2 border-b border-[var(--landing-border)] px-3 py-2 text-zinc-500">
             <Terminal className="size-4" aria-hidden />
             <span className="text-xs font-medium">Terminal</span>
             <span className="ms-auto size-2 rounded-full bg-red-400/90" aria-hidden />

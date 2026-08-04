@@ -18,20 +18,60 @@ export const navLinks = [
   { label: 'Blog', href: '/blog' },
 ] as const;
 
-export const ecosystemLinks = [
+export type EcosystemItem = {
+  name: string;
+  description: string;
+  href?: string;
+  status: 'live' | 'soon';
+  tag: string;
+};
+
+export const ecosystemLinks: EcosystemItem[] = [
   {
     name: 'opentide',
-    description: 'DetectionOps engine (PyPI package)',
+    description: 'DetectionOps engine on PyPI: validate, generate, deploy, document.',
     href: 'https://github.com/OpenTideHQ/opentide',
+    status: 'live',
+    tag: 'Engine',
   },
   {
     name: 'specifications',
-    description: 'Normative spec library',
+    description: 'Normative object specs, schemas, and vocabularies.',
     href: 'https://github.com/OpenTideHQ/specifications',
+    status: 'live',
+    tag: 'Specs',
   },
   {
-    name: 'ShareTide',
-    description: 'TLP:CLEAR community detection objects',
-    href: 'https://github.com/OpenTideHQ/ShareTide',
+    name: 'library',
+    description: 'Public registry of published detection objects.',
+    href: 'https://github.com/OpenTideHQ/library',
+    status: 'live',
+    tag: 'Registry',
   },
-] as const;
+  {
+    name: 'explorer',
+    description: 'Deployable app for exploring OpenTide objects end to end.',
+    href: 'https://github.com/OpenTideHQ/explorer',
+    status: 'live',
+    tag: 'App',
+  },
+  {
+    name: 'skills',
+    description: 'Canonical agent skills for OpenTide detection engineering.',
+    href: 'https://github.com/OpenTideHQ/skills',
+    status: 'live',
+    tag: 'Agents',
+  },
+  {
+    name: 'language-server',
+    description: 'LSP for OpenTide object and query authoring in any editor.',
+    status: 'soon',
+    tag: 'Editor',
+  },
+  {
+    name: 'vscode-extension',
+    description: 'VS Code tooling for schemas, validation, and detection workflows.',
+    status: 'soon',
+    tag: 'Editor',
+  },
+];

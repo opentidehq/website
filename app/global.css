@@ -1,6 +1,10 @@
 @import 'tailwindcss';
 @import 'fumadocs-ui/css/neutral.css';
 @import 'fumadocs-ui/css/preset.css';
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
 
 /* Pantone Reflex Blue #001489 · EU Yellow #FFCC00 — light=white+blue, dark=black+yellow */
 @theme {
@@ -28,6 +32,38 @@
   --color-fd-primary-foreground: #ffffff;
   --color-fd-ring: hsl(var(--eu-blue-hsl) / 0.35);
   --color-fd-idea: hsl(var(--eu-blue-hsl));
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
 }
 
 .dark {
@@ -42,6 +78,37 @@
   --color-fd-idea: hsl(var(--eu-yellow-hsl));
   --color-fd-accent: hsl(220 15% 18%);
   --color-fd-muted: hsl(220 12% 14%);
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
 }
 
 /* Docs active states track --brand-accent (blue light / yellow dark) */
@@ -148,6 +215,34 @@ html > body[data-scroll-locked] {
 }
 
 .landing {
+  /* Light: white + Pantone Reflex Blue (matches docs) */
+  --landing-bg: #ffffff;
+  --landing-surface-deep: #f7f7f9;
+  --landing-surface: #f2f2f5;
+  --landing-surface-raised: #ebebf0;
+  --landing-ink: #0a0a0c;
+  --landing-muted: #3f3f46;
+  --landing-subtle: #52525b;
+  --landing-accent: var(--eu-blue);
+  --landing-accent-lift: var(--color-eu-blue-muted);
+  --landing-blue: var(--eu-blue);
+  --landing-dim: #71717a;
+  --landing-border: rgb(0 0 0 / 0.1);
+  --landing-border-subtle: rgb(0 0 0 / 0.06);
+  --landing-hover: rgb(0 0 0 / 0.04);
+  --landing-btn-shadow: rgb(0 20 137 / 0.28);
+  --brand-accent: var(--eu-blue);
+  --brand-accent-foreground: #ffffff;
+  --brand-mark-fill: var(--eu-blue);
+  --brand-mark-ink: #ffffff;
+
+  font-family: var(--font-sans), system-ui, sans-serif;
+  background-color: var(--landing-bg);
+  color: var(--landing-ink);
+}
+
+.dark .landing {
+  /* Dark: black + EU yellow */
   --landing-bg: #000000;
   --landing-surface-deep: #050505;
   --landing-surface: #0a0a0a;
@@ -156,22 +251,21 @@ html > body[data-scroll-locked] {
   --landing-muted: #c4c4cc;
   --landing-subtle: #9a9aa3;
   --landing-accent: var(--eu-yellow);
-  --landing-blue: var(--eu-blue);
+  --landing-accent-lift: var(--color-yellow-lift);
   --landing-dim: #52525b;
-  /* Landing is always black + yellow regardless of docs theme toggle */
+  --landing-border: rgb(255 255 255 / 0.1);
+  --landing-border-subtle: rgb(255 255 255 / 0.08);
+  --landing-hover: rgb(255 255 255 / 0.05);
+  --landing-btn-shadow: rgb(255 204 0 / 0.35);
   --brand-accent: var(--eu-yellow);
   --brand-accent-foreground: #000000;
   --brand-mark-fill: var(--eu-yellow);
   --brand-mark-ink: #000000;
-
-  font-family: var(--font-sans), system-ui, sans-serif;
-  background-color: var(--landing-bg);
-  color: var(--landing-ink);
 }
 
 .landing-surface-card {
   border-radius: 1rem;
-  border: 1px solid rgb(255 255 255 / 0.1);
+  border: 1px solid var(--landing-border);
   background-color: var(--landing-surface);
 }
 
@@ -184,13 +278,13 @@ html > body[data-scroll-locked] {
   padding: 0.75rem 1.5rem;
   font-size: 0.875rem;
   font-weight: 700;
-  color: var(--landing-bg);
-  box-shadow: 0 0 0 1px rgb(255 204 0 / 0.35);
+  color: var(--brand-accent-foreground);
+  box-shadow: 0 0 0 1px var(--landing-btn-shadow);
   transition: background-color 0.2s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 .landing-btn-primary:hover {
-  background-color: var(--color-yellow-lift);
+  background-color: var(--landing-accent-lift);
 }
 
 .landing-btn-primary:focus-visible {
@@ -203,7 +297,7 @@ html > body[data-scroll-locked] {
   align-items: center;
   gap: 0.5rem;
   border-radius: 0.5rem;
-  border: 1px solid rgb(255 204 0 / 0.5);
+  border: 1px solid color-mix(in srgb, var(--landing-accent) 50%, transparent);
   background-color: var(--landing-surface-raised);
   padding: 0.75rem 1.5rem;
   font-size: 0.875rem;
@@ -216,7 +310,7 @@ html > body[data-scroll-locked] {
 
 .landing-btn-secondary:hover {
   border-color: var(--landing-accent);
-  background-color: #141414;
+  background-color: var(--landing-hover);
 }
 
 .landing-btn-secondary:focus-visible {
@@ -323,4 +417,123 @@ html > body[data-scroll-locked] {
 
 .landing-pipeline-card {
   will-change: transform;
+}
+
+/* Thin themed scrollbars for landing code / YAML panes */
+@keyframes landing-fade-slide {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.landing-fade-slide {
+  animation: landing-fade-slide 380ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-fade-slide {
+    animation: none;
+  }
+}
+
+/* Pierre file tree + diffs inherit landing theme in the IDE studio */
+.landing-studio-tree {
+  color: var(--landing-ink);
+}
+
+.landing-studio-tree::part(tree),
+.landing-studio-tree file-tree {
+  color: inherit;
+}
+
+.dark .landing .landing-studio-tree {
+  color-scheme: dark;
+}
+
+.landing-code-scroll,
+.landing-code-scroll pre {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--landing-ink) 28%, transparent) transparent;
+}
+
+.landing-code-scroll::-webkit-scrollbar,
+.landing-code-scroll pre::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.landing-code-scroll::-webkit-scrollbar-track,
+.landing-code-scroll pre::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.landing-code-scroll::-webkit-scrollbar-thumb,
+.landing-code-scroll pre::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--landing-ink) 28%, transparent);
+}
+
+.landing-code-scroll::-webkit-scrollbar-thumb:hover,
+.landing-code-scroll pre::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--landing-ink) 45%, transparent);
+}
+
+@theme inline {
+  --font-heading: var(--font-sans);
+  --font-sans: var(--font-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
 }

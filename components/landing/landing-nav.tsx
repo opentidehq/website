@@ -2,12 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { ThemeSwitch } from 'fumadocs-ui/layouts/shared/slots/theme-switch';
+import { OpentideLicensePill, OpentideWordmark } from '@/components/brand/opentide-mark';
 import { baseOptions } from '@/lib/layout.shared';
 import { ecosystemLinks, gitConfig } from '@/lib/shared';
 import type { ReactNode } from 'react';
 
 function BrandMark() {
-  return baseOptions().nav?.title as ReactNode;
+  return <OpentideWordmark height={32} />;
 }
 
 function navClass(active: boolean) {
@@ -22,9 +24,12 @@ export function LandingNav({ children }: { children: ReactNode }) {
 
   return (
     <div className="landing flex min-h-screen flex-col">
-      <header className="sticky top-0 z-40 border-b border-white/10 bg-[var(--landing-bg)]/95 backdrop-blur-sm">
+      <header className="sticky top-0 z-40 border-b border-[var(--landing-border)] bg-[var(--landing-bg)]/95 backdrop-blur-sm">
         <div className="mx-auto flex h-14 max-w-[1400px] items-center justify-between gap-4 px-4 md:px-6">
-          <Link href="/" className="shrink-0 rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--landing-accent)]">
+          <Link
+            href="/"
+            className="shrink-0 rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--landing-accent)]"
+          >
             <BrandMark />
           </Link>
           <nav className="flex items-center gap-1 text-sm" aria-label="Site">
@@ -36,7 +41,7 @@ export function LandingNav({ children }: { children: ReactNode }) {
                     href={link.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="rounded-md p-2 text-[var(--landing-subtle)] transition hover:bg-white/5 hover:text-[var(--landing-accent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--landing-accent)]"
+                    className="rounded-md p-2 text-[var(--landing-subtle)] transition hover:bg-[var(--landing-hover)] hover:text-[var(--landing-accent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--landing-accent)]"
                     aria-label={link.label}
                   >
                     {link.icon}
@@ -50,34 +55,39 @@ export function LandingNav({ children }: { children: ReactNode }) {
                     ? pathname === '/'
                     : pathname === href || pathname.startsWith(`${href.replace(/\/$/, '')}/`);
                 return (
-                  <Link key={String(link.text)} href={href} className={`${navClass(active)} focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--landing-accent)]`}>
+                  <Link
+                    key={String(link.text)}
+                    href={href}
+                    className={`${navClass(active)} focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--landing-accent)]`}
+                  >
                     {link.text}
                   </Link>
                 );
               }
               return null;
             })}
+            <ThemeSwitch className="ml-1 border-[var(--landing-border)] text-[var(--landing-subtle)]" />
           </nav>
         </div>
       </header>
       <main className="flex-1">{children}</main>
-      <footer className="border-t border-white/10 bg-black">
+      <footer className="border-t border-[var(--landing-border)] bg-[var(--landing-bg)]">
         <div className="mx-auto max-w-[1400px] px-4 py-12 md:px-6">
           <div className="grid gap-10 md:grid-cols-[1.2fr_1fr_1fr]">
             <div>
-              <p className="text-lg font-semibold">
-                open<span className="text-[var(--eu-yellow)]">tide</span>
-              </p>
-              <p className="mt-3 max-w-sm text-sm leading-relaxed text-[var(--landing-muted)]">
+              <OpentideWordmark height={36} />
+              <p className="mt-4 max-w-sm text-sm leading-relaxed text-[var(--landing-muted)]">
                 The DetectionOps engine. Structure detection engineering from intel to deploy.
-                EUPL-1.2, forever free.
+                Forever free.
               </p>
-              <p className="mt-4 font-mono text-[10px] text-[var(--landing-dim)]">
-                Specs CC-BY-4.0 · PyPI · MCP-ready
-              </p>
+              <div className="mt-4">
+                <OpentideLicensePill />
+              </div>
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-[var(--landing-muted)]">Product</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-[var(--landing-muted)]">
+                Product
+              </p>
               <ul className="mt-4 space-y-2 text-sm text-[var(--landing-subtle)]">
                 <li>
                   <Link href="/docs/usage/" className="transition hover:text-[var(--landing-accent)]">
@@ -90,7 +100,10 @@ export function LandingNav({ children }: { children: ReactNode }) {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/docs/usage/concepts/platforms/" className="transition hover:text-[var(--landing-accent)]">
+                  <Link
+                    href="/docs/usage/concepts/platforms/"
+                    className="transition hover:text-[var(--landing-accent)]"
+                  >
                     Platform matrix
                   </Link>
                 </li>
@@ -102,7 +115,9 @@ export function LandingNav({ children }: { children: ReactNode }) {
               </ul>
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-[var(--landing-muted)]">Ecosystem</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-[var(--landing-muted)]">
+                Ecosystem
+              </p>
               <ul className="mt-4 space-y-2 text-sm text-[var(--landing-subtle)]">
                 {ecosystemLinks.map((repo) => (
                   <li key={repo.name}>
@@ -139,12 +154,11 @@ export function LandingNav({ children }: { children: ReactNode }) {
               </ul>
             </div>
           </div>
-          <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-white/[0.06] pt-6 text-xs text-[var(--landing-dim)] md:flex-row">
+          <div className="mt-10 border-t border-[var(--landing-border-subtle)] pt-6 text-xs text-[var(--landing-dim)]">
             <p>
               © {new Date().getFullYear()} opentide ·{' '}
-              <span className="text-[var(--eu-yellow)]">EUPL-1.2</span> · forever free
+              <span className="text-[var(--landing-accent)]">EUPL-1.2</span> · forever free
             </p>
-            <p className="font-mono text-[10px]">DetectionOps: your tide, your autonomy level</p>
           </div>
         </div>
       </footer>

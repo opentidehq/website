@@ -1,8 +1,4 @@
-/** Inline wordmark: neutral open + brand accent tide (blue light / yellow dark). */
+/** Plain product name — no accent split on “tide”. */
 export function OpentideName({ className }: { className?: string }) {
-  return (
-    <span className={className}>
-      open<span className="text-[var(--brand-accent)]">tide</span>
-    </span>
-  );
+  return <span className={className}>opentide</span>;
 }

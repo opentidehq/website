@@ -1,66 +1,44 @@
 import Link from 'next/link';
-import { ArrowRight, CheckCircle2 } from 'lucide-react';
-import { OpentideName } from '@/components/brand/opentide-name';
-import { TideSmokeScene } from '@/components/landing/tide-smoke-scene';
+import { ArrowRight } from 'lucide-react';
+import { OpentideBadge } from '@/components/brand/opentide-mark';
+import { TideAsciiScene } from '@/components/landing/tide-ascii-scene';
 import { HeroInstall } from '@/components/landing/hero-install';
 import { HeroPitch } from '@/components/landing/hero-pitch';
 import { FeatureShowcase } from '@/components/landing/feature-showcase';
+import { EcosystemGrid } from '@/components/landing/ecosystem-grid';
 import { PipelineFlow } from '@/components/landing/pipeline-flow';
-import { WorkflowStudio, ObjectGraph, AutonomySpectrum } from '@/components/landing/landing-heavy';
-import { ecosystemLinks } from '@/lib/shared';
+import { WorkflowStudio, ObjectGraph } from '@/components/landing/landing-heavy';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'opentide, the DetectionOps Engine',
   description:
-    'The normative standard for DetectionOps. Validate, generate, deploy, and document rules with a structured framework that makes engineering faster and more reliable.',
+    'The battle-hardened detection engineering standard for teams adopting detection-as-code—strict validation, deployment pipelines, and agent-native constructs on an object graph that scales with you.',
 };
-
-const spectrumBullets = [
-  {
-    title: 'Fully human',
-    body: 'Engineers drive every change with strict validation gates.',
-  },
-  {
-    title: 'Human in the loop',
-    body: 'Agents draft, humans approve before deploy.',
-  },
-  {
-    title: 'Fully agentic',
-    body: 'MCP skills and dry-run deploy for autonomous pipelines.',
-  },
-  {
-    title: 'Anything between',
-    body: 'Mix surfaces per team, per workflow, per risk appetite.',
-  },
-];
 
 export default function HomePage() {
   return (
-    <div className="landing relative overflow-x-hidden bg-black">
-      <section className="relative min-h-[min(92vh,880px)]">
-        <div className="absolute inset-0" aria-hidden>
-          <TideSmokeScene className="h-full w-full" />
-        </div>
-
-        <div className="relative z-10 mx-auto flex min-h-[min(92vh,880px)] w-full max-w-[1400px] items-center px-4 py-16 pointer-events-none md:px-6 md:py-20">
-          <div className="max-w-xl pointer-events-auto">
+    <div className="landing relative overflow-x-hidden bg-[var(--landing-bg)]">
+      <section className="relative mx-auto flex min-h-[min(100svh,920px)] w-full max-w-[1400px] flex-col justify-center gap-10 px-4 py-14 md:px-6 md:py-16 lg:gap-12">
+        <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.95fr)] lg:gap-12 xl:gap-16">
+          <div className="max-w-xl">
             <h1 className="text-[clamp(2.1rem,5vw,3.6rem)] font-bold leading-[1.05] tracking-[-0.04em] text-balance">
-              Make detection engineering{' '}
-              <span className="text-[var(--landing-accent)]">better and faster</span>
-              {' '}with a standard.
+              Adopt detection engineering and keep your{' '}
+              <span className="text-[var(--landing-accent)]">security operations flowing</span>
             </h1>
-            <p className="mt-5 max-w-md text-base leading-relaxed text-[var(--landing-ink)]/80 md:text-lg text-pretty">
-              <OpentideName className="font-medium text-[var(--landing-ink)]" /> is the structured
-              framework for DetectionOps: normative objects, honest validation, and deploy across
-              platforms.
-            </p>
             <HeroInstall />
           </div>
-        </div>
-      </section>
 
-      <HeroPitch />
+          <div
+            className="relative aspect-[5/4] w-full overflow-hidden rounded-2xl border border-[var(--landing-border)] bg-[var(--landing-bg)] shadow-[0_24px_80px_-40px_var(--landing-btn-shadow)] sm:aspect-[4/3] lg:aspect-auto lg:min-h-[min(52vh,440px)] lg:h-full"
+            aria-hidden
+          >
+            <TideAsciiScene className="h-full w-full" />
+          </div>
+        </div>
+
+        <HeroPitch />
+      </section>
 
       <section className="landing-section mx-auto max-w-[1400px] px-4 md:px-6">
         <h2 className="text-center text-3xl font-bold tracking-[-0.02em] text-balance md:text-4xl">
@@ -76,11 +54,10 @@ export default function HomePage() {
       <section className="landing-section">
         <div className="mx-auto max-w-[1400px] px-4 md:px-6">
           <h2 className="text-3xl font-bold tracking-[-0.02em] md:text-4xl text-balance">
-            Objects chain into a graph
+            From an intel trigger to a branched object graph
           </h2>
           <p className="mt-4 max-w-2xl text-[var(--landing-muted)] text-pretty">
-            Intel informs threats. Threats drive objectives. Rules deploy the detection. One chain
-            highlighted among everything else in your repo.
+            Threats fan into objectives and rules — linked by stable UUIDs across every branch.
           </p>
           <div className="mt-10">
             <ObjectGraph />
@@ -90,11 +67,11 @@ export default function HomePage() {
 
       <section className="landing-section mx-auto max-w-[1400px] px-4 md:px-6">
         <h2 className="text-3xl font-bold tracking-[-0.02em] md:text-4xl text-balance">
-          IDE, CLI, and agents in one workflow
+          Author in the IDE. Validate in the terminal. Agents in the loop.
         </h2>
         <p className="mt-4 max-w-2xl text-[var(--landing-muted)] text-pretty">
-          File tree, editor, agent trace, and terminal. One scenario from intel to deploy, with MCP
-          skills and CLI validation at each stage.
+          Watch a full DetectionOps scenario play through: file tree, editor, MCP skills, and CLI
+          output — end to end, on a loop.
         </p>
         <div className="mt-10">
           <WorkflowStudio />
@@ -107,7 +84,8 @@ export default function HomePage() {
             Built for DetectionOps teams
           </h2>
           <p className="mt-4 max-w-2xl text-[var(--landing-muted)] text-pretty">
-            Specs for authors, CLI for pipelines, MCP for agents. Composable surfaces on one engine.
+            Specs for authors, CLI for pipelines, MCP for agents. One engine across the surfaces your
+            team already uses.
           </p>
           <div className="mt-12">
             <FeatureShowcase />
@@ -116,67 +94,31 @@ export default function HomePage() {
       </section>
 
       <section className="landing-section mx-auto max-w-[1400px] px-4 md:px-6">
-        <div className="grid items-center gap-12 lg:grid-cols-2">
-          <div>
-            <h2 className="text-3xl font-bold tracking-[-0.02em] md:text-4xl text-balance">
-              You set the autonomy level
-            </h2>
-            <p className="mt-4 leading-relaxed text-[var(--landing-muted)] text-pretty">
-              DetectionOps is not all-or-nothing. <OpentideName /> structures the work so engineers,
-              reviewers, and agents collaborate on the same objects, with MCP, skills, and specs from
-              day one.
-            </p>
-            <ul className="mt-8 space-y-5">
-              {spectrumBullets.map((item) => (
-                <li key={item.title} className="flex gap-3">
-                  <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-[var(--landing-accent)]" aria-hidden />
-                  <div>
-                    <p className="text-sm font-semibold text-[var(--landing-ink)]">{item.title}</p>
-                    <p className="mt-0.5 text-sm text-[var(--landing-muted)]">{item.body}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-            <Link
-              href="/docs/usage/workflows/agentic-setup/"
-              className="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-[var(--landing-muted)] transition hover:text-[var(--landing-accent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--landing-accent)]"
-            >
-              Agentic setup guide <ArrowRight className="size-4" aria-hidden />
-            </Link>
-          </div>
-          <AutonomySpectrum />
-        </div>
-      </section>
-
-      <section className="landing-section mx-auto max-w-[1400px] px-4 md:px-6">
-        <h2 className="text-center text-3xl font-bold tracking-[-0.02em]">
-          The <OpentideName /> ecosystem
+        <h2 className="text-center text-3xl font-bold tracking-[-0.02em] md:text-4xl text-balance">
+          The opentide ecosystem
         </h2>
-        <ul className="mt-12 grid list-none gap-4 p-0 md:grid-cols-3">
-          {ecosystemLinks.map((repo) => (
-            <li key={repo.name}>
-              <a
-                href={repo.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block h-full border-t border-white/15 pt-5 transition hover:border-[var(--landing-accent)]/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--landing-accent)]"
-              >
-                <h3 className="text-lg font-semibold">{repo.name}</h3>
-                <p className="mt-2 text-sm text-[var(--landing-muted)]">{repo.description}</p>
-              </a>
-            </li>
-          ))}
-        </ul>
+        <p className="mx-auto mt-4 max-w-2xl text-center text-[var(--landing-muted)] text-pretty">
+          Engine, specs, library, explorer, and skills — with editor tooling on the way.
+        </p>
+        <div className="mt-12">
+          <EcosystemGrid />
+        </div>
       </section>
 
       <section className="py-24 md:py-32">
         <div className="mx-auto max-w-3xl px-4 text-center">
+          <div className="mb-8 flex justify-center">
+            <OpentideBadge
+              size={72}
+              className="drop-shadow-[0_12px_32px_color-mix(in_srgb,var(--landing-accent)_28%,transparent)]"
+            />
+          </div>
           <h2 className="text-3xl font-bold tracking-[-0.02em] md:text-4xl text-balance">
             Set the standard for DetectionOps
           </h2>
           <p className="mt-6 text-lg text-[var(--landing-muted)] text-pretty">
-            Bring your rules, your reviewers, and your agents. <OpentideName /> structures the flow.
-            You choose how much of the tide is human and how much runs on its own.
+            Bring your rules, your reviewers, and your agents. opentide structures the flow. You
+            choose how much runs with you — and how much runs on its own.
           </p>
           <div className="mt-10 flex flex-wrap justify-center gap-4">
             <Link href="/docs/usage/" className="landing-btn-primary group">

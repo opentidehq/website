@@ -24,6 +24,7 @@ Generic SaaS gradients, glassmorphism hero cards, identical icon+heading card gr
 
 - Inter + JetBrains Mono only; no display font drift
 - Pantone Reflex Blue `#001489` (light) and Yellow `#FFCC00` (dark) as committed brand colors (light = white+blue, dark = black+yellow)
-- One signature motion: mouse-reactive smoke hero; restrained CSS elsewhere
+- One signature motion: ASCII tide hero (FLIP liquid sim rendered as monospace glyphs); restrained CSS elsewhere
+- Landing follows theme: light white+blue, dark black+yellow (same rule as docs)
 - Docs sidebar always shows root dropdown; Usage is the default entry
 - Honest platform capability messaging; never fake validation claims

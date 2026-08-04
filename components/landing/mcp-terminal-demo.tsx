@@ -23,7 +23,7 @@ export function McpTerminalDemo() {
   }, [reduced]);
 
   return (
-    <div className="rounded-2xl border border-white/[0.08] bg-[var(--landing-surface)] p-8">
+    <div className="rounded-2xl border border-[var(--landing-border-subtle)] bg-[var(--landing-surface)] p-8">
       <div className="flex items-center gap-2">
         <span className="relative flex size-2.5" aria-hidden>
           <span className="landing-mcp-ping absolute inline-flex size-full rounded-full bg-[var(--landing-accent)] opacity-40" />
@@ -40,7 +40,7 @@ export function McpTerminalDemo() {
             } ${
               line.highlight
                 ? 'bg-[var(--landing-accent)]/10 text-[var(--landing-accent)] ring-[var(--landing-accent)]/25'
-                : 'bg-black ring-white/[0.06]'
+                : 'bg-black ring-[var(--landing-border-subtle)]'
             }`}
           >
             {line.text}

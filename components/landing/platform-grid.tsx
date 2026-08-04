@@ -80,8 +80,8 @@ export function PlatformGrid() {
       <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         {platforms.map((p) => (
           <li key={p.id}>
-            <div className="group landing-surface-card flex h-full flex-col items-center gap-3 p-5 text-center transition hover:border-[var(--eu-yellow)]/25">
-              <div className="flex size-12 items-center justify-center rounded-full bg-[var(--landing-bg)] ring-1 ring-white/[0.06] transition group-hover:ring-[var(--eu-yellow)]/20">
+            <div className="group landing-surface-card flex h-full flex-col items-center gap-3 p-5 text-center transition hover:border-[var(--landing-accent)]/25">
+              <div className="flex size-12 items-center justify-center rounded-full bg-[var(--landing-bg)] ring-1 ring-[var(--landing-border-subtle)] transition group-hover:ring-[var(--landing-accent)]/20">
                 <PlatformLogo src={p.src} name={p.name} raster={p.raster} />
               </div>
               <div>
@@ -92,8 +92,8 @@ export function PlatformGrid() {
           </li>
         ))}
         <li>
-          <div className="flex h-full flex-col items-center justify-center rounded-xl border border-dashed border-white/10 p-5 text-center">
-            <p className="font-mono text-[10px] uppercase tracking-wider text-[var(--eu-yellow)]">extensible</p>
+          <div className="flex h-full flex-col items-center justify-center rounded-xl border border-dashed border-[var(--landing-border)] p-5 text-center">
+            <p className="font-mono text-[10px] uppercase tracking-wider text-[var(--landing-accent)]">extensible</p>
             <p className="mt-2 text-sm text-[var(--landing-subtle)]">Platform adapters follow the same normative contract</p>
           </div>
         </li>
