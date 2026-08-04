@@ -19,7 +19,6 @@ const STEPS = [
   'objective',
   'rule',
   'validate',
-  'generate',
   'deploy',
 ] as const;
 
@@ -68,18 +67,13 @@ const stepFocus: Record<
     ],
     expand: ['objects', 'objects/threats', 'objects/objectives', 'objects/rules'],
   },
-  generate: {
-    open: '.opentide/schemas/rule.1.0.schema.json',
-    select: [
-      '.opentide/schemas/rule.1.0.schema.json',
-      '.opentide/templates/rule.1.0.template.yaml',
-    ],
-    expand: ['.opentide', '.opentide/schemas', '.opentide/templates'],
-  },
   deploy: {
     open: 'objects/rules/lsass-memory-access.yaml',
-    select: ['objects/rules/lsass-memory-access.yaml'],
-    expand: ['objects', 'objects/rules'],
+    select: [
+      'objects/rules/lsass-memory-access.yaml',
+      '.opentide/configurations/platforms/sentinel.toml',
+    ],
+    expand: ['objects', 'objects/rules', '.opentide', '.opentide/configurations', '.opentide/configurations/platforms'],
   },
 };
 
@@ -89,7 +83,6 @@ const stepLabel: Record<Step, string> = {
   objective: 'Define objective',
   rule: 'Author rule',
   validate: 'Validate repo',
-  generate: 'Generate schemas',
   deploy: 'Deploy dry-run',
 };
 
@@ -101,32 +94,63 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
         text: 'Turn CISA AA24-073A into deployable Sentinel detections: strict validation, dry-run deploy.',
       },
       {
+        kind: 'reasoning',
+        text: 'Advisory cites ScreenConnect ≤ 23.9.7 auth bypass → unauth RCE on exposed gateways, then credential access inland.',
+      },
+      {
         kind: 'skill',
         skill: 'detection-engineering',
-        action: 'Load TVM → DOM → MDR sequencing from advisory',
-        detail: 'SKILL.md · OpenTideHQ/skills',
+        action: 'Map advisory stages to TVM → DOM → MDR object sequence',
+        detail: 'SKILL.md · OpenTideHQ/skills · prefer normative UUIDs over free text',
       },
       {
         kind: 'mcp',
         tool: 'read_file',
         input: 'intel/advisories/cve-2024-1709.md',
-        output: 'parsed CVE-2024-1709 · T1190 · T1003.001',
+        output: 'CVE-2024-1709 · T1190 / T1133 · follow-on T1003.001',
+      },
+      {
+        kind: 'mcp',
+        tool: 'search_objects',
+        input: 'query="ScreenConnect" OR technique=T1190',
+        output: '0 existing threats · draft new gateway vector',
+      },
+      {
+        kind: 'cli',
+        command: 'opentide document --intel intel/advisories/cve-2024-1709.md',
+        output: 'extracted techniques · ready for object drafting',
       },
     ],
     cmd: 'opentide document --intel intel/advisories/cve-2024-1709.md',
-    out: ['→ extracted T1190, T1003.001 · ready for object drafting'],
+    out: [
+      '→ parsed CISA AA24-073A (TLP:CLEAR)',
+      '→ techniques: T1190, T1133, T1003.001',
+      '→ next: author threat::1.0',
+    ],
   },
   threat: {
     events: [
       {
         kind: 'reasoning',
-        text: 'ScreenConnect auth bypass maps to gateway exploitation: edge terrain, High severity, ATT&CK T1190.',
+        text: 'Frame as edge-gateway exploitation: High severity, High leverage, killchain=Exploitation, ATT&CK T1190+T1133.',
+      },
+      {
+        kind: 'skill',
+        skill: 'opentide-threat',
+        action: 'Scaffold threat::1.0 with stable UUID and ATT&CK bindings',
+        detail: 'reject free-text technique IDs · require uuid v4',
       },
       {
         kind: 'mcp',
         tool: 'write_file',
         input: 'objects/threats/gateway-exploitation.yaml',
-        output: 'threat::1.0 · uuid …010 · schema valid',
+        output: 'threat::1.0 · uuid …010 · fields complete',
+      },
+      {
+        kind: 'mcp',
+        tool: 'validate',
+        input: 'file=objects/threats/gateway-exploitation.yaml',
+        output: 'schema ok · att&ck ok · 0 errors',
       },
       {
         kind: 'cli',
@@ -135,55 +159,106 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
       },
     ],
     cmd: 'opentide validate --file objects/threats/gateway-exploitation.yaml',
-    out: ['✓ schema threat::1.0', '✓ att&ck techniques', '0 errors'],
+    out: ['✓ schema threat::1.0', '✓ att&ck techniques [T1190, T1133]', '0 errors'],
   },
   objective: {
     events: [
       {
+        kind: 'reasoning',
+        text: 'Follow-on risk is LSASS credential access after foothold — one objective, synergetic signals, link to threat UUID …010.',
+      },
+      {
         kind: 'skill',
         skill: 'opentide-detection-rule',
-        action: 'Link objective to threat UUID · define LSASS signal',
-        detail: 'normative MDR object contract',
+        action: 'Compose objective::1.0 with signal + detection_model contract',
+        detail: 'priority=High · type=Threat · entities host/process',
       },
       {
         kind: 'mcp',
         tool: 'write_file',
         input: 'objects/objectives/credential-access.yaml',
-        output: 'objective links threat …010 · 1 signal',
+        output: 'objective links threat …010 · 1 signal (LSASS process access)',
+      },
+      {
+        kind: 'mcp',
+        tool: 'validate',
+        input: 'file=objects/objectives/credential-access.yaml strict=true',
+        output: 'cross-object threat ref ok · signal uuid ok',
+      },
+      {
+        kind: 'cli',
+        command: 'opentide validate --file objects/objectives/credential-access.yaml',
+        output: '✓ objective::1.0 · 0 errors',
       },
     ],
     cmd: 'opentide validate --file objects/objectives/credential-access.yaml',
-    out: ['✓ objective::1.0', '✓ cross-object threat reference', '0 errors'],
+    out: ['✓ objective::1.0', '✓ cross-object threat reference', '✓ signal uuid …001', '0 errors'],
   },
   rule: {
     events: [
       {
+        kind: 'prompt',
+        text: 'Author an LSASS memory-access rule for Sentinel + Defender that implements the credential-access objective.',
+      },
+      {
         kind: 'skill',
         skill: 'microsoft-sentinel',
-        action: 'KQL for DeviceProcessEvents → LSASS access',
-        detail: 'Sentinel + Defender configs in one rule',
+        action: 'Draft KQL on DeviceProcessEvents → ProcessAccess → lsass.exe',
+        detail: 'exclude csrss/services · dual-platform configurations block',
+      },
+      {
+        kind: 'reasoning',
+        text: 'One rule object, two configs: Sentinel scheduling PT1H/PT2H; Defender category CredentialAccess.',
       },
       {
         kind: 'mcp',
         tool: 'write_file',
         input: 'objects/rules/lsass-memory-access.yaml',
-        output: 'rule links objective …001 · sentinel + defender',
+        output: 'rule::1.0 · detection_model → objective …001 · sentinel+defender',
+      },
+      {
+        kind: 'mcp',
+        tool: 'validate_query',
+        input: 'platform=sentinel',
+        output: 'KQL parse ok · DeviceProcessEvents bound',
+      },
+      {
+        kind: 'cli',
+        command: 'opentide validate --file objects/rules/lsass-memory-access.yaml',
+        output: '✓ rule::1.0 · detection_model ok',
       },
     ],
     cmd: 'opentide validate --file objects/rules/lsass-memory-access.yaml',
-    out: ['✓ rule::1.0', '✓ detection_model reference', '0 errors'],
+    out: [
+      '✓ rule::1.0',
+      '✓ detection_model → objective …001',
+      '✓ sentinel KQL',
+      '0 errors',
+    ],
   },
   validate: {
     events: [
       {
         kind: 'reasoning',
-        text: 'Strict validation across registry: schema, UUID v4, cross-object refs, Sentinel KQL where supported.',
+        text: 'Run registry-wide strict validation before any deploy: uuid v4, id uniqueness, cross-object refs, platform queries.',
+      },
+      {
+        kind: 'mcp',
+        tool: 'list_objects',
+        input: 'scope=registry',
+        output: '1 threat · 1 objective · 1 rule · 1 signal',
       },
       {
         kind: 'mcp',
         tool: 'validate',
         input: 'strict=true',
-        output: '8 objects · 0 blocking · sentinel KQL passed',
+        output: '4 objects · 0 blocking · sentinel KQL passed',
+      },
+      {
+        kind: 'mcp',
+        tool: 'validate_query',
+        input: 'platform=defender_for_endpoint',
+        output: 'query ok · ActionType ProcessAccess',
       },
       {
         kind: 'cli',
@@ -192,35 +267,33 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
       },
     ],
     cmd: 'opentide validate --strict',
-    out: ['✓ schema · uuid-format · id-uniqueness', '✓ cross-object references', '0 blocking errors'],
-  },
-  generate: {
-    events: [
-      {
-        kind: 'skill',
-        skill: 'github-actions',
-        action: 'Align CI workflow with setup ci discovery',
-        detail: 'validate query jobs per platform TOML',
-      },
-      {
-        kind: 'mcp',
-        tool: 'generate',
-        output: 'schemas · templates · docs refreshed',
-      },
+    out: [
+      '✓ schema · uuid-format · id-uniqueness',
+      '✓ cross-object references',
+      '✓ sentinel + defender queries',
+      '0 blocking errors',
     ],
-    cmd: 'opentide generate',
-    out: ['→ .opentide/schemas/rule.1.0.schema.json', '→ .opentide/templates/rule.1.0.template.yaml'],
   },
   deploy: {
     events: [
       {
+        kind: 'prompt',
+        text: 'Dry-run deploy the LSASS rule to Sentinel staging — no production write.',
+      },
+      {
         kind: 'reasoning',
-        text: 'Human approved: dry-run deploy LSASS rule to Sentinel staging.',
+        text: 'Human gate passed. Read sentinel.toml workspace=soc-prod · dry_run_default=true.',
+      },
+      {
+        kind: 'mcp',
+        tool: 'read_file',
+        input: '.opentide/configurations/platforms/sentinel.toml',
+        output: 'enabled · workspace soc-prod · dry_run_default',
       },
       {
         kind: 'mcp',
         tool: 'deploy',
-        input: 'dry_run=true, platform=sentinel',
+        input: 'dry_run=true, platform=sentinel, rule=…0001',
         output: '1 rule would deploy · staging plan ready',
       },
       {
@@ -230,14 +303,34 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
       },
     ],
     cmd: 'opentide deploy --platform sentinel --dry-run',
-    out: ['✓ dry-run: 1 rule would deploy to Sentinel', '0 blocked'],
+    out: [
+      'plan: 1 create · 0 update · 0 delete',
+      '✓ dry-run: LSASS memory access → Sentinel (soc-prod)',
+      '0 blocked',
+    ],
   },
 };
 
-function EditorPane({ path, themeType }: { path: DemoPath; themeType: 'light' | 'dark' }) {
-  const contents = DEMO_FILES[path];
+function EditorPane({
+  path,
+  themeType,
+  chars,
+  showCursor,
+}: {
+  path: DemoPath;
+  themeType: 'light' | 'dark';
+  chars?: number;
+  showCursor?: boolean;
+}) {
+  const full = DEMO_FILES[path];
+  const contents =
+    chars == null ? full : full.slice(0, Math.min(Math.max(chars, 0), full.length));
   const file = useMemo(
-    () => ({ name: path.split('/').pop() ?? path, contents, cacheKey: `${path}-${themeType}` }),
+    () => ({
+      name: path.split('/').pop() ?? path,
+      contents,
+      cacheKey: `${path}-${themeType}-${contents.length}`,
+    }),
     [path, contents, themeType],
   );
   const options = useMemo(
@@ -250,38 +343,30 @@ function EditorPane({ path, themeType }: { path: DemoPath; themeType: 'light' | 
       }) as const,
     [themeType],
   );
-  return <File key={`${path}-${themeType}`} file={file} options={options} disableWorkerPool className="h-full min-h-0" />;
-}
 
-/** Typewriter / static file body used during scenario playback. */
-function TypingPane({
-  path,
-  chars,
-  showCursor,
-}: {
-  path: DemoPath;
-  chars: number;
-  showCursor: boolean;
-}) {
-  const full = DEMO_FILES[path];
-  const text = full.slice(0, Math.min(chars, full.length));
-  const preRef = useRef<HTMLPreElement>(null);
-
+  const scrollRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const el = preRef.current;
+    const el = scrollRef.current?.querySelector('[data-diffs-scroll], .cm-scroller, pre, .overflow-auto');
     if (el) el.scrollTop = el.scrollHeight;
-  }, [chars]);
+    else if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  }, [contents.length]);
 
   return (
-    <pre
-      ref={preRef}
-      className="landing-code-scroll h-full overflow-auto p-3 font-mono text-[11px] leading-[1.7] whitespace-pre-wrap text-[var(--landing-ink)]"
-    >
-      <span className="text-[var(--landing-muted)]">{text}</span>
-      {showCursor && (
-        <span className="ml-px inline-block h-[1em] w-[7px] animate-pulse bg-[var(--landing-accent)] align-middle" />
+    <div ref={scrollRef} className="relative h-full min-h-0">
+      <File
+        key={`${path}-${themeType}`}
+        file={file}
+        options={options}
+        disableWorkerPool
+        className="h-full min-h-0"
+      />
+      {showCursor && chars != null && chars < full.length && (
+        <span
+          className="pointer-events-none absolute bottom-3 left-3 h-[1em] w-[7px] animate-pulse bg-[var(--landing-accent)]"
+          aria-hidden
+        />
       )}
-    </pre>
+    </div>
   );
 }
 
@@ -448,8 +533,8 @@ export function WorkflowStudio() {
       'objects/objectives',
       'objects/rules',
       '.opentide',
-      '.opentide/schemas',
-      '.opentide/templates',
+      '.opentide/configurations',
+      '.opentide/configurations/platforms',
     ],
     initialSelectedPaths: [...focus.select],
   });
@@ -609,22 +694,17 @@ export function WorkflowStudio() {
                 {focus.open.split('/').pop()}
               </span>
             </div>
-            <div className="min-h-0 flex-1 overflow-hidden">
-              {reduced && phase !== 'typing' ? (
-                focus.open.endsWith('.md') ? (
-                  <TypingPane path={focus.open} chars={fullText.length} showCursor={false} />
-                ) : (
-                  <div className="h-full p-1">
-                    <EditorPane path={focus.open} themeType={themeType} />
-                  </div>
-                )
-              ) : (
-                <TypingPane
-                  path={focus.open}
-                  chars={typedChars}
-                  showCursor={!paused && phase === 'typing' && typedChars < fullText.length}
-                />
-              )}
+            <div className="min-h-0 flex-1 overflow-hidden p-1">
+              <EditorPane
+                path={focus.open}
+                themeType={themeType}
+                chars={
+                  phase === 'typing' || phase === 'trace'
+                    ? typedChars
+                    : DEMO_FILES[focus.open].length
+                }
+                showCursor={!paused && phase === 'typing' && typedChars < fullText.length}
+              />
             </div>
 
             <StudioTerminal

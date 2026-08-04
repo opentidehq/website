@@ -73,7 +73,7 @@ export function OpentideWordmark({
   );
 }
 
-/** Compact OTIDE ring seal for footers. */
+/** Circular seal — scales via viewBox; use container size, not baked glyph transforms. */
 export function OpentideBadge({
   className,
   size = 44,
@@ -82,24 +82,29 @@ export function OpentideBadge({
   size?: number;
 }) {
   return (
-    <span className={`relative inline-flex shrink-0 ${className ?? ''}`} style={{ width: size, height: size }}>
-      <Image
+    <span
+      className={`relative inline-block shrink-0 overflow-hidden ${className ?? ''}`}
+      style={{ width: size, height: size }}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
         src="/brand/svg/badge-normal.svg"
         alt=""
         width={size}
         height={size}
-        className="dark:hidden"
+        className="block size-full dark:hidden"
         aria-hidden
-        unoptimized
+        decoding="async"
       />
-      <Image
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
         src="/brand/svg/badge-inverse.svg"
         alt=""
         width={size}
         height={size}
-        className="hidden dark:block"
+        className="hidden size-full dark:block"
         aria-hidden
-        unoptimized
+        decoding="async"
       />
     </span>
   );

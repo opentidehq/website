@@ -54,7 +54,8 @@ export default function HomePage() {
       <section className="landing-section">
         <div className="mx-auto max-w-[1400px] px-4 md:px-6">
           <h2 className="text-3xl font-bold tracking-[-0.02em] md:text-4xl text-balance">
-            From an intel trigger to a branched object graph
+            From messy, continuous intel to a structured and actionable detection engineering
+            graph
           </h2>
           <p className="mt-4 max-w-2xl text-[var(--landing-muted)] text-pretty">
             Threats fan into objectives and rules — linked by stable UUIDs across every branch.

@@ -106,8 +106,8 @@ export function EventCard({ event, animate }: { event: AgentEvent; animate?: boo
           opentide CLI
         </span>
       </div>
-      <p className="mt-2 font-mono text-[10px] text-[var(--landing-ink)]">
-        <span className="text-[var(--landing-accent)]">$</span> {event.command}
+      <p className="mt-2 font-mono text-[10px]">
+        <span className="text-[var(--landing-accent)]">$</span> {highlightCliCommand(event.command)}
       </p>
       {event.output && (
         <p className="mt-1.5 font-mono text-[10px] text-emerald-700 dark:text-emerald-400">
@@ -118,7 +118,54 @@ export function EventCard({ event, animate }: { event: AgentEvent; animate?: boo
   );
 }
 
-const EVENT_MS = 560;
+const EVENT_MS = 420;
+
+function highlightCliCommand(cmd: string) {
+  const tokens = cmd.split(/(\s+)/);
+  const firstIdx = tokens.findIndex((t) => t.trim().length > 0);
+  return tokens.map((tok, i) => {
+    if (/^\s+$/.test(tok)) return <span key={i}>{tok}</span>;
+    if (i === firstIdx) {
+      return (
+        <span key={i} className="font-medium text-sky-700 dark:text-sky-300">
+          {tok}
+        </span>
+      );
+    }
+    if (tok.startsWith('--') || (tok.startsWith('-') && tok.length > 1)) {
+      return (
+        <span key={i} className="text-violet-700 dark:text-violet-300">
+          {tok}
+        </span>
+      );
+    }
+    if (tok.includes('/') || tok.includes('.') || tok.includes('=')) {
+      return (
+        <span key={i} className="text-amber-800 dark:text-amber-300">
+          {tok}
+        </span>
+      );
+    }
+    return (
+      <span key={i} className="text-[var(--landing-ink)]">
+        {tok}
+      </span>
+    );
+  });
+}
+
+function highlightOutLine(line: string) {
+  if (line.includes('✓')) {
+    return <span className="text-emerald-700 dark:text-emerald-400">{line}</span>;
+  }
+  if (line.startsWith('→') || line.startsWith('plan:')) {
+    return <span className="text-sky-700 dark:text-sky-300">{line}</span>;
+  }
+  if (/error|blocked/i.test(line)) {
+    return <span className="text-red-600 dark:text-red-400">{line}</span>;
+  }
+  return <span className="text-[var(--landing-muted)]">{line}</span>;
+}
 
 /** Agent timeline — only runs when armed. Parent should remount via `key` on step change. */
 export function AgentTracePanel({
@@ -334,7 +381,7 @@ export function StudioTerminal({
   const outVisible = armed && (showAll || showOut);
 
   return (
-    <div className="flex h-[108px] shrink-0 flex-col border-t border-[var(--landing-border-subtle)] bg-[var(--landing-surface-deep)]">
+    <div className="flex h-[128px] shrink-0 flex-col border-t border-[var(--landing-border-subtle)] bg-[var(--landing-surface-deep)]">
       <div className="flex h-7 shrink-0 items-center gap-2 px-3">
         <Terminal className="size-3 text-[var(--landing-subtle)]" aria-hidden />
         <span className="font-mono text-[10px] text-[var(--landing-muted)]">Terminal</span>
@@ -342,26 +389,26 @@ export function StudioTerminal({
       <div className="landing-code-scroll min-h-0 flex-1 overflow-auto px-3 pb-2.5 font-mono text-[11px] leading-relaxed">
         {armed ? (
           <>
-            <p className="text-[var(--landing-ink)]">
-              <span className="text-[var(--landing-accent)]">$</span> {typedCmd}
+            <p>
+              <span className="text-[var(--landing-accent)]">$</span>{' '}
+              {highlightCliCommand(typedCmd)}
               {!outVisible && (
                 <span className="ml-0.5 inline-block h-[0.95em] w-[7px] animate-pulse bg-[var(--landing-accent)] align-middle" />
               )}
             </p>
-            <div className="mt-1.5 min-h-[2.25rem] space-y-0.5">
+            <div className="mt-1.5 min-h-[2.5rem] space-y-0.5">
               {outVisible &&
                 out.map((line, i) => (
-                  <p
-                    key={line}
-                    className={`text-emerald-700 dark:text-emerald-400 ${i === 0 ? 'landing-fade-slide' : ''}`}
-                  >
-                    {line}
+                  <p key={line} className={i === 0 ? 'landing-fade-slide' : undefined}>
+                    {highlightOutLine(line)}
                   </p>
                 ))}
             </div>
           </>
         ) : (
-          <p className="font-mono text-[10px] text-[var(--landing-dim)]">$</p>
+          <p className="font-mono text-[10px] text-[var(--landing-dim)]">
+            <span className="text-[var(--landing-accent)]">$</span>
+          </p>
         )}
       </div>
     </div>

@@ -14,8 +14,7 @@ export const DEMO_PATHS = [
   'objects/threats/gateway-exploitation.yaml',
   'objects/objectives/credential-access.yaml',
   'objects/rules/lsass-memory-access.yaml',
-  '.opentide/schemas/rule.1.0.schema.json',
-  '.opentide/templates/rule.1.0.template.yaml',
+  '.opentide/configurations/platforms/sentinel.toml',
 ] as const;
 
 export type DemoPath = (typeof DEMO_PATHS)[number];
@@ -174,29 +173,18 @@ configurations:
     alert:
       category: CredentialAccess
 `,
-  '.opentide/schemas/rule.1.0.schema.json': `{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "rule.1.0.schema.json",
-  "title": "rule::1.0",
-  "description": "Generated from Pydantic models"
-}`,
-  '.opentide/templates/rule.1.0.template.yaml': `name: "New rule"
-metadata:
-  schema: rule::1.0
-  version: 1
-  uuid: "<generate-uuid>"
-  tlp: clear
-description: |
-  Rule narrative
-status: STAGING
-severity: Informational
-detection_model: "<objective-uuid>"
-configurations:
-  sentinel:
-    enabled: false
-    name: New rule
-    query: |
-      # KQL`,
+  '.opentide/configurations/platforms/sentinel.toml': `[platform]
+enabled = true
+name = "Microsoft Sentinel"
+
+[auth]
+tenant_id = "\${SENTINEL_TENANT_ID}"
+client_id = "\${SENTINEL_CLIENT_ID}"
+
+[deploy]
+workspace = "soc-prod"
+dry_run_default = true
+`,
 };
 
 export type ObjectBlurb = {

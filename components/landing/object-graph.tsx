@@ -13,7 +13,7 @@ import {
   Target,
   Zap,
 } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 import { YamlPreview } from '@/components/landing/yaml-preview';
 import {
   GRAPH_NODES,
@@ -76,6 +76,7 @@ function GraphCard({
   paused,
   reduced,
   onSelect,
+  fillRef,
 }: {
   id: GraphNodeId;
   active: boolean;
@@ -84,6 +85,7 @@ function GraphCard({
   paused: boolean;
   reduced: boolean;
   onSelect: (id: GraphNodeId) => void;
+  fillRef?: RefObject<HTMLSpanElement | null>;
 }) {
   const node = GRAPH_NODES[id];
   const style = KIND_STYLE[node.kind];
@@ -95,56 +97,59 @@ function GraphCard({
     <button
       type="button"
       onClick={() => onSelect(id)}
-      className={`group relative flex w-full overflow-hidden rounded-2xl bg-[var(--landing-bg)] text-left shadow-[0_1px_0_var(--landing-border)] transition duration-300 ${
+      className={`group relative isolate w-full rounded-2xl bg-[var(--landing-bg)] text-left shadow-[0_1px_0_var(--landing-border)] transition-[box-shadow] duration-300 ${
         active
           ? `ring-2 ${style.ring} shadow-[0_8px_28px_-12px_color-mix(in_srgb,var(--landing-ink)_28%,transparent)]`
           : 'hover:shadow-[0_8px_24px_-16px_color-mix(in_srgb,var(--landing-ink)_22%,transparent)]'
       }`}
       aria-current={active ? 'step' : undefined}
     >
-      {/* Whole-card progress fill */}
-      <span
-        className={`pointer-events-none absolute inset-y-0 left-0 ${style.bar} transition-[width] duration-100 ease-linear ${
-          active ? 'opacity-[0.16]' : visited ? 'opacity-[0.1]' : 'opacity-0'
-        }`}
-        style={{ width: `${pct * 100}%` }}
-        aria-hidden
-      />
-
-      <span className="relative z-[1] flex w-full items-center gap-2.5 px-3.5 py-3.5">
+      {/* Inner clip so the ring sits outside and the fill meets the corners */}
+      <span className="relative block overflow-hidden rounded-2xl">
         <span
-          className={`relative flex size-9 shrink-0 items-center justify-center rounded-xl transition duration-300 ${
-            active || visited
-              ? style.color
-              : 'bg-[color-mix(in_srgb,var(--landing-ink)_7%,transparent)] text-[var(--landing-subtle)]'
-          } ${active && !reduced ? 'scale-[1.04]' : ''}`}
-        >
-          <Icon className="size-3.5" aria-hidden />
-          {active && !paused && !reduced && (
-            <span className={`absolute inset-0 animate-ping rounded-xl opacity-20 ${style.bar}`} />
-          )}
-        </span>
-        <span className="min-w-0">
-          <span className="flex flex-wrap items-center gap-1.5">
-            <span
-              className={`font-mono text-[9px] uppercase tracking-[0.12em] ${
-                active ? style.text : 'text-[var(--landing-dim)]'
-              }`}
-            >
-              {node.label}
-            </span>
-            {isTrigger && (
-              <span className="rounded-full bg-amber-400/20 px-1.5 py-px font-mono text-[8px] uppercase tracking-wider text-amber-800 dark:text-amber-300">
-                not an object
-              </span>
+          ref={active ? fillRef : undefined}
+          className={`pointer-events-none absolute inset-0 origin-left will-change-transform ${style.bar} ${
+            active ? 'opacity-[0.16]' : visited ? 'opacity-[0.1]' : 'opacity-0'
+          }`}
+          style={{ transform: `scaleX(${pct})` }}
+          aria-hidden
+        />
+
+        <span className="relative z-[1] flex w-full items-center gap-2.5 px-3.5 py-3.5">
+          <span
+            className={`relative flex size-9 shrink-0 items-center justify-center rounded-xl transition duration-300 ${
+              active || visited
+                ? style.color
+                : 'bg-[color-mix(in_srgb,var(--landing-ink)_7%,transparent)] text-[var(--landing-subtle)]'
+            } ${active && !reduced ? 'scale-[1.04]' : ''}`}
+          >
+            <Icon className="size-3.5" aria-hidden />
+            {active && !paused && !reduced && (
+              <span className={`absolute inset-0 animate-ping rounded-xl opacity-20 ${style.bar}`} />
             )}
           </span>
-          <span
-            className={`mt-0.5 block truncate text-sm font-semibold ${
-              active ? 'text-[var(--landing-ink)]' : 'text-[var(--landing-muted)]'
-            }`}
-          >
-            {node.short}
+          <span className="min-w-0">
+            <span className="flex flex-wrap items-center gap-1.5">
+              <span
+                className={`font-mono text-[9px] uppercase tracking-[0.12em] ${
+                  active ? style.text : 'text-[var(--landing-dim)]'
+                }`}
+              >
+                {node.label}
+              </span>
+              {isTrigger && (
+                <span className="rounded-full bg-amber-400/20 px-1.5 py-px font-mono text-[8px] uppercase tracking-wider text-amber-800 dark:text-amber-300">
+                  not an object
+                </span>
+              )}
+            </span>
+            <span
+              className={`mt-0.5 block truncate text-sm font-semibold ${
+                active ? 'text-[var(--landing-ink)]' : 'text-[var(--landing-muted)]'
+              }`}
+            >
+              {node.short}
+            </span>
           </span>
         </span>
       </span>
@@ -224,15 +229,22 @@ export function ObjectGraph() {
   const reduced = usePrefersReducedMotion();
   const [tourIdx, setTourIdx] = useState(0);
   const [paused, setPaused] = useState(false);
-  const [progress, setProgress] = useState(0);
   const [panelKey, setPanelKey] = useState(0);
+  const [fillProgress, setFillProgress] = useState(0);
+  const [seenTour, setSeenTour] = useState(0);
   const elapsedRef = useRef(0);
+  const activeFillRef = useRef<HTMLSpanElement | null>(null);
+
+  if (seenTour !== tourIdx) {
+    setSeenTour(tourIdx);
+    setFillProgress(0);
+  }
 
   const activeId = GRAPH_TOUR[tourIdx];
   const meta = GRAPH_NODES[activeId];
   const style = KIND_STYLE[meta.kind];
   const activeTourIndex = tourIdx;
-  const fillProgress = reduced ? 1 : progress;
+  const cardProgress = reduced ? 1 : fillProgress;
   const tourPaused = reduced || paused;
 
   useEffect(() => {
@@ -245,10 +257,10 @@ export function ObjectGraph() {
       const elapsed = Math.min(STEP_MS, now - origin);
       elapsedRef.current = elapsed;
       const t = elapsed / STEP_MS;
-      setProgress(t);
+      const el = activeFillRef.current;
+      if (el) el.style.transform = `scaleX(${t})`;
       if (t >= 1) {
         elapsedRef.current = 0;
-        setProgress(0);
         setTourIdx((i) => (i + 1) % GRAPH_TOUR.length);
         setPanelKey((k) => k + 1);
         return;
@@ -264,23 +276,27 @@ export function ObjectGraph() {
     const i = GRAPH_TOUR.indexOf(id);
     if (i < 0) return;
     elapsedRef.current = 0;
-    setProgress(0);
+    setFillProgress(0);
     setPaused(true);
     setTourIdx(i);
     setPanelKey((k) => k + 1);
   }, []);
 
   const togglePause = useCallback(() => {
-    setPaused((p) => !p);
+    setPaused((p) => {
+      if (!p) setFillProgress(elapsedRef.current / STEP_MS);
+      return !p;
+    });
   }, []);
 
   const visited = (id: GraphNodeId) => GRAPH_TOUR.indexOf(id) < activeTourIndex;
 
   const cardProps = {
-    progress: fillProgress,
+    progress: cardProgress,
     paused: tourPaused,
     reduced,
     onSelect: select,
+    fillRef: activeFillRef,
   };
 
   return (
