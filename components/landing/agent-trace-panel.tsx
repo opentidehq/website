@@ -1,12 +1,13 @@
 'use client';
 
-import { BookOpen, Bot, ChevronRight, Sparkles, Terminal, User } from 'lucide-react';
+import { BookOpen, Bot, ChevronRight, Sparkles, Terminal, User, Wrench } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { usePrefersReducedMotion } from '@/lib/hooks/use-prefers-reduced-motion';
 
 export type AgentEvent =
   | { kind: 'prompt'; text: string }
   | { kind: 'reasoning'; text: string }
+  | { kind: 'response'; text: string }
   | { kind: 'skill'; skill: string; action: string; detail?: string }
   | { kind: 'mcp'; tool: string; input?: string; output: string }
   | { kind: 'cli'; command: string; output?: string };
@@ -43,6 +44,22 @@ export function EventCard({ event, animate }: { event: AgentEvent; animate?: boo
     );
   }
 
+  if (event.kind === 'response') {
+    return (
+      <div
+        className={`rounded-lg border border-[var(--landing-border-subtle)] px-3 py-2.5 ${enter}`}
+      >
+        <div className="flex items-center gap-2">
+          <Bot className="size-3.5 text-[var(--landing-accent)]" aria-hidden />
+          <span className="font-mono text-[9px] font-semibold uppercase tracking-wider text-[var(--landing-subtle)]">
+            Agent
+          </span>
+        </div>
+        <p className="mt-1.5 text-[11px] leading-relaxed text-[var(--landing-ink)]">{event.text}</p>
+      </div>
+    );
+  }
+
   if (event.kind === 'skill') {
     return (
       <div
@@ -72,7 +89,7 @@ export function EventCard({ event, animate }: { event: AgentEvent; animate?: boo
         className={`rounded-lg bg-[color-mix(in_srgb,var(--landing-accent)_8%,transparent)] px-3 py-2.5 ${enter}`}
       >
         <div className="flex items-center gap-2">
-          <Bot className="size-3.5 text-[var(--landing-accent)]" aria-hidden />
+          <Wrench className="size-3.5 text-[var(--landing-accent)]" aria-hidden />
           <span className="font-mono text-[9px] font-semibold uppercase tracking-wider text-[var(--landing-accent)]">
             opentide-mcp
           </span>

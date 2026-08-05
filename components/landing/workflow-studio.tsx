@@ -1,6 +1,17 @@
 'use client';
 
-import { Files, Bot, Terminal, FileText, Pause, Play } from 'lucide-react';
+import {
+  Files,
+  Bot,
+  Terminal,
+  FileText,
+  FileCode2,
+  GitBranch,
+  GitPullRequest,
+  Pause,
+  Play,
+  Sparkles,
+} from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AgentTracePanel,
@@ -8,98 +19,99 @@ import {
   StudioTerminal,
   type AgentEvent,
 } from '@/components/landing/agent-trace-panel';
-import { StudioEditor, StudioEditorIdle } from '@/components/landing/studio-editor';
+import { StudioEditor, StudioEditorIdle, type EditorHighlight } from '@/components/landing/studio-editor';
 import { StudioExplorer } from '@/components/landing/studio-explorer';
+import { StudioReviewTab } from '@/components/landing/studio-review-tab';
 import {
+  DEMO_BRANCH,
   DEMO_FILES,
   DEMO_PATHS,
   DEMO_REPO,
+  INLINE_EDIT,
+  REVIEW_JOBS,
+  REVIEW_MR,
+  RULE_PATH,
   SCENARIO_PROMPT,
   type DemoPath,
 } from '@/lib/landing/demo-registry';
 import { usePrefersReducedMotion } from '@/lib/hooks/use-prefers-reduced-motion';
 
-const STEPS = ['prompt', 'threat', 'objective', 'rule', 'validate', 'deploy'] as const;
+const STEPS = ['prompt', 'threat', 'objective', 'rule', 'inline', 'ci'] as const;
 
 type Step = (typeof STEPS)[number];
-type Phase = 'work' | 'terminal' | 'dwell';
+type Phase = 'work' | 'run' | 'dwell';
+
+const REVIEW_TAB = 'review' as const;
+type TabId = DemoPath | typeof REVIEW_TAB;
+
+const THREAT_FILE = 'objects/threats/gateway-exploitation.yaml' satisfies DemoPath;
+const OBJECTIVE_FILE = 'objects/objectives/credential-access.yaml' satisfies DemoPath;
+const SENTINEL_TOML = '.opentide/configurations/platforms/sentinel.toml' satisfies DemoPath;
+const SPLUNK_TOML = '.opentide/configurations/platforms/splunk.toml' satisfies DemoPath;
 
 type StepFocus = {
-  open: DemoPath | null;
-  /** Typewriter the open file; false = show full file immediately. */
+  /** Files that become open tabs at this step, in order. */
+  opens: readonly DemoPath[];
+  /** Tab the animation drives at this step; null = idle editor. */
+  active: TabId | null;
+  /** Typewriter the active file; false = show it whole. */
   type: boolean;
+  /** Explorer highlight. */
   select: readonly DemoPath[];
-  expand: readonly string[];
-  /** Skip CLI pane for this step. */
-  skipTerminal?: boolean;
+  /** Inline ⌘K edit beat on the active file. */
+  inlineEdit?: boolean;
+  /** Merge request review tab instead of an editor buffer. */
+  review?: boolean;
 };
 
 const stepFocus: Record<Step, StepFocus> = {
   prompt: {
-    open: null,
+    opens: [],
+    active: null,
     type: false,
     select: [],
-    expand: ['objects', 'objects/threats', 'objects/objectives', 'objects/rules'],
-    skipTerminal: true,
   },
   threat: {
-    open: 'objects/threats/gateway-exploitation.yaml',
+    opens: [THREAT_FILE],
+    active: THREAT_FILE,
     type: true,
-    select: ['objects/threats/gateway-exploitation.yaml'],
-    expand: ['objects', 'objects/threats'],
+    select: [THREAT_FILE],
   },
   objective: {
-    open: 'objects/objectives/credential-access.yaml',
+    opens: [OBJECTIVE_FILE],
+    active: OBJECTIVE_FILE,
     type: true,
-    select: [
-      'objects/threats/gateway-exploitation.yaml',
-      'objects/objectives/credential-access.yaml',
-    ],
-    expand: ['objects', 'objects/threats', 'objects/objectives'],
+    select: [THREAT_FILE, OBJECTIVE_FILE],
   },
   rule: {
-    open: 'objects/rules/lsass-memory-access.yaml',
+    opens: [RULE_PATH],
+    active: RULE_PATH,
     type: true,
-    select: [
-      'objects/objectives/credential-access.yaml',
-      'objects/rules/lsass-memory-access.yaml',
-    ],
-    expand: ['objects', 'objects/objectives', 'objects/rules'],
+    select: [OBJECTIVE_FILE, RULE_PATH],
   },
-  validate: {
-    open: 'objects/rules/lsass-memory-access.yaml',
+  inline: {
+    opens: [],
+    active: RULE_PATH,
     type: false,
-    select: [
-      'objects/threats/gateway-exploitation.yaml',
-      'objects/objectives/credential-access.yaml',
-      'objects/rules/lsass-memory-access.yaml',
-    ],
-    expand: ['objects', 'objects/threats', 'objects/objectives', 'objects/rules'],
+    select: [RULE_PATH],
+    inlineEdit: true,
   },
-  deploy: {
-    open: '.opentide/configurations/platforms/sentinel.toml',
+  ci: {
+    opens: [SENTINEL_TOML, SPLUNK_TOML],
+    active: REVIEW_TAB,
     type: false,
-    select: [
-      'objects/rules/lsass-memory-access.yaml',
-      '.opentide/configurations/platforms/sentinel.toml',
-    ],
-    expand: [
-      'objects',
-      'objects/rules',
-      '.opentide',
-      '.opentide/configurations',
-      '.opentide/configurations/platforms',
-    ],
+    select: [THREAT_FILE, OBJECTIVE_FILE, RULE_PATH, SENTINEL_TOML, SPLUNK_TOML],
+    review: true,
   },
 };
 
 const stepLabel: Record<Step, string> = {
-  prompt: 'Start from prompt',
+  prompt: 'Read the brief',
   threat: 'Draft threat',
   objective: 'Define objective',
   rule: 'Author rule',
-  validate: 'Validate repo',
-  deploy: 'Deploy dry-run',
+  inline: 'Tune inline',
+  ci: 'Review & ship',
 };
 
 const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string[] }> = {
@@ -108,13 +120,23 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
       { kind: 'prompt', text: SCENARIO_PROMPT },
       {
         kind: 'reasoning',
-        text: 'ScreenConnect ≤ 23.9.7 auth bypass → unauth RCE on exposed gateways, then credential access inland. Map to T1190 / T1133 → T1003.001.',
+        text: 'Check what this repo can actually ship to before authoring — the platform configs decide which query languages the rule needs.',
+      },
+      {
+        kind: 'mcp',
+        tool: 'read_file',
+        input: '.opentide/configurations/platforms/*.toml',
+        output: 'sentinel enabled · splunk enabled · staging + production tenants',
       },
       {
         kind: 'skill',
         skill: 'detection-engineering',
-        action: 'Plan TVM → DOM → MDR object sequence from the brief',
-        detail: 'prefer normative UUIDs · no intel/ folder required',
+        action: 'Plan the threat → objective → rule chain from the advisory',
+        detail: 'normative UUIDs · Sentinel KQL + Splunk SPL',
+      },
+      {
+        kind: 'response',
+        text: 'Both platforms are enabled with a STAGING tenant, so this becomes one rule carrying a Sentinel and a Splunk block. Starting with the threat vector — everything else chains back to it.',
       },
     ],
     cmd: '',
@@ -134,23 +156,27 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
       {
         kind: 'mcp',
         tool: 'write_file',
-        input: 'objects/threats/gateway-exploitation.yaml',
+        input: THREAT_FILE,
         output: 'threat::1.0 · uuid …010 · fields complete',
       },
       {
         kind: 'cli',
-        command: 'opentide validate --file objects/threats/gateway-exploitation.yaml',
+        command: `opentide validate --file ${THREAT_FILE}`,
         output: '✓ threat::1.0 · 0 errors',
       },
+      {
+        kind: 'response',
+        text: 'Threat vector is in and valid. CVE-2024-1709 scores High severity on Edge Gateway terrain; the objective can now reference uuid …010.',
+      },
     ],
-    cmd: 'opentide validate --file objects/threats/gateway-exploitation.yaml',
+    cmd: `opentide validate --file ${THREAT_FILE}`,
     out: ['✓ schema threat::1.0', '✓ att&ck [T1190, T1133]', '0 errors'],
   },
   objective: {
     events: [
       {
         kind: 'reasoning',
-        text: 'Follow-on risk is LSASS credential access — one objective, synergetic signals, link threat …010.',
+        text: 'Follow-on risk is LSASS credential access — one objective, synergetic signals, linked to threat …010.',
       },
       {
         kind: 'skill',
@@ -160,16 +186,20 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
       {
         kind: 'mcp',
         tool: 'write_file',
-        input: 'objects/objectives/credential-access.yaml',
+        input: OBJECTIVE_FILE,
         output: 'objective links threat …010 · 1 signal',
       },
       {
         kind: 'cli',
-        command: 'opentide validate --file objects/objectives/credential-access.yaml',
+        command: `opentide validate --file ${OBJECTIVE_FILE}`,
         output: '✓ objective::1.0 · 0 errors',
       },
+      {
+        kind: 'response',
+        text: 'Objective states what proof we need — corroborating LSASS handle access after the gateway foothold — and declares the telemetry it depends on. Queries come next, not before.',
+      },
     ],
-    cmd: 'opentide validate --file objects/objectives/credential-access.yaml',
+    cmd: `opentide validate --file ${OBJECTIVE_FILE}`,
     out: ['✓ objective::1.0', '✓ cross-object threat ref', '0 errors'],
   },
   rule: {
@@ -181,69 +211,113 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
       },
       {
         kind: 'reasoning',
-        text: 'One rule, two configs: Sentinel PT1H/PT2H; Defender category CredentialAccess.',
+        text: 'One rule, two estates: Sentinel runs PT1H/PT2H with entity mappings; Splunk ES runs a 15m correlation search raising a notable plus risk objects.',
+      },
+      {
+        kind: 'skill',
+        skill: 'splunk-es',
+        action: 'Translate the same signal to SPL over Sysmon EventCode 10',
+        detail: 'throttle by host + SourceImage · risk on host and user',
       },
       {
         kind: 'mcp',
         tool: 'write_file',
-        input: 'objects/rules/lsass-memory-access.yaml',
+        input: RULE_PATH,
         output: 'rule::1.0 · detection_model → objective …001',
       },
       {
         kind: 'cli',
-        command: 'opentide validate --file objects/rules/lsass-memory-access.yaml',
-        output: '✓ rule::1.0 · detection_model ok',
+        command: `opentide validate --file ${RULE_PATH}`,
+        output: '✓ rule::1.0 · sentinel + splunk blocks ok',
+      },
+      {
+        kind: 'response',
+        text: 'Both platform blocks come from the same objective, so the KQL and the SPL stay accountable to one detection intent. Status stays STAGING until a human promotes it.',
       },
     ],
-    cmd: 'opentide validate --file objects/rules/lsass-memory-access.yaml',
-    out: ['✓ rule::1.0', '✓ detection_model → objective …001', '✓ sentinel KQL'],
-  },
-  validate: {
-    events: [
-      {
-        kind: 'reasoning',
-        text: 'Registry-wide strict validation: uuid v4, id uniqueness, cross-object refs, platform queries.',
-      },
-      {
-        kind: 'mcp',
-        tool: 'validate',
-        input: 'strict=true',
-        output: '4 objects · 0 blocking · sentinel KQL passed',
-      },
-      {
-        kind: 'cli',
-        command: 'opentide validate --strict',
-        output: '✓ uuid-format · cross-object · id-uniqueness',
-      },
-    ],
-    cmd: 'opentide validate --strict',
-    out: ['✓ schema · uuid-format · id-uniqueness', '✓ cross-object references', '0 blocking'],
-  },
-  deploy: {
-    events: [
-      {
-        kind: 'reasoning',
-        text: 'Human gate passed. sentinel.toml workspace=soc-prod · dry_run_default=true.',
-      },
-      {
-        kind: 'mcp',
-        tool: 'deploy',
-        input: 'dry_run=true, platform=sentinel, rule=…0001',
-        output: '1 rule would deploy · staging plan ready',
-      },
-      {
-        kind: 'cli',
-        command: 'opentide deploy --platform sentinel --dry-run',
-        output: '✓ LSASS memory access → Sentinel · 0 blocked',
-      },
-    ],
-    cmd: 'opentide deploy --platform sentinel --dry-run',
+    cmd: `opentide validate --file ${RULE_PATH}`,
     out: [
-      'plan: 1 create · 0 update · 0 delete',
-      '✓ dry-run: LSASS → Sentinel (soc-prod)',
+      '✓ rule::1.0 · detection_model → objective …001',
+      '✓ sentinel KQL · splunk SPL',
+      '0 errors',
     ],
+  },
+  inline: {
+    events: [
+      { kind: 'prompt', text: INLINE_EDIT.ask },
+      {
+        kind: 'reasoning',
+        text: 'WmiPrvSE opens LSASS handles on every inventory sweep. Exclude the accessor by name and drop the scan command line rather than weakening the signal.',
+      },
+      {
+        kind: 'mcp',
+        tool: 'apply_edit',
+        input: 'objects/rules/lsass-memory-access.yaml · configurations.sentinel.query',
+        output: '1 hunk applied · +2 −1',
+      },
+      {
+        kind: 'cli',
+        command: `opentide validate --file ${RULE_PATH}`,
+        output: '✓ rule::1.0 · sentinel KQL parsed',
+      },
+      {
+        kind: 'response',
+        text: 'Exclusions now live in a BenignAccessors set with the inventory-scan command line filtered out. Splunk keeps its own exclusion list, and the rule re-validates clean.',
+      },
+    ],
+    cmd: `opentide validate --file ${RULE_PATH}`,
+    out: ['✓ rule::1.0', '✓ sentinel KQL parsed · exclusion applied', '0 errors'],
+  },
+  ci: {
+    events: [
+      {
+        kind: 'reasoning',
+        text: 'Local checks are green. Push the branch and let CI re-run the same gates on a clean runner before anything reaches a tenant.',
+      },
+      {
+        kind: 'mcp',
+        tool: 'open_merge_request',
+        input: `${DEMO_BRANCH} → main`,
+        output: `${REVIEW_MR.id} opened · 5 files · pipeline queued`,
+      },
+      {
+        kind: 'mcp',
+        tool: 'pipeline_status',
+        input: `mr=${REVIEW_MR.id}`,
+        output: 'validate ✓ 41s · deploy-staging ✓ 1m12s',
+      },
+      {
+        kind: 'response',
+        text: 'CI enforced the same contract end to end: strict validation, KQL and SPL query checks, then a dry-run and a staged deploy to both platforms. Production promotion still waits on a protected approval.',
+      },
+    ],
+    cmd: '',
+    out: [],
   },
 };
+
+const INLINE_APPLY_AT =
+  stepScripts.inline.events.findIndex((e) => e.kind === 'mcp' && e.tool === 'apply_edit') + 1;
+
+const INLINE_SPAN = diffSpan(DEMO_FILES[RULE_PATH], INLINE_EDIT.tuned);
+
+/** Line range that differs between two revisions, 1-based and inclusive. */
+function diffSpan(before: string, after: string) {
+  const a = before.split('\n');
+  const b = after.split('\n');
+  let start = 0;
+  while (start < a.length && start < b.length && a[start] === b[start]) start += 1;
+  let endA = a.length - 1;
+  let endB = b.length - 1;
+  while (endA >= start && endB >= start && a[endA] === b[endB]) {
+    endA -= 1;
+    endB -= 1;
+  }
+  return {
+    base: { from: start + 1, to: Math.max(start + 1, endA + 1) },
+    tuned: { from: start + 1, to: Math.max(start + 1, endB + 1) },
+  };
+}
 
 function splitScriptEvents(events: AgentEvent[]) {
   const writeIdx = events.findIndex(
@@ -271,6 +345,7 @@ function ScenarioChrome({
   typing,
   paused,
   onTogglePause,
+  onSelectStep,
 }: {
   stepIdx: number;
   phasePart: number;
@@ -278,13 +353,14 @@ function ScenarioChrome({
   typing: boolean;
   paused: boolean;
   onTogglePause: () => void;
+  onSelectStep: (i: number) => void;
 }) {
   const step = STEPS[stepIdx];
   const segmentProgress = (i: number) => {
     if (i < stepIdx) return 1;
     if (i > stepIdx) return 0;
     if (phase === 'work') return phasePart * 0.67;
-    if (phase === 'terminal') return 0.67 + phasePart * 0.33;
+    if (phase === 'run') return 0.67 + phasePart * 0.33;
     return 1;
   };
 
@@ -293,8 +369,10 @@ function ScenarioChrome({
       ? typing
         ? 'Writing file'
         : 'Agent working'
-      : phase === 'terminal'
-        ? 'Running CLI'
+      : phase === 'run'
+        ? stepFocus[step].review
+          ? 'Pipeline running'
+          : 'Running CLI'
         : 'Next stage';
 
   return (
@@ -337,28 +415,34 @@ function ScenarioChrome({
       <div
         className="grid gap-1"
         style={{ gridTemplateColumns: `repeat(${STEPS.length}, minmax(0, 1fr))` }}
-        role="list"
       >
         {STEPS.map((s, i) => {
           const pct = segmentProgress(i);
           const active = i === stepIdx;
           const done = i < stepIdx;
           return (
-            <div key={s} role="listitem" className="min-w-0">
+            <button
+              key={s}
+              type="button"
+              onClick={() => onSelectStep(i)}
+              aria-current={active ? 'step' : undefined}
+              title={`${String(i + 1).padStart(2, '0')} · ${stepLabel[s]}`}
+              className="group min-w-0 cursor-pointer text-left"
+            >
               <span
-                className={`mb-1.5 block truncate font-mono text-[9px] tracking-wide ${
+                className={`mb-1.5 block truncate font-mono text-[9px] tracking-wide transition-colors ${
                   active
                     ? 'text-[var(--landing-accent)]'
                     : done
-                      ? 'text-[var(--landing-muted)]'
-                      : 'text-[var(--landing-dim)]'
+                      ? 'text-[var(--landing-muted)] group-hover:text-[var(--landing-ink)]'
+                      : 'text-[var(--landing-dim)] group-hover:text-[var(--landing-muted)]'
                 }`}
               >
                 <span className="sm:hidden">{String(i + 1).padStart(2, '0')}</span>
                 <span className="hidden sm:inline">{stepLabel[s]}</span>
               </span>
               <span
-                className="block h-1 overflow-hidden rounded-full bg-[color-mix(in_srgb,var(--landing-ink)_10%,transparent)]"
+                className="block h-1 overflow-hidden rounded-full bg-[color-mix(in_srgb,var(--landing-ink)_10%,transparent)] transition-colors group-hover:bg-[color-mix(in_srgb,var(--landing-ink)_18%,transparent)]"
                 aria-hidden
               >
                 <span
@@ -368,7 +452,7 @@ function ScenarioChrome({
                   style={{ width: `${pct * 100}%` }}
                 />
               </span>
-            </div>
+            </button>
           );
         })}
       </div>
@@ -376,27 +460,109 @@ function ScenarioChrome({
   );
 }
 
+/** ⌘K prompt box rendered inline in the buffer during the tuning step. */
+function InlineEditWidget({
+  ask,
+  applied,
+  paused,
+  instant,
+}: {
+  ask: string;
+  applied: boolean;
+  paused: boolean;
+  instant: boolean;
+}) {
+  const [step, setStep] = useState(0);
+  const pausedRef = useRef(paused);
+  const typed = instant ? ask.length : step;
+
+  useEffect(() => {
+    pausedRef.current = paused;
+  }, [paused]);
+
+  useEffect(() => {
+    if (instant) return;
+    let n = 0;
+    const id = window.setInterval(() => {
+      if (pausedRef.current) return;
+      n += 1;
+      setStep(n);
+      if (n >= ask.length) window.clearInterval(id);
+    }, 26);
+    return () => window.clearInterval(id);
+  }, [ask, instant]);
+
+  return (
+    <div className="ml-8 max-w-[28rem] rounded-lg border border-[var(--landing-accent)] bg-[var(--landing-surface-raised)] px-2.5 py-2 shadow-[0_10px_30px_-16px_var(--landing-btn-shadow)]">
+      <div className="flex items-center gap-1.5">
+        <Sparkles className="size-3 text-[var(--landing-accent)]" aria-hidden />
+        <span className="font-mono text-[9px] font-semibold uppercase tracking-wider text-[var(--landing-accent)]">
+          Edit selection
+        </span>
+        <span className="ml-auto rounded bg-[color-mix(in_srgb,var(--landing-ink)_8%,transparent)] px-1 py-0.5 font-mono text-[8px] text-[var(--landing-subtle)]">
+          ⌘K
+        </span>
+      </div>
+      <p className="mt-1.5 whitespace-pre-wrap font-mono text-[10px] leading-relaxed text-[var(--landing-ink)]">
+        {ask.slice(0, typed)}
+        {typed < ask.length && (
+          <span
+            className="ml-px inline-block h-[0.95em] w-[6px] animate-pulse bg-[var(--landing-accent)] align-middle"
+            aria-hidden
+          />
+        )}
+      </p>
+      {applied && (
+        <p className="mt-1.5 font-mono text-[9px] text-emerald-700 dark:text-emerald-400">
+          ✓ applied · 1 hunk · re-validating
+        </p>
+      )}
+    </div>
+  );
+}
+
 export function WorkflowStudio() {
   const reduced = usePrefersReducedMotion();
-  const [stepIdx, setStepIdx] = useState(0);
+  const [cursor, setCursor] = useState({ idx: 0, jumped: false });
   const [phase, setPhase] = useState<Phase>(reduced ? 'dwell' : 'work');
   const [paused, setPaused] = useState(false);
   const [typedChars, setTypedChars] = useState(0);
   const [visibleEvents, setVisibleEvents] = useState(0);
   const [phasePart, setPhasePart] = useState(0);
+  const [tabOverride, setTabOverride] = useState<TabId | null>(null);
+
+  const stepIdx = cursor.idx;
   const step = STEPS[stepIdx];
   const script = stepScripts[step];
   const focus = stepFocus[step];
-  const fullText = focus.open ? DEMO_FILES[focus.open] : '';
+  const usesRunPhase = Boolean(focus.review || script.cmd);
   const split = useMemo(() => splitScriptEvents(script.events), [script.events]);
 
-  const [seenStep, setSeenStep] = useState(stepIdx);
-  if (seenStep !== stepIdx) {
-    setSeenStep(stepIdx);
-    setTypedChars(focus.type ? 0 : fullText.length);
-    setVisibleEvents(0);
-    setPhasePart(0);
-    setPhase(reduced ? 'dwell' : 'work');
+  /** Everything the step produced is on screen once the work phase is over. */
+  const shownEvents = phase === 'work' ? visibleEvents : script.events.length;
+
+  const inlineIdx = STEPS.indexOf('inline');
+  const ruleTuned = Boolean(
+    stepIdx > inlineIdx || (focus.inlineEdit && shownEvents >= INLINE_APPLY_AT),
+  );
+  const fileText = useCallback(
+    (path: DemoPath) => (path === RULE_PATH && ruleTuned ? INLINE_EDIT.tuned : DEMO_FILES[path]),
+    [ruleTuned],
+  );
+  const fullText =
+    focus.type && focus.active != null && focus.active !== REVIEW_TAB
+      ? fileText(focus.active)
+      : '';
+
+  const [seen, setSeen] = useState(cursor);
+  if (seen !== cursor) {
+    setSeen(cursor);
+    const complete = cursor.jumped || reduced;
+    setTypedChars(complete || !focus.type ? fullText.length : 0);
+    setVisibleEvents(complete ? script.events.length : 0);
+    setPhasePart(complete ? 1 : 0);
+    setPhase(complete ? 'dwell' : 'work');
+    setTabOverride(null);
   }
 
   const pausedRef = useRef(paused);
@@ -409,11 +575,7 @@ export function WorkflowStudio() {
 
     const finishWork = () => {
       setPhasePart(1);
-      if (focus.skipTerminal || !script.cmd) {
-        setPhase('dwell');
-      } else {
-        setPhase('terminal');
-      }
+      setPhase(usesRunPhase ? 'run' : 'dwell');
     };
 
     if (reduced) {
@@ -456,10 +618,9 @@ export function WorkflowStudio() {
       }, EVENT_MS);
     };
 
-    // Prompt / read-only steps: no typewriter — stream events only
-    if (!focus.open || !focus.type) {
+    // Read-only steps (brief, inline tuning, review): stream events only
+    if (!focus.type) {
       const kickoff = window.requestAnimationFrame(() => {
-        setTypedChars(fullText.length);
         if (events === 0 && script.events.length > 0) {
           events = 1;
           setVisibleEvents(1);
@@ -558,51 +719,102 @@ export function WorkflowStudio() {
       window.clearInterval(eventOnlyTimer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, fullText, reduced, stepIdx, paused, script.events, split, focus.open, focus.type, focus.skipTerminal, script.cmd]);
+  }, [phase, fullText, reduced, stepIdx, paused, script.events, split, focus.type, usesRunPhase]);
 
-  const onTerminalComplete = useCallback(() => {
+  const onRunComplete = useCallback(() => {
     setPhase('dwell');
     setPhasePart(1);
   }, []);
 
-  const onTermProgress = useCallback((r: number) => setPhasePart(r), []);
+  const onRunProgress = useCallback((r: number) => setPhasePart(r), []);
 
   useEffect(() => {
     if (paused || phase !== 'dwell') return;
-    const dwell = reduced ? 350 : 750;
+    const dwell = reduced ? 350 : cursor.jumped ? 2600 : 750;
     const id = window.setTimeout(() => {
-      setStepIdx((i) => (i >= STEPS.length - 1 ? 0 : i + 1));
+      setCursor((c) => ({ idx: c.idx >= STEPS.length - 1 ? 0 : c.idx + 1, jumped: false }));
     }, dwell);
     return () => window.clearTimeout(id);
-  }, [phase, stepIdx, paused, reduced]);
+  }, [phase, cursor, paused, reduced]);
 
-  useEffect(() => {
-    if (phase !== 'dwell' && phase !== 'terminal') return;
-    const frame = window.requestAnimationFrame(() => {
-      if (typedChars < fullText.length) setTypedChars(fullText.length);
-      if (visibleEvents < script.events.length) setVisibleEvents(script.events.length);
-    });
-    return () => window.cancelAnimationFrame(frame);
-  }, [phase, fullText.length, script.events.length, typedChars, visibleEvents]);
+  const openTabs = useMemo(() => {
+    const acc: TabId[] = [];
+    for (let i = 0; i <= stepIdx; i++) {
+      const s = stepFocus[STEPS[i]];
+      for (const p of s.opens) if (!acc.includes(p)) acc.push(p);
+      if (s.review) acc.push(REVIEW_TAB);
+    }
+    return acc;
+  }, [stepIdx]);
 
-  const typing = Boolean(focus.open && focus.type && phase === 'work' && typedChars < fullText.length);
+  const filePaths = useMemo(
+    () => openTabs.filter((t): t is DemoPath => t !== REVIEW_TAB),
+    [openTabs],
+  );
+
+  /** Folders stay open for every file that has become a tab. */
+  const expandedDirs = useMemo(() => {
+    const dirs = new Set<string>(['objects', 'objects/threats', 'objects/objectives', 'objects/rules']);
+    for (const path of filePaths) {
+      const parts = path.split('/');
+      parts.pop();
+      let acc = '';
+      for (const part of parts) {
+        acc = acc ? `${acc}/${part}` : part;
+        dirs.add(acc);
+      }
+    }
+    return [...dirs];
+  }, [filePaths]);
+
+  const activeTab: TabId | null = tabOverride ?? focus.active;
+  const isReviewTab = activeTab === REVIEW_TAB;
+  const activePath: DemoPath | null =
+    activeTab == null || activeTab === REVIEW_TAB ? null : activeTab;
+  const drivenTab = activeTab != null && activeTab === focus.active;
+  const showIdle = activeTab == null && !focus.review;
+
+  const typing = Boolean(focus.type && phase === 'work' && typedChars < fullText.length);
   const phaseLabel =
     phase === 'work'
       ? typing
         ? 'Writing file…'
-        : focus.open
-          ? 'Agent working…'
-          : 'Reading brief…'
-      : phase === 'terminal'
-        ? 'Running CLI…'
+        : focus.inlineEdit
+          ? 'Editing selection…'
+          : showIdle
+            ? 'Reading brief…'
+            : 'Agent working…'
+      : phase === 'run'
+        ? focus.review
+          ? 'Pipeline running…'
+          : 'Running CLI…'
         : 'Next stage…';
 
-  const editorContents =
-    focus.open == null
-      ? null
-      : focus.type
+  const inlineActive = Boolean(focus.inlineEdit && activePath === RULE_PATH);
+  const inlineApplied = Boolean(focus.inlineEdit && ruleTuned);
+  const highlight: EditorHighlight | undefined = inlineActive
+    ? inlineApplied
+      ? { ...INLINE_SPAN.tuned, tone: 'change' }
+      : { ...INLINE_SPAN.base, tone: 'select' }
+    : undefined;
+
+  const editorText =
+    activePath == null
+      ? ''
+      : drivenTab && focus.type && phase === 'work'
         ? fullText.slice(0, typedChars)
-        : fullText;
+        : fileText(activePath);
+
+  const reviewFiles = useMemo(
+    () =>
+      DEMO_PATHS.map((path) => ({
+        path,
+        added: DEMO_FILES[path].trimEnd().split('\n').length,
+      })),
+    [],
+  );
+
+  const runArmed = phase === 'run' || phase === 'dwell';
 
   return (
     <div className="space-y-4">
@@ -613,6 +825,7 @@ export function WorkflowStudio() {
         typing={typing}
         paused={paused}
         onTogglePause={() => setPaused((p) => !p)}
+        onSelectStep={(i) => setCursor({ idx: i, jumped: true })}
       />
 
       <div className="overflow-hidden rounded-2xl border border-[var(--landing-border)] bg-[var(--landing-surface)] shadow-[0_20px_60px_-28px_var(--landing-btn-shadow)]">
@@ -621,9 +834,19 @@ export function WorkflowStudio() {
           <span className="size-2.5 rounded-full bg-[#febc2e]" aria-hidden />
           <span className="size-2.5 rounded-full bg-[#28c840]" aria-hidden />
           <span className="ml-2 truncate font-mono text-[11px] text-[var(--landing-subtle)]">
-            {focus.open ? `${DEMO_REPO} / ${focus.open}` : `${DEMO_REPO} · brief`}
+            {isReviewTab
+              ? `${DEMO_REPO} · ${REVIEW_MR.id}`
+              : activePath
+                ? `${DEMO_REPO} / ${activePath}`
+                : `${DEMO_REPO} · brief`}
           </span>
-          <span className="ml-auto font-mono text-[9px] text-[var(--landing-dim)]">
+          {stepIdx >= STEPS.indexOf('threat') && (
+            <span className="hidden shrink-0 items-center gap-1 rounded-full bg-[color-mix(in_srgb,var(--landing-ink)_7%,transparent)] px-2 py-0.5 font-mono text-[9px] text-[var(--landing-muted)] md:inline-flex">
+              <GitBranch className="size-2.5" aria-hidden />
+              {DEMO_BRANCH}
+            </span>
+          )}
+          <span className="ml-auto shrink-0 font-mono text-[9px] text-[var(--landing-dim)]">
             {paused ? 'Paused' : phaseLabel}
           </span>
         </div>
@@ -639,52 +862,122 @@ export function WorkflowStudio() {
           <div className="pointer-events-none hidden min-h-0 overflow-hidden border-r border-[var(--landing-border-subtle)] bg-[var(--landing-surface)] lg:block">
             <StudioExplorer
               paths={DEMO_PATHS}
-              open={focus.open ?? ''}
+              open={activePath ?? ''}
               selected={focus.select}
-              expanded={focus.expand}
+              expanded={expandedDirs}
             />
           </div>
 
           <div className="flex min-h-0 min-w-0 flex-col overflow-hidden border-r border-[var(--landing-border-subtle)] bg-[var(--landing-bg)]">
-            <div className="flex h-9 shrink-0 items-center bg-[var(--landing-surface)] px-2">
-              {focus.open ? (
-                <span className="inline-block border-b-2 border-[var(--landing-accent)] px-2 pb-2 pt-1.5 font-mono text-[10px] text-[var(--landing-ink)]">
-                  {focus.open.split('/').pop()}
-                </span>
-              ) : (
+            <div
+              className="landing-code-scroll flex h-9 shrink-0 items-center gap-0.5 overflow-x-auto bg-[var(--landing-surface)] px-1.5"
+              role="tablist"
+              aria-label="Open editors"
+            >
+              {openTabs.length === 0 ? (
                 <span className="px-2 font-mono text-[10px] text-[var(--landing-dim)]">No file open</span>
-              )}
-            </div>
-            <div className="min-h-0 flex-1 overflow-hidden">
-              {editorContents == null ? (
-                <StudioEditorIdle message="Brief in the agent trace — objects appear as the agent authors them." />
               ) : (
-                <StudioEditor
-                  path={focus.open!}
-                  contents={editorContents}
-                  showCursor={!paused && typing}
-                />
+                openTabs.map((tab) => {
+                  const active = tab === activeTab;
+                  const review = tab === REVIEW_TAB;
+                  return (
+                    <button
+                      key={tab}
+                      type="button"
+                      role="tab"
+                      aria-selected={active}
+                      onClick={() => setTabOverride(tab)}
+                      className={`inline-flex shrink-0 items-center gap-1.5 border-b-2 px-2 py-1.5 font-mono text-[10px] transition-colors ${
+                        active
+                          ? 'border-[var(--landing-accent)] text-[var(--landing-ink)]'
+                          : 'border-transparent text-[var(--landing-dim)] hover:text-[var(--landing-muted)]'
+                      }`}
+                    >
+                      {review ? (
+                        <GitPullRequest
+                          className={`size-3 ${active ? 'text-[var(--landing-accent)]' : ''}`}
+                          aria-hidden
+                        />
+                      ) : (
+                        <FileCode2
+                          className={`size-3 ${active ? 'text-[var(--landing-accent)]' : ''}`}
+                          aria-hidden
+                        />
+                      )}
+                      {review ? `${REVIEW_MR.id} review` : tab.split('/').pop()}
+                    </button>
+                  );
+                })
               )}
             </div>
 
-            {script.cmd ? (
-              <StudioTerminal
-                key={`${step}-term`}
-                cmd={script.cmd}
-                out={script.out}
-                armed={phase === 'terminal' || phase === 'dwell'}
-                paused={paused}
-                instant={reduced || phase === 'dwell'}
-                onProgress={phase === 'terminal' ? onTermProgress : undefined}
-                onComplete={phase === 'terminal' ? onTerminalComplete : undefined}
-              />
-            ) : (
-              <div className="flex h-10 shrink-0 items-center border-t border-[var(--landing-border-subtle)] bg-[var(--landing-surface-deep)] px-3">
-                <span className="font-mono text-[10px] text-[var(--landing-dim)]">
-                  <span className="text-[var(--landing-accent)]">$</span> waiting for objects…
-                </span>
-              </div>
-            )}
+            <div className="min-h-0 flex-1 overflow-hidden">
+              {focus.review && (
+                <div className={isReviewTab ? 'h-full' : 'hidden'}>
+                  <StudioReviewTab
+                    key={`${step}-review`}
+                    mr={REVIEW_MR}
+                    jobs={REVIEW_JOBS}
+                    files={reviewFiles}
+                    armed={runArmed}
+                    paused={paused}
+                    instant={reduced || phase === 'dwell'}
+                    onProgress={phase === 'run' ? onRunProgress : undefined}
+                    onComplete={phase === 'run' ? onRunComplete : undefined}
+                  />
+                </div>
+              )}
+              {showIdle ? (
+                <StudioEditorIdle message="Brief in the agent trace — objects appear as the agent authors them." />
+              ) : activePath ? (
+                <StudioEditor
+                  path={activePath}
+                  contents={editorText}
+                  showCursor={!paused && typing && drivenTab}
+                  highlight={highlight}
+                  widget={
+                    inlineActive ? (
+                      <InlineEditWidget
+                        key={`${step}-widget`}
+                        ask={INLINE_EDIT.ask}
+                        applied={inlineApplied}
+                        paused={paused}
+                        instant={reduced || phase !== 'work'}
+                      />
+                    ) : undefined
+                  }
+                  widgetLine={inlineActive ? highlight?.to : undefined}
+                  follow={
+                    inlineActive
+                      ? INLINE_SPAN.base.from
+                      : drivenTab && focus.type
+                        ? 'bottom'
+                        : 'top'
+                  }
+                />
+              ) : null}
+            </div>
+
+            {!focus.review &&
+              (script.cmd ? (
+                <StudioTerminal
+                  key={`${step}-term`}
+                  cmd={script.cmd}
+                  out={script.out}
+                  armed={runArmed}
+                  paused={paused}
+                  instant={reduced || phase === 'dwell'}
+                  onProgress={phase === 'run' ? onRunProgress : undefined}
+                  onComplete={phase === 'run' ? onRunComplete : undefined}
+                />
+              ) : (
+                <div className="flex h-10 shrink-0 items-center border-t border-[var(--landing-border-subtle)] bg-[var(--landing-surface-deep)] px-3">
+                  <span className="font-mono text-[10px] text-[var(--landing-dim)]">
+                    <span className="text-[var(--landing-accent)]">$</span> reading repository
+                    configuration…
+                  </span>
+                </div>
+              ))}
           </div>
 
           <div className="flex min-h-0 flex-col overflow-hidden border-t border-[var(--landing-border-subtle)] max-lg:min-h-[220px] lg:border-t-0">
@@ -692,9 +985,7 @@ export function WorkflowStudio() {
               key={`${step}-trace`}
               label={stepLabel[step]}
               events={script.events}
-              visibleCount={
-                phase === 'terminal' || phase === 'dwell' ? script.events.length : visibleEvents
-              }
+              visibleCount={shownEvents}
               animate={!reduced && phase === 'work'}
             />
           </div>
