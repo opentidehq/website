@@ -1,45 +1,127 @@
 ---
 title: opentide generate
-description: Framework generation pipeline — schemas, templates, vocabs, snippets, exports, and docs.
+description: Output-first generation pipeline — docs, exports, vocabs, templates, schemas, snippets, and optional platform import.
 ---
 
 # opentide generate
 
-Builds framework artifacts from Pydantic models and bundled vocabulary.
+Builds client-visible outputs first, then framework internals from Pydantic models and bundled vocabulary.
 
 ```bash
-opentide generate                    # full pipeline
+opentide generate                    # full pipeline (no extract)
 opentide generate schemas            # single phase
+opentide generate docs --output docs
+opentide generate exports navigator
+opentide generate extract sentinel   # opt-in platform import
 ```
 
-## Phases (execution order)
+## Default pipeline order
 
 When run without a subcommand, phases execute in this order:
 
-| Phase | Subcommand | Output |
-|-------|------------|--------|
-| vocabs | `generate vocabs` | Object vocabulary indexes |
-| templates | `generate templates` | `.opentide/templates/*.template.yaml` |
-| schemas | `generate schemas` | `.opentide/schemas/*.schema.json`, IDE router |
-| snippets | `generate snippets` | VS Code snippets from templates |
-| exports | `generate exports` | Export artifacts (navigator layer, etc.) |
-| playbook-map | `generate playbook-map` | Playbook mapping export |
-| docs | `generate docs` | Internal docs generation (scoped flags) |
+| Order | Phase | Subcommand | Output |
+|-------|-------|------------|--------|
+| 1 | docs | `generate docs` | Markdown documentation for rules, objectives, threats |
+| 2 | exports | `generate exports` | ATT&CK navigator layer, objects export, revisions export |
+| 3 | vocabs | `generate vocabs` | In-memory object vocabulary indexes |
+| 4 | templates | `generate templates` | `.opentide/templates/*.template.yaml` |
+| 5 | schemas | `generate schemas` | `.opentide/schemas/*.schema.json`, IDE router |
+| 6 | snippets | `generate snippets` | VS Code snippets from templates |
+
+`extract` is **not** part of the default run — it calls live platform APIs and writes `Imported/` in the working directory. Use `opentide generate extract` explicitly when importing rules.
 
 ## generate docs
 
+The only supported entry point for markdown documentation.
+
 ```bash
 opentide generate docs
-opentide generate docs --rules --threats
+opentide generate docs --changed
+opentide generate docs --rules --threats --objectives
+opentide generate docs --output docs --flavor github
+opentide generate docs rules
+opentide generate docs index
 ```
 
-| Flag | Scope |
-|------|-------|
-| `--rules` | Rules documentation only |
-| `--threats` | Threats documentation only |
-| `--objectives` | Objectives documentation only |
+| Flag | Purpose |
+|------|---------|
+| `--output` | Docs output directory |
+| `--flavor` | Renderer flavour (for example `github`) |
+| `--changed` | Generate only docs for changed object YAMLs (from git merge-base diff + untracked files), expanded with upstream referrer closure, remove pages for deleted objects, then rewrite affected indexes |
+| `--rules` / `--threats` / `--objectives` | Limit scopes on the default callback |
 
-Distinct from `opentide document`, which writes client wiki pages from loaded objects.
+`--changed` is only supported on full `opentide generate docs` runs and cannot be combined with `--rules`, `--threats`, or `--objectives`.
+
+Subcommands `rules`, `objectives`, `threats`, and `index` accept the same `--output` and `--flavor` flags.
+
+### Rendered sections by object type
+
+`generate docs` now renders shared metadata and references sections for all object families, plus richer object-specific sections:
+
+- **Shared (rules, objectives, threats):**
+  - `Metadata` (UUID, schema, version, created/modified, TLP, optional author/contributors/organisation)
+  - `References` (`Public`, `Internal`, `Reports` buckets when present)
+- **Rules:**
+  - `Status`, `Techniques`, `Detection model`, `Response`, `Platform configurations`, `Relations`
+- **Objectives:**
+  - `Objective metadata`, `Signals`, `Signal MDR coverage`, `Relations`
+- **Threats:**
+  - `Criticality`, `Terrain`, `Threat Assessment`, `Actors`, `ATT&CK Techniques` (when present), `Chaining`, `Chaining details`, `Relations`
+
+### Mermaid behavior and relations direction
+
+Threat chaining and object relations are rendered with Mermaid across flavors:
+
+- **Chaining diagram:** threat-to-threat flow that preserves relation labels between chain entries.
+- **Relations diagram:** related objects grouped by relation label where the flavor supports Mermaid subgraphs.
+
+`relations_direction` controls whether relations diagrams show upstream, downstream, or both sides:
+
+```toml
+[diagrams]
+relations_direction = "both" # upstream | downstream | both
+```
+
+Flavor notes:
+
+- `github` / `gitlab` / `generic` render flowchart-style relations and chaining.
+- `azure-devops` downgrades to `graph` syntax and disables subgraphs for compatibility.
+
+### Index enrichment options
+
+Folder and root index pages can be enriched from `.opentide/configurations/documentation.toml`:
+
+```toml
+folder_index_pages = true
+
+[index]
+relation_counts = true
+icons = false
+```
+
+- `folder_index_pages`: write `README.md` index pages for Rules/Objectives/Threats and root.
+- `index.relation_counts`: include relation counts (or object counts on root index table).
+- `index.icons`: prefix section/object labels with emoji markers.
+
+## generate exports
+
+```bash
+opentide generate exports              # all export targets
+opentide generate exports navigator
+opentide generate exports objects
+opentide generate exports revisions
+```
+
+## generate extract
+
+Import detection rules from external platforms (credential-heavy, experimental for Defender):
+
+```bash
+opentide generate extract sentinel
+opentide generate extract defender
+```
+
+Configure tenant credentials under `.opentide/configurations/platforms/` before running.
 
 ## When to run
 
@@ -50,6 +132,14 @@ Distinct from `opentide document`, which writes client wiki pages from loaded ob
 ## Side effects
 
 Schema and template phases reload `IndexManager` and `OpenTide` registry caches.
+
+## Deprecated shims
+
+| Legacy command | Replacement |
+|----------------|-------------|
+| `opentide generate docs` | `opentide generate docs` |
+| `opentide generate exports …` | `opentide generate exports …` |
+| `opentide generate extract …` | `opentide generate extract …` |
 
 ## Source
 

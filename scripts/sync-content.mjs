@@ -148,7 +148,16 @@ function rewritePublishedLinks(content) {
   return content
     .replace(/\]\(\.\.\/\.\.\/fixtures\//g, `](${SPECS_BLOB}/fixtures/`)
     .replace(/\]\(\.\.\/fixtures\//g, `](${SPECS_BLOB}/fixtures/`)
+    .replace(/\]\(fixtures\//g, `](${SPECS_BLOB}/fixtures/`)
     .replace(/\]\(\.\.\/\.\.\/schemas\//g, `](${SPECS_BLOB}/schemas/`)
+    .replace(/\]\(\.\.\/\.\.\/vocabularies\//g, `](${SPECS_BLOB}/vocabularies/`)
+    .replace(/\]\(\.\.\/vocabularies\//g, `](${SPECS_BLOB}/vocabularies/`)
+    .replace(/\]\(\.\.\/rfcs\//g, `](${SPECS_BLOB}/rfcs/`)
+    .replace(/\]\(rfcs\//g, `](${SPECS_BLOB}/rfcs/`)
+    .replace(/\]\(llms\.txt\)/g, `](${SPECS_BLOB}/llms.txt)`)
+    .replace(/\]\(\.\.\/\.\.\/CHANGELOG\.md\)/g, `](${SPECS_BLOB}/CHANGELOG.md)`)
+    .replace(/\]\(\.\.\/CHANGELOG\.md\)/g, `](${SPECS_BLOB}/CHANGELOG.md)`)
+    .replace(/\]\(CHANGELOG\.md\)/g, `](${SPECS_BLOB}/CHANGELOG.md)`)
     .replace(/https:\/\/github\.com\/OpenTide\/opentide/g, 'https://github.com/OpenTideHQ/opentide')
     .replace(/\]\(\.\.\/\.\.\/internal\//g, `](${OPENTIDE_BLOB}/internal/`)
     .replace(/\]\(\.agents\//g, '](https://github.com/OpenTideHQ/opentide/blob/development/.agents/')
@@ -204,6 +213,7 @@ function buildSpecificationsMeta() {
     pages: [
       'index',
       'SPECS',
+      'conformance',
       '---Core---',
       'specs/versioning',
       'specs/metadata',
@@ -222,9 +232,6 @@ function buildSpecificationsMeta() {
       'specs/vocabularies/catalog',
       '---Governance---',
       'GOVERNANCE',
-      'AGENTS',
-      '---RFCs---',
-      'rfcs/0001-authority-model',
     ],
   };
 }
@@ -289,13 +296,20 @@ function main() {
   const specOut = join(OUT, 'specifications');
   mkdirSync(specOut, { recursive: true });
 
-  writeFileSync(join(specOut, 'index.md'), buildSpecificationsIndex());
+  // Conceptual overview: prefer an authored site/index.md, else fall back to the generated stub.
+  const authoredIndex = join(specificationsRoot, 'site', 'index.md');
+  if (existsSync(authoredIndex)) {
+    writeFileSync(
+      join(specOut, 'index.md'),
+      transformSpecFrontmatter(readFileSync(authoredIndex, 'utf8'), 'index.md'),
+    );
+  } else {
+    writeFileSync(join(specOut, 'index.md'), buildSpecificationsIndex());
+  }
   syncMarkdownTree(join(specificationsRoot, 'specs'), join(specOut, 'specs'));
-  syncMarkdownTree(join(specificationsRoot, 'rfcs'), join(specOut, 'rfcs'), {
-    exclude: ['0000-template.md', 'README.md'],
-  });
 
-  for (const file of ['SPECS.md', 'GOVERNANCE.md', 'AGENTS.md']) {
+  // RFCs are contributor/provenance docs — kept in the specifications repo, not published to the site.
+  for (const file of ['SPECS.md', 'GOVERNANCE.md', 'conformance.md']) {
     const src = join(specificationsRoot, file);
     if (existsSync(src)) {
       const dest = join(specOut, file);

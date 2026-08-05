@@ -17,7 +17,7 @@ Index of canonical vocabulary files bundled with OpenTide. Each file lives in `v
 ## Requirements
 
 - The set of bundled vocabularies MUST match the files in `vocabularies/` at release time.
-- Adding or removing a vocabulary MUST update this catalog and [CHANGELOG.md](../../CHANGELOG.md) via RFC.
+- Adding or removing a vocabulary MUST update this catalog and [CHANGELOG.md](https://github.com/OpenTideHQ/specifications/blob/main/CHANGELOG.md) via RFC.
 - Each entry MUST validate per [format.md](format.md).
 
 ## Definition

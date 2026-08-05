@@ -1,6 +1,6 @@
 ---
 title: Metaschema keywords
-description: OpenTide extends JSON Schema generation with `tide.*` keywords in Pydantic metaschema. At generation time, `gen_json_schema()` walks the metaschema depth-first and resolves each keyword into standard JSON Schema constructs. Keywords are stripped from emitted client-facing schemas via `strip_framework_keywords()`.
+description: OpenTide extends JSON Schema generation with `tide.*` keywords in its metaschema. At generation time the implementation walks the metaschema depth-first and resolves each keyword into standard JSON Schema constructs; the `tide.*` keywords are then stripped from the emitted client-facing schemas.
 spec: metaschema-keywords
 version: "1.0"
 schema_id: null
@@ -12,7 +12,11 @@ supersedes: null
 
 ## Summary
 
-OpenTide extends JSON Schema generation with `tide.*` keywords in Pydantic metaschema. At generation time, `gen_json_schema()` walks the metaschema depth-first and resolves each keyword into standard JSON Schema constructs. Keywords are stripped from emitted client-facing schemas via `strip_framework_keywords()`.
+OpenTide extends JSON Schema generation with `tide.*` keywords in its metaschema. At generation time the implementation walks the metaschema depth-first and resolves each keyword into standard JSON Schema constructs; the `tide.*` keywords are then stripped from the emitted client-facing schemas.
+
+<Callout type="info">
+This spec is an **implementer contract** — it defines how JSON Schema is generated from the metaschema. Detection authors do not write `tide.*` keywords; they benefit from the generated schemas transparently. Read this only if you build tooling that generates or consumes OpenTide schemas.
+</Callout>
 
 ## Requirements
 
@@ -35,12 +39,33 @@ OpenTide extends JSON Schema generation with `tide.*` keywords in Pydantic metas
 
 | Keyword | Value | Effect |
 |---------|-------|--------|
-| `tide.vocab` | string, bool, or list | Resolve vocabulary file(s) to `enum` + `markdownEnumDescriptions` |
+| `tide.vocab` | string, bool, or list | Resolve vocabulary contract(s) to `enum` + `markdownEnumDescriptions` |
 | `tide.vocab.scoped` | boolean | Enable stage-scoped vocabulary filtering |
 | `tide.vocab.stages` | string \| list | Filter vocabulary entries to matching stages |
 | `tide.vocab.hints.no-wrap` | boolean | Disable enum value wrapping in descriptions |
 
-When `tide.vocab` is `true`, the field name is used as the vocabulary identifier.
+#### `tide.vocab` resolution
+
+| `tide.vocab` value | Behavior |
+|--------------------|----------|
+| `"severity"` (legacy unversioned) | Implementations SHOULD warn; resolve via schema pin for the field path |
+| `"severity::1.0"` | Explicit vocabulary contract pin |
+| `true` | Infer field name from property path → lookup schema pin |
+| `["att&ck::1.0", "custom"]` | Union of contracts (existing list semantics + versions) |
+
+When `tide.vocab` is `true`, the leaf field name is used as the vocabulary field identifier for pin lookup.
+
+#### Schema pin resolution
+
+Each object schema revision (`metadata.schema`, e.g. `threat::1.0`) maintains a vocabulary pin table in `schemas/pins/{threat,objective,rule}.toml`. Keys are dot-paths to vocab-constrained fields; values are versioned contract identifiers (`field::M.m`).
+
+During JSON Schema generation and validation for schema `S`:
+
+1. If `tide.vocab` is an explicit `field::M.m` string (or list of such), use it directly.
+2. If `tide.vocab` is a bare field name or `true`, look up the pin for path `P` under section `[S]` in the family pin file.
+3. Resolve the contract via per-key lifecycle rules in [vocabularies/format.md](vocabularies/format.md) (cumulative minor filter + `removed`).
+
+Implementations MUST NOT resolve pins against the latest unversioned vocabulary when a schema revision is known. If a pinned contract is unavailable, generation and strict validation MUST fail with an explicit error.
 
 ### `tide.config.*`
 
@@ -102,7 +127,9 @@ When `tide.vocab` is `true`, the field name is used as the vocabulary identifier
 
 ## Relationships
 
-- [vocabularies/format.md](vocabularies/format.md) — vocabulary file format
+- [vocabularies/format.md](vocabularies/format.md) — vocabulary file format and per-key lifecycle
+- [schemas/pins/](../schemas/pins/) — per-schema vocabulary pin manifests
+- [RFC 0003](https://github.com/OpenTideHQ/specifications/blob/main/rfcs/0003-per-key-vocabulary-versioning.md) — per-key versioning design
 - [configuration.md](configuration.md) — config sources for `tide.config.*`
 - [deployment.md](deployment.md) — statuses for `tide.config.statuses`
 - [platforms.md](platforms.md) — `recomposition` and platform schemas
@@ -120,8 +147,11 @@ Rule metaschema binds `detection_model` to objective vocabulary:
 "detection_model": {"tide.vocab": "objective"}
 ```
 
+Threat schema `threat::1.0` pins `threat.killchain` to `killchain::1.0` via [schemas/pins/threat.toml](../schemas/pins/threat.toml). A later `threat::2.1` revision may pin `killchain::1.1` while other pins remain at `::1.0`.
+
 ## History
 
 | Version | Date | Notes |
 |---------|------|-------|
+| 1.1 | 2026-06-26 | Versioned `tide.vocab` and schema pin resolution ([RFC 0003](https://github.com/OpenTideHQ/specifications/blob/main/rfcs/0003-per-key-vocabulary-versioning.md)) |
 | 1.0 | 2026-06-25 | Initial spec from opentide `generation/schema_pipeline.py` and `pydantic_metaschema.py` |
