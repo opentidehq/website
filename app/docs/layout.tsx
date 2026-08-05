@@ -9,7 +9,7 @@ export default function Layout({ children }: LayoutProps<'/docs'>) {
   return (
     <DocsLayout
       tree={tree}
-      {...baseOptions()}
+      {...baseOptions('docs')}
       tabs={false}
       sidebar={{
         banner: <DocsRootSwitcher />,
