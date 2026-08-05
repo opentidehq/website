@@ -141,9 +141,14 @@ export function StudioReviewTab({
       if (pausedRef.current) return;
       if (shownRef.current >= total) {
         window.clearInterval(timer);
-        mergeTimer = window.setTimeout(() => {
-          if (!pausedRef.current) finish();
-        }, 620);
+        const tryFinish = () => {
+          if (pausedRef.current) {
+            mergeTimer = window.setTimeout(tryFinish, 200);
+            return;
+          }
+          finish();
+        };
+        mergeTimer = window.setTimeout(tryFinish, 620);
         return;
       }
       const next = shownRef.current + 1;

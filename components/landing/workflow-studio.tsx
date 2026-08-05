@@ -809,7 +809,9 @@ export function WorkflowStudio() {
     () =>
       DEMO_PATHS.map((path) => ({
         path,
-        added: DEMO_FILES[path].trimEnd().split('\n').length,
+        added: (path === RULE_PATH ? INLINE_EDIT.tuned : DEMO_FILES[path])
+          .trimEnd()
+          .split('\n').length,
       })),
     [],
   );
