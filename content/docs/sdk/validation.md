@@ -3,8 +3,6 @@ title: Validation API
 description: Programmatic validation with ValidationScope, ValidateCheck, and ValidationReport.
 ---
 
-# Validation API
-
 Headless validation for scripts, services, and MCP tools.
 
 ## Full registry validation

@@ -4,8 +4,6 @@ description: Embed OpenTide in Python applications — registry lifecycle, valid
 icon: Code
 ---
 
-# Python SDK
-
 The `opentide` PyPI package exposes a typed programmatic API centred on the **`OpenTide`** registry singleton.
 
 ```python

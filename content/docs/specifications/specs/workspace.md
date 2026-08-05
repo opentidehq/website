@@ -8,12 +8,6 @@ status: normative
 supersedes: null
 ---
 
-# Workspace layout
-
-## Summary
-
-Defines the standard detection-repository directory layout scaffolded by `opentide setup` and used for object storage, generated artifacts, documentation mirrors, and client configuration overrides.
-
 ## Requirements
 
 - A healthy OpenTide workspace MUST contain `objects/` with subdirectories for each core object family.

@@ -3,8 +3,6 @@ title: opentide deploy
 description: Deploy detection rules to configured platforms with dry-run, promotion, and plan controls.
 ---
 
-# opentide deploy
-
 Deploy detection rules to configured platforms, honoring each rule's `status` and your deployment plan.
 
 ```bash

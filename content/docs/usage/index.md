@@ -4,8 +4,6 @@ description: Install OpenTide, learn the object model, and run detection-as-code
 icon: BookOpen
 ---
 
-# Usage
-
 OpenTide is the **DetectionOps engine**: a versioned toolchain for building, validating, deploying, and documenting detection content as code across enterprise security platforms. This section takes you from "what is it?" to a working, CI-gated detection repository.
 
 <Callout type="info">

@@ -3,8 +3,6 @@ title: Specifications
 description: What a Tide object is, how the object families chain, and how to read the normative OpenTide specifications.
 ---
 
-# OpenTide Specifications
-
 These are the **normative specifications** for OpenTide — the contract that every detection object, tool, and agent relies on. The [opentide](https://github.com/OpenTideHQ/opentide) package implements this contract; the generated JSON Schema is a build artifact, never the source of truth. Each spec is versioned independently — there is no framework-wide version.
 
 <Callout type="info">

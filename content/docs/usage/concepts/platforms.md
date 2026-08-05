@@ -3,8 +3,6 @@ title: Platforms
 description: Seven deployment platforms and five query validators — capability matrix and CLI identifiers.
 ---
 
-# Platforms
-
 OpenTide integrates with **seven detection platforms** through built-in adapters registered at import time (`opentide.platforms` entry points). All ship in the base PyPI package.
 
 ## Capability matrix

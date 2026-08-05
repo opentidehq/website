@@ -128,20 +128,75 @@ function h1InBody(body) {
 const SPECS_BLOB = 'https://github.com/OpenTideHQ/specifications/blob/main';
 const OPENTIDE_BLOB = 'https://github.com/OpenTideHQ/opentide/blob/development/docs';
 
-function stripDuplicateH1(content) {
-  if (!content.startsWith('---\n')) return content;
+function splitFrontmatter(content) {
+  if (!content.startsWith('---\n')) return null;
   const end = content.indexOf('\n---\n', 4);
-  if (end === -1) return content;
-  const frontmatter = content.slice(4, end);
-  const titleMatch = frontmatter.match(/^title:\s*"?([^"\n]+)"?/m);
-  if (!titleMatch) return content;
-  const title = titleMatch[1].trim();
-  let body = content.slice(end + 5);
-  const h1Match = body.match(/^#\s+(.+)$/m);
-  if (h1Match && h1Match[1].trim().toLowerCase() === title.toLowerCase()) {
-    body = body.replace(/^#\s+.+?\n+/, '');
+  if (end === -1) return null;
+  return { frontmatter: content.slice(4, end), body: content.slice(end + 5) };
+}
+
+function joinFrontmatter(frontmatter, body) {
+  return `---\n${frontmatter}\n---\n\n${body.replace(/^\s+/, '')}`;
+}
+
+function frontmatterValue(frontmatter, key) {
+  const match = frontmatter.match(new RegExp(`^${key}:\\s*(.+)$`, 'm'));
+  if (!match) return null;
+  const raw = match[1].trim();
+  if (raw.startsWith('"')) {
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return raw.slice(1, -1);
+    }
   }
-  return `---\n${frontmatter}\n---\n${body}`;
+  return raw;
+}
+
+function normalizeProse(value) {
+  return value.replace(/\s+/g, ' ').trim();
+}
+
+/**
+ * The docs layout renders the frontmatter title as the page h1, so a leading body
+ * H1 is always redundant — and would make the page carry two h1 elements.
+ */
+function stripLeadingH1(content) {
+  const parts = splitFrontmatter(content);
+  if (!parts) return content;
+  if (!frontmatterValue(parts.frontmatter, 'title')) return content;
+  const leadingH1 = parts.body.match(/^\s*#\s+.+?\s*(?:\n|$)/);
+  if (!leadingH1) return content;
+  return joinFrontmatter(parts.frontmatter, parts.body.slice(leadingH1[0].length));
+}
+
+/**
+ * Spec pages open with a `## Summary` whose first paragraph becomes the frontmatter
+ * description. The layout already renders that description, so drop the duplicated
+ * paragraph — and the heading with it, keeping any remaining prose as the page lead.
+ */
+function stripRedundantSummary(content) {
+  const parts = splitFrontmatter(content);
+  if (!parts) return content;
+  const description = frontmatterValue(parts.frontmatter, 'description');
+  if (!description) return content;
+
+  const section = parts.body.match(/^##\s+Summary\s*\n([\s\S]*?)(?=\n##\s|\n#\s|$)/m);
+  if (!section) return content;
+
+  const paragraphs = section[1]
+    .split(/\n{2,}/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+  if (!paragraphs.length) return content;
+  if (normalizeProse(paragraphs[0]) !== normalizeProse(description)) return content;
+
+  const remaining = paragraphs.slice(1).join('\n\n');
+  const body =
+    parts.body.slice(0, section.index) +
+    (remaining ? `${remaining}\n` : '') +
+    parts.body.slice(section.index + section[0].length);
+  return joinFrontmatter(parts.frontmatter, body);
 }
 
 function rewritePublishedLinks(content) {
@@ -165,7 +220,7 @@ function rewritePublishedLinks(content) {
 }
 
 function postProcessMarkdown(content) {
-  return rewritePublishedLinks(stripDuplicateH1(content));
+  return rewritePublishedLinks(stripRedundantSummary(stripLeadingH1(content)));
 }
 
 function postProcessMarkdownTree(dir) {

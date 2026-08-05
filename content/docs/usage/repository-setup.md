@@ -3,8 +3,6 @@ title: Repository setup
 description: How opentide setup scaffolds detection repositories, CI, MCP, and agent skills.
 ---
 
-# Repository setup
-
 `opentide setup` is the primary onboarding entry point. It can run interactively or non-interactively with `--yes`.
 
 ## Interactive wizard

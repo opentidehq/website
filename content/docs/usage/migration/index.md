@@ -3,8 +3,6 @@ title: Migration guide
 description: Upgrade detection repositories from CoreTide git submodules to the opentide PyPI package.
 ---
 
-# Client migration guide
-
 Upgrade detection repositories from **CoreTide git submodules** to the **`opentide` PyPI package**.
 
 ## Before and after

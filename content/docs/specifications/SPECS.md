@@ -3,8 +3,6 @@ title: OpenTide spec index
 description: One-page index of active normative spec versions — each spec is independently versioned.
 ---
 
-# OpenTide spec index
-
 One-page index of active normative spec versions. There is no framework-wide version — each row is independently versioned.
 
 | Spec | Version | Schema ID | Status | Path |

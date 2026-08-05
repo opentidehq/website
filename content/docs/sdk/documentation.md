@@ -3,8 +3,6 @@ title: Documentation API
 description: Render and publish markdown documentation for rules, objectives, and threats.
 ---
 
-# Documentation API
-
 Programmatic access to the same renderer used by `opentide generate docs`.
 
 <Callout type="info">

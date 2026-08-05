@@ -3,8 +3,6 @@ title: Platforms API
 description: Platform registry, entry-point plugins, deployers, and query validators.
 ---
 
-# Platforms API
-
 Platforms register through setuptools entry points in `pyproject.toml`:
 
 ```toml

@@ -8,12 +8,6 @@ status: normative
 supersedes: null
 ---
 
-# Versioning
-
-## Summary
-
-OpenTide separates **structural schema revisions** from **object instance versions**. Schema revisions select the validation model and generated JSON Schema artifact; instance versions track business content evolution in git.
-
 ## Requirements
 
 - Every Tide object MUST declare `metadata.schema` as a registered schema identifier (`{family}::{major}.{minor}`).

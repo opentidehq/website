@@ -3,8 +3,6 @@ title: opentide info
 description: Repository statistics, platform capabilities, object listings, and ATT&CK coverage lookup.
 ---
 
-# opentide info
-
 Show repository and platform information.
 
 ```bash

@@ -3,8 +3,6 @@ title: MCP installation
 description: Install opentide-mcp — included with pip install opentide — and verify stdio transport.
 ---
 
-# MCP installation
-
 ## PyPI
 
 The MCP server ships with the base package:

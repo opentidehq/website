@@ -3,8 +3,6 @@ title: Glossary
 description: Definitions for the OpenTide terms and acronyms used throughout the docs.
 ---
 
-# Glossary
-
 The terms and acronyms you will meet across the OpenTide docs, defined once. Where a concept has a deeper page, it is linked.
 
 ## Objects and content

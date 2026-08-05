@@ -8,12 +8,6 @@ status: normative
 supersedes: null
 ---
 
-# Validation
-
-## Summary
-
-OpenTide validates detection content through a structured pipeline: ID uniqueness, UUID format, Pydantic schema validation, vocabulary conformance, deprecated field warnings, and cross-object reference checks. Optional checks include CVE scanning and per-platform query validation.
-
 ## Requirements
 
 - `opentide validate` MUST run default checks: `id-uniqueness`, `uuid-format`, `schema`.
