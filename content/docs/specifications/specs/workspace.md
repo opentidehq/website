@@ -65,6 +65,8 @@ Registered objects list: `threat`, `objective`, `rule`.
 | visibility | `visibility.1.0.schema.json` |
 | router | `opentide.schema.json` |
 
+`visibility.1.0.schema.json` is **not** an object family — there are no `visibility` objects under `objects/`. It is the schema used to validate the client `visibility.toml` [configuration](configuration.md), emitted here alongside the object schemas. `opentide.schema.json` is the IDE router that dispatches object YAML to the correct object schema by `metadata.schema`. `.opentide/inflight/` is reserved for future CI preview shards and is not written today.
+
 ### Generated template artifacts
 
 | Family | Template filename |

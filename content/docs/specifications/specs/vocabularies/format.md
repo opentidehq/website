@@ -96,7 +96,7 @@ The sync script is an opentide build concern; this spec defines the data contrac
 
 ## Examples
 
-- Canonical TLP vocabulary: [vocabularies/tlp.vocab.toml](../../vocabularies/tlp.vocab.toml)
+- Canonical TLP vocabulary: [vocabularies/tlp.vocab.toml](https://github.com/OpenTideHQ/specifications/blob/main/vocabularies/tlp.vocab.toml)
 - JSON Schema: [schemas/vocabulary.schema.json](https://github.com/OpenTideHQ/specifications/blob/main/schemas/vocabulary.schema.json)
 
 ## History

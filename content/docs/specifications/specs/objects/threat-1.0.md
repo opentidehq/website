@@ -20,6 +20,7 @@ A threat vector describes an adversary capability or scenario: severity, impact,
 - `name` and `criticality` MUST be present at the top level.
 - `threat` body MUST be present with all required subfields.
 - `threat.att&ck` MUST be a non-empty list of ATT&CK technique references (YAML key `att&ck`; aliased as `att_ck` in Pydantic).
+- `threat.terrain` MUST be a value from the `surface` vocabulary. The YAML field is named `terrain`; its allowed values are the `surface` vocabulary entries.
 - `references` MAY be omitted.
 - `threat.chaining` entries MUST reference valid chaining relation vocabulary values when present.
 
@@ -44,7 +45,7 @@ A threat vector describes an adversary capability or scenario: severity, impact,
 | `impact` | string | yes | — | Impact vocabulary |
 | `leverage` | string | yes | — | Leverage vocabulary |
 | `viability` | string | yes | — | Viability vocabulary |
-| `terrain` | string | yes | — | Threat surface / terrain |
+| `terrain` | string | yes | — | Attack surface / terrain — values from the `surface` vocabulary |
 | `att&ck` | list[string] | yes | — | MITRE ATT&CK technique IDs |
 | `actors` | list[string] | no | null | Threat actor vocabulary values |
 | `killchain` | string \| list[string] | no | null | Kill chain stage(s) |
@@ -68,6 +69,25 @@ A threat vector describes an adversary capability or scenario: severity, impact,
 No object-level configuration overrides. Vocabulary values are canonical in `vocabularies/`. See [configuration.md](../configuration.md).
 
 ## Examples
+
+```yaml
+name: Simulated Actor
+criticality: High
+metadata:
+  uuid: 00000000-0000-4000-8001-000000000001
+  schema: threat::1.0
+  version: 1
+  tlp: clear
+threat:
+  description: Simulated threat actor exercising credential access
+  severity: High
+  impact: Data Breach
+  leverage: High
+  viability: High
+  terrain: Endpoint          # value from the `surface` vocabulary
+  att&ck:
+    - T1059
+```
 
 - Valid: [fixtures/valid/threat-1.0.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/valid/threat-1.0.yaml)
 - Invalid (missing threat body): [fixtures/invalid/threat-missing-body.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/invalid/threat-missing-body.yaml)

@@ -5,7 +5,11 @@ description: Generate markdown documentation for rules, objectives, threats, and
 
 # opentide document
 
-Generate markdown documentation for detection objects.
+Generate human-readable markdown documentation for detection objects.
+
+<Callout type="info">
+**`document` vs `generate`.** `opentide generate` builds *framework scaffolding* — JSON Schemas, templates, the IDE router — into `.opentide/`. `opentide document` renders *human wiki pages* from your loaded objects into your docs folder. Run `generate` after upgrading OpenTide or changing schema revisions; run `document` after changing content. See [How OpenTide works](../usage/how-it-works.md#where-generation-and-deployment-differ).
+</Callout>
 
 ```bash
 opentide document                           # all scopes, then index
