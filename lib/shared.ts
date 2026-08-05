@@ -12,11 +12,18 @@ export const gitConfig = {
   branch: 'main',
 };
 
-export const navLinks = [
-  { label: 'Home', href: '/' },
+/** Marketing chrome — the wordmark already goes home, so no Home link. */
+export const siteNavLinks = [
   { label: 'Docs', href: '/docs/usage/' },
   { label: 'Blog', href: '/blog' },
 ] as const;
+
+/**
+ * Docs chrome — no text site links. The wordmark goes home, the sidebar is the
+ * docs nav, and GitHub stays as the icon escape hatch. Blog lives on the
+ * marketing chrome only.
+ */
+export const docsNavLinks = [] as const;
 
 export type EcosystemItem = {
   name: string;
