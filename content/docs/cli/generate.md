@@ -3,8 +3,6 @@ title: opentide generate
 description: Output-first generation pipeline — docs, exports, vocabs, templates, schemas, snippets, and optional platform import.
 ---
 
-# opentide generate
-
 Builds client-visible outputs first, then framework internals from Pydantic models and bundled vocabulary.
 
 ```bash

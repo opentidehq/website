@@ -8,12 +8,6 @@ status: normative
 supersedes: null
 ---
 
-# Vocabulary catalog
-
-## Summary
-
-Index of canonical vocabulary files bundled with OpenTide. Each file lives in `vocabularies/` and is referenced by field path in object specs and metaschema `tide.vocab` keywords.
-
 ## Requirements
 
 - The set of bundled vocabularies MUST match the files in `vocabularies/` at release time.

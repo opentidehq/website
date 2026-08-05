@@ -3,8 +3,6 @@ title: "Tutorial: your first detection"
 description: Build a complete threat → objective → rule chain, validate it, fix an error, and dry-run a deploy — end to end.
 ---
 
-# Tutorial: your first detection
-
 The [quickstart](./quickstart.md) runs commands against an existing repo. This tutorial is different: you will **author a real detection chain from nothing** and take it through the whole lifecycle. By the end you will have a threat, an objective, and a Sentinel rule that reference each other, pass validation, and are ready to deploy.
 
 Budget 15–20 minutes. You need Python 3.10+ and `opentide` installed — see [Installation](./installation.md).

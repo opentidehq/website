@@ -3,8 +3,6 @@ title: MCP resources
 description: opentide:// resource URIs for catalogue indexes, objects, schemas, templates, and vocabularies.
 ---
 
-# MCP resources
-
 Read-only JSON resources registered on the OpenTide MCP server.
 
 ## URI catalogue

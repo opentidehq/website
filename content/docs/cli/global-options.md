@@ -3,8 +3,6 @@ title: Global options
 description: Repository root, data root, debug logging, colour, and JSON output flags shared by all CLI commands.
 ---
 
-# Global options
-
 Set on the root `opentide` callback before any subcommand.
 
 ```bash

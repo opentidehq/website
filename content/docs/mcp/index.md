@@ -4,8 +4,6 @@ description: OpenTide MCP server — search, validate, deploy, and query detecti
 icon: Bot
 ---
 
-# MCP server
-
 The OpenTide MCP server exposes catalogue search, validation, deployment, and read-only resources to AI agents and editor integrations.
 
 ## Quick start

@@ -3,8 +3,6 @@ title: Why OpenTide
 description: The problem detection-as-code teams hit at scale, and the design goals that shape OpenTide.
 ---
 
-# Why OpenTide
-
 Detection engineering breaks down in predictable ways as a team grows. OpenTide exists to remove those failure modes. This page explains the problem it solves and the principles behind its design — read it before deciding whether OpenTide fits your team.
 
 ## The problem

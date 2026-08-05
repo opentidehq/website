@@ -8,12 +8,6 @@ status: normative
 supersedes: null
 ---
 
-# Threat vector (TVM)
-
-## Summary
-
-A threat vector describes an adversary capability or scenario: severity, impact, ATT&CK mapping, and optional chaining relationships. Schema identifier: `threat::1.0`.
-
 ## Requirements
 
 - The document MUST declare `metadata.schema: threat::1.0`.

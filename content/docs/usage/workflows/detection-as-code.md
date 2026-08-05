@@ -3,8 +3,6 @@ title: Detection-as-code
 description: The day-to-day loop for authoring, reviewing, promoting, and deploying detection objects.
 ---
 
-# Detection-as-code
-
 This is the workflow you live in after onboarding: author objects, validate, review, promote, deploy. If you have not built a chain yet, do the [Tutorial](../tutorial.md) first — this page assumes you understand the [object model](../concepts/object-model.md).
 
 ## The daily loop

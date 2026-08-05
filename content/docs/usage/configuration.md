@@ -3,8 +3,6 @@ title: Configuration
 description: What lives in .opentide/configurations/ — enabling platforms, credentials, deployment statuses, promotion, and visibility.
 ---
 
-# Configuration
-
 OpenTide ships sensible defaults inside the package. Your repository customises them under `.opentide/configurations/`. This guide is the practical tour of that directory; the normative merge rules live in the [Configuration spec](/docs/specifications/specs/configuration/).
 
 ## How configuration is layered

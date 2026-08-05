@@ -8,12 +8,6 @@ status: normative
 supersedes: null
 ---
 
-# Metadata
-
-## Summary
-
-Shared metadata block present on all Tide objects (threat, objective, rule). Provides identity, schema routing, versioning, provenance, and classification.
-
 ## Requirements
 
 - Every core object MUST include a `metadata` object.

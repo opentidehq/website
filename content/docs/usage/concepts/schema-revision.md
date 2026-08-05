@@ -3,8 +3,6 @@ title: Schema revision
 description: Why every object has two version fields, what each one controls, and how schema revisions coexist.
 ---
 
-# Schema revision
-
 Every OpenTide object carries **two** version-like fields, and mixing them up is the single most common authoring mistake. This page explains what each controls and why they are separate.
 
 ## Two fields, two jobs

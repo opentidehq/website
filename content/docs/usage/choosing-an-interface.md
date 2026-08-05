@@ -3,8 +3,6 @@ title: Choosing an interface
 description: When to use the CLI, the Python SDK, or the MCP server — they are three doors to the same engine.
 ---
 
-# Choosing an interface
-
 OpenTide exposes the **same engine** three ways. They share the object model, validation, and deployment logic — the difference is who is driving.
 
 ```mermaid

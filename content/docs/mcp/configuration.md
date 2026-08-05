@@ -3,8 +3,6 @@ title: MCP configuration
 description: Editor MCP config files, environment variables, and multi-host setup with opentide setup mcp.
 ---
 
-# MCP configuration
-
 ## Automated setup
 
 ```bash

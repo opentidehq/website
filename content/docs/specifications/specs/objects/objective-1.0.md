@@ -8,12 +8,6 @@ status: normative
 supersedes: null
 ---
 
-# Detection objective (DOM)
-
-## Summary
-
-A detection objective defines what to detect: prioritized signals, composition strategy, and links to threat vectors. Schema identifier: `objective::1.0`.
-
 ## Requirements
 
 - The document MUST declare `metadata.schema: objective::1.0`.

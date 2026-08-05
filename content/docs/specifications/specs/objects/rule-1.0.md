@@ -8,12 +8,6 @@ status: normative
 supersedes: null
 ---
 
-# Detection rule (MDR)
-
-## Summary
-
-A detection rule (MDR — Managed Detection Rule) is the deployable unit of detection content: metadata, severity, ATT&CK techniques, platform-specific query configurations, optional response playbook, and lifecycle status. Schema identifier: `rule::1.0`.
-
 This document is the **exemplar spec** — all object specs follow the same section order and level of detail.
 
 ## Requirements

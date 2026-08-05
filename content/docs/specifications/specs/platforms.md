@@ -8,12 +8,6 @@ status: normative
 supersedes: null
 ---
 
-# Platforms
-
-## Summary
-
-OpenTide ships seven detection platform integrations. Each platform has bundled TOML configuration, an optional deployer entry point, an optional query validator, and a typed rule configuration model referenced from `rule::1.0` via `configurations.<platform>`.
-
 ## Requirements
 
 - Platform identifiers MUST use the keys defined in this spec (snake_case).

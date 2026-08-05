@@ -3,8 +3,6 @@ title: How OpenTide works
 description: The end-to-end DetectionOps lifecycle — from authoring objects to deploying and documenting detections in CI.
 ---
 
-# How OpenTide works
-
 This page is the mental model. Everything else in the docs is a detail of one of these steps. Read it once and the CLI, SDK, and MCP surfaces will make sense.
 
 ## The lifecycle

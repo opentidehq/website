@@ -3,8 +3,6 @@ title: Troubleshooting
 description: Common OpenTide failures — validation errors, generation drift, platform loading, and deployment — with fixes.
 ---
 
-# Troubleshooting
-
 The failures you are most likely to hit, why they happen, and how to fix them. If your problem is a genuine bug, open an issue on [opentide](https://github.com/OpenTideHQ/opentide/issues).
 
 ## Setup and paths

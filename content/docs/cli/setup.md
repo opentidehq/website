@@ -3,8 +3,6 @@ title: opentide setup
 description: Repository scaffolding, platform configs, CI pipelines, MCP, agent skills, and VS Code helpers.
 ---
 
-# opentide setup
-
 Primary onboarding entry point for detection repositories.
 
 ```bash

@@ -3,8 +3,6 @@ title: Governance
 description: How OpenTide specifications are proposed, reviewed, versioned, and published — and why the model is shaped this way.
 ---
 
-# Governance
-
 The specifications are the **normative source** for OpenTide. This page explains who controls them, how they change, and why the model is built this way. It is written for anyone reading the specs; the repository mechanics contributors need live in the [specifications repository](https://github.com/OpenTideHQ/specifications).
 
 ## Why specifications exist

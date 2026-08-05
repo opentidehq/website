@@ -3,8 +3,6 @@ title: opentide validate
 description: Object validation (schema, UUID, uniqueness) and platform query syntax validation.
 ---
 
-# opentide validate
-
 Validates detection objects and platform query syntax.
 
 ## Object validation (default)

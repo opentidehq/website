@@ -3,8 +3,6 @@ title: CI/CD
 description: Gate detection content on every PR and deploy on merge — GitHub, GitLab, and Azure pipelines with staging, promotion, and secrets.
 ---
 
-# CI/CD integration
-
 The point of detection-as-code is that a machine enforces quality. A good OpenTide pipeline **validates every pull request** and **deploys on merge**, promoting to production as a controlled step.
 
 ```mermaid

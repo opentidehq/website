@@ -8,12 +8,6 @@ status: normative
 supersedes: null
 ---
 
-# Configuration and overrides
-
-## Summary
-
-OpenTide merges bundled package configuration with optional client overrides from `.opentide/configurations/`. Deep merge applies at the TOML key level; later layers override earlier ones for scalar and replaced subtrees.
-
 ## Requirements
 
 - Bundled configuration MUST include `paths.toml` (or equivalent `global` alias).

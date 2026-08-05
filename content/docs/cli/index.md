@@ -4,8 +4,6 @@ description: Complete opentide command-line interface — commands, flags, exit 
 icon: Terminal
 ---
 
-# CLI reference
-
 The `opentide` command is a [Typer](https://typer.tiangolo.com/) application included in the core package:
 
 ```bash

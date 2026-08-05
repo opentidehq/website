@@ -3,8 +3,6 @@ title: SDK installation
 description: Install opentide as a library dependency with PEP 561 typing support.
 ---
 
-# SDK installation
-
 ## Base package
 
 ```python

@@ -3,8 +3,6 @@ title: Models
 description: Pydantic models for rules, objectives, and threats — key fields, delegation methods, results, and errors.
 ---
 
-# Models
-
 Core objects are Pydantic v2 models with explicit schema identifiers. This page is the Python-side field reference; the full normative field contract lives in the [specifications](/docs/specifications/).
 
 ## Core objects

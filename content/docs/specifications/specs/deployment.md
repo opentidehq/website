@@ -8,12 +8,6 @@ status: normative
 supersedes: null
 ---
 
-# Deployment lifecycle
-
-## Summary
-
-Defines rule deployment statuses, promotion strategy, proxy settings, and debug configuration. Shipped in bundled `deployment.toml`; clients MAY override via `.opentide/configurations/deployment.toml`.
-
 ## Requirements
 
 - Every rule `status` value MUST match a configured status `name` in merged `deployment.toml`.

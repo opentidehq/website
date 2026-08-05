@@ -8,12 +8,6 @@ status: normative
 supersedes: null
 ---
 
-# Vocabulary format
-
-## Summary
-
-OpenTide vocabularies are TOML files (`.vocab.toml`) defining allowed enum values for object and configuration fields. Canonical copies live in `vocabularies/`; opentide bundles them at build time.
-
 ## Requirements
 
 - Every vocabulary file MUST validate against [schemas/vocabulary.schema.json](https://github.com/OpenTideHQ/specifications/blob/main/schemas/vocabulary.schema.json).
