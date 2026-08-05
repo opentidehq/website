@@ -9,7 +9,7 @@ icon: Terminal
 The `opentide` command is a [Typer](https://typer.tiangolo.com/) application. Install with the `cli` extra:
 
 ```bash
-pip install "opentide[cli]>=0.1"
+pip install opentide
 ```
 
 Run `opentide --help` for the live command tree.
@@ -18,16 +18,17 @@ Run `opentide --help` for the live command tree.
 
 | Command | Purpose |
 |---------|---------|
-| [`setup`](./setup.md) | Onboard detection repositories (interactive or scripted) |
-| [`generate`](./generate.md) | Build indexes, schemas, templates, exports |
+| [`setup`](./setup.md) | Onboard detection repositories (repo, platforms, CI, MCP, skills) |
+| [`generate`](./generate.md) | Documentation, exports, framework artifacts, optional platform import |
 | [`validate`](./validate.md) | Object and query validation |
 | [`deploy`](./deploy.md) | Platform rule deployment |
-| [`document`](./document.md) | Wiki and object documentation generation |
-| [`mutate`](./mutate.md) | Bulk content mutations |
-| [`export`](./export.md) | Navigator layers, object dumps, revisions |
-| [`extract`](./extract.md) | Import rules from external platforms |
 | [`info`](./info.md) | Repository and platform statistics |
-| [`migrate`](./migrate.md) | Legacy import and script migration |
+
+<Callout type="info">
+
+Top-level `document`, `export`, and `extract` remain as **hidden deprecation shims** for one release. They log a warning and delegate to `opentide generate docs`, `generate exports`, and `generate extract`. `mutate` and `migrate` were removed — use `opentide deploy` for promotion and the [CoreTide migration prompt](../usage/migration/prompt.md) for legacy repos.
+
+</Callout>
 
 ## Global options
 
@@ -49,6 +50,8 @@ opentide validate --strict --json
 opentide validate query --platform sentinel
 opentide deploy --platform sentinel --dry-run
 ```
+
+Generated pipelines use `opentide generate docs --output docs` for documentation jobs. Status promotion runs inside `opentide deploy` — there is no separate `mutate promote` step.
 
 ## JSON output
 

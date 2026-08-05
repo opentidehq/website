@@ -49,7 +49,9 @@ threat:
   impact: Data Breach
   leverage: High
   viability: High
-  terrain: Endpoint          # drawn from the `surface` vocabulary
+  terrain: Endpoint workstations and user devices.
+  surface:
+    - Windows::Desktop
   att&ck:
     - T1059
 ```

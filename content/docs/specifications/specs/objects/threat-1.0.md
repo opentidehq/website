@@ -20,8 +20,9 @@ A threat vector describes an adversary capability or scenario: severity, impact,
 - `name` and `criticality` MUST be present at the top level.
 - `threat` body MUST be present with all required subfields.
 - `threat.att&ck` MUST be a non-empty list of ATT&CK technique references (YAML key `att&ck`; aliased as `att_ck` in Pydantic).
-- `threat.terrain` MUST be a value from the `surface` vocabulary. The YAML field is named `terrain`; its allowed values are the `surface` vocabulary entries.
 - `references` MAY be omitted.
+- `threat.terrain` MUST be a non-empty explanatory string describing where and how the threat operates.
+- `threat.surface` MUST be a non-empty list of `surface::1.0` vocabulary values.
 - `threat.chaining` entries MUST reference valid chaining relation vocabulary values when present.
 
 ## Definition
@@ -45,11 +46,14 @@ A threat vector describes an adversary capability or scenario: severity, impact,
 | `impact` | string | yes | — | Impact vocabulary |
 | `leverage` | string | yes | — | Leverage vocabulary |
 | `viability` | string | yes | — | Viability vocabulary |
-| `terrain` | string | yes | — | Attack surface / terrain — values from the `surface` vocabulary |
+| `terrain` | string | yes | — | Explanatory narrative about where/how the threat operates |
+| `surface` | list[string] | yes | — | Threat surface vocabulary values (`surface::1.0`) |
 | `att&ck` | list[string] | yes | — | MITRE ATT&CK technique IDs |
 | `actors` | list[string] | no | null | Threat actor vocabulary values |
 | `killchain` | string \| list[string] | no | null | Kill chain stage(s) |
 | `chaining` | list[ChainingEntry] | no | null | Vector chaining relationships |
+
+`terrain` and `surface` are complementary: `terrain` is free-form prose for humans; `surface` is the controlled vocabulary used for filtering and coverage. Do not put vocabulary tokens in `terrain`.
 
 ### `chaining` entry
 
@@ -84,7 +88,9 @@ threat:
   impact: Data Breach
   leverage: High
   viability: High
-  terrain: Endpoint          # value from the `surface` vocabulary
+  terrain: Endpoint workstations and user devices.
+  surface:
+    - Windows::Desktop
   att&ck:
     - T1059
 ```

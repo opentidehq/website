@@ -26,7 +26,7 @@ You only ever edit **layer 3** — your workspace. You override just the keys yo
 ├── deployment.toml         # statuses + promotion
 ├── schema.toml             # template defaults, vocabulary extensions
 ├── visibility.toml         # what is exposed/deployed
-├── documentation.toml      # `opentide document` settings
+├── documentation.toml      # `opentide generate docs` settings
 └── platforms/
     ├── sentinel.toml
     └── splunk.toml
@@ -64,11 +64,19 @@ Deploying rules or running live query checks needs platform credentials. Keep se
 [platform]
 enabled = true
 
-[platform.connection]
-tenant_id = "${AZURE_TENANT_ID}"
-client_id = "${AZURE_CLIENT_ID}"
-client_secret = "${AZURE_CLIENT_SECRET}"
-workspace_id = "${SENTINEL_WORKSPACE_ID}"
+[[tenants]]
+name = "Primary"
+description = "Production Sentinel workspace"
+deployment = "ALWAYS"
+
+[tenants.setup]
+resource_group = "rg-soc"
+workspace_name = "soc-sentinel"
+workspace_id = "$AZURE_WORKSPACE_ID"
+azure_tenant_id = "$AZURE_TENANT_ID"
+azure_subscription_id = "$AZURE_SUBSCRIPTION_ID"
+azure_client_id = "$AZURE_CLIENT_ID"
+azure_client_secret = "$AZURE_CLIENT_SECRET"
 ```
 
 <Callout type="info">
@@ -123,13 +131,7 @@ enabled = true
 promotion_target = "PRODUCTION"
 ```
 
-Bulk-promote with the CLI (target comes from `promotion_target`; edits YAML in place — commit the result):
-
-```bash
-opentide mutate promote
-```
-
-See the [detection-as-code workflow](./workflows/detection-as-code.md#status-lifecycle) for how status and promotion fit day-to-day work.
+There is no separate promote command. Edit a rule's `status` in YAML for deliberate transitions, then run `opentide deploy` — when promotion is enabled, deploy applies the configured promotion target before production release. See [`deploy`](../cli/deploy.md) and the [detection-as-code workflow](./workflows/detection-as-code.md#status-lifecycle).
 
 ## Deployment plan
 
@@ -145,7 +147,7 @@ See [CLI global options](../cli/global-options.md) for how it resolves.
 ## Visibility and documentation
 
 - `visibility.toml` controls which objects are exposed/deployed in a given context; it is validated by a generated `visibility` schema.
-- `documentation.toml` tunes `opentide document` output (which folders, which sections). See [`document`](../cli/document.md).
+- `documentation.toml` tunes `opentide generate docs` output (which folders, which sections). See [`generate docs`](../cli/generate.md).
 
 ## Paths
 

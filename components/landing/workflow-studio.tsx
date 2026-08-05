@@ -458,16 +458,19 @@ export function WorkflowStudio() {
 
     // Prompt / read-only steps: no typewriter — stream events only
     if (!focus.open || !focus.type) {
-      setTypedChars(fullText.length);
+      const kickoff = window.requestAnimationFrame(() => {
+        setTypedChars(fullText.length);
+        if (events === 0 && script.events.length > 0) {
+          events = 1;
+          setVisibleEvents(1);
+          setPhasePart(1 / script.events.length);
+        }
+        if (events >= script.events.length) {
+          finishWork();
+        }
+      });
       if (events >= script.events.length) {
-        finishWork();
-        return;
-      }
-      // Reveal first event immediately
-      if (events === 0 && script.events.length > 0) {
-        events = 1;
-        setVisibleEvents(1);
-        setPhasePart(1 / script.events.length);
+        return () => window.cancelAnimationFrame(kickoff);
       }
       eventOnlyTimer = window.setInterval(() => {
         if (pausedRef.current) return;
@@ -487,23 +490,29 @@ export function WorkflowStudio() {
         }
       }, EVENT_MS);
       return () => {
+        window.cancelAnimationFrame(kickoff);
         window.clearInterval(eventOnlyTimer);
         window.clearInterval(postTimer);
       };
     }
 
     if (chars >= fullText.length) {
-      setTypedChars(fullText.length);
-      if (events < hingeTotal) {
-        events = hingeTotal;
-        setVisibleEvents(hingeTotal);
-      }
-      if (events >= script.events.length) {
-        finishWork();
-        return;
-      }
-      dripPostlude();
-      return () => window.clearInterval(postTimer);
+      const kickoff = window.requestAnimationFrame(() => {
+        setTypedChars(fullText.length);
+        if (events < hingeTotal) {
+          events = hingeTotal;
+          setVisibleEvents(hingeTotal);
+        }
+        if (events >= script.events.length) {
+          finishWork();
+          return;
+        }
+        dripPostlude();
+      });
+      return () => {
+        window.cancelAnimationFrame(kickoff);
+        window.clearInterval(postTimer);
+      };
     }
 
     const chunk = Math.max(3, Math.ceil(fullText.length / 70));
@@ -569,8 +578,11 @@ export function WorkflowStudio() {
 
   useEffect(() => {
     if (phase !== 'dwell' && phase !== 'terminal') return;
-    if (typedChars < fullText.length) setTypedChars(fullText.length);
-    if (visibleEvents < script.events.length) setVisibleEvents(script.events.length);
+    const frame = window.requestAnimationFrame(() => {
+      if (typedChars < fullText.length) setTypedChars(fullText.length);
+      if (visibleEvents < script.events.length) setVisibleEvents(script.events.length);
+    });
+    return () => window.cancelAnimationFrame(frame);
   }, [phase, fullText.length, script.events.length, typedChars, visibleEvents]);
 
   const typing = Boolean(focus.open && focus.type && phase === 'work' && typedChars < fullText.length);

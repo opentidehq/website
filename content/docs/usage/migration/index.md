@@ -25,7 +25,7 @@ python Orchestration/validate.py
 ### After (pip package)
 
 ```toml
-dependencies = ["opentide[sentinel,splunk,cli]>=0.1"]
+dependencies = ["opentide>=0.1"]
 ```
 
 ```python
@@ -48,19 +48,16 @@ Use `--platform`, not legacy `--system`.
 ### 1. Install
 
 ```bash
-pip install "opentide[sentinel,splunk,cli]>=0.1"
+pip install opentide
 ```
 
-| Extra | Adds |
-|-------|------|
-| `cli` | `opentide` command |
-| `mcp` | `opentide-mcp` server |
-| `sentinel` | Sentinel plugin (no extra deps) |
-| `splunk` | Splunk plugin + SDK dependencies |
-| `crowdstrike` | CrowdStrike plugin |
-| `carbon-black` | Carbon Black plugin + SDK |
+Enable platforms in the repo (not at pip install time):
 
-All seven `--platform` plugins ship with the base package — see [Installation](../installation.md).
+```bash
+opentide setup platforms --sentinel --splunk --yes
+```
+
+Optional MCP server setup: `opentide setup mcp --cursor --yes` (after `pip install opentide`).
 
 ### 2. Remove submodule
 
@@ -95,7 +92,7 @@ v0.x: legacy imports warn via `DeprecationWarning`. **v1.0 removes shims.**
 | `Orchestration/validate.py` | `opentide validate` |
 | `Orchestration/deploy.py` | `opentide deploy` |
 | `Orchestration/generate.py` | `opentide generate` |
-| `Orchestration/document.py` | `opentide document` |
+| `Orchestration/document.py` | `opentide generate docs` |
 | (repository onboarding) | `opentide setup` |
 | (CI pipeline files) | `opentide setup ci` |
 
@@ -106,7 +103,7 @@ Query validation: **five platforms only** (no CrowdStrike/HarfangLab).
 Remove `submodules: recursive`. Add:
 
 ```yaml
-- run: pip install "opentide[sentinel,cli]>=0.1"
+- run: pip install opentide
 - run: opentide validate --strict
   env:
     OPENTIDE_REPO_ROOT: ${{ github.workspace }}
@@ -127,14 +124,9 @@ Or configure manually:
 { "mcpServers": { "opentide": { "command": "opentide-mcp" } } }
 ```
 
-## Automated helper
+## Agent-assisted migration
 
-```bash
-opentide migrate --check    # scan for legacy patterns
-opentide migrate --apply    # rewrite known imports and script calls
-```
-
-See [CLI migrate](../../cli/migrate.md).
+OpenTide no longer provides `opentide migrate`. Use the [CoreTide migration prompt](./prompt.md) with your coding agent to replace submodule imports, Orchestration scripts, and CI configuration.
 
 ## Deprecation timeline
 
@@ -145,7 +137,7 @@ See [CLI migrate](../../cli/migrate.md).
 
 ## Verification checklist
 
-- [ ] `pip install opentide[<platforms>,cli]` succeeds
+- [ ] `pip install opentide` succeeds
 - [ ] `OPENTIDE_REPO_ROOT` set
 - [ ] `opentide validate --strict` passes
 - [ ] CI no longer uses submodule
@@ -155,4 +147,5 @@ See [CLI migrate](../../cli/migrate.md).
 
 - [Behaviour inventory (internal)](https://github.com/OpenTideHQ/opentide/blob/development/docs/internal/behaviour-inventory.md) — legacy vs new behaviour mapping
 - [Repository setup](../repository-setup.md)
-- [CLI migrate](../../cli/migrate.md)
+- [CoreTide migration prompt](./prompt.md)
+- [Repository setup](../repository-setup.md)

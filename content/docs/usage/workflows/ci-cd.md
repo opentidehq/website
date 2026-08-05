@@ -25,6 +25,8 @@ opentide setup ci --ci gitlab --platform sentinel --platform splunk --yes
 opentide setup ci --ci azure  --python-version 3.12 --yes
 ```
 
+`setup ci` discovers enabled platforms from `.opentide/configurations/platforms/` — it does not take `--platform` flags (those belong on `setup platforms` or the parent `opentide setup --platform` callback).
+
 | Flag | Default | Purpose |
 |------|---------|---------|
 | `--staging` / `--no-staging` | staging on | Include the staging deploy stage |
@@ -49,7 +51,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - run: pip install "opentide[sentinel,splunk,cli]>=0.1"
+      - run: pip install opentide
       - run: opentide generate
       - run: opentide validate --strict
       - run: opentide validate query --platform sentinel
@@ -75,12 +77,12 @@ jobs:
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-      SENTINEL_WORKSPACE_ID: ${{ secrets.SENTINEL_WORKSPACE_ID }}
+      AZURE_WORKSPACE_ID: ${{ secrets.AZURE_WORKSPACE_ID }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - run: pip install "opentide[sentinel,cli]>=0.1"
+      - run: pip install opentide
       - run: opentide generate
       - run: opentide deploy --platform sentinel --dry-run   # preview in logs
       - run: opentide deploy --platform sentinel
@@ -101,12 +103,12 @@ Promotion is a deliberate step — gate it behind a protected environment or man
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-      SENTINEL_WORKSPACE_ID: ${{ secrets.SENTINEL_WORKSPACE_ID }}
+      AZURE_WORKSPACE_ID: ${{ secrets.AZURE_WORKSPACE_ID }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - run: pip install "opentide[sentinel,cli]>=0.1"
+      - run: pip install opentide
       - run: opentide deploy --platform sentinel
 ```
 
@@ -134,7 +136,7 @@ validate:
   variables:
     OPENTIDE_REPO_ROOT: $CI_PROJECT_DIR
   script:
-    - pip install "opentide[sentinel,cli]>=0.1"
+    - pip install opentide
     - opentide generate
     - opentide validate --strict
     - opentide validate query --platform sentinel
@@ -148,7 +150,7 @@ deploy-staging:
     OPENTIDE_REPO_ROOT: $CI_PROJECT_DIR
     DEPLOYMENT_PLAN: staging
   script:
-    - pip install "opentide[sentinel,cli]>=0.1"
+    - pip install opentide
     - opentide generate
     - opentide deploy --platform sentinel
 ```
@@ -164,7 +166,7 @@ variables:
 steps:
   - task: UsePythonVersion@0
     inputs: { versionSpec: '3.12' }
-  - script: pip install "opentide[sentinel,cli]>=0.1"
+  - script: pip install opentide
   - script: opentide generate && opentide validate --strict
   - script: opentide validate query --platform sentinel
 ```
@@ -182,10 +184,10 @@ See [CLI → JSON output](../../cli/index.md) and [exit codes](../../cli/exit-co
 ## Documentation in CI
 
 ```bash
-opentide document --flavor github
+opentide generate docs --flavor github
 ```
 
-Flavor auto-detects from `GITHUB_ACTIONS`, GitLab `CI`, or Azure `TF_BUILD`; override with `--flavor`. See [`document`](../../cli/document.md).
+Flavor auto-detects from `GITHUB_ACTIONS`, GitLab `CI`, or Azure `TF_BUILD`; override with `--flavor`. See [`generate docs`](../../cli/generate.md).
 
 ## Migrating from submodule CI
 
@@ -196,6 +198,6 @@ Remove `submodules: recursive` from checkout and install from PyPI instead. Repl
 | `Orchestration/validate.py` | `opentide validate` |
 | `Orchestration/generate.py` | `opentide generate` |
 | `Orchestration/deploy.py` | `opentide deploy` |
-| `Orchestration/document.py` | `opentide document` |
+| `Orchestration/document.py` | `opentide generate docs` |
 
 See the [migration guide](../migration/index.md).

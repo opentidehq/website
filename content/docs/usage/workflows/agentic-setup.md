@@ -24,7 +24,7 @@ The MCP `validate_query` and `run_query` tools are **stubs** — they return suc
 ## Install and configure the server
 
 ```bash
-pip install "opentide[mcp,cli]>=0.1"
+pip install opentide
 opentide setup mcp --cursor --yes
 ```
 
@@ -56,19 +56,27 @@ The server uses **stdio transport**. It must know where your content lives, so s
 
 Skills give the agent durable, project-specific instructions (object layout, commands, the validate-before-deploy rule):
 
+Browse the catalogue, then install selected skills from [OpenTideHQ/skills](https://github.com/OpenTideHQ/skills):
+
 ```bash
-opentide setup skills --generic --yes \
+opentide setup skills discover
+opentide setup skills discover --query sentinel
+opentide setup skills show opentide-detection-rule
+
+opentide setup skills --yes --generic \
   --name "SOC Detections" \
   --org "Example Corp" \
   --description "Enterprise MDR content"
+
+opentide setup skills --yes --install opentide-detection-rule --install detection-engineering
 ```
 
 | Target | Files created |
 |--------|---------------|
-| `--generic` | `AGENTS.md`, `.agents/skills/opentide-detection-ops/SKILL.md` |
-| `--cursor` | `.cursor/skills/opentide-detection-ops/` |
+| `--generic` | `AGENTS.md`, `.agents/skills/<slug>/SKILL.md` |
+| `--cursor` | `.cursor/skills/<slug>/` copies |
 | `--claude-code` | `CLAUDE.md`, `.claude/skills/` |
-| `--github-copilot` | `.github/copilot-instructions.md` |
+| `--github-copilot` | `.github/copilot-instructions.md` (also applies `--generic` unless already selected) |
 
 After setup, point your agent at the generated `AGENTS.md` at the repo root — it is the entry point for detection work in your repository.
 
@@ -111,7 +119,7 @@ flowchart LR
 **Unsafe — keep a human in the loop**
 
 - Real (non-dry-run) deploys to production.
-- Bulk `mutate promote` to `PRODUCTION`.
+- Bulk promotion of rules to `PRODUCTION` without an explicit human status change and review.
 - Editing `.opentide/configurations/` credentials or deployment plans.
 - Trusting an MCP `validate_query` "pass" as real syntax validation (it is a stub).
 - Regenerating or hand-editing UUIDs to resolve a conflict.

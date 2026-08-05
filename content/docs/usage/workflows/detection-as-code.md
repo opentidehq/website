@@ -24,7 +24,7 @@ opentide generate                          # only when schemas/templates changed
 opentide validate --strict                 # schema, UUID, uniqueness, chaining
 opentide validate query --platform sentinel
 opentide deploy --platform sentinel --dry-run
-opentide document                          # refresh wiki pages
+opentide generate docs                          # refresh wiki pages
 ```
 
 While iterating on a single file, keep the loop tight:
@@ -66,7 +66,7 @@ opentide --json info --technique T1059 coverage
 
 ### Map fields to vocabularies
 
-Fields like `severity`, `impact`, `terrain`, `methodology`, and `att&ck` draw their allowed values from published [vocabularies](/docs/specifications/specs/vocabularies/catalog/). Using a value outside the vocabulary fails validation — check the catalog when unsure.
+Fields like `severity`, `impact`, `surface`, `methodology`, and `att&ck` draw their allowed values from published [vocabularies](/docs/specifications/specs/vocabularies/catalog/). (`terrain` is free-form prose, not a vocabulary.) Using a value outside the vocabulary fails validation — check the catalog when unsure.
 
 ## Status lifecycle
 
@@ -89,13 +89,15 @@ A rule's `status` must exist in your merged `deployment.toml` — see [Configura
 
 ## Promotion
 
-Move rules up the lifecycle when they are ready. Individually you edit a rule's `status`; in bulk you use the CLI, which promotes eligible rules to the configured `promotion_target`:
+Move rules up the lifecycle when they are ready. Edit the rule's `status` in YAML (and commit it), then deploy. When `[promotion]` is enabled in `deployment.toml`, `opentide deploy` applies the configured `promotion_target` as part of the deployment flow — there is no separate `mutate promote` command.
 
 ```bash
-opentide mutate promote
+# after reviewing and bumping status in YAML
+opentide deploy --platform sentinel --dry-run
+opentide deploy --platform sentinel
 ```
 
-`mutate` edits YAML in place — review the diff and commit it through your normal VCS flow. Configure the target under `[promotion]` in `deployment.toml`. See [`mutate`](../../cli/mutate.md) and [Configuration → promotion](../configuration.md#promotion).
+See [`deploy`](../../cli/deploy.md) and [Configuration → promotion](../configuration.md#promotion).
 
 ## Platform queries
 
@@ -127,12 +129,12 @@ Use this in pull-request reviews:
 ## Exports and coverage
 
 ```bash
-opentide export navigator      # ATT&CK Navigator layer
-opentide export revisions      # snapshot export
+opentide generate exports navigator
+opentide generate exports revisions
 opentide --json info --technique T1059 coverage
 ```
 
-See [`export`](../../cli/export.md).
+See [`generate exports`](../../cli/generate.md).
 
 ## Agent-assisted authoring
 
@@ -140,7 +142,7 @@ Agents can run the same loop through MCP. Configure once:
 
 ```bash
 opentide setup mcp --cursor --yes
-opentide setup skills --generic --yes
+opentide setup skills --yes --generic
 ```
 
 Then see [Agentic setup](./agentic-setup.md) for a safe agent workflow and its limits.

@@ -28,7 +28,7 @@ The terms and acronyms you will meet across the OpenTide docs, defined once. Whe
 : The reference graph between objects. Rules point at objectives (`detection_model`); objectives point at threats (`objective.threats`). Coverage flows the opposite way: threats are covered by objectives, which are implemented by rules. See [Object model](./object-model.md#chaining).
 
 **Coverage**
-: What detection exists for a given threat or ATT&CK technique, derived by walking the chaining graph. Reported by `opentide info` and `document`.
+: What detection exists for a given threat or ATT&CK technique, derived by walking the chaining graph. Reported by `opentide info` and `generate docs`.
 
 ## Versioning and schema
 
@@ -56,7 +56,7 @@ The terms and acronyms you will meet across the OpenTide docs, defined once. Whe
 : Deploying rules in a non-production state for verification before they go live.
 
 **Promotion**
-: Advancing rules from a lower status to a higher one (typically `STAGING → PRODUCTION`), individually or in bulk via `opentide mutate promote`.
+: Advancing rules from a lower status to a higher one (typically `STAGING → PRODUCTION`), individually or in bulk via `opentide deploy`.
 
 **Deployment plan (`DEPLOYMENT_PLAN`)**
 : The configuration that decides which rules deploy where and in what status. Referenced by CLI global options and [Configuration](./configuration.md).
@@ -76,7 +76,7 @@ The terms and acronyms you will meet across the OpenTide docs, defined once. Whe
 : `opentide generate` — compile specs + objects into schemas, templates, the IDE router, and indexes. See [`generate`](../../cli/generate.md).
 
 **Document**
-: `opentide document` — render human wiki pages from loaded objects. See [`document`](../../cli/document.md).
+: `opentide generate docs` — render human wiki pages from loaded objects. See [`generate docs`](../../cli/generate.md).
 
 **Registry**
 : The in-memory index of loaded objects and generated artifacts that the SDK exposes (`OpenTide.Rules`, `OpenTide.Objectives`, …). See [SDK registry](../../sdk/registry.md).

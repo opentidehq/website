@@ -67,12 +67,13 @@ obj.objective.threats           # ["…8001…"]  (threat UUIDs)
 | `name` | `str` | Display name |
 | `criticality` | `str` | Criticality vocabulary |
 | `metadata` | `ObjectMetadata` | Shared metadata |
-| `threat` | `ThreatBody` | Body: `severity`, `impact`, `terrain`, `att&ck`, … |
+| `threat` | `ThreatBody` | Body: `severity`, `impact`, `terrain`, `surface`, `att&ck`, … |
 
 ```python
 threat = OpenTide.Threats["00000000-0000-4000-8001-000000000001"]
 threat.threat.att_ck            # ["T1059"]  (YAML `att&ck`, aliased att_ck)
-threat.threat.terrain           # value from the `surface` vocabulary
+threat.threat.terrain           # free-form prose
+threat.threat.surface           # vocabulary list, e.g. ["Windows::Desktop"]
 ```
 
 ## Delegation methods
@@ -91,7 +92,7 @@ rule.document() -> str                                   # or OpenTide.render_ru
 `validate_query` runs the platform's query validator when one exists (Sentinel, Defender, Splunk, SentinelOne, Carbon Black); for CrowdStrike/HarfangLab it reports unsupported rather than faking a pass. See [Validation → query validation](./validation.md#query-validation).
 
 <Callout type="warn">
-`OpenTide.promote_rule()` raises `NotImplementedError` — use `opentide mutate promote` for bulk promotion.
+`OpenTide.promote_rule()` raises `NotImplementedError` — change rule `status` in YAML and use `opentide deploy` (promotion runs inside deploy when configured).
 </Callout>
 
 ## Results

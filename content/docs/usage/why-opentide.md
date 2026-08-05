@@ -24,7 +24,7 @@ OpenTide treats detection content as **typed, versioned objects in a git reposit
 - **A normative object model.** Every threat, objective, and rule conforms to a published [specification](/docs/specifications/). Validation is schema-driven, not opinion-driven.
 - **Explicit chaining.** Rules reference the objectives they satisfy; objectives reference the threats they cover. Coverage and gaps become queryable facts, not tribal knowledge. See the [object model](./concepts/object-model.md).
 - **One source, many platforms.** A rule carries per-platform configuration blocks. OpenTide deploys to each platform and, where the platform allows it, validates query syntax — [honestly reporting](./concepts/platforms.md) where it cannot.
-- **Generated, not hand-maintained, scaffolding.** JSON Schemas, templates, IDE routing, and documentation are generated from the specs and your objects with `opentide generate` and `opentide document`.
+- **Generated, not hand-maintained, scaffolding.** JSON Schemas, templates, IDE routing, and documentation are generated from the specs and your objects with `opentide generate` and `opentide generate docs`.
 - **Package, not submodule.** OpenTide ships as a PyPI package. You depend on a version, not on someone else's repository layout.
 - **Automation as a first-class citizen.** The same engine is exposed as a [CLI](../cli/index.md), a Python [SDK](../sdk/index.md), and an [MCP server](../mcp/index.md) for agents — with capability reporting that never fakes a result.
 

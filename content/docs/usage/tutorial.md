@@ -64,7 +64,9 @@ threat:
   impact: Data Breach
   leverage: High
   viability: High
-  terrain: Endpoint
+  terrain: Endpoint workstations and user devices.
+  surface:
+    - Windows::Desktop
   att&ck:
     - T1059
 ```
@@ -211,10 +213,10 @@ deploy: 1 rule planned, 0 applied (dry-run)
 ## 10. Generate documentation
 
 ```bash
-opentide document
+opentide generate docs
 ```
 
-This renders wiki-style markdown for each object under `docs/`, including a Mermaid diagram of the chain you just built. See [`document`](../cli/document.md).
+This renders wiki-style markdown for each object under `docs/`, including a Mermaid diagram of the chain you just built. See [`generate docs`](../cli/generate.md).
 
 ## What you built
 

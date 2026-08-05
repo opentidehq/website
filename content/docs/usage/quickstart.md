@@ -16,7 +16,7 @@ Want to author objects from scratch and understand each step? Do the [Tutorial](
 ### Install and point at your repo
 
 ```bash
-pip install "opentide[sentinel,cli]>=0.1"
+pip install opentide
 export OPENTIDE_REPO_ROOT=/path/to/detection-repo
 ```
 
@@ -32,7 +32,7 @@ Schemas, templates, and indexes must exist before strict validation:
 opentide generate
 ```
 
-This runs the full pipeline: vocabs → templates → schemas → snippets → exports → playbook-map → docs.
+This runs the full pipeline: docs → exports → vocabs → templates → schemas → snippets.
 
 ```text
 ✓ vocabularies loaded
@@ -97,7 +97,7 @@ opentide deploy --platform sentinel --dry-run
 ### Generate object documentation
 
 ```bash
-opentide document
+opentide generate docs
 ```
 
 Writes markdown pages for rules, objectives, and threats under the configured docs folder.
@@ -113,9 +113,11 @@ opentide setup --yes \
   --name "SOC Detections" \
   --org "Example Corp" \
   --platform sentinel \
-  --ci github \
-  --mcp cursor \
-  --skills generic
+  --ci github
+
+opentide setup platforms --sentinel --yes
+opentide setup mcp --cursor --yes
+opentide setup skills --yes --generic
 
 opentide generate
 opentide validate

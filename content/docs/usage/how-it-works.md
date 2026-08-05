@@ -17,7 +17,7 @@ flowchart TD
   generate["opentide generate<br/>schemas · templates · router · indexes"] --> validate
   validate["opentide validate<br/>schema · UUID · uniqueness · chaining · query syntax"] --> deploy
   deploy["opentide deploy<br/>per-platform, staging → production"] --> document
-  document["opentide document<br/>wiki pages + Mermaid coverage"]
+  document["opentide generate docs<br/>wiki pages + Mermaid coverage"]
   validate -.->|blocks merge| ci["CI/CD gate"]
   ci --> deploy
 ```
@@ -72,7 +72,7 @@ You write **objects** as YAML in `objects/`. A [threat](./concepts/object-model.
 
 ### Document
 
-`opentide document` renders human-readable wiki pages for every object, with Mermaid diagrams for chaining and ATT&CK coverage. This is how the rest of the org sees what your detections do. See [`document`](../cli/document.md).
+`opentide generate docs` renders human-readable wiki pages for every object, with Mermaid diagrams for chaining and ATT&CK coverage. This is how the rest of the org sees what your detections do. See [`generate docs`](../cli/generate.md).
 
 </Step>
 
@@ -93,7 +93,7 @@ The same operations are available three ways. Pick per task — see [Choosing an
 A common point of confusion:
 
 - **`generate`** produces *framework scaffolding* (schemas, templates, router) inside `.opentide/`. Run it after upgrading OpenTide or changing schema revisions.
-- **`document`** produces *human wiki pages* from your loaded objects. Run it after content changes.
+- **`generate docs`** produces *human wiki pages* from your loaded objects. Run it after content changes.
 - **`deploy`** pushes *rules to platforms*. It reads objects; it does not regenerate scaffolding.
 
 ## Next
