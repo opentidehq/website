@@ -17,8 +17,10 @@ export const metadata: Metadata = {
 };
 
 export default function HomePage() {
+  // `overflow-x-clip` rather than `hidden`: hidden would turn this into a scroll container
+  // and break the sticky stage the workflow studio pins against.
   return (
-    <div className="landing relative overflow-x-hidden bg-[var(--landing-bg)]">
+    <div className="landing relative overflow-x-clip bg-[var(--landing-bg)]">
       <section className="relative mx-auto flex min-h-[min(100svh,920px)] w-full max-w-[1400px] flex-col justify-center gap-10 px-4 py-14 md:px-6 md:py-16 lg:gap-12">
         <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.95fr)] lg:gap-12 xl:gap-16">
           <div className="max-w-xl">
