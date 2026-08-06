@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
-import { OpentideBadge } from '@/components/brand/opentide-mark';
 import { TideAsciiScene } from '@/components/landing/tide-ascii-scene';
+import { TiltBadge } from '@/components/landing/tilt-badge';
 import { HeroInstall } from '@/components/landing/hero-install';
 import { HeroPitch } from '@/components/landing/hero-pitch';
 import { FeatureShowcase } from '@/components/landing/feature-showcase';
@@ -107,13 +107,11 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="py-24 md:py-32">
+      {/* Top padding is trimmed to what the seal grew into, so the copy stays put. */}
+      <section className="pb-24 pt-6 md:pb-32 md:pt-8">
         <div className="mx-auto max-w-3xl px-4 text-center">
-          <div className="mb-8 flex justify-center">
-            <OpentideBadge
-              size={72}
-              className="drop-shadow-[0_12px_32px_color-mix(in_srgb,var(--landing-accent)_28%,transparent)]"
-            />
+          <div className="mb-2 flex justify-center">
+            <TiltBadge />
           </div>
           <h2 className="text-3xl font-bold tracking-[-0.02em] md:text-4xl text-balance">
             Set the standard for DetectionOps

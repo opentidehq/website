@@ -396,6 +396,98 @@ html > body[data-scroll-locked] {
   }
 }
 
+/*
+ * Closing-CTA seal, as a tilt card.
+ *
+ * TiltBadge eases five unitless channels toward the pointer and writes them here:
+ * `--tilt-x`/`--tilt-y` in degrees, `--tilt-px`/`--tilt-py` as percentages for the
+ * specular highlight, and `--tilt-lift` (0 → 1) for how engaged the card is. Nothing
+ * below affects layout — the glow and glare are absolutely positioned and everything
+ * else is a transform — so growing the seal never moves the copy under it.
+ */
+.landing-tilt {
+  --tilt-x: 0;
+  --tilt-y: 0;
+  --tilt-px: 50;
+  --tilt-py: 50;
+  --tilt-lift: 0;
+
+  display: grid;
+  place-items: center;
+  /* Reacts a little before the pointer is actually on the seal. */
+  padding: 1.25rem;
+  perspective: 620px;
+}
+
+.landing-tilt-stage {
+  position: relative;
+  width: var(--tilt-size);
+  height: var(--tilt-size);
+  line-height: 0; /* the badge is inline-block; kill the baseline gap */
+  transform-style: preserve-3d;
+  transform: rotateX(calc(var(--tilt-x) * 1deg)) rotateY(calc(var(--tilt-y) * 1deg))
+    scale(calc(1 + 0.05 * var(--tilt-lift)));
+}
+
+.landing-tilt[data-tilting] .landing-tilt-stage {
+  will-change: transform;
+}
+
+/* Accent bloom, sitting behind the seal and lagging to the far side of the tilt. */
+.landing-tilt-glow {
+  position: absolute;
+  inset: -20%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at center,
+    color-mix(in srgb, var(--landing-accent) 32%, transparent),
+    transparent 70%
+  );
+  filter: blur(26px);
+  opacity: calc(0.4 + 0.5 * var(--tilt-lift));
+  transform: translate3d(calc(var(--tilt-y) * -1.6px), calc(var(--tilt-x) * 1.6px), -48px);
+}
+
+/* Cast shadow leans opposite the tilt so the seal reads as lifted off the page. */
+.landing-tilt-face {
+  filter: drop-shadow(
+    calc(var(--tilt-y) * -0.5px) calc(12px + var(--tilt-x) * 0.5px)
+      calc(24px + 10px * var(--tilt-lift))
+      color-mix(in srgb, var(--landing-accent) 26%, transparent)
+  );
+}
+
+/*
+ * Specular sheen across the enamel, plus a rim light banked toward the pointer so the
+ * near edge of the seal catches the same source.
+ */
+.landing-tilt-glare {
+  position: absolute;
+  inset: 1%; /* the seal is r=98 in a 200 viewBox — match it so the rim light stays on the disc */
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at calc(var(--tilt-px) * 1%) calc(var(--tilt-py) * 1%),
+    rgb(255 255 255 / 0.9),
+    rgb(255 255 255 / 0.28) 30%,
+    transparent 62%
+  );
+  box-shadow: inset calc(var(--tilt-y) * -0.6px) calc(var(--tilt-x) * 0.6px) 16px
+    rgb(255 255 255 / 0.4);
+  mix-blend-mode: soft-light;
+  opacity: var(--tilt-lift);
+  transform: translateZ(2px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-tilt-stage {
+    transform: none;
+  }
+
+  .landing-tilt-glare {
+    display: none;
+  }
+}
+
 @keyframes landing-mcp-ping {
   0% {
     transform: scale(1);

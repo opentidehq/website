@@ -83,7 +83,8 @@ export function OpentideBadge({
   size = 44,
 }: {
   className?: string;
-  size?: number;
+  /** Any CSS length; strings let a parent drive the size (`100%`, `clamp(...)`). */
+  size?: number | string;
 }) {
   return (
     <span
@@ -94,8 +95,8 @@ export function OpentideBadge({
       <img
         src="/brand/svg/badge-normal.svg"
         alt=""
-        width={size}
-        height={size}
+        width={200}
+        height={200}
         className="block size-full dark:hidden"
         aria-hidden
         decoding="async"
@@ -104,8 +105,8 @@ export function OpentideBadge({
       <img
         src="/brand/svg/badge-dark.svg"
         alt=""
-        width={size}
-        height={size}
+        width={200}
+        height={200}
         className="hidden size-full dark:block"
         aria-hidden
         decoding="async"
