@@ -333,6 +333,69 @@ html > body[data-scroll-locked] {
   animation-play-state: paused;
 }
 
+/*
+ * Workflow Studio stage.
+ *
+ * The studio sits in a tall track. As that track scrolls past, `--stage-open` (written by
+ * useScrollStage) runs 0 → 1 → 0, so the pinned panel claims the viewport while you are
+ * reading it and hands the space back once you scroll on. Below `lg` the panel stacks and
+ * keeps its resting size — pinning a stacked IDE is worse than not pinning at all.
+ */
+.landing-studio {
+  --stage-open: 0;
+  --studio-rest: min(58vh, 560px);
+  --studio-full: min(calc(100svh - 13rem), 940px);
+  --studio-bleed: 0px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.landing-studio-body {
+  height: calc(
+    var(--studio-rest) + (var(--studio-full) - var(--studio-rest)) * var(--stage-open)
+  );
+}
+
+.landing-studio-frame {
+  margin-inline: calc(-1 * var(--studio-bleed));
+  /* rounded.md at rest, tightening to rounded.sm once the frame reaches full bleed */
+  border-radius: calc(1rem - 0.5rem * var(--stage-open));
+}
+
+@media (min-width: 1024px) {
+  .landing-studio-track {
+    /* 100svh is spent pinned; the rest is the travel that opens and closes the stage. */
+    height: 260svh;
+  }
+
+  .landing-studio {
+    position: sticky;
+    top: 3.5rem; /* clears the sticky site header */
+    height: calc(100svh - 3.5rem);
+    /* Reach for the viewport edge, but never past the track's own gutter. */
+    --studio-bleed: calc(var(--stage-open) * (min(100vw - 4rem, 1760px) - 100%) / 2);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-studio-track {
+    height: auto;
+  }
+
+  .landing-studio {
+    position: static;
+    height: auto;
+    --studio-bleed: 0px;
+  }
+
+  .landing-studio-body {
+    height: var(--studio-rest);
+  }
+}
+
 @keyframes landing-mcp-ping {
   0% {
     transform: scale(1);

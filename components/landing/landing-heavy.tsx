@@ -13,7 +13,16 @@ function BlockSkeleton({ className }: { className?: string }) {
 
 export const WorkflowStudio = dynamic(
   () => import('@/components/landing/workflow-studio').then((m) => m.WorkflowStudio),
-  { loading: () => <BlockSkeleton className="min-h-[560px]" /> },
+  {
+    // Reserve the scroll track so pinning does not shift the page when the studio hydrates.
+    loading: () => (
+      <div className="landing-studio-track">
+        <div className="landing-studio">
+          <BlockSkeleton className="landing-studio-body" />
+        </div>
+      </div>
+    ),
+  },
 );
 
 export const ObjectGraph = dynamic(

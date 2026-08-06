@@ -73,7 +73,11 @@ export function OpentideWordmark({
   );
 }
 
-/** Circular seal — scales via viewBox; use container size, not baked glyph transforms. */
+/**
+ * Circular ring seal from OpenTideHQ/.github assets.
+ * Light → badge-normal (blue). Dark → badge-dark (yellow), matching the icon/logo mapping.
+ * Ring text is a `<textPath>` over a subsetted Inter face embedded in the SVG.
+ */
 export function OpentideBadge({
   className,
   size = 44,
@@ -98,7 +102,7 @@ export function OpentideBadge({
       />
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/brand/svg/badge-inverse.svg"
+        src="/brand/svg/badge-dark.svg"
         alt=""
         width={size}
         height={size}

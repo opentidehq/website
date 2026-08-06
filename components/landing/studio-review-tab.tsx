@@ -11,51 +11,11 @@ import {
   UserCheck,
 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { LogLine } from '@/components/landing/studio-log-line';
 import type { ReviewJob, ReviewMr } from '@/lib/landing/demo-registry';
-
-const LINE_MS = 110;
+import { TIMING } from '@/lib/landing/studio-timing';
 
 type JobStatus = 'queued' | 'running' | 'passed';
-
-function logTone(line: string) {
-  if (line.startsWith('::group::')) return 'group';
-  if (line.startsWith('::notice::')) return 'notice';
-  if (line.startsWith('$ ')) return 'command';
-  if (line.startsWith('✓') || line.startsWith('[SUCCESS]')) return 'ok';
-  return 'plain';
-}
-
-function LogLine({ line }: { line: string }) {
-  const tone = logTone(line);
-
-  if (tone === 'group') {
-    return (
-      <p className="mt-2 first:mt-0 font-mono text-[10px] font-medium uppercase tracking-wider text-[var(--landing-subtle)]">
-        {line.replace('::group::', '')}
-      </p>
-    );
-  }
-  if (tone === 'notice') {
-    return (
-      <p className="font-mono text-[10px] text-sky-700 dark:text-sky-300">
-        {line.replace('::notice::', 'notice: ')}
-      </p>
-    );
-  }
-  if (tone === 'command') {
-    return (
-      <p className="font-mono text-[10px] text-[var(--landing-ink)]">
-        <span className="text-[var(--landing-accent)]">$</span> {line.slice(2)}
-      </p>
-    );
-  }
-  if (tone === 'ok') {
-    return (
-      <p className="font-mono text-[10px] text-emerald-700 dark:text-emerald-400">{line}</p>
-    );
-  }
-  return <p className="font-mono text-[10px] text-[var(--landing-muted)]">{line}</p>;
-}
 
 function StatusDot({ status }: { status: JobStatus }) {
   if (status === 'passed') {
@@ -148,14 +108,14 @@ export function StudioReviewTab({
           }
           finish();
         };
-        mergeTimer = window.setTimeout(tryFinish, 620);
+        mergeTimer = window.setTimeout(tryFinish, TIMING.ciMerge);
         return;
       }
       const next = shownRef.current + 1;
       shownRef.current = next;
       setStreamed(next);
       progressRef.current?.(Math.min(0.92, (next / Math.max(total, 1)) * 0.92));
-    }, LINE_MS);
+    }, TIMING.ciLine);
 
     return () => {
       window.clearInterval(timer);
