@@ -25,34 +25,40 @@ const STRUCTLOG = new RegExp(`^(\\d{2}:\\d{2}:\\d{2})\\s+(${LEVELS.join('|')})\\
 export function CommandTokens({ command }: { command: string }) {
   const tokens = command.split(/(\s+)/);
   const firstIdx = tokens.findIndex((t) => t.trim().length > 0);
+  const offsets: number[] = [];
+  for (let i = 0, cursor = 0; i < tokens.length; i += 1) {
+    offsets.push(cursor);
+    cursor += tokens[i].length;
+  }
 
   return (
     <>
       {tokens.map((tok, i) => {
-        if (/^\s+$/.test(tok)) return <span key={i}>{tok}</span>;
+        const key = `t${offsets[i]}:${tok}`;
+        if (/^\s+$/.test(tok)) return <span key={key}>{tok}</span>;
         if (i === firstIdx) {
           return (
-            <span key={i} className="font-medium text-sky-700 dark:text-sky-300">
+            <span key={key} className="font-medium text-sky-700 dark:text-sky-300">
               {tok}
             </span>
           );
         }
         if (tok.startsWith('-')) {
           return (
-            <span key={i} className="text-violet-700 dark:text-violet-300">
+            <span key={key} className="text-violet-700 dark:text-violet-300">
               {tok}
             </span>
           );
         }
         if (/[/.=]/.test(tok)) {
           return (
-            <span key={i} className="text-amber-800 dark:text-amber-300">
+            <span key={key} className="text-amber-800 dark:text-amber-300">
               {tok}
             </span>
           );
         }
         return (
-          <span key={i} className="text-[var(--landing-ink)]">
+          <span key={key} className="text-[var(--landing-ink)]">
             {tok}
           </span>
         );

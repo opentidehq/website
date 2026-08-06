@@ -313,8 +313,8 @@ export function StudioTerminal({
             <div className="mt-1.5 min-h-[2.5rem]">
               {outVisible && (
                 <div className="landing-fade-slide">
-                  {out.map((line, i) => (
-                    <LogLine key={`${i}-${line}`} line={line} />
+                  {out.map((line) => (
+                    <LogLine key={line} line={line} />
                   ))}
                 </div>
               )}

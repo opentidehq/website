@@ -757,11 +757,19 @@ export function WorkflowStudio() {
   }, [phase, cursor, halted, reduced]);
 
   const openTabs = useMemo(() => {
+    const seen = new Set<TabId>();
     const acc: TabId[] = [];
     for (let i = 0; i <= stepIdx; i++) {
       const s = stepFocus[STEPS[i]];
-      for (const p of s.opens) if (!acc.includes(p)) acc.push(p);
-      if (s.review) acc.push(REVIEW_TAB);
+      for (const p of s.opens) {
+        if (seen.has(p)) continue;
+        seen.add(p);
+        acc.push(p);
+      }
+      if (s.review && !seen.has(REVIEW_TAB)) {
+        seen.add(REVIEW_TAB);
+        acc.push(REVIEW_TAB);
+      }
     }
     return acc;
   }, [stepIdx]);
