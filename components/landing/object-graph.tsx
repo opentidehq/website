@@ -19,6 +19,7 @@ import {
   GRAPH_NODES,
   GRAPH_TOUR,
   KIND_STYLE,
+  type GraphKind,
   type GraphNodeId,
 } from '@/lib/landing/graph-demo';
 import { usePrefersReducedMotion } from '@/lib/hooks/use-prefers-reduced-motion';
@@ -35,36 +36,128 @@ const ICONS: Record<GraphNodeId, typeof Target> = {
 const STEP_MS = 3800;
 const PANEL_H = 'h-[min(52vh,420px)]';
 
-function edgeActive(activeId: GraphNodeId, to: GraphNodeId) {
-  return GRAPH_TOUR.indexOf(activeId) >= GRAPH_TOUR.indexOf(to);
+type EdgeState = 'pending' | 'flowing' | 'done';
+
+/**
+ * Where an edge sits relative to the tour: not walked yet, being walked right now, or
+ * already behind us. Only the edge feeding the current node animates, so the graph reads
+ * as one path being traced rather than every connector pulsing at once.
+ */
+function edgeState(activeId: GraphNodeId, to: GraphNodeId): EdgeState {
+  const at = GRAPH_TOUR.indexOf(activeId);
+  const target = GRAPH_TOUR.indexOf(to);
+  if (target > at) return 'pending';
+  return target === at ? 'flowing' : 'done';
 }
 
-function HArrow({ active, label }: { active: boolean; label?: string }) {
+/** Edges stay neutral until walked, then take the colour of whatever they feed. */
+function edgeTone(state: EdgeState, kind: GraphKind) {
+  if (state === 'pending') return 'text-[var(--landing-dim)]';
+  return `${KIND_STYLE[kind].text}${state === 'done' ? ' opacity-60' : ''}`;
+}
+
+const EDGE_LABEL =
+  'absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-[15px] whitespace-nowrap font-mono text-[8px] uppercase leading-none tracking-wider';
+
+/**
+ * Straight connector between two adjacent cards.
+ *
+ * Stays 48px wide — the box the cards have always been laid out around — and keeps the
+ * rail on the centre line so it meets the cards it joins. The label is taken out of flow
+ * for that same reason: in normal flow it pushed the rail off centre.
+ */
+function EdgeLink({ state, kind, label }: { state: EdgeState; kind: GraphKind; label?: string }) {
   return (
     <div
-      className={`hidden shrink-0 flex-col items-center justify-center gap-1 px-1.5 md:flex ${
-        active ? 'text-[var(--landing-ink)]' : 'text-[var(--landing-dim)]'
-      }`}
+      className={`relative hidden shrink-0 items-center justify-center px-1.5 transition-[color,opacity] duration-500 md:flex ${edgeTone(state, kind)}`}
       aria-hidden
     >
-      {label && (
-        <span className="font-mono text-[8px] uppercase tracking-wider opacity-70">{label}</span>
-      )}
-      <svg viewBox="0 0 36 12" className="h-3 w-9">
-        <path
-          d="M0 6 H28 M22 1.5 L30 6 L22 10.5"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          {active && (
-            <animate attributeName="opacity" values="0.45;1;0.45" dur="1.2s" repeatCount="indefinite" />
-          )}
-        </path>
+      {label && <span className={EDGE_LABEL}>{label}</span>}
+      <svg viewBox="0 0 36 12" className="h-3 w-9" fill="none">
+        <path d="M1 6h26" stroke="currentColor" strokeWidth="1.25" />
+        <path d="M26 2.7 L33 6 L26 9.3 Z" fill="currentColor" />
+        {state === 'flowing' && (
+          <path
+            className="landing-edge-comet"
+            d="M1 6h26"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeDasharray="4 32"
+          />
+        )}
       </svg>
     </div>
+  );
+}
+
+/**
+ * One arm of the fan-out: down (or up) from the trunk, round the elbow, out to the card.
+ *
+ * Drawn with borders rather than SVG because the run from the trunk to the row's centre
+ * line depends on the card heights, and only CSS can follow that without measuring.
+ */
+function ForkArm({ state, side }: { state: EdgeState; side: 'top' | 'bottom' }) {
+  const elbow =
+    side === 'top'
+      ? 'top-1/2 -bottom-1.5 rounded-tl-lg border-l border-t'
+      : '-top-1.5 bottom-1/2 rounded-bl-lg border-b border-l';
+
+  return (
+    <div
+      className={`relative flex-1 transition-[color,opacity] duration-500 ${edgeTone(state, 'objective')}`}
+    >
+      <span className={`absolute left-[18px] right-[13px] border-current lg:right-0 ${elbow}`} />
+      {/* The branch tag carries the head once there's room for it. */}
+      <svg
+        viewBox="0 0 7 12"
+        className="absolute right-1.5 top-1/2 h-3 w-[7px] -translate-y-1/2 lg:hidden"
+        fill="currentColor"
+      >
+        <path d="M0 2.7 L7 6 L0 9.3 Z" />
+      </svg>
+      {state === 'flowing' && (
+        <span className="landing-edge-spark absolute left-[19px] top-1/2 size-[3px] rounded-full bg-current" />
+      )}
+    </div>
+  );
+}
+
+/**
+ * Fan-out from the threat into both objective branches.
+ *
+ * Mirrors the branch column's own `flex-col gap-3`, so each arm lands dead centre on its
+ * row whatever height the cards settle at, and the trunk meets the spine in the gap
+ * between the rows — which is exactly this column's own centre line.
+ */
+function ForkLink({ a, b }: { a: EdgeState; b: EdgeState }) {
+  return (
+    <div className="relative hidden w-12 shrink-0 flex-col gap-3 md:flex" aria-hidden>
+      <span
+        className={`absolute left-1.5 top-1/2 w-[13px] border-t border-current transition-[color,opacity] duration-500 ${edgeTone(a, 'objective')}`}
+      />
+      <ForkArm state={a} side="top" />
+      <ForkArm state={b} side="bottom" />
+    </div>
+  );
+}
+
+/**
+ * The lettered tail of a fork arm. Only shown where the layout affords it, and it carries
+ * the arrowhead at that width so the whole branch reads as one line into the card.
+ */
+function BranchTag({ label, state }: { label: string; state: EdgeState }) {
+  return (
+    <span
+      className={`relative mr-1.5 hidden w-12 shrink-0 items-center transition-[color,opacity] duration-500 lg:flex ${edgeTone(state, 'objective')}`}
+      aria-hidden
+    >
+      <span className={`${EDGE_LABEL} font-medium`}>{label}</span>
+      <svg viewBox="0 0 48 12" className="h-3 w-12" fill="none">
+        <path d="M0 6h41" stroke="currentColor" strokeWidth="1.25" />
+        <path d="M41 2.7 L48 6 L41 9.3 Z" fill="currentColor" />
+      </svg>
+    </span>
   );
 }
 
@@ -344,7 +437,7 @@ export function ObjectGraph() {
               />
             </div>
 
-            <HArrow active={edgeActive(activeId, 'threat')} label="author" />
+            <EdgeLink state={edgeState(activeId, 'threat')} kind="threat" label="author" />
 
             <div className="flex min-w-0 flex-1 flex-col justify-center">
               <GraphCard
@@ -355,13 +448,11 @@ export function ObjectGraph() {
               />
             </div>
 
-            <HArrow active={edgeActive(activeId, 'obj-oauth')} />
+            <ForkLink a={edgeState(activeId, 'obj-oauth')} b={edgeState(activeId, 'obj-mailbox')} />
 
             <div className="flex min-w-0 flex-[2.2] flex-col justify-center gap-3">
               <div className="flex items-center gap-0">
-                <span className="mr-1.5 hidden w-12 shrink-0 font-mono text-[8px] uppercase tracking-wider text-blue-600 dark:text-blue-400 lg:block">
-                  A
-                </span>
+                <BranchTag label="A" state={edgeState(activeId, 'obj-oauth')} />
                 <div className="min-w-0 flex-1">
                   <GraphCard
                     id="obj-oauth"
@@ -370,7 +461,7 @@ export function ObjectGraph() {
                     {...cardProps}
                   />
                 </div>
-                <HArrow active={edgeActive(activeId, 'rule-entra')} label="impl" />
+                <EdgeLink state={edgeState(activeId, 'rule-entra')} kind="rule" label="impl" />
                 <div className="min-w-0 flex-1">
                   <GraphCard
                     id="rule-entra"
@@ -382,9 +473,7 @@ export function ObjectGraph() {
               </div>
 
               <div className="flex items-center gap-0">
-                <span className="mr-1.5 hidden w-12 shrink-0 font-mono text-[8px] uppercase tracking-wider text-blue-600 dark:text-blue-400 lg:block">
-                  B
-                </span>
+                <BranchTag label="B" state={edgeState(activeId, 'obj-mailbox')} />
                 <div className="min-w-0 flex-1">
                   <GraphCard
                     id="obj-mailbox"
@@ -393,7 +482,7 @@ export function ObjectGraph() {
                     {...cardProps}
                   />
                 </div>
-                <HArrow active={edgeActive(activeId, 'rule-exo')} label="impl" />
+                <EdgeLink state={edgeState(activeId, 'rule-exo')} kind="rule" label="impl" />
                 <div className="min-w-0 flex-1">
                   <GraphCard
                     id="rule-exo"

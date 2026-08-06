@@ -488,6 +488,52 @@ html > body[data-scroll-locked] {
   }
 }
 
+/*
+ * Object-graph edge flow.
+ *
+ * Only the edge feeding the currently selected node runs one of these, so the graph reads
+ * as a path being traced. Straight links get a comet riding the rail; fork arms get a
+ * spark, because their elbow is drawn with borders rather than a stroked path.
+ */
+@keyframes landing-edge-comet {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: -36;
+  }
+}
+
+.landing-edge-comet {
+  animation: landing-edge-comet 1.5s linear infinite;
+}
+
+@keyframes landing-edge-spark {
+  0% {
+    transform: translate(0, -50%) scale(0.4);
+    opacity: 0;
+  }
+  20%,
+  70% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(18px, -50%) scale(0.4);
+    opacity: 0;
+  }
+}
+
+.landing-edge-spark {
+  animation: landing-edge-spark 1.5s ease-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-edge-comet,
+  .landing-edge-spark {
+    display: none;
+  }
+}
+
 @keyframes landing-mcp-ping {
   0% {
     transform: scale(1);
