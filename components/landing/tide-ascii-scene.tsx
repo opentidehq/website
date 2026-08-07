@@ -10,8 +10,32 @@ import { FlipFluid } from '@/components/landing/liquid-ascii/flip-fluid';
  * Official @reactbits-starter/liquid-ascii-tw needs REACTBITS_LICENSE_KEY.
  */
 
-const CHARACTERS = ' ·:-~=+*#%@';
-const CELL_SIZE = 15;
+/**
+ * The glyph field is detection content rather than an ASCII density ramp — the Sentinel
+ * KQL, Splunk SPL, and object fields this site is actually about. Folded across the grid
+ * it reads as a wall of query; the fluid only decides which of it is lit and how brightly,
+ * so the simulation and its silhouette are untouched.
+ */
+const QUERY_SOURCE = [
+  'SigninLogs | where AuthenticationProtocol == "deviceCode" | where ResultType == 0',
+  '| where AppDisplayName !in ("Microsoft Office", "Microsoft Teams")',
+  '| summarize attempts = count() by UserPrincipalName, IPAddress, AppDisplayName',
+  'detection_model: 00000000-0000-4000-8002-000000000010',
+  'OfficeActivity | where Operation == "New-InboxRule"',
+  '| where Parameters has_any ("ForwardTo", "RedirectTo", "MoveToFolder")',
+  'index=o365 sourcetype=o365:management:activity Operation=New-InboxRule',
+  '| stats values(Parameters) as params by UserId, ClientIP',
+  'status: PRODUCTION  severity: High  techniques: T1528, T1078.004',
+  'opentide validate --strict && opentide deploy --plan STAGING --dry-run',
+].join('   ');
+
+/**
+ * Chars per row shift by this much between rows, so the fold never lines its statements up
+ * into vertical seams. Coprime with anything the grid is likely to be.
+ */
+const ROW_STAGGER = 7;
+
+const CELL_SIZE = 13;
 const SPEED = 0.9;
 const GRAVITY = -25;
 const FLIP_RATIO = 0.3;
@@ -113,24 +137,29 @@ export function TideAsciiScene({ className }: { className?: string }) {
       const cols = Math.max(8, Math.ceil(w / CELL_SIZE));
       const rows = Math.max(8, Math.ceil(h / CELL_SIZE));
       const fontSize = Math.max(10, CELL_SIZE - 2);
-      ctx.font = `600 ${fontSize}px ui-monospace, "JetBrains Mono", Menlo, monospace`;
+      ctx.font = `500 ${fontSize}px ui-monospace, "JetBrains Mono", Menlo, monospace`;
       ctx.textBaseline = 'top';
       ctx.textAlign = 'left';
 
+      const len = QUERY_SOURCE.length;
+
       for (let row = 0; row < rows; row++) {
+        // Where this row picks up in the query. Rows stay contiguous runs of it, so the
+        // text still reads left to right wherever the fluid happens to expose it.
+        const rowStart = row * (cols + ROW_STAGGER);
+
         for (let col = 0; col < cols; col++) {
           const nx = (col + 0.5) / cols;
           const ny = 1 - (row + 0.5) / rows;
           const dens = fluid.sampleDensity01(nx, ny);
           if (dens < 0.05) continue;
 
-          const v = Math.min(1, dens * 1.2);
-          const gi = Math.min(CHARACTERS.length - 1, Math.floor(v * (CHARACTERS.length - 1)));
-          const ch = CHARACTERS[gi];
+          const ch = QUERY_SOURCE[(rowStart + col) % len];
           if (ch === ' ') continue;
 
-          const alpha = 0.35 + v * 0.65;
-          ctx.fillStyle = `rgba(${ink.r},${ink.g},${ink.b},${alpha})`;
+          // Glyph weight no longer carries the density, so alpha has to do all of it.
+          const v = Math.min(1, dens * 1.2);
+          ctx.fillStyle = `rgba(${ink.r},${ink.g},${ink.b},${0.16 + v * 0.84})`;
           ctx.fillText(ch, col * CELL_SIZE + 1, row * CELL_SIZE + 1);
         }
       }

@@ -38,7 +38,7 @@ const clamp = (n: number) => (n < -1 ? -1 : n > 1 ? 1 : n);
  * reduced motion and for coarse pointers, where there is no hover to react to.
  */
 export function TiltBadge({
-  size = 'clamp(116px, 16vw, 176px)',
+  size = 'clamp(148px, 21vw, 232px)',
   className,
 }: {
   /** Any CSS length. Drives the badge only — the hover area's padding is fixed. */

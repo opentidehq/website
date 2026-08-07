@@ -107,10 +107,10 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Top padding is trimmed to what the seal grew into, so the copy stays put. */}
-      <section className="pb-24 pt-6 md:pb-32 md:pt-8">
+      {/* Pulled up into the section gap above: the seal is large enough to carry it. */}
+      <section className="-mt-10 pb-20 pt-0 md:-mt-16 md:pb-24">
         <div className="mx-auto max-w-3xl px-4 text-center">
-          <div className="mb-2 flex justify-center">
+          <div className="flex justify-center">
             <TiltBadge />
           </div>
           <h2 className="text-3xl font-bold tracking-[-0.02em] md:text-4xl text-balance">
