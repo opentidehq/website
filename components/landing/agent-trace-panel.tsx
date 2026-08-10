@@ -1,6 +1,6 @@
 'use client';
 
-import { BookOpen, Bot, ChevronRight, Sparkles, Terminal, User, Wrench } from 'lucide-react';
+import { BookOpen, Bot, ChevronRight, Globe, Sparkles, Terminal, User, Wrench } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { CommandTokens, LogLine } from '@/components/landing/studio-log-line';
 import { usePrefersReducedMotion } from '@/lib/hooks/use-prefers-reduced-motion';
@@ -11,7 +11,8 @@ export type AgentEvent =
   | { kind: 'reasoning'; text: string }
   | { kind: 'response'; text: string }
   | { kind: 'skill'; skill: string; action: string; detail?: string }
-  | { kind: 'mcp'; tool: string; input?: string; output: string }
+  /** `server` names the MCP server when it isn't opentide-mcp — the agent's browser, say. */
+  | { kind: 'mcp'; tool: string; input?: string; output: string; server?: string }
   | { kind: 'cli'; command: string; output?: string };
 
 export function EventCard({ event, animate }: { event: AgentEvent; animate?: boolean }) {
@@ -28,7 +29,9 @@ export function EventCard({ event, animate }: { event: AgentEvent; animate?: boo
             Engineer prompt
           </span>
         </div>
-        <p className="mt-1.5 text-[11px] leading-relaxed text-[var(--landing-ink)]">{event.text}</p>
+        <p className="mt-1.5 break-words text-[11px] leading-relaxed text-[var(--landing-ink)]">
+          {event.text}
+        </p>
       </div>
     );
   }
@@ -86,14 +89,15 @@ export function EventCard({ event, animate }: { event: AgentEvent; animate?: boo
   }
 
   if (event.kind === 'mcp') {
+    const Icon = event.server ? Globe : Wrench;
     return (
       <div
         className={`rounded-lg bg-[color-mix(in_srgb,var(--landing-accent)_8%,transparent)] px-3 py-2.5 ${enter}`}
       >
         <div className="flex items-center gap-2">
-          <Wrench className="size-3.5 text-[var(--landing-accent)]" aria-hidden />
+          <Icon className="size-3.5 text-[var(--landing-accent)]" aria-hidden />
           <span className="font-mono text-[9px] font-semibold uppercase tracking-wider text-[var(--landing-accent)]">
-            opentide-mcp
+            {event.server ?? 'opentide-mcp'}
           </span>
           <span className="rounded bg-[color-mix(in_srgb,var(--landing-accent)_16%,transparent)] px-1.5 py-0.5 font-mono text-[8px] text-[var(--landing-accent)]">
             tool

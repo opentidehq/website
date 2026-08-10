@@ -8,6 +8,7 @@ import {
   FileCode2,
   GitBranch,
   GitPullRequest,
+  Globe,
   Loader,
   Pause,
   Play,
@@ -15,10 +16,12 @@ import {
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AgentTracePanel, StudioTerminal, type AgentEvent } from '@/components/landing/agent-trace-panel';
-import { StudioEditor, StudioEditorIdle, type EditorHighlight } from '@/components/landing/studio-editor';
+import { StudioBrowserTab } from '@/components/landing/studio-browser-tab';
+import { StudioEditor, type EditorHighlight } from '@/components/landing/studio-editor';
 import { StudioExplorer } from '@/components/landing/studio-explorer';
 import { StudioReviewTab } from '@/components/landing/studio-review-tab';
 import {
+  ADVISORY,
   DEMO_BRANCH,
   DEMO_FILES,
   DEMO_PATHS,
@@ -40,7 +43,8 @@ type Step = (typeof STEPS)[number];
 type Phase = 'work' | 'run' | 'dwell';
 
 const REVIEW_TAB = 'review' as const;
-type TabId = DemoPath | typeof REVIEW_TAB;
+const BROWSER_TAB = 'advisory' as const;
+type TabId = DemoPath | typeof REVIEW_TAB | typeof BROWSER_TAB;
 
 const THREAT_FILE = 'objects/threats/gateway-exploitation.yaml' satisfies DemoPath;
 const OBJECTIVE_FILE = 'objects/objectives/credential-access.yaml' satisfies DemoPath;
@@ -60,14 +64,17 @@ type StepFocus = {
   inlineEdit?: boolean;
   /** Merge request review tab instead of an editor buffer. */
   review?: boolean;
+  /** Advisory opened in a browser tab instead of an editor buffer. */
+  browser?: boolean;
 };
 
 const stepFocus: Record<Step, StepFocus> = {
   prompt: {
     opens: [],
-    active: null,
+    active: BROWSER_TAB,
     type: false,
     select: [],
+    browser: true,
   },
   threat: {
     opens: [THREAT_FILE],
@@ -117,6 +124,17 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
     events: [
       { kind: 'prompt', text: SCENARIO_PROMPT },
       {
+        kind: 'mcp',
+        server: 'browser',
+        tool: 'open_url',
+        input: ADVISORY.url,
+        output: `${ADVISORY.code} · ${ADVISORY.title} · CERT-EU · published 2026-05-06`,
+      },
+      {
+        kind: 'reasoning',
+        text: 'The advisory is an unauthenticated root RCE in the PAN-OS User-ID Authentication Portal on internet-facing PA/VM firewalls (T1190). CERT-EU frames initial access; on our terrain the follow-on once the perimeter falls is credential access on the internal estate.',
+      },
+      {
         kind: 'reasoning',
         text: 'Check what this repo can actually ship to before authoring — the platform configs decide which query languages the rule needs.',
       },
@@ -134,7 +152,7 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
       },
       {
         kind: 'response',
-        text: 'Both platforms are enabled with a STAGING tenant, so this becomes one rule carrying a Sentinel and a Splunk block. Starting with the threat vector — everything else chains back to it.',
+        text: 'Both platforms are enabled with a STAGING tenant, so this becomes one rule carrying a Sentinel and a Splunk block. Starting with the gateway threat vector — everything else chains back to it.',
       },
     ],
     cmd: '',
@@ -164,7 +182,7 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
       },
       {
         kind: 'response',
-        text: 'Threat vector is in and valid. CVE-2024-1709 scores High severity on Edge Gateway terrain; the objective can now reference uuid …010.',
+        text: 'Threat vector is in and valid. CVE-2026-0300 scores High severity on Edge Gateway terrain; the objective can now reference uuid …010.',
       },
     ],
     cmd: `opentide validate --file ${THREAT_FILE}`,
@@ -313,6 +331,10 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
 
 const INLINE_APPLY_AT =
   stepScripts.inline.events.findIndex((e) => e.kind === 'mcp' && e.tool === 'apply_edit') + 1;
+
+/** The advisory passages read as quoted once the agent has actually fetched the page. */
+const ADVISORY_QUOTED_AT =
+  stepScripts.prompt.events.findIndex((e) => e.kind === 'mcp' && e.tool === 'open_url') + 2;
 
 const INLINE_SPAN = diffSpan(DEMO_FILES[RULE_PATH], INLINE_EDIT.tuned);
 
@@ -635,7 +657,7 @@ export function WorkflowStudio() {
     [ruleTuned],
   );
   const fullText =
-    focus.type && focus.active != null && focus.active !== REVIEW_TAB
+    focus.type && focus.active != null && focus.active !== REVIEW_TAB && focus.active !== BROWSER_TAB
       ? fileText(focus.active)
       : '';
 
@@ -761,6 +783,10 @@ export function WorkflowStudio() {
     const acc: TabId[] = [];
     for (let i = 0; i <= stepIdx; i++) {
       const s = stepFocus[STEPS[i]];
+      if (s.browser && !seen.has(BROWSER_TAB)) {
+        seen.add(BROWSER_TAB);
+        acc.push(BROWSER_TAB);
+      }
       for (const p of s.opens) {
         if (seen.has(p)) continue;
         seen.add(p);
@@ -775,7 +801,7 @@ export function WorkflowStudio() {
   }, [stepIdx]);
 
   const filePaths = useMemo(
-    () => openTabs.filter((t): t is DemoPath => t !== REVIEW_TAB),
+    () => openTabs.filter((t): t is DemoPath => t !== REVIEW_TAB && t !== BROWSER_TAB),
     [openTabs],
   );
 
@@ -796,10 +822,10 @@ export function WorkflowStudio() {
 
   const activeTab: TabId | null = tabOverride ?? focus.active;
   const isReviewTab = activeTab === REVIEW_TAB;
+  const isBrowserTab = activeTab === BROWSER_TAB;
   const activePath: DemoPath | null =
-    activeTab == null || activeTab === REVIEW_TAB ? null : activeTab;
+    activeTab == null || isReviewTab || isBrowserTab ? null : activeTab;
   const drivenTab = activeTab != null && activeTab === focus.active;
-  const showIdle = activeTab == null && !focus.review;
 
   const typing = Boolean(
     focus.type && phase === 'work' && typedChars > 0 && typedChars < fullText.length,
@@ -819,8 +845,8 @@ export function WorkflowStudio() {
             : 'Edit applied'
         : typing
           ? 'Writing file'
-          : showIdle
-            ? 'Reading brief'
+          : focus.browser
+            ? 'Reading advisory'
             : 'Agent working'
       : phase === 'run'
         ? focus.review
@@ -855,6 +881,9 @@ export function WorkflowStudio() {
 
   const runArmed = phase === 'run' || phase === 'dwell';
 
+  // The page scrolls behind the trace: the fetch lands first, then the agent reads down.
+  const readProgress = phase === 'work' ? clamp01((phasePart - 0.18) / 0.62) : 1;
+
   return (
     <div ref={trackRef} className="landing-studio-track">
       <div ref={stageRef} className="landing-studio">
@@ -876,9 +905,11 @@ export function WorkflowStudio() {
             <span className="ml-2 truncate font-mono text-[11px] text-[var(--landing-subtle)]">
               {isReviewTab
                 ? `${DEMO_REPO} · ${REVIEW_MR.id}`
-                : activePath
-                  ? `${DEMO_REPO} / ${activePath}`
-                  : `${DEMO_REPO} · brief`}
+                : isBrowserTab
+                  ? `${ADVISORY.host} · ${ADVISORY.code}`
+                  : activePath
+                    ? `${DEMO_REPO} / ${activePath}`
+                    : DEMO_REPO}
             </span>
             {stepIdx >= STEPS.indexOf('threat') && (
               <span className="hidden shrink-0 items-center gap-1 rounded-full bg-[color-mix(in_srgb,var(--landing-ink)_7%,transparent)] px-2 py-0.5 font-mono text-[9px] text-[var(--landing-muted)] md:inline-flex">
@@ -914,41 +945,36 @@ export function WorkflowStudio() {
                 role="tablist"
                 aria-label="Open editors"
               >
-                {openTabs.length === 0 ? (
-                  <span className="px-2 font-mono text-[10px] text-[var(--landing-dim)]">No file open</span>
-                ) : (
-                  openTabs.map((tab) => {
-                    const active = tab === activeTab;
-                    const review = tab === REVIEW_TAB;
-                    return (
-                      <button
-                        key={tab}
-                        type="button"
-                        role="tab"
-                        aria-selected={active}
-                        onClick={() => setTabOverride(tab)}
-                        className={`inline-flex shrink-0 items-center gap-1.5 border-b-2 px-2 py-1.5 font-mono text-[10px] transition-colors ${
-                          active
-                            ? 'border-[var(--landing-accent)] text-[var(--landing-ink)]'
-                            : 'border-transparent text-[var(--landing-dim)] hover:text-[var(--landing-muted)]'
-                        }`}
-                      >
-                        {review ? (
-                          <GitPullRequest
-                            className={`size-3 ${active ? 'text-[var(--landing-accent)]' : ''}`}
-                            aria-hidden
-                          />
-                        ) : (
-                          <FileCode2
-                            className={`size-3 ${active ? 'text-[var(--landing-accent)]' : ''}`}
-                            aria-hidden
-                          />
-                        )}
-                        {review ? `${REVIEW_MR.id} review` : tab.split('/').pop()}
-                      </button>
-                    );
-                  })
-                )}
+                {openTabs.map((tab) => {
+                  const active = tab === activeTab;
+                  const review = tab === REVIEW_TAB;
+                  const browser = tab === BROWSER_TAB;
+                  const Icon = review ? GitPullRequest : browser ? Globe : FileCode2;
+                  return (
+                    <button
+                      key={tab}
+                      type="button"
+                      role="tab"
+                      aria-selected={active}
+                      onClick={() => setTabOverride(tab)}
+                      className={`inline-flex shrink-0 items-center gap-1.5 border-b-2 px-2 py-1.5 font-mono text-[10px] transition-colors ${
+                        active
+                          ? 'border-[var(--landing-accent)] text-[var(--landing-ink)]'
+                          : 'border-transparent text-[var(--landing-dim)] hover:text-[var(--landing-muted)]'
+                      }`}
+                    >
+                      <Icon
+                        className={`size-3 ${active ? 'text-[var(--landing-accent)]' : ''}`}
+                        aria-hidden
+                      />
+                      {review
+                        ? `${REVIEW_MR.id} review`
+                        : browser
+                          ? ADVISORY.tab
+                          : tab.split('/').pop()}
+                    </button>
+                  );
+                })}
               </div>
 
               <div className="min-h-0 flex-1 overflow-hidden">
@@ -967,8 +993,14 @@ export function WorkflowStudio() {
                     />
                   </div>
                 )}
-                {showIdle ? (
-                  <StudioEditorIdle message="Brief in the agent trace — objects appear as the agent authors them." />
+                {isBrowserTab ? (
+                  <StudioBrowserTab
+                    key={`${step}-browser`}
+                    page={ADVISORY}
+                    read={drivenTab ? readProgress : 0}
+                    marked={drivenTab ? shownEvents >= ADVISORY_QUOTED_AT : true}
+                    instant={reduced || cursor.jumped || !drivenTab}
+                  />
                 ) : activePath ? (
                   <StudioEditor
                     path={activePath}

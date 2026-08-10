@@ -168,13 +168,3 @@ export function StudioEditor({
     </div>
   );
 }
-
-export function StudioEditorIdle({ message }: { message: string }) {
-  return (
-    <div className="flex h-full min-h-0 items-center justify-center p-6 text-center">
-      <p className="max-w-[18rem] font-mono text-[11px] leading-relaxed text-[var(--landing-dim)]">
-        {message}
-      </p>
-    </div>
-  );
-}

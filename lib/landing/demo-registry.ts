@@ -13,7 +13,170 @@ export const UUID = {
 
 /** Starting engineer brief — simulated as a prompt, not a repo folder. */
 export const SCENARIO_PROMPT =
-  'Turn CISA AA24-073A (CVE-2024-1709 ScreenConnect auth bypass → RCE) into deployable detections for our Sentinel and Splunk estates: strict validation, staged deploy.';
+  'Turn this CERT-EU advisory into deployable detections for our Sentinel and Splunk estates — strict validation, staged deploy: cert.europa.eu/publications/security-advisories/2026-006';
+
+/**
+ * The advisory the agent opens in a browser tab before it writes anything.
+ *
+ * Content is condensed from the real CERT-EU Security Advisory 2026-006 so the beat
+ * the scenario detects — an unauthenticated root RCE on the PAN-OS edge firewall
+ * portal (CVE-2026-0300, T1190) — is a quote the visitor can actually read.
+ */
+export type AdvisoryBlock =
+  | { kind: 'p'; text: string; mark?: boolean }
+  | { kind: 'h3'; text: string }
+  | { kind: 'note'; text: string }
+  | { kind: 'list'; items: string[] }
+  | { kind: 'files'; items: string[] }
+  | { kind: 'table'; caption: string; head: string[]; rows: string[][] };
+
+export type AdvisorySection = { heading: string; blocks: AdvisoryBlock[] };
+
+export type AdvisoryPage = {
+  url: string;
+  host: string;
+  path: string;
+  /** Label for the editor tab strip. */
+  tab: string;
+  site: string;
+  siteTagline: string;
+  banner: { text: string; hint: string };
+  nav: string[];
+  breadcrumb: string[];
+  label: string;
+  code: string;
+  title: string;
+  meta: { label: string; value: string }[];
+  topics: string;
+  glance: { heading: string; items: string[] };
+  sections: AdvisorySection[];
+  tags: string[];
+  legal: string;
+};
+
+export const ADVISORY: AdvisoryPage = {
+  url: 'https://cert.europa.eu/publications/security-advisories/2026-006/',
+  host: 'cert.europa.eu',
+  path: '/publications/security-advisories/2026-006/',
+  tab: 'cert.europa.eu/2026-006',
+  site: 'CERT-EU',
+  siteTagline: 'Cybersecurity Service for the Union institutions, bodies, offices and agencies',
+  banner: {
+    text: 'TLP:CLEAR',
+    hint: 'Subject to standard copyright rules',
+  },
+  nav: ['Threat Intelligence', 'Publications', 'Services', 'About us', 'Contact'],
+  breadcrumb: ['Home', 'Publications', 'Security Advisories'],
+  label: 'Security Advisory',
+  code: '2026-006',
+  title: 'Critical Vulnerability in PAN-OS',
+  meta: [
+    { label: 'Release Date', value: '06 May 2026' },
+    { label: 'Reference', value: '2026-006 · v1.0' },
+    { label: 'CVSS', value: '9.3 (Critical)' },
+  ],
+  topics: 'Edge Gateway, Remote Code Execution, Palo Alto Networks, Exploited in the wild',
+  glance: {
+    heading: 'At a glance',
+    items: [
+      'Unauthenticated remote code execution as root on the firewall itself.',
+      'Affects PA-Series and VM-Series appliances using the User-ID Authentication Portal.',
+      'Palo Alto has observed limited exploitation in the wild.',
+    ],
+  },
+  sections: [
+    {
+      heading: 'Summary',
+      blocks: [
+        {
+          kind: 'note',
+          text: 'History — v1.0 (06/05/2026): Initial publication.',
+        },
+        {
+          kind: 'p',
+          text: 'On 6 May 2026, Palo Alto Networks published a security advisory addressing a critical vulnerability affecting [[PAN-OS]]. This vulnerability allows an unauthenticated attacker to execute arbitrary code with root privileges.',
+        },
+        {
+          kind: 'p',
+          text: 'Palo Alto observed limited exploitation of this vulnerability. CERT-EU strongly recommends updating affected appliances as soon as patches are available, and applying the workarounds and mitigations in the meantime.',
+        },
+        {
+          kind: 'files',
+          items: ['Download MARKDOWN', 'Download JSON (STIX 2.1)'],
+        },
+      ],
+    },
+    {
+      heading: 'Technical Details',
+      blocks: [
+        {
+          kind: 'p',
+          mark: true,
+          text: 'The vulnerability [[CVE-2026-0300]], with a CVSS score of 9.3, is a buffer overflow in the User-ID Authentication Portal (aka Captive Portal) service of Palo Alto Networks PAN-OS software.',
+        },
+        {
+          kind: 'p',
+          mark: true,
+          text: 'An unauthenticated attacker could execute arbitrary code with root privileges on the PA-Series and VM-Series firewalls by sending specially crafted packets [T1190].',
+        },
+        {
+          kind: 'p',
+          text: 'The flaw is reachable before authentication on any firewall that exposes the portal to an untrusted zone, handing an adversary a root foothold on the network perimeter.',
+        },
+      ],
+    },
+    {
+      heading: 'Affected Products',
+      blocks: [
+        {
+          kind: 'p',
+          text: 'This issue is applicable only to PA-Series and VM-Series firewalls that are configured to use the User-ID Authentication Portal. The following PAN-OS release trains are affected:',
+        },
+        {
+          kind: 'table',
+          caption: 'Fixed versions per PAN-OS release train',
+          head: ['Release train', 'Fixed in'],
+          rows: [
+            ['PAN-OS 12.1', '12.1.4-h5 · 12.1.7'],
+            ['PAN-OS 11.2', '11.2.4-h17 · 11.2.12'],
+            ['PAN-OS 11.1', '11.1.4-h33 · 11.1.15'],
+            ['PAN-OS 10.2', '10.2.7-h34 · 10.2.18-h6'],
+          ],
+        },
+      ],
+    },
+    {
+      heading: 'Recommendations',
+      blocks: [
+        {
+          kind: 'p',
+          text: 'The patches are not available at the time of writing but are scheduled for release in the near future. It is recommended updating affected devices as soon as the patches are released.',
+        },
+        { kind: 'h3', text: 'Mitigation' },
+        {
+          kind: 'list',
+          items: [
+            'Restrict User-ID Authentication Portal access to trusted zones only.',
+            'Disable the User-ID Authentication Portal if it is not required.',
+          ],
+        },
+      ],
+    },
+    {
+      heading: 'References',
+      blocks: [
+        {
+          kind: 'list',
+          items: [
+            '[1] Palo Alto Networks — CVE-2026-0300 PAN-OS Authentication Portal Buffer Overflow (security.paloaltonetworks.com)',
+          ],
+        },
+      ],
+    },
+  ],
+  tags: ['PAN-OS', 'Palo Alto Networks', 'Remote Code Execution', 'Edge Gateway'],
+  legal: 'CERT-EU · TLP:CLEAR — free to distribute without restriction, subject to standard copyright rules.',
+};
 
 export const DEMO_PATHS = [
   'objects/threats/gateway-exploitation.yaml',
@@ -42,23 +205,24 @@ const SENTINEL_QUERY_TUNED = `      let BenignAccessors = dynamic(["csrss.exe", 
       | where InitiatingProcessCommandLine !has "inventory-scan"`;
 
 export const DEMO_FILES: Record<DemoPath, string> = {
-  'objects/threats/gateway-exploitation.yaml': `name: Gateway exploitation (CVE-2024-1709)
+  'objects/threats/gateway-exploitation.yaml': `name: Gateway exploitation (CVE-2026-0300)
 criticality: High
 
 metadata:
   uuid: ${UUID.threatGateway}
   schema: threat::1.0
   version: 1.1.0
-  created: "2024-02-21"
-  modified: "2026-03-01"
+  created: "2026-05-06"
+  modified: "2026-05-08"
   tlp: clear
   author: detection-team
 
 threat:
   description: |
-    Adversaries exploit ConnectWise ScreenConnect authentication bypass
-    (CVE-2024-1709) for unauthenticated RCE on exposed gateway hosts,
-    then pivot toward credential access on the internal estate.
+    Adversaries exploit the PAN-OS User-ID Authentication Portal
+    buffer overflow (CVE-2026-0300) for unauthenticated root RCE on
+    internet-facing PA-Series and VM-Series firewalls, then pivot
+    toward credential access on the internal estate.
   severity: High
   impact: Data Breach
   leverage: High
@@ -73,7 +237,7 @@ threat:
 
 references:
   public:
-    1: https://www.cisa.gov/news-events/cybersecurity-advisories/aa24-073a
+    1: https://cert.europa.eu/publications/security-advisories/2026-006/
 `,
   'objects/objectives/credential-access.yaml': `name: Credential access via LSASS
 
@@ -96,7 +260,7 @@ objective:
   type: Threat
   description: |
     Detect credential dumping that follows initial access via the
-    ScreenConnect gateway threat vector.
+    PAN-OS gateway threat vector.
   composition:
     strategy: synergetic
     description: Signals must corroborate unusual LSASS handle access
@@ -314,13 +478,13 @@ export const INLINE_EDIT = {
 /** Merge request opened once the object chain is authored. */
 export const REVIEW_MR = {
   id: '!142',
-  title: 'Detect LSASS credential access after ScreenConnect gateway exploitation',
+  title: 'Detect LSASS credential access after PAN-OS gateway exploitation',
   branch: DEMO_BRANCH,
   target: 'main',
   author: 'detection-team',
   labels: ['detection-content', 'sentinel', 'splunk'],
   summary: [
-    'Turns CISA AA24-073A into a linked object chain: gateway threat vector → credential-access objective → deployable rule.',
+    'Turns CERT-EU 2026-006 into a linked object chain: gateway threat vector → credential-access objective → deployable rule.',
     'The rule ships one Sentinel analytics rule (KQL) and one Splunk ES correlation search (SPL) from the same detection intent.',
   ],
   approval: 'SOC lead approved these changes',
@@ -438,24 +602,24 @@ export type ObjectBlurb = {
 /** Human-readable blurbs for graph detail panel */
 export const OBJECT_BLURBS: Record<string, ObjectBlurb> = {
   intel: {
-    title: 'CISA AA24-073A brief',
+    title: 'CERT-EU 2026-006 brief',
     kind: 'Engineer prompt',
     intent:
       'Starting brief — not an OpenTide object. The engineer (or agent) turns this narrative into a threat vector.',
     blurb:
-      'External intel arrives as a prompt, not a folder in the object graph. Authoring starts when you write the first threat::1.0.',
+      'External intel arrives as a link the agent opens, not a folder in the object graph. Authoring starts when you write the first threat::1.0.',
     points: [
-      'External source of truth (vendor / CISA / blog)',
+      'External source of truth (vendor / CERT-EU / blog)',
       'Maps candidate ATT&CK techniques before authoring',
       'Feeds the first normative object: a threat::1.0 vector',
     ],
     facts: [
-      { label: 'Source', value: 'CISA AA24-073A' },
-      { label: 'CVE', value: 'CVE-2024-1709' },
+      { label: 'Source', value: 'CERT-EU 2026-006' },
+      { label: 'CVE', value: 'CVE-2026-0300' },
       { label: 'Form', value: 'Prompt / brief' },
     ],
     next: 'Author a threat vector that scores severity, terrain, and ATT&CK.',
-    note: 'ConnectWise ScreenConnect auth bypass → RCE',
+    note: 'PAN-OS auth-portal RCE → credential-access follow-on',
   },
   threat: {
     title: 'Gateway exploitation',

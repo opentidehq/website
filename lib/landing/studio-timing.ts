@@ -16,6 +16,8 @@ export const TIMING = {
   typeTicks: 82,
   /** Pause after the agent finishes reasoning, before it starts writing the file. */
   beforeWrite: beat(520),
+  /** How long the browser tab spends loading the advisory before the page paints. */
+  pageLoad: beat(620),
   /** ⌘K prompt: per-character typing, then the hold before the engineer submits. */
   promptTick: beat(34),
   promptSubmit: beat(760),
