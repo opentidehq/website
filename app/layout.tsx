@@ -4,14 +4,17 @@ import { siteUrl } from '@/lib/shared';
 import type { Metadata } from 'next';
 import './global.css';
 
+// Names must not collide with Tailwind's `--font-sans`/`--font-mono` theme
+// variables: both land on <html> at equal specificity, so the theme value would
+// win and self-reference into an invalid cycle.
 const inter = Inter({
   subsets: ['latin'],
-  variable: '--font-sans',
+  variable: '--font-inter',
   display: 'swap',
 });
 const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],
-  variable: '--font-mono',
+  variable: '--font-jetbrains-mono',
   display: 'swap',
 });
 
