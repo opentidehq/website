@@ -24,7 +24,9 @@ export function LandingNav({ children }: { children: ReactNode }) {
 
   return (
     <div className="landing flex min-h-screen flex-col">
-      <header className="sticky top-0 z-40 border-b border-[var(--landing-border)] bg-[var(--landing-bg)]/95 backdrop-blur-sm">
+      {/* --landing-bg is pure white/black, so the 5% that shows through needs a
+          heavy blur or high-contrast headings ghost through as readable text. */}
+      <header className="sticky top-0 z-40 border-b border-[var(--landing-border)] bg-[var(--landing-bg)]/95 backdrop-blur-xl">
         <div className="mx-auto flex h-14 max-w-[1400px] items-center justify-between gap-4 px-4 md:px-6">
           <Link
             href="/"

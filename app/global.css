@@ -241,6 +241,12 @@ html > body[data-scroll-locked] {
   color: var(--landing-ink);
 }
 
+/* Keep headings clear of the 3.5rem sticky header when scrolled to. Scoped to
+   the landing chrome — docs headings carry their own scroll-m-* offsets. */
+.landing :is(h1, h2, h3, h4) {
+  scroll-margin-top: 4.5rem;
+}
+
 .dark .landing {
   /* Dark: black + EU yellow */
   --landing-bg: #000000;
