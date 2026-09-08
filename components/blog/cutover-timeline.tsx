@@ -8,8 +8,8 @@ import { usePrefersReducedMotion } from '@/lib/hooks/use-prefers-reduced-motion'
 const beats: { step: string; label: string; desc: string; icon: LucideIcon }[] = [
   {
     step: '01',
-    label: 'Engine ships',
-    desc: 'The DetectionOps engine is a package: CLI, MCP, and SDK on one version.',
+    label: 'Engine on PyPI',
+    desc: 'pip install opentide — CLI, MCP, and SDK on one version.',
     icon: Package,
   },
   {
@@ -20,8 +20,8 @@ const beats: { step: string; label: string; desc: string; icon: LucideIcon }[] =
   },
   {
     step: '03',
-    label: 'Four-week sit',
-    desc: 'Bugs, docs, and migration questions only. No feature theatre until this settles.',
+    label: 'Four-week window',
+    desc: 'Deployer bugs, docs, and migration questions. We are not adding platforms in this stretch.',
     icon: Pause,
   },
 ];

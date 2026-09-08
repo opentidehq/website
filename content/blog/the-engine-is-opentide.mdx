@@ -1,6 +1,6 @@
 ---
 title: The engine is OpenTide now
-description: The DetectionOps engine is a package. We are archiving the old tree, keeping pinned checkouts alive, and sitting still for four weeks.
+description: pip install opentide. We are archiving the old engine, keeping pinned checkouts alive, and taking four weeks of bug reports.
 author: OpenTide Team
 date: 2026-09-08
 tags:
@@ -8,23 +8,21 @@ tags:
   - detectionops
 ---
 
-We spent a long time running DetectionOps as a git submodule. That era is over. The engine is a package now — CLI, MCP, SDK, same object graph — and we are making that the default.
+The engine used to ship as a git submodule. It is a PyPI package now — `pip install opentide` — CLI, MCP, and SDK on the same object graph. That is the default for new work.
 
-Not a hard cut. If you already have a pinned checkout of the old engine, it keeps working. We are not going to break your git history to prove a point. New work, though, does not go into the archived tree.
+Not a hard cut. If you already have a pinned checkout of the old engine, it keeps working. We are not going to break your git history to prove a point. New work does not go into the archived tree.
 
 <CutoverTimeline />
 
 ## Why we did this
 
-Detection-as-code does not fail because KQL is hard. It fails when the engine you share cannot be versioned, reviewed, or handed to an agent without a small ritual.
+You can already write detections for Sentinel, Splunk, Defender, SentinelOne, Carbon Black, CrowdStrike, and HarfangLab. What kept breaking was the shared engine: it was not a version you could pin, not a reviewable upgrade, and every instance rewrote the same CI glue.
 
-The old engine lived inside client repositories as a submodule. Getting it on `sys.path` took a git walk. The entry point was a fifteen-hundred-line file that loaded the catalogue on import. Object names hid the domain — MDR, TVM, DataTide — so a new engineer learned our plumbing before they learned their threats. Schemas existed in three places at once: YAML metaschemas, Python dataclasses, and the loaders that tried to keep them honest. They drifted. Vocabularies were untyped. A couple of generators duplicated their own enum descriptions and nobody noticed until a schema diff looked like a fight.
+The old engine lived in the client repo as a submodule. Imports walked git to find `sys.path`. You pinned a SHA, hoped the next pull left `Orchestration/` alone, and could not write `opentide==0.4` and go home.
 
-Upgrades were someone else's git history. You could not pin `opentide==0.4` and move on. You pinned a SHA, prayed the next pull did not rewrite `Orchestration/`, and wrote the same CI glue in every instance.
+Schemas lived in three places — YAML metaschemas, Python dataclasses, and the loaders that tried to keep them aligned. They drifted. Vocabularies were untyped. A couple of generators even duplicated their own enum descriptions.
 
-Agents made that worse. A model that edits detection YAML needs a schema, an honest capability report, and an exit code that means something. Seven platforms deploy. Five of them can validate query syntax. CrowdStrike and HarfangLab cannot — and we will say so rather than return a fake pass.
-
-So we rebuilt the engine as a package, in a new repository, instead of renovating the submodule in place. The old tree stays a historical artefact. The new one never inherited the `sys.path` tricks.
+CI needs three things from an engine: a schema that matches the objects, a capability report that is true, and an exit code you can gate on. So we rebuilt it as a package, in a new repository, instead of renovating the submodule in place. The old tree stays as history. The new one never inherited the `sys.path` tricks.
 
 ```mermaid
 flowchart TB
@@ -75,6 +73,7 @@ rule.deploy("sentinel")
 ```
 
 ```bash
+pip install opentide
 opentide validate --strict
 opentide deploy --platform sentinel --dry-run
 ```
@@ -85,21 +84,17 @@ opentide deploy --platform sentinel --dry-run
 
 ## What you get now
 
-Four things changed in practice. The rest is documentation.
+You pin a version, not a submodule SHA. `pip install opentide`, then lock it like any other dependency.
 
-You **pin a version**, not a submodule SHA. Until the PyPI cut lands in this window, install from the [opentide](https://github.com/OpenTideHQ/opentide) repository the same way you will from the index later.
+CLI, SDK, and MCP are the same package — `opentide validate`, `from opentide import OpenTide`, `opentide-mcp`. Not three engines, and not a pile of `Orchestration/` scripts.
 
-You get **one surface**. `opentide validate`, `generate`, `deploy`, `setup`. `from opentide import OpenTide`. `opentide-mcp` for agents. The CLI orchestrates; the registry does not pretend to.
-
-**Specs live on their own.** JSON Schema is generated from the models. It is an artefact, not the contract. That is what stops the triple-maintenance we had before.
-
-**Content and the engine are no longer the same repo trick.** Public objects sit in the Library. Explorer is how you walk them. Skills are how agents author against the same graph.
+JSON Schema is generated from the models, so the types and the schema cannot drift. Models are the source of truth; the schema is what CI and editors actually consume. Detection content stays in your repo. That split is the point of a dependency.
 
 <div className="not-prose">
   <PipelineFlow />
 </div>
 
-The object model did not change in spirit. A threat is still what you defend against, an objective is still what you are trying to detect, a rule is still how you detect it on a platform. References still point rule → objective → threat. Coverage still flows the other way. The names are just English now.
+The object model did not change in spirit. A threat is still what you defend against, an objective is still what you are trying to detect, a rule is still how you detect it on a platform. References still point rule → objective → threat. Coverage still flows the other way.
 
 ```mermaid
 flowchart LR
@@ -113,16 +108,16 @@ flowchart LR
 ```
 
 <Callout type="info">
-Seven platforms deploy. Five validate query syntax — Sentinel, Defender, Splunk, SentinelOne, Carbon Black. CrowdStrike and HarfangLab are deploy-only. The CLI and MCP report `supported: false` there. They do not invent a pass.
+Seven platforms deploy. Five validate query syntax — KQL, SPL, S1QL, Lucene. CrowdStrike and HarfangLab cannot. The CLI and MCP report `supported: false` there instead of inventing a pass.
 </Callout>
 
 ## Soft rollout
 
-We are archiving the old engine and companion repos. History stays. Issues stay. The READMEs will point here. That is the public signal that new work happens on the new stack.
+We are archiving the old engine and companion repos. History stays. Issues stay. The READMEs will point here. New work goes in the package.
 
-Pinned submodules continue to resolve against the commit you already have. Existing production instances do not have to move this week. They should move when they next touch CI — not in a panic, and not by rewriting history.
+Pinned submodule SHAs and existing clones keep working. Existing production instances do not have to move this week. They should move when they next touch CI — not in a panic, and not by rewriting history.
 
-There is no magic `opentide migrate`. The [migration guide](/docs/usage/migration/) is the path: drop the submodule, replace `Orchestration/` with the CLI, set `OPENTIDE_REPO_ROOT`, run `opentide validate --strict`. If you would rather have an agent do the mechanical edits, there is a prompt on that page. Review the diff as if a colleague wrote it.
+There is no magic `opentide migrate`. The [migration guide](/docs/usage/migration/) is the path: drop the submodule, replace `Orchestration/` with the CLI, set `OPENTIDE_REPO_ROOT`, run `opentide validate --strict`. If you would rather have someone else do the mechanical edits, there is a prompt on that page. Review the diff as if a colleague wrote it.
 
 <Steps>
 
@@ -130,7 +125,7 @@ There is no magic `opentide migrate`. The [migration guide](/docs/usage/migratio
 
 ### Archive
 
-The old engine and companion repos go read-only. Bookmarks, SHAs, and clones you already have are unaffected.
+The old engine and companion repos go read-only. SHAs and clones you already have are unaffected.
 
 </Step>
 
@@ -138,15 +133,15 @@ The old engine and companion repos go read-only. Bookmarks, SHAs, and clones you
 
 ### Migrate when you next touch CI
 
-Remove the submodule. Depend on the package. Swap `python Orchestration/validate.py` for `opentide validate --strict`. Keep `--platform`; do not bring back `--system`.
+Remove the submodule. `pip install opentide`. Swap `python Orchestration/validate.py` for `opentide validate --strict`. Keep `--platform`; do not bring back `--system`.
 
 </Step>
 
 <Step>
 
-### Sit for four weeks
+### Four weeks of support
 
-We will treat this as a freeze on ambition: deployer bugs, docs, agent setup, migration questions. After that we can talk about what 1.0 even means.
+We are not adding platforms in this stretch. We will fix deployer bugs, docs, setup, and migration questions. After that we can talk about 1.0.
 
 </Step>
 
@@ -154,20 +149,16 @@ We will treat this as a freeze on ambition: deployer bugs, docs, agent setup, mi
 
 ## Four weeks
 
-This is the part of a rewrite people skip. The package works. The docs are in better shape than they have ever been. That is not the same as “we are done.”
-
-For four weeks we are not adding platforms, not inventing lint commands, not shipping a language server. We will fix what you hit: validation that is too loud or too quiet, a deployer that misbehaves on a tenant you actually have, a setup wizard that writes the wrong MCP path, a migration step the guide forgot.
+The package works. The docs are in better shape than they have ever been. For four weeks we are not adding platforms. We will fix what you hit: validation that is too loud or too quiet, a deployer that misbehaves on a tenant you actually have, a setup wizard that writes the wrong MCP path, a migration step the guide forgot.
 
 <Callout type="warn">
 If something is wrong, file it on [OpenTideHQ/opentide](https://github.com/OpenTideHQ/opentide/issues). That is the engine now. The archived tree will not grow new fixes.
 </Callout>
 
-The old engine earned the rewrite. It ran in production for years before it was open-sourced; it taught us what DetectionOps actually needs. The work was to make that practice installable, reviewable, and honest about what each platform can do.
-
-Then we stop talking, and we sit with it.
+The old engine ran in production for years before it was open-sourced. The work was to make that practice installable, and to stop lying about platforms that cannot validate a query. Then we take four weeks of bug reports.
 
 <Cards>
   <Card title="Usage" href="/docs/usage/" description="Install, object model, and the detection-as-code loop." />
-  <Card title="Migration" href="/docs/usage/migration/" description="Submodule to package — imports, CI, and the agent prompt." />
-  <Card title="MCP" href="/docs/mcp/installation/" description="Wire Cursor, VS Code, or any MCP client to the same engine." />
+  <Card title="Migration" href="/docs/usage/migration/" description="Submodule to package — imports, CI, and the copy-paste prompt." />
+  <Card title="MCP" href="/docs/mcp/installation/" description="Same engine, from an editor or an MCP client." />
 </Cards>
