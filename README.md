@@ -87,7 +87,7 @@ Open a pull request. Posts appear at `/blog/<filename-without-extension>/`.
 
 ### Prerequisites
 
-1. **opentide** submodule tracks the `docs/fumadocs-ready` branch (Fumadocs-formatted docs).
+1. **opentide** submodule tracks the `development` branch (Fumadocs-formatted docs under `docs/`).
 2. **specifications** content must exist in the [specifications](https://github.com/OpenTideHQ/specifications) repository — until published, local builds fall back to `../specifications` when the vendor submodule is empty.
 
 Pushes to `main` deploy to **GitHub Pages** via `.github/workflows/deploy.yml`.
