@@ -1,6 +1,6 @@
 ---
 title: The engine is OpenTide now
-description: pip install opentide. We are archiving the old engine, keeping pinned checkouts alive, and taking four weeks of bug reports.
+description: pip install opentide==0.1.0. First public beta. We are archiving the old engine, keeping pinned checkouts alive, and taking four weeks of bug reports.
 author: OpenTide Team
 date: 2026-09-08
 tags:
@@ -8,7 +8,7 @@ tags:
   - detectionops
 ---
 
-The engine used to ship as a git submodule. It is a PyPI package now — `pip install opentide` — CLI, MCP, and SDK on the same object graph. That is the default for new work.
+The engine used to ship as a git submodule. It is a PyPI package now — `pip install opentide==0.1.0` — CLI, MCP, and SDK on the same object graph. That is the default for new work. Notes: [0.1.0](/docs/usage/releases/).
 
 Not a hard cut. If you already have a pinned checkout of the old engine, it keeps working. We are not going to break your git history to prove a point. New work does not go into the archived tree.
 
@@ -73,7 +73,7 @@ rule.deploy("sentinel")
 ```
 
 ```bash
-pip install opentide
+pip install opentide==0.1.0
 opentide validate --strict
 opentide deploy --platform sentinel --dry-run
 ```
@@ -84,7 +84,7 @@ opentide deploy --platform sentinel --dry-run
 
 ## What you get now
 
-You pin a version, not a submodule SHA. `pip install opentide`, then lock it like any other dependency.
+You pin a version, not a submodule SHA. `pip install opentide==0.1.0`, then lock it like any other dependency.
 
 CLI, SDK, and MCP are the same package — `opentide validate`, `from opentide import OpenTide`, `opentide-mcp`. Not three engines, and not a pile of `Orchestration/` scripts.
 
@@ -133,7 +133,7 @@ The old engine and companion repos go read-only. SHAs and clones you already hav
 
 ### Migrate when you next touch CI
 
-Remove the submodule. `pip install opentide`. Swap `python Orchestration/validate.py` for `opentide validate --strict`. Keep `--platform`; do not bring back `--system`.
+Remove the submodule. `pip install opentide==0.1.0`. Swap `python Orchestration/validate.py` for `opentide validate --strict`. Keep `--platform`; do not bring back `--system`.
 
 </Step>
 
@@ -158,6 +158,7 @@ If something is wrong, file it on [OpenTideHQ/opentide](https://github.com/OpenT
 The old engine ran in production for years before it was open-sourced. The work was to make that practice installable, and to stop lying about platforms that cannot validate a query. Then we take four weeks of bug reports.
 
 <Cards>
+  <Card title="0.1.0" href="/docs/usage/releases/" description="First public beta — pin the version, then migrate when you next touch CI." />
   <Card title="Usage" href="/docs/usage/" description="Install, object model, and the detection-as-code loop." />
   <Card title="Migration" href="/docs/usage/migration/" description="Submodule to package — imports, CI, and the copy-paste prompt." />
   <Card title="MCP" href="/docs/mcp/installation/" description="Same engine, from an editor or an MCP client." />

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 
-const INSTALL_CMD = 'pip install opentide';
+const INSTALL_CMD = 'pip install opentide==0.1.0';
 
 export function HeroInstall() {
   return (

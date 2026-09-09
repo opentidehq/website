@@ -4,7 +4,7 @@ import { Fragment, useEffect, useRef, useState, type ReactElement } from 'react'
 import { Check, Copy, Terminal } from 'lucide-react';
 import { usePrefersReducedMotion } from '@/lib/hooks/use-prefers-reduced-motion';
 
-const INSTALL_CMD = 'pip install opentide';
+const INSTALL_CMD = 'pip install opentide==0.1.0';
 const TICK_MS = 42;
 
 function TerminalAnimation() {
