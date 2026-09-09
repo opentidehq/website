@@ -12,7 +12,7 @@ Built with [Next.js](https://nextjs.org/) and [Fumadocs](https://fumadocs.dev/),
 | Documentation | Synced at build time | `/docs` |
 | Specifications | [specifications](https://github.com/OpenTideHQ/specifications) repo | `/docs/specifications` |
 | Usage, CLI, MCP, SDK | [opentide](https://github.com/OpenTideHQ/opentide) `docs/` | `/docs/{usage,cli,mcp,sdk}` |
-| Blog | This repo `content/blog/` | `/blog` |
+| Blog | This repo `content/blog/` | `/blog/` |
 
 Documentation prose is synced from the opentide and specifications repos via `pnpm sync:content` and **committed** under `content/docs/` so private-repo CI can build without cross-repository access. After upstream doc changes, run sync and commit the diff.
 
