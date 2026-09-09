@@ -1,6 +1,6 @@
 # OpenTide Website
 
-Source for the OpenTide web presence — deployed on GitHub Pages ([congenial-winner-o8y3gq9.pages.github.io](https://congenial-winner-o8y3gq9.pages.github.io); [opentide.org](https://opentide.org) DNS later).
+Source for the OpenTide web presence — deployed on GitHub Pages at [opentide.org](https://opentide.org).
 
 Built with [Next.js](https://nextjs.org/) and [Fumadocs](https://fumadocs.dev/), exported as a static site for GitHub Pages.
 
@@ -90,17 +90,15 @@ Open a pull request. Posts appear at `/blog/<filename-without-extension>/`.
 1. **opentide** submodule tracks the `development` branch (Fumadocs-formatted docs under `docs/`).
 2. **specifications** content must exist in the [specifications](https://github.com/OpenTideHQ/specifications) repository — until published, local builds fall back to `../specifications` when the vendor submodule is empty.
 
-Pushes to `main` deploy to **GitHub Pages** via `.github/workflows/deploy.yml`.
-
-### Custom domain (opentide.org) — later
-
-When DNS is ready: add `public/CNAME` with `opentide.org`, set the custom domain in GitHub Pages settings, and update `siteUrl` in `lib/shared.ts`.
+Pushes to `main` deploy to **GitHub Pages** via `.github/workflows/deploy.yml`. Custom domain is `opentide.org` (`public/CNAME`, `siteUrl` in `lib/shared.ts`, and the Pages custom-domain field). Apex DNS is four GitHub A records plus AAAA; `www` CNAMEs to `OpenTideHQ.github.io`. Do not attach `blog.opentide.org` to this Pages site — forward it to `/blog/` at the registrar.
 
 ## Related repositories
 
 - **[opentide](https://github.com/OpenTideHQ/opentide)** — DetectionOps engine (PyPI)
 - **[specifications](https://github.com/OpenTideHQ/specifications)** — Normative specs
-- **[ShareTide](https://github.com/OpenTideHQ/ShareTide)** — Community detection objects
+- **[library](https://github.com/OpenTideHQ/library)** — Public detection objects
+- **[explorer](https://github.com/OpenTideHQ/explorer)** — Browse published objects
+- **[skills](https://github.com/OpenTideHQ/skills)** — Agent skills for detection engineering
 
 ## License
 
