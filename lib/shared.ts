@@ -15,7 +15,7 @@ export const gitConfig = {
 /** Marketing chrome — the wordmark already goes home, so no Home link. */
 export const siteNavLinks = [
   { label: 'Docs', href: '/docs/usage/' },
-  { label: 'Blog', href: '/blog' },
+  { label: 'Blog', href: '/blog/' },
 ] as const;
 
 /**
