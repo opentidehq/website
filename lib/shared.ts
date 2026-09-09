@@ -4,7 +4,7 @@ export const appDescription =
 export const docsRoute = '/docs';
 export const docsImageRoute = '/og/docs';
 export const docsContentRoute = '/llms.mdx/docs';
-export const siteUrl = 'https://congenial-winner-o8y3gq9.pages.github.io';
+export const siteUrl = 'https://opentide.org';
 
 export const gitConfig = {
   user: 'OpenTideHQ',
