@@ -2,7 +2,7 @@ import { docs, blogPosts } from 'collections/server';
 import { loader } from 'fumadocs-core/source';
 import { lucideIconsPlugin } from 'fumadocs-core/source/plugins/lucide-icons';
 import { toFumadocsSource } from 'fumadocs-mdx/runtime/server';
-import { docsContentRoute, docsImageRoute, docsRoute } from './shared';
+import { blogImageRoute, docsContentRoute, docsImageRoute, docsRoute } from './shared';
 
 export const source = loader({
   baseUrl: docsRoute,
@@ -21,6 +21,15 @@ export function getPageImage(page: (typeof source)['$inferPage']) {
   return {
     segments,
     url: `${docsImageRoute}/${segments.join('/')}`,
+  };
+}
+
+export function getBlogImage(page: (typeof blog)['$inferPage']) {
+  const segments = [...page.slugs, 'image.png'];
+
+  return {
+    segments,
+    url: `${blogImageRoute}/${segments.join('/')}`,
   };
 }
 

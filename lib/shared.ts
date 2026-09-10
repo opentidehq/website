@@ -3,6 +3,10 @@ export const appDescription =
   'The DetectionOps engine for detection-as-code — validate, generate, deploy, and document rules across seven security platforms.';
 export const docsRoute = '/docs';
 export const docsImageRoute = '/og/docs';
+export const blogImageRoute = '/og/blog';
+export const siteImageRoute = '/og/site';
+export const siteOgImage = `${siteImageRoute}/image.png`;
+export const blogIndexOgImage = `${blogImageRoute}/image.png`;
 export const docsContentRoute = '/llms.mdx/docs';
 export const siteUrl = 'https://opentide.org';
 
