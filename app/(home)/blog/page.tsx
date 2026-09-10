@@ -1,10 +1,17 @@
 import Link from 'next/link';
 import { getBlogPosts } from '@/lib/source';
+import { blogIndexOgImage } from '@/lib/shared';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Blog',
   description: 'News, announcements, and engineering posts from the opentide team.',
+  openGraph: {
+    images: blogIndexOgImage,
+  },
+  twitter: {
+    images: blogIndexOgImage,
+  },
 };
 
 function formatDate(date: Date) {

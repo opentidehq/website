@@ -1,4 +1,4 @@
-import { blog } from '@/lib/source';
+import { blog, getBlogImage } from '@/lib/source';
 import { getMDXComponents } from '@/components/mdx';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -67,5 +67,16 @@ export async function generateMetadata(
   return {
     title: page.data.title,
     description: page.data.description,
+    authors: [{ name: page.data.author }],
+    openGraph: {
+      type: 'article',
+      publishedTime: page.data.date.toISOString(),
+      authors: [page.data.author],
+      tags: page.data.tags,
+      images: getBlogImage(page).url,
+    },
+    twitter: {
+      images: getBlogImage(page).url,
+    },
   };
 }

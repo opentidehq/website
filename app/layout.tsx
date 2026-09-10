@@ -1,6 +1,6 @@
 import { Inter, JetBrains_Mono } from 'next/font/google';
 import { Provider } from '@/components/provider';
-import { siteUrl } from '@/lib/shared';
+import { siteOgImage, siteUrl } from '@/lib/shared';
 import type { Metadata } from 'next';
 import './global.css';
 
@@ -26,6 +26,15 @@ export const metadata: Metadata = {
   },
   description:
     'The DetectionOps engine for detection-as-code — validate, generate, deploy, and document rules across seven security platforms.',
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    siteName: 'opentide',
+    images: siteOgImage,
+  },
+  twitter: {
+    card: 'summary_large_image',
+  },
 };
 
 export default function Layout({ children }: LayoutProps<'/'>) {

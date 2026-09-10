@@ -78,5 +78,8 @@ export async function generateMetadata(
     openGraph: {
       images: getPageImage(page).url,
     },
+    twitter: {
+      images: getPageImage(page).url,
+    },
   };
 }

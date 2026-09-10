@@ -9,11 +9,21 @@ import { EcosystemGrid } from '@/components/landing/ecosystem-grid';
 import { PipelineFlow } from '@/components/landing/pipeline-flow';
 import { WorkflowStudio, ObjectGraph } from '@/components/landing/landing-heavy';
 import type { Metadata } from 'next';
+import { siteOgImage } from '@/lib/shared';
 
 export const metadata: Metadata = {
   title: 'opentide, the DetectionOps Engine',
   description:
     'The battle-hardened detection engineering standard for teams adopting detection-as-code—strict validation, deployment pipelines, and agent-native constructs on an object graph that scales with you.',
+  openGraph: {
+    title: 'opentide, the DetectionOps Engine',
+    description:
+      'The battle-hardened detection engineering standard for teams adopting detection-as-code—strict validation, deployment pipelines, and agent-native constructs on an object graph that scales with you.',
+    images: siteOgImage,
+  },
+  twitter: {
+    images: siteOgImage,
+  },
 };
 
 export default function HomePage() {
