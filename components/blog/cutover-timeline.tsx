@@ -8,14 +8,14 @@ import { usePrefersReducedMotion } from '@/lib/hooks/use-prefers-reduced-motion'
 const beats: { step: string; label: string; desc: string; icon: LucideIcon }[] = [
   {
     step: '01',
-    label: 'Engine on PyPI',
+    label: 'Package on PyPI',
     desc: 'pip install opentide==0.1.0 — CLI, MCP, and SDK on one version.',
     icon: Package,
   },
   {
     step: '02',
     label: 'Old tree archived',
-    desc: 'The old engine and companion repos go read-only. Pinned checkouts keep resolving.',
+    desc: 'The old implementation and companion repos go read-only. Pinned checkouts keep resolving.',
     icon: Archive,
   },
   {
