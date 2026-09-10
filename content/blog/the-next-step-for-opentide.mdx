@@ -1,0 +1,141 @@
+---
+title: The next step for OpenTide
+description: The spec stays the spec. The implementation is a package you pin — pip install opentide==0.1.0.
+author: OpenTide Team
+date: 2026-09-08
+tags:
+  - announcement
+---
+
+OpenTide is a spec and an implementation. The spec is the contract for detection objects — threats, objectives, rules. The `opentide` package implements that spec. It is the engine you run against a detection repo.
+
+Until now that implementation lived in your git tree as a submodule. The next step is a version you can pin:
+
+```bash
+pip install opentide==0.1.0
+```
+
+Specs, usage docs, and this blog live here, at opentide.org.
+
+<SpecStack />
+
+The spec does not ship detections. The package does not hold your YAML. Your repo is still the source of truth for what you detect.
+
+## Why the submodule had to go
+
+You can already write detections for Sentinel, Splunk, Defender, SentinelOne, Carbon Black, CrowdStrike, and HarfangLab. What kept breaking was sharing the implementation: it was not a version you could pin, upgrades were not reviewable, and every instance rewrote the same CI glue.
+
+The old tree lived in the client repo as a submodule. Imports walked git to find `sys.path`. You pinned a SHA, hoped the next pull left `Orchestration/` alone, and could not write `opentide==0.4` and go home.
+
+So we rebuilt it as a package, in a new repository. The old tree stays as history.
+
+<ThenNow />
+
+<Tabs items={['Before', 'After']}>
+
+<Tab value="Before">
+
+```python
+import sys, git
+sys.path.append(str(git.Repo(".", search_parent_directories=True).working_dir))
+from Engines.modules.tide import DataTide
+from Engines.modules.plugins import DeployTide
+
+rule = DataTide.Models.mdr[uuid]
+DeployTide.mdr["sentinel"].deploy(...)
+```
+
+```bash
+python Orchestration/validate.py
+```
+
+</Tab>
+
+<Tab value="After">
+
+```python
+from opentide import OpenTide
+
+OpenTide.initialise()
+rule = OpenTide.Rules[uuid]
+rule.deploy("sentinel")
+```
+
+```bash
+pip install opentide==0.1.0
+opentide validate --strict
+opentide deploy --platform sentinel --dry-run
+```
+
+</Tab>
+
+</Tabs>
+
+## What changed
+
+You pin a version, not a submodule SHA. `pip install opentide==0.1.0`, then lock it like any other dependency.
+
+CLI, SDK, and MCP are the same package — `opentide validate`, `from opentide import OpenTide`, `opentide-mcp`. Not three implementations, and not a pile of `Orchestration/` scripts.
+
+JSON Schema is generated from the models, so the types and the schema cannot drift. Detection content stays in your repo.
+
+A threat is still what you defend against. An objective is still what you are trying to detect. A rule is still how you detect it on a platform. References still point rule → objective → threat; coverage still flows the other way. See the [object model](/docs/usage/concepts/object-model/).
+
+<Callout type="info">
+Seven platforms deploy. Five validate query syntax — KQL, SPL, S1QL, Lucene. CrowdStrike and HarfangLab cannot. The CLI and MCP report `supported: false` there instead of inventing a pass.
+</Callout>
+
+## Soft cutover
+
+<CutoverTimeline />
+
+We are archiving the old implementation and companion repos. History stays. Issues stay. The READMEs will point here. New work goes in the package.
+
+Pinned submodule SHAs and existing clones keep working. Existing production instances do not have to move this week. They should move when they next touch CI.
+
+There is no `opentide migrate`. The [migration guide](/docs/usage/migration/) is the path: drop the submodule, replace `Orchestration/` with the CLI, set `OPENTIDE_REPO_ROOT`, run `opentide validate --strict`. If you would rather have someone else do the mechanical edits, there is a prompt on that page. Review the diff as if a colleague wrote it.
+
+<Steps>
+
+<Step>
+
+### Archive
+
+The old implementation and companion repos go read-only. SHAs and clones you already have are unaffected.
+
+</Step>
+
+<Step>
+
+### Migrate when you next touch CI
+
+Remove the submodule. `pip install opentide==0.1.0`. Swap `python Orchestration/validate.py` for `opentide validate --strict`. Keep `--platform`; do not bring back `--system`.
+
+</Step>
+
+<Step>
+
+### Four weeks of support
+
+We are not adding platforms in this stretch. We will fix deployer bugs, docs, setup, and migration questions. After that we can talk about 1.0.
+
+</Step>
+
+</Steps>
+
+## Four weeks
+
+The package works. For four weeks we are not adding platforms. We will fix what you hit: validation that is too loud or too quiet, a deployer that misbehaves on a tenant you actually have, a setup wizard that writes the wrong MCP path, a migration step the guide forgot.
+
+<Callout type="warn">
+If something is wrong, file it on [OpenTideHQ/opentide](https://github.com/OpenTideHQ/opentide/issues). That is the package now. The archived tree will not grow new fixes.
+</Callout>
+
+The old implementation ran in production for years before it was open-sourced. 0.1.0 is that same work, installable, and honest about which platforms can check a query. Then we take four weeks of bug reports.
+
+<Cards>
+  <Card title="0.1.0" href="/docs/usage/releases/" description="First public beta — pin the version, then migrate when you next touch CI." />
+  <Card title="Usage" href="/docs/usage/" description="Install, object model, and the detection-as-code loop." />
+  <Card title="Migration" href="/docs/usage/migration/" description="Submodule to package — imports, CI, and the copy-paste prompt." />
+  <Card title="MCP" href="/docs/mcp/installation/" description="Same package, from an editor or an MCP client." />
+</Cards>

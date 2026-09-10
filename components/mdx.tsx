@@ -5,7 +5,8 @@ import { Step, Steps } from 'fumadocs-ui/components/steps';
 import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
 import { TypeTable } from 'fumadocs-ui/components/type-table';
 import { CutoverTimeline } from '@/components/blog/cutover-timeline';
-import { PipelineFlow } from '@/components/landing/pipeline-flow';
+import { SpecStack } from '@/components/blog/spec-stack';
+import { ThenNow } from '@/components/blog/then-now';
 import { Mermaid } from '@/components/mdx/mermaid';
 import type { MDXComponents } from 'mdx/types';
 
@@ -19,11 +20,12 @@ export function getMDXComponents(components?: MDXComponents) {
     Files,
     Folder,
     Mermaid,
-    PipelineFlow,
+    SpecStack,
     Step,
     Steps,
     Tab,
     Tabs,
+    ThenNow,
     TypeTable,
     ...components,
   } satisfies MDXComponents;
