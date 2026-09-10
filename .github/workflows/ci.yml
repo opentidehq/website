@@ -54,4 +54,8 @@ jobs:
           SKIP_SYNC: '1'
 
       - name: Verify static export output
-        run: test -f out/index.html && test -f out/.nojekyll
+        run: |
+          test -f out/index.html
+          test -f out/.nojekyll
+          test -f out/og/site/image.png
+          test -f out/og/blog/image.png

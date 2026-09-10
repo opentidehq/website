@@ -32,7 +32,10 @@ async function loadOgFonts() {
         style: 'normal' as const,
       };
     }),
-  );
+  ).catch((error: unknown) => {
+    fontsPromise = undefined;
+    throw error;
+  });
   return fontsPromise;
 }
 
@@ -84,6 +87,8 @@ function OgFrame({
           opacity: 0.12,
         }}
       >
+        {/* Satori ImageResponse cannot use next/image. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img alt="" src={iconSrc} width={400} height={400} />
       </div>
 
@@ -95,6 +100,7 @@ function OgFrame({
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center' }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img alt="" src={iconSrc} width={72} height={72} />
           <div
             style={{
@@ -185,11 +191,17 @@ function OgFrame({
 }
 
 export async function generateOgImage(props: OgImageProps) {
-  const [fonts, iconSrc] = await Promise.all([loadOgFonts(), loadOgIcon()]);
+  const iconSrc = await loadOgIcon();
+  let fonts: OgFonts | undefined;
+  try {
+    fonts = await loadOgFonts();
+  } catch (error) {
+    console.warn('OG Inter fonts unavailable; using Satori defaults', error);
+  }
 
   return new ImageResponse(<OgFrame {...props} iconSrc={iconSrc} />, {
     ...ogSize,
-    fonts,
+    ...(fonts ? { fonts } : {}),
   });
 }
 
