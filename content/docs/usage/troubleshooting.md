@@ -1,6 +1,6 @@
 ---
 title: Troubleshooting
-description: Common OpenTide failures — validation errors, generation drift, platform loading, and deployment — with fixes.
+description: Common opentide failures — validation errors, generation drift, platform loading, and deployment — with fixes.
 ---
 
 The failures you are most likely to hit, why they happen, and how to fix them. If your problem is a genuine bug, open an issue on [opentide](https://github.com/OpenTideHQ/opentide/issues).
@@ -9,7 +9,7 @@ The failures you are most likely to hit, why they happen, and how to fix them. I
 
 ### `Could not resolve repository root` / objects not found
 
-OpenTide does not know where your content lives. Set the repo root explicitly:
+opentide does not know where your content lives. Set the repo root explicitly:
 
 ```bash
 export OPENTIDE_REPO_ROOT=/path/to/detection-repo
@@ -40,7 +40,7 @@ opentide generate
 opentide validate --strict
 ```
 
-Run [`generate`](../cli/generate.md) after cloning a repo, after upgrading the OpenTide package, and whenever schema revisions change.
+Run [`generate`](../cli/generate.md) after cloning a repo, after upgrading the opentide package, and whenever schema revisions change.
 
 ### Editor stopped validating YAML
 
@@ -88,7 +88,7 @@ See [Exit codes](../cli/exit-codes.md).
 
 ### `supported: false` for a platform
 
-CrowdStrike and HarfangLab are **deploy-only** — they cannot validate query syntax, and OpenTide reports this honestly rather than faking a pass. This is expected behaviour, not an error. Validate queries on a supporting platform (Sentinel, Defender, Splunk, SentinelOne, Carbon Black). See [Platforms](./concepts/platforms.md#query-validation-policy).
+CrowdStrike and HarfangLab are **deploy-only** — they cannot validate query syntax, and opentide reports this honestly rather than faking a pass. This is expected behaviour, not an error. Validate queries on a supporting platform (Sentinel, Defender, Splunk, SentinelOne, Carbon Black). See [Platforms](./concepts/platforms.md#query-validation-policy).
 
 ### MCP `validate_query` always returns valid
 
@@ -110,7 +110,7 @@ Verify with `opentide info --platform sentinel`. See [Configuration → enabling
 
 ### Deploy fails with an authentication error
 
-Credentials are missing or wrong. OpenTide reads them from your platform TOML, typically via environment variables. Confirm the variables are set in your shell (or CI secrets) and match the keys the platform expects (`opentide info --platform <name>`). Never commit secrets — see [Configuration → credentials](./configuration.md#credentials).
+Credentials are missing or wrong. opentide reads them from your platform TOML, typically via environment variables. Confirm the variables are set in your shell (or CI secrets) and match the keys the platform expects (`opentide info --platform <name>`). Never commit secrets — see [Configuration → credentials](./configuration.md#credentials).
 
 ### `deploy metadata` seems to do nothing
 

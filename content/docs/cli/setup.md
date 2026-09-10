@@ -167,7 +167,7 @@ Pass `--ci none` on the default callback to skip CI file generation while still 
 
 ## Non-interactive use
 
-Interactive setup requires a TTY. In CI or an agent subprocess, provide explicit targets and `--yes`; OpenTide fails immediately rather than waiting for hidden input.
+Interactive setup requires a TTY. In CI or an agent subprocess, provide explicit targets and `--yes`; opentide fails immediately rather than waiting for hidden input.
 
 ## Source
 

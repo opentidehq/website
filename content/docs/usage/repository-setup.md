@@ -14,7 +14,7 @@ opentide setup
 
 The wizard uses arrow-key menus and checkboxes for repository metadata, platforms, CI workflow features, MCP hosts, and agent skill targets. Only the repository name is inferred from the current directory. Platforms are explicitly selected, CI starts at **Configure later**, and MCP/skills are opt-in.
 
-Before writing, OpenTide displays the target and selected steps and asks for one confirmation. Existing destinations are therefore visible before setup updates them.
+Before writing, opentide displays the target and selected steps and asks for one confirmation. Existing destinations are therefore visible before setup updates them.
 
 ## Scripted onboarding
 
@@ -107,7 +107,7 @@ See [Agentic setup](./workflows/agentic-setup.md) for details.
 
 ## VS Code settings (deprecated)
 
-`opentide setup vscode` writes yaml.schemas and snippets — interim scaffolding until the OpenTide VS Code extension ships. Prefer `opentide setup mcp --vscode` for MCP configuration.
+`opentide setup vscode` writes yaml.schemas and snippets — interim scaffolding until the opentide VS Code extension ships. Prefer `opentide setup mcp --vscode` for MCP configuration.
 
 ## CLI reference
 

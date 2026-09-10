@@ -3,7 +3,7 @@ title: Schema revision
 description: Why every object has two version fields, what each one controls, and how schema revisions coexist.
 ---
 
-Every OpenTide object carries **two** version-like fields, and mixing them up is the single most common authoring mistake. This page explains what each controls and why they are separate.
+Every opentide object carries **two** version-like fields, and mixing them up is the single most common authoring mistake. This page explains what each controls and why they are separate.
 
 ## Two fields, two jobs
 
@@ -48,7 +48,7 @@ This means a schema upgrade never forces a big-bang migration — you move objec
 | Situation | Action |
 |-----------|--------|
 | You changed a rule's detection logic | Bump `metadata.version` |
-| You upgraded the OpenTide package | Run `opentide generate` to refresh schema artifacts |
+| You upgraded the opentide package | Run `opentide generate` to refresh schema artifacts |
 | A new schema revision is available | Migrate objects to the new `metadata.schema` when ready |
 | Your editor stopped validating YAML | Regenerate: `opentide generate schemas` |
 

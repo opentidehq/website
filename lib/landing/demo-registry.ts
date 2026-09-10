@@ -457,7 +457,7 @@ default_actions = ["notable"]
 
 [[modifiers]]
 name = "Platform defaults"
-description = "Applied to every scheduled search deployed by OpenTide"
+description = "Applied to every scheduled search deployed by opentide"
 [modifiers.conditions]
 default = true
 [modifiers.modifications]
@@ -521,7 +521,7 @@ export const REVIEW_JOBS: ReviewJob[] = [
       '$ opentide validate',
       '09:41:02  INFO     validates_all_opentide_objects_via_model_validate',
       '09:41:04  INFO     step_completed',
-      '  detail: Successfully verified 5 OpenTide objects',
+      '  detail: Successfully verified 5 opentide objects',
       '09:41:04  INFO     all_content_successfully_passed_validation',
       '::group::Validate Sentinel queries',
       '$ opentide validate query --platform sentinel',
@@ -605,7 +605,7 @@ export const OBJECT_BLURBS: Record<string, ObjectBlurb> = {
     title: 'CERT-EU 2026-006 brief',
     kind: 'Engineer prompt',
     intent:
-      'Starting brief — not an OpenTide object. The engineer (or agent) turns this narrative into a threat vector.',
+      'Starting brief — not an opentide object. The engineer (or agent) turns this narrative into a threat vector.',
     blurb:
       'External intel arrives as a link the agent opens, not a folder in the object graph. Authoring starts when you write the first threat::1.0.',
     points: [

@@ -1,6 +1,6 @@
 ---
 title: Vocabulary catalog
-description: Index of canonical vocabulary files bundled with OpenTide. Each file lives in `vocabularies/` and is referenced by field path in object specs and metaschema `tide.vocab` keywords.
+description: Index of canonical vocabulary files bundled with opentide. Each file lives in `vocabularies/` and is referenced by field path in object specs and metaschema `tide.vocab` keywords.
 spec: vocabulary-catalog
 version: "1.0"
 schema_id: null

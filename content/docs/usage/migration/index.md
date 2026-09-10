@@ -124,7 +124,7 @@ Or configure manually:
 
 ## Agent-assisted migration
 
-OpenTide no longer provides `opentide migrate`. Use the [CoreTide migration prompt](./prompt.md) with your coding agent to replace submodule imports, Orchestration scripts, and CI configuration.
+opentide no longer provides `opentide migrate`. Use the [CoreTide migration prompt](./prompt.md) with your coding agent to replace submodule imports, Orchestration scripts, and CI configuration.
 
 ## Deprecation timeline
 

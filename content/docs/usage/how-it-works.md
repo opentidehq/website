@@ -1,5 +1,5 @@
 ---
-title: How OpenTide works
+title: How opentide works
 description: The end-to-end DetectionOps lifecycle — from authoring objects to deploying and documenting detections in CI.
 ---
 
@@ -7,7 +7,7 @@ This page is the mental model. Everything else in the docs is a detail of one of
 
 ## The lifecycle
 
-OpenTide turns a repository of detection **objects** into validated, deployed, and documented detections. The engine sits between your YAML and your platforms.
+opentide turns a repository of detection **objects** into validated, deployed, and documented detections. The engine sits between your YAML and your platforms.
 
 ```mermaid
 flowchart TD
@@ -90,7 +90,7 @@ The same operations are available three ways. Pick per task — see [Choosing an
 
 A common point of confusion:
 
-- **`generate`** produces *framework scaffolding* (schemas, templates, router) inside `.opentide/`. Run it after upgrading OpenTide or changing schema revisions.
+- **`generate`** produces *framework scaffolding* (schemas, templates, router) inside `.opentide/`. Run it after upgrading opentide or changing schema revisions.
 - **`generate docs`** produces *human wiki pages* from your loaded objects. Run it after content changes.
 - **`deploy`** pushes *rules to platforms*. It reads objects; it does not regenerate scaffolding.
 

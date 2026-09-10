@@ -74,7 +74,7 @@ function extractTitleAndDescription(body) {
       .filter(Boolean)[0]
       ?.slice(0, 320) ??
     firstPara?.slice(0, 320) ??
-    `OpenTide normative specification — ${title}`;
+    `opentide normative specification — ${title}`;
 
   return { title, description };
 }
@@ -213,23 +213,57 @@ function rewritePublishedLinks(content) {
     .replace(/\]\(\.\.\/\.\.\/CHANGELOG\.md\)/g, `](${SPECS_BLOB}/CHANGELOG.md)`)
     .replace(/\]\(\.\.\/CHANGELOG\.md\)/g, `](${SPECS_BLOB}/CHANGELOG.md)`)
     .replace(/\]\(CHANGELOG\.md\)/g, `](${SPECS_BLOB}/CHANGELOG.md)`)
-    .replace(/https:\/\/github\.com\/OpenTide\/opentide/g, 'https://github.com/OpenTideHQ/opentide')
+    .replace(
+      /https:\/\/github\.com\/(?:OpenTide|opentide)\/opentide/g,
+      'https://github.com/OpenTideHQ/opentide',
+    )
     .replace(/\]\(\.\.\/\.\.\/internal\//g, `](${OPENTIDE_BLOB}/internal/`)
     .replace(/\]\(\.agents\//g, '](https://github.com/OpenTideHQ/opentide/blob/development/.agents/')
     .replace(/\]\(\.github\//g, '](https://github.com/OpenTideHQ/specifications/blob/main/.github/');
 }
 
-function postProcessMarkdown(content) {
-  return rewritePublishedLinks(stripRedundantSummary(stripLeadingH1(content)));
+/** Brand is lowercase. Keep the GitHub org suffix HQ and the Python registry identifier. */
+function rewriteBrandName(content) {
+  const camel = 'Open' + 'Tide';
+  const hq = camel + 'HQ';
+  const registry = camel + 'Registry';
+  const tick = '`' + camel + '`';
+  const imported = 'from opentide import ' + camel;
+  const exported = camel + ', __version__';
+  const oldOrg = 'github.com/' + camel + '/';
+  return content
+    .replaceAll(hq, '\uE000HQ\uE001')
+    .replaceAll(registry, '\uE000REG\uE001')
+    .replaceAll(oldOrg, '\uE000OLDORG\uE001')
+    .replaceAll(imported, '\uE000IMPORT\uE001')
+    .replaceAll(exported, '\uE000EXPORT\uE001')
+    .replaceAll(tick, '\uE000TICK\uE001')
+    .replace(new RegExp(`${camel}(?=\\.[A-Za-z_])`, 'g'), '\uE000API\uE001')
+    .replaceAll(camel, 'opentide')
+    .replaceAll('\uE000HQ\uE001', hq)
+    .replaceAll('\uE000REG\uE001', registry)
+    .replaceAll('\uE000OLDORG\uE001', oldOrg)
+    .replaceAll('\uE000IMPORT\uE001', imported)
+    .replaceAll('\uE000EXPORT\uE001', exported)
+    .replaceAll('\uE000TICK\uE001', tick)
+    .replaceAll('\uE000API\uE001', camel);
 }
 
-function postProcessMarkdownTree(dir) {
+function postProcessMarkdown(content) {
+  return rewriteBrandName(rewritePublishedLinks(stripRedundantSummary(stripLeadingH1(content))));
+}
+
+function postProcessPublishedTree(dir) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const p = join(dir, entry.name);
-    if (entry.isDirectory()) postProcessMarkdownTree(p);
-    else if (entry.name.endsWith('.md')) {
-      const raw = readFileSync(p, 'utf8');
-      writeFileSync(p, postProcessMarkdown(raw));
+    if (entry.isDirectory()) {
+      postProcessPublishedTree(p);
+      continue;
+    }
+    if (entry.name.endsWith('.md')) {
+      writeFileSync(p, postProcessMarkdown(readFileSync(p, 'utf8')));
+    } else if (entry.name.endsWith('.json')) {
+      writeFileSync(p, rewriteBrandName(readFileSync(p, 'utf8')));
     }
   }
 }
@@ -263,7 +297,7 @@ function buildSpecificationsMeta() {
   return {
     root: true,
     title: 'Specifications',
-    description: 'Normative OpenTide specifications for authors, maintainers, and agents',
+    description: 'Normative opentide specifications for authors, maintainers, and agents',
     icon: 'FileText',
     pages: [
       'index',
@@ -294,12 +328,12 @@ function buildSpecificationsMeta() {
 function buildSpecificationsIndex() {
   return `---
 title: Specifications
-description: Normative OpenTide specifications — versioning, objects, vocabularies, and governance.
+description: Normative opentide specifications — versioning, objects, vocabularies, and governance.
 ---
 
-# OpenTide Specifications
+# opentide Specifications
 
-Normative specifications define the contract between OpenTide implementations, detection repositories, and agent tooling. Each spec is independently versioned.
+Normative specifications define the contract between opentide implementations, detection repositories, and agent tooling. Each spec is independently versioned.
 
 ## Start here
 
@@ -393,7 +427,7 @@ function main() {
   );
 
   const pageCount = countFiles(OUT, (f) => f.endsWith('.md'));
-  postProcessMarkdownTree(OUT);
+  postProcessPublishedTree(OUT);
   console.log(`sync-content: wrote ${pageCount} markdown pages to content/docs/`);
 }
 

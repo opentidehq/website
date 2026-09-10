@@ -1,6 +1,6 @@
 ---
 title: Platforms
-description: "OpenTide ships seven detection platform integrations. Each platform has bundled TOML configuration, an optional deployer entry point, an optional query validator, and a typed rule configuration model referenced from `rule::1.0` via `configurations.<platform>`."
+description: "opentide ships seven detection platform integrations. Each platform has bundled TOML configuration, an optional deployer entry point, an optional query validator, and a typed rule configuration model referenced from `rule::1.0` via `configurations.<platform>`."
 spec: platforms
 version: "1.0"
 schema_id: null

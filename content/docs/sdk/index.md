@@ -1,6 +1,6 @@
 ---
 title: Python SDK
-description: Embed OpenTide in Python applications — registry lifecycle, validation, documentation, and platform plugins.
+description: Embed opentide in Python applications — registry lifecycle, validation, documentation, and platform plugins.
 icon: Code
 ---
 

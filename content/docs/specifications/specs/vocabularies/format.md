@@ -1,6 +1,6 @@
 ---
 title: Vocabulary format
-description: OpenTide vocabularies are TOML files (`.vocab.toml`) defining allowed enum values for object and configuration fields. Canonical copies live in `vocabularies/`; opentide bundles them at build time.
+description: opentide vocabularies are TOML files (`.vocab.toml`) defining allowed enum values for object and configuration fields. Canonical copies live in `vocabularies/`; opentide bundles them at build time.
 spec: vocabulary-format
 version: "1.0"
 schema_id: null

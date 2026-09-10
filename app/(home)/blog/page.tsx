@@ -4,7 +4,7 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Blog',
-  description: 'News, announcements, and engineering posts from the OpenTide team.',
+  description: 'News, announcements, and engineering posts from the opentide team.',
 };
 
 function formatDate(date: Date) {
@@ -22,7 +22,7 @@ export default function BlogPage() {
     <div className="container mx-auto px-4 py-16 md:py-20 max-w-3xl">
       <h1 className="text-3xl md:text-4xl font-bold mb-2">Blog</h1>
       <p className="text-fd-muted-foreground mb-12">
-        Announcements and engineering notes from the OpenTide project.
+        Announcements and engineering notes from the opentide project.
       </p>
 
       <div className="space-y-8">

@@ -1,13 +1,13 @@
 ---
 title: Governance
-description: How OpenTide specifications are proposed, reviewed, versioned, and published — and why the model is shaped this way.
+description: How opentide specifications are proposed, reviewed, versioned, and published — and why the model is shaped this way.
 ---
 
-The specifications are the **normative source** for OpenTide. This page explains who controls them, how they change, and why the model is built this way. It is written for anyone reading the specs; the repository mechanics contributors need live in the [specifications repository](https://github.com/OpenTideHQ/specifications).
+The specifications are the **normative source** for opentide. This page explains who controls them, how they change, and why the model is built this way. It is written for anyone reading the specs; the repository mechanics contributors need live in the [specifications repository](https://github.com/OpenTideHQ/specifications).
 
 ## Why specifications exist
 
-OpenTide previously mixed architecture notes, Python models, and generated JSON Schema with no single normative source, so authors, agents, and implementers had no clear precedence order. The specifications repository fixes that: it is a language-neutral, agent-friendly contract that evolves through a lightweight, transparent process.
+opentide previously mixed architecture notes, Python models, and generated JSON Schema with no single normative source, so authors, agents, and implementers had no clear precedence order. The specifications repository fixes that: it is a language-neutral, agent-friendly contract that evolves through a lightweight, transparent process.
 
 ## Authority model
 

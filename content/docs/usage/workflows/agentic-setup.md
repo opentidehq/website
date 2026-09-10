@@ -3,7 +3,7 @@ title: Agentic setup
 description: Configure MCP servers and agent skills so AI assistants work safely with detection content — with an example session and its limits.
 ---
 
-OpenTide exposes the engine to AI agents through an [MCP server](../../mcp/index.md) and portable agent skills, so an assistant in your editor can search the catalogue, validate objects, and preview deploys. This page sets it up, shows a realistic session, and is honest about what agents can and cannot do today.
+opentide exposes the engine to AI agents through an [MCP server](../../mcp/index.md) and portable agent skills, so an assistant in your editor can search the catalogue, validate objects, and preview deploys. This page sets it up, shows a realistic session, and is honest about what agents can and cannot do today.
 
 ## What agents can and cannot do today
 

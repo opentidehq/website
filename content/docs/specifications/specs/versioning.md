@@ -1,6 +1,6 @@
 ---
 title: Versioning
-description: OpenTide separates **structural schema revisions** from **object instance versions**. Schema revisions select the validation model and generated JSON Schema artifact; instance versions track business content evolution in git.
+description: opentide separates **structural schema revisions** from **object instance versions**. Schema revisions select the validation model and generated JSON Schema artifact; instance versions track business content evolution in git.
 spec: versioning
 version: "1.0"
 schema_id: null

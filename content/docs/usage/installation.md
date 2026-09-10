@@ -15,7 +15,7 @@ One install gets the CLI, MCP server (`opentide-mcp`), all seven platform adapte
 
 ## Recommended: an isolated environment
 
-Install OpenTide into a virtual environment so its dependencies never collide with other tools:
+Install opentide into a virtual environment so its dependencies never collide with other tools:
 
 <Tabs items={['venv + pip', 'uv']}>
 
@@ -63,11 +63,11 @@ Get-Command opentide -All
 where.exe opentide
 ```
 
-OpenTide does not ship or generate `opentide.bat`. Inspect any bat wrapper reported by these commands before using it; it may have been created by local tooling or an agent.
+opentide does not ship or generate `opentide.bat`. Inspect any bat wrapper reported by these commands before using it; it may have been created by local tooling or an agent.
 
 ### Live deploy SDKs (when needed)
 
-OpenTide ships platform logic in the wheel. **Third-party SDKs** are only required for live API deploy to some vendors — install them separately in the same environment if you use live deploy (not for validate, generate, or dry-run):
+opentide ships platform logic in the wheel. **Third-party SDKs** are only required for live API deploy to some vendors — install them separately in the same environment if you use live deploy (not for validate, generate, or dry-run):
 
 | Live deploy target | Additional `pip install` |
 |--------------------|---------------------------|
@@ -92,7 +92,7 @@ These `--platform` values are built into the package — **no separate PyPI extr
 
 See [Platforms](./concepts/platforms.md) for deploy vs query-validation capabilities.
 
-## Contributing to OpenTide
+## Contributing to opentide
 
 To work on the [opentide](https://github.com/OpenTideHQ/opentide) package itself:
 

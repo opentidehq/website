@@ -1,6 +1,6 @@
-# OpenTide Website
+# opentide Website
 
-Source for the OpenTide web presence — deployed on GitHub Pages at [opentide.org](https://opentide.org).
+Source for the opentide web presence — deployed on GitHub Pages at [opentide.org](https://opentide.org).
 
 Built with [Next.js](https://nextjs.org/) and [Fumadocs](https://fumadocs.dev/), exported as a static site for GitHub Pages.
 
@@ -25,10 +25,10 @@ Documentation prose is synced from the opentide and specifications repos via `pn
 
 ### Monorepo layout (recommended)
 
-If you clone OpenTide repos as siblings:
+If you clone opentide repos as siblings:
 
 ```
-OpenTide/
+opentide/
 ├── opentide/
 ├── specifications/
 └── website/    ← you are here
