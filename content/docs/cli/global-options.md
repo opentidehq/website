@@ -22,7 +22,7 @@ opentide --debug --no-color generate
 
 ## Repository root resolution
 
-When `--repo` is omitted, OpenTide walks up from the current directory to find the repository root (objects, configurations markers). Explicit `--repo` or `OPENTIDE_REPO_ROOT` always wins.
+When `--repo` is omitted, opentide walks up from the current directory to find the repository root (objects, configurations markers). Explicit `--repo` or `OPENTIDE_REPO_ROOT` always wins.
 
 Setup commands honour `--repo` when `--path` is `.` (default).
 

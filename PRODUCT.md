@@ -1,4 +1,4 @@
-# OpenTide Website
+# opentide Website
 
 ## Register
 
@@ -10,7 +10,7 @@ Detection engineers, security platform operators, and AI-agent integrators build
 
 ## Product purpose
 
-Marketing site and documentation hub for OpenTide — the DetectionOps engine. Help visitors evaluate the project, install the CLI/SDK/MCP stack, read normative specifications, and adopt DetectionOps workflows.
+Marketing site and documentation hub for opentide — the DetectionOps engine. Help visitors evaluate the project, install the CLI/SDK/MCP stack, read normative specifications, and adopt DetectionOps workflows.
 
 ## Brand personality
 

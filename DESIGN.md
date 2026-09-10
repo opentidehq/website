@@ -1,5 +1,5 @@
 ---
-name: OpenTide
+name: opentide
 description: DetectionOps engine — EU coastal precision on the marketing site; Fumadocs clarity in docs.
 colors:
   eu-blue: "#001489"
@@ -68,7 +68,7 @@ components:
 
 ## Overview
 
-OpenTide uses two registers on one codebase: an expressive **brand** landing (FLIP liquid ASCII hero, EU blue/yellow) and a restrained **product** docs shell (Fumadocs neutral theme). Typography is Inter everywhere; JetBrains Mono for code and terminal demos. Motion is intentional: one canvas liquid-ASCII hero, restrained section transitions - all gated by `prefers-reduced-motion`. Landing light mode is white+blue; dark is black+yellow.
+opentide uses two registers on one codebase: an expressive **brand** landing (FLIP liquid ASCII hero, EU blue/yellow) and a restrained **product** docs shell (Fumadocs neutral theme). Typography is Inter everywhere; JetBrains Mono for code and terminal demos. Motion is intentional: one canvas liquid-ASCII hero, restrained section transitions - all gated by `prefers-reduced-motion`. Landing light mode is white+blue; dark is black+yellow.
 
 Logo and logotype assets live in `public/brand/` (synced from OpenTideHQ/.github): Material Tsunami circle mark + **opentide** wordmark.
 

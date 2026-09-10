@@ -1,6 +1,6 @@
 ---
 title: Registry API
-description: OpenTide registry lifecycle, typed object access, configuration accessors, and lookup.
+description: opentide registry lifecycle, typed object access, configuration accessors, and lookup.
 ---
 
 `OpenTide` is a module-level singleton of `OpenTideRegistry` with explicit initialisation.

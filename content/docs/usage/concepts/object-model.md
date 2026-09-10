@@ -3,7 +3,7 @@ title: Object model
 description: Threat vectors, detection objectives, and MDR rules — what each is for, how they chain, and how to author them.
 ---
 
-OpenTide organises detection content into three object families under `objects/`. Together they answer three questions: **what do we defend against?** (threat), **what are we trying to detect?** (objective), and **how do we detect it?** (rule).
+opentide organises detection content into three object families under `objects/`. Together they answer three questions: **what do we defend against?** (threat), **what are we trying to detect?** (objective), and **how do we detect it?** (rule).
 
 | Object | Answers | Directory | Schema | Acronym |
 |--------|---------|-----------|--------|---------|

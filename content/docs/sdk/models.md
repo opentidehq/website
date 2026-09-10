@@ -129,7 +129,7 @@ Exceptions live under `opentide.core.errors.Errors` (aliased `TideErrors`). Catc
 | `Errors.TideDeploymentErrors` | Any failure during deployment |
 | `Errors.TenantConnectionError` | Cannot connect to the target tenant |
 | `Errors.DetectionRuleCreationFailed` / `…UpdateFailed` / `…DeletionFailed` | Platform API operation failed |
-| `Errors.TideConfigurationErrors` | Invalid OpenTide configuration files |
+| `Errors.TideConfigurationErrors` | Invalid opentide configuration files |
 | `Errors.TenantNonExistingDeploymentPlan` | A tenant references a missing deployment plan |
 
 ```python

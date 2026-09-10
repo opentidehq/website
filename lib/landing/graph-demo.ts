@@ -32,7 +32,7 @@ export type GraphNodeMeta = {
   points: string[];
   facts: { label: string; value: string }[];
   next?: string;
-  /** YAML path for OpenTide objects; trigger has none */
+  /** YAML path for opentide objects; trigger has none */
   path?: string;
   yaml?: string;
   lane: 'trigger' | 'threat' | 'left' | 'right';
@@ -253,7 +253,7 @@ export const GRAPH_NODES: Record<GraphNodeId, GraphNodeMeta> = {
     short: 'ISAC brief',
     title: 'Device-code phishing campaign',
     intent:
-      'Not an OpenTide object — just the spark. External intel you ingest before anything is authored under objects/.',
+      'Not an opentide object — just the spark. External intel you ingest before anything is authored under objects/.',
     blurb:
       'A feed item, advisory, or ticket that tells the team what to model. Authors and agents translate it into a threat::1.0 vector; the trigger itself never validates against a schema.',
     points: [

@@ -1,5 +1,5 @@
 ---
-title: OpenTide spec index
+title: opentide spec index
 description: One-page index of active normative spec versions — each spec is independently versioned.
 ---
 

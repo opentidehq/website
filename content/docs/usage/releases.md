@@ -1,6 +1,6 @@
 ---
 title: Releases
-description: Public package versions of the OpenTide DetectionOps engine on PyPI.
+description: Public package versions of the opentide DetectionOps engine on PyPI.
 ---
 
 The engine is the [`opentide`](https://pypi.org/project/opentide/) package. Pin a version in CI. Source of truth for notes is [`CHANGELOG.md`](https://github.com/OpenTideHQ/opentide/blob/development/CHANGELOG.md) in the repository; GitHub Releases are tagged `v*` and publish to PyPI.

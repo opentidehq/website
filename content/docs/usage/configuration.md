@@ -3,11 +3,11 @@ title: Configuration
 description: What lives in .opentide/configurations/ — enabling platforms, credentials, deployment statuses, promotion, and visibility.
 ---
 
-OpenTide ships sensible defaults inside the package. Your repository customises them under `.opentide/configurations/`. This guide is the practical tour of that directory; the normative merge rules live in the [Configuration spec](/docs/specifications/specs/configuration/).
+opentide ships sensible defaults inside the package. Your repository customises them under `.opentide/configurations/`. This guide is the practical tour of that directory; the normative merge rules live in the [Configuration spec](/docs/specifications/specs/configuration/).
 
 ## How configuration is layered
 
-OpenTide deep-merges configuration from several sources. Later layers win; nested tables merge, scalars replace.
+opentide deep-merges configuration from several sources. Later layers win; nested tables merge, scalars replace.
 
 ```mermaid
 flowchart LR
@@ -93,7 +93,7 @@ proxy_password = "${PROXY_PASSWORD}"
 
 ## Deployment statuses and strategies
 
-Every rule's `status` must match a status defined in the merged `deployment.toml`. That is the only constraint — statuses are a configurable set, not a fixed lifecycle, and OpenTide does not enforce an order between them. OpenTide ships this set out of the box:
+Every rule's `status` must match a status defined in the merged `deployment.toml`. That is the only constraint — statuses are a configurable set, not a fixed lifecycle, and opentide does not enforce an order between them. opentide ships this set out of the box:
 
 | Status | Strategy | What it does |
 |--------|----------|--------------|

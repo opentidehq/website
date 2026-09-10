@@ -3,7 +3,7 @@ title: CI/CD
 description: Gate detection content on every PR and deploy on merge — GitHub, GitLab, and Azure pipelines with staging, promotion, and secrets.
 ---
 
-The point of detection-as-code is that a machine enforces quality. A good OpenTide pipeline **validates every pull request** and **deploys on merge**, promoting to production as a controlled step.
+The point of detection-as-code is that a machine enforces quality. A good opentide pipeline **validates every pull request** and **deploys on merge**, promoting to production as a controlled step.
 
 ```mermaid
 flowchart LR
@@ -15,7 +15,7 @@ flowchart LR
 
 ## Scaffold with setup
 
-The fastest start is to let OpenTide write the pipeline for you:
+The fastest start is to let opentide write the pipeline for you:
 
 ```bash
 opentide setup ci --ci github --platform sentinel --yes

@@ -16,7 +16,7 @@ export function BlogPostRedirect() {
         href={NEXT_STEP_HREF}
         className="text-[var(--landing-accent)] underline underline-offset-2"
       >
-        Continue to The next step for OpenTide
+        Continue to The next step for opentide
       </Link>
     </div>
   );

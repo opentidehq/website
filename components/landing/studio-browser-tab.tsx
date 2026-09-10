@@ -17,7 +17,7 @@ import { TIMING } from '@/lib/landing/studio-timing';
 
 const LINK = 'text-sky-700 underline decoration-dotted underline-offset-2 dark:text-sky-300';
 
-/** The publisher's own blue, kept off the OpenTide accent so the page reads as someone else's. */
+/** The publisher's own blue, kept off the opentide accent so the page reads as someone else's. */
 const SITE_BLUE = '#004494';
 
 /** `[[text]]` renders as a page link, `` `text` `` as inline code. */

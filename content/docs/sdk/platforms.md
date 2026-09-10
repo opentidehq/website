@@ -60,7 +60,7 @@ Each platform module exposes `declare()` returning deployer/validator factories.
 
 ## Authoring a custom platform plugin
 
-You can add support for a platform OpenTide does not ship by publishing a small package that registers an `opentide.platforms` entry point. At a high level:
+You can add support for a platform opentide does not ship by publishing a small package that registers an `opentide.platforms` entry point. At a high level:
 
 <Steps>
 

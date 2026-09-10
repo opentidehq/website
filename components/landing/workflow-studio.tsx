@@ -189,7 +189,7 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
     out: [
       '09:12:38  INFO     validates_all_opentide_objects_via_model_validate',
       '09:12:40  INFO     step_completed',
-      '  detail: Successfully verified 1 OpenTide object',
+      '  detail: Successfully verified 1 opentide object',
       '09:12:40  INFO     all_content_successfully_passed_validation',
     ],
   },
@@ -224,7 +224,7 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
     out: [
       '09:19:04  INFO     validates_all_opentide_objects_via_model_validate',
       '09:19:06  INFO     step_completed',
-      '  detail: Successfully verified 2 OpenTide objects',
+      '  detail: Successfully verified 2 opentide objects',
       '09:19:06  INFO     all_content_successfully_passed_validation',
     ],
   },
@@ -265,7 +265,7 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
     out: [
       '09:26:41  INFO     validates_all_opentide_objects_via_model_validate',
       '09:26:44  INFO     step_completed',
-      '  detail: Successfully verified 3 OpenTide objects',
+      '  detail: Successfully verified 3 opentide objects',
       '09:26:44  INFO     all_content_successfully_passed_validation',
     ],
   },

@@ -3,7 +3,7 @@ title: CoreTide migration prompt
 description: Copy-paste LLM prompt for migrating legacy CoreTide submodule repositories to opentide.
 ---
 
-OpenTide no longer ships `opentide migrate`. For the few repositories still on CoreTide git submodules, paste the prompt below into your agent (Cursor, Claude Code, Copilot, and so on) and review every diff.
+opentide no longer ships `opentide migrate`. For the few repositories still on CoreTide git submodules, paste the prompt below into your agent (Cursor, Claude Code, Copilot, and so on) and review every diff.
 
 See also the [migration guide](./index.md) for background and verification steps.
 

@@ -1,6 +1,6 @@
 ---
 title: MCP tools
-description: Tool reference for the OpenTide MCP server — parameters, behaviour, and response shapes.
+description: Tool reference for the opentide MCP server — parameters, behaviour, and response shapes.
 ---
 
 Registered in `src/opentide/mcp_server/server.py`. Implementations in `src/opentide/mcp_server/tools.py`.

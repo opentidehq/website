@@ -1,4 +1,4 @@
-# OpenTide brand assets
+# opentide brand assets
 
 Synced from [OpenTideHQ/.github](https://github.com/OpenTideHQ/.github) `assets/`.
 

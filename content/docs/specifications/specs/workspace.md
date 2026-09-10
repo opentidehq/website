@@ -10,7 +10,7 @@ supersedes: null
 
 ## Requirements
 
-- A healthy OpenTide workspace MUST contain `objects/` with subdirectories for each core object family.
+- A healthy opentide workspace MUST contain `objects/` with subdirectories for each core object family.
 - Generated artifacts MUST live under `.opentide/` — not committed as hand-edited sources.
 - Client configuration overrides MUST live only under `.opentide/configurations/`.
 - Object YAML files MUST reside in the paths defined by merged `paths.toml` configuration.
