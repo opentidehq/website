@@ -50,4 +50,4 @@ Being honest about scope:
 
 - [How opentide works](./how-it-works.md) — the end-to-end lifecycle.
 - [Object model](./concepts/object-model.md) — the three object families and chaining.
-- [Installation](./installation.md) — get the CLI on your machine. First public release: [0.1.0](./releases.md).
+- [Installation](./installation.md) — get the CLI on your machine. Current package: [opentide on PyPI](https://pypi.org/project/opentide/).

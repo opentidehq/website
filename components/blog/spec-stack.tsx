@@ -14,11 +14,11 @@ const LAYERS = [
   },
   {
     id: 'pkg',
-    title: 'opentide==0.1.0',
+    title: 'opentide',
     role: 'the engine you run',
     items: ['CLI', 'Python', 'MCP'],
-    detail: 'One package that implements the spec. Pin it like any other dependency.',
-    pill: '0.1.0',
+    detail: 'One package that implements the spec. Install from PyPI, then lock it like any other dependency.',
+    pill: 'PyPI',
   },
   {
     id: 'repo',

@@ -5,7 +5,7 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'The next step for opentide',
   description:
-    'The spec stays the spec. The implementation is a package you pin — pip install opentide==0.1.0.',
+    'The spec stays the spec. The implementation is a package you install — pip install opentide.',
   robots: { index: false, follow: true },
   alternates: { canonical: NEXT_STEP_HREF },
   openGraph: {

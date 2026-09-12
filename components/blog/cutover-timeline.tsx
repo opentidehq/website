@@ -9,7 +9,7 @@ const beats: { step: string; label: string; desc: string; icon: LucideIcon }[] =
   {
     step: '01',
     label: 'Package on PyPI',
-    desc: 'pip install opentide==0.1.0 — CLI, MCP, and SDK on one version.',
+    desc: 'pip install opentide — CLI, MCP, and SDK on one package.',
     icon: Package,
   },
   {
