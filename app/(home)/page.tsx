@@ -3,6 +3,7 @@ import { ArrowRight } from 'lucide-react';
 import { TideAsciiScene } from '@/components/landing/tide-ascii-scene';
 import { TiltBadge } from '@/components/landing/tilt-badge';
 import { HeroInstall } from '@/components/landing/hero-install';
+import { PypiProjectLink } from '@/components/landing/pypi-release-link';
 import { HeroPitch } from '@/components/landing/hero-pitch';
 import { FeatureShowcase } from '@/components/landing/feature-showcase';
 import { EcosystemGrid } from '@/components/landing/ecosystem-grid';
@@ -135,14 +136,7 @@ export default function HomePage() {
               Explore documentation
               <ArrowRight className="size-4 transition group-hover:translate-x-0.5" aria-hidden />
             </Link>
-            <a
-              href="https://pypi.org/project/opentide/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="landing-btn-secondary"
-            >
-              Install from PyPI
-            </a>
+            <PypiProjectLink className="landing-btn-secondary">Install from PyPI</PypiProjectLink>
           </div>
         </div>
       </section>

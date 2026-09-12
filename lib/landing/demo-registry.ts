@@ -514,7 +514,7 @@ export const REVIEW_JOBS: ReviewJob[] = [
     id: 'validate',
     name: 'Validate',
     trigger: 'on: pull_request',
-    meta: 'ubuntu-latest · python 3.12 · pip install opentide==0.1.0',
+    meta: 'ubuntu-latest · python 3.12 · pip install opentide',
     duration: '48s',
     lines: [
       '::group::Validate objects',

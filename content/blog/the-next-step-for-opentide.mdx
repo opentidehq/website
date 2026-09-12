@@ -1,6 +1,6 @@
 ---
 title: The next step for opentide
-description: The spec stays the spec. The implementation is a package you pin — pip install opentide==0.1.0.
+description: The spec stays the spec. The implementation is a package you install — pip install opentide.
 author: opentide
 date: 2026-09-08
 tags:
@@ -9,10 +9,10 @@ tags:
 
 opentide is a spec and an implementation. The spec is the contract for detection objects — threats, objectives, rules. The `opentide` package implements that spec. It is the engine you run against a detection repo.
 
-Until now that implementation lived in your git tree as a submodule. The next step is a version you can pin:
+Until now that implementation lived in your git tree as a submodule. The next step is a package you can install:
 
 ```bash
-pip install opentide==0.1.0
+pip install opentide
 ```
 
 Specs, usage docs, and this blog live here, at opentide.org.
@@ -62,7 +62,7 @@ rule.deploy("sentinel")
 ```
 
 ```bash
-pip install opentide==0.1.0
+pip install opentide
 opentide validate --strict
 opentide deploy --platform sentinel --dry-run
 ```
@@ -73,7 +73,7 @@ opentide deploy --platform sentinel --dry-run
 
 ## What changed
 
-You pin a version, not a submodule SHA. `pip install opentide==0.1.0`, then lock it like any other dependency.
+You install a package, not a submodule SHA. `pip install opentide`, then lock it like any other dependency.
 
 CLI, SDK, and MCP are the same package — `opentide validate`, `from opentide import OpenTide`, `opentide-mcp`. Not three implementations, and not a pile of `Orchestration/` scripts.
 
@@ -109,7 +109,7 @@ The old implementation and companion repos go read-only. SHAs and clones you alr
 
 ### Migrate when you next touch CI
 
-Remove the submodule. `pip install opentide==0.1.0`. Swap `python Orchestration/validate.py` for `opentide validate --strict`. Keep `--platform`; do not bring back `--system`.
+Remove the submodule. `pip install opentide`. Swap `python Orchestration/validate.py` for `opentide validate --strict`. Keep `--platform`; do not bring back `--system`.
 
 </Step>
 
@@ -134,7 +134,7 @@ If something is wrong, file it on [OpenTideHQ/opentide](https://github.com/OpenT
 The old implementation ran in production for years before it was open-sourced. 0.1.0 is that same work, installable, and honest about which platforms can check a query. Then we take four weeks of bug reports.
 
 <Cards>
-  <Card title="0.1.0" href="/docs/usage/releases/" description="First public beta — pin the version, then migrate when you next touch CI." />
+  <Card title="Releases" href="/docs/usage/releases/" description="What's on PyPI — then migrate when you next touch CI." />
   <Card title="Usage" href="/docs/usage/" description="Install, object model, and the detection-as-code loop." />
   <Card title="Migration" href="/docs/usage/migration/" description="Submodule to package — imports, CI, and the copy-paste prompt." />
   <Card title="MCP" href="/docs/mcp/installation/" description="Same package, from an editor or an MCP client." />

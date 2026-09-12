@@ -23,7 +23,7 @@ const ROWS: {
   { id: 'threats', depth: 2, name: 'threats/', kind: 'dir', when: 'always' },
   { id: 'objectives', depth: 2, name: 'objectives/', kind: 'dir', when: 'always' },
   { id: 'rules', depth: 2, name: 'rules/', kind: 'dir', when: 'always' },
-  { id: 'req', depth: 1, name: 'requirements.txt', kind: 'file', when: 'pkg', note: 'opentide==0.1.0' },
+  { id: 'req', depth: 1, name: 'requirements.txt', kind: 'file', when: 'pkg', note: 'opentide' },
 ];
 
 function visibleIn(when: When, mode: Mode) {
@@ -127,7 +127,7 @@ export function ThenNow() {
               <span className="text-[var(--landing-accent)]" aria-hidden>
                 $
               </span>{' '}
-              pip install opentide==0.1.0
+              pip install opentide
             </li>
             <li className="text-[var(--landing-ink)]">
               <span className="text-[var(--landing-accent)]" aria-hidden>
