@@ -4,9 +4,9 @@ import { ArrowUpRight } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { usePypiRelease } from '@/lib/hooks/use-pypi-release';
 
-export function PypiReleaseLink() {
-  const release = usePypiRelease();
-  const hasVersion = release.status === 'ready' && release.version !== null;
+export function PypiReleaseLink({ initialVersion }: { initialVersion?: string | null }) {
+  const release = usePypiRelease(initialVersion);
+  const hasVersion = release.version !== null;
   const label = hasVersion ? `${release.version} on PyPI` : 'opentide on PyPI';
   const ariaLabel = hasVersion
     ? `opentide ${release.version} on PyPI`
@@ -31,15 +31,14 @@ export function PypiReleaseLink() {
 export function PypiProjectLink({
   className,
   children,
+  initialVersion,
 }: {
   className?: string;
   children: ReactNode;
+  initialVersion?: string | null;
 }) {
-  const release = usePypiRelease();
-  const title =
-    release.status === 'ready' && release.version
-      ? `${release.version} on PyPI`
-      : undefined;
+  const release = usePypiRelease(initialVersion);
+  const title = release.version ? `${release.version} on PyPI` : undefined;
 
   return (
     <a

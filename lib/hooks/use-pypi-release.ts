@@ -16,12 +16,14 @@ export type PypiReleaseState = {
 };
 
 const FETCH_TIMEOUT_MS = 8_000;
+const CACHE_TTL_MS = 60_000;
 
 let cachedVersion: string | null = null;
+let cachedAt = 0;
 let inflight: Promise<string> | null = null;
 
 function loadLatestVersion(): Promise<string> {
-  if (cachedVersion) {
+  if (cachedVersion && Date.now() - cachedAt < CACHE_TTL_MS) {
     return Promise.resolve(cachedVersion);
   }
   if (!inflight) {
@@ -30,13 +32,14 @@ function loadLatestVersion(): Promise<string> {
     inflight = requestLatestVersion(controller.signal)
       .then((version) => {
         cachedVersion = version;
+        cachedAt = Date.now();
         return version;
       })
       .catch((error: unknown) => {
-        inflight = null;
         throw error;
       })
       .finally(() => {
+        inflight = null;
         window.clearTimeout(timeout);
       });
   }
@@ -46,6 +49,7 @@ function loadLatestVersion(): Promise<string> {
 async function requestLatestVersion(signal: AbortSignal): Promise<string> {
   const response = await fetch(PYPI_JSON_URL, {
     signal,
+    cache: 'no-store',
     headers: { Accept: 'application/json' },
   });
   if (!response.ok) {
@@ -59,17 +63,15 @@ async function requestLatestVersion(signal: AbortSignal): Promise<string> {
   return version;
 }
 
-export function usePypiRelease(): PypiReleaseState {
-  const [version, setVersion] = useState<string | null>(cachedVersion);
-  const [status, setStatus] = useState<'loading' | 'ready' | 'error'>(
-    cachedVersion ? 'ready' : 'loading',
+export function usePypiRelease(initialVersion?: string | null): PypiReleaseState {
+  const [version, setVersion] = useState<string | null>(
+    () => cachedVersion ?? initialVersion ?? null,
+  );
+  const [status, setStatus] = useState<'loading' | 'ready' | 'error'>(() =>
+    cachedVersion || initialVersion ? 'ready' : 'loading',
   );
 
   useEffect(() => {
-    if (cachedVersion) {
-      return;
-    }
-
     let cancelled = false;
     void loadLatestVersion()
       .then((next) => {
@@ -83,6 +85,10 @@ export function usePypiRelease(): PypiReleaseState {
         if (cancelled) {
           return;
         }
+        if (cachedVersion || initialVersion) {
+          setStatus('ready');
+          return;
+        }
         if (error instanceof DOMException && error.name === 'AbortError') {
           setStatus('error');
           return;
@@ -93,7 +99,7 @@ export function usePypiRelease(): PypiReleaseState {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [initialVersion]);
 
   return {
     status,
