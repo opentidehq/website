@@ -5,7 +5,6 @@ import {
   parsePypiProjectPayload,
   PYPI_JSON_URL,
   PYPI_PROJECT_URL,
-  pypiReleaseUrl,
 } from '@/lib/pypi';
 
 export type PypiReleaseState = {
@@ -105,6 +104,8 @@ export function usePypiRelease(initialVersion?: string | null): PypiReleaseState
     status,
     version,
     packageUrl: PYPI_PROJECT_URL,
-    releaseUrl: version ? pypiReleaseUrl(version) : PYPI_PROJECT_URL,
+    // Always the project page — that URL is the latest release. A versioned
+    // permalink would go stale between website deploys.
+    releaseUrl: PYPI_PROJECT_URL,
   };
 }

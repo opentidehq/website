@@ -74,5 +74,5 @@ jobs:
           needle = f'{version} on PyPI'
           if needle not in html:
               raise SystemExit(f'Homepage is missing {needle!r}')
-          print(f'Homepage advertises {needle}')
+          print(f'Homepage advertises {needle} (build snapshot; live visitors re-fetch PyPI)')
           PY
