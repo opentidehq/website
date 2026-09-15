@@ -2,7 +2,7 @@
 #
 # A package release does NOT need this workflow for the landing version number —
 # that is fetched live from PyPI in the browser. This pipeline exists so that
-# when docs/changelog/specs change, the site updates, merges, and deploys with
+# when docs/changelog/specs change, the site updates and deploys with
 # no human in the loop.
 #
 # Instant trigger from OpenTideHQ/opentide after a PyPI publish (optional):
@@ -29,7 +29,6 @@ concurrency:
 
 permissions:
   contents: write
-  pull-requests: write
   actions: write
 
 jobs:
@@ -160,75 +159,18 @@ jobs:
         env:
           SKIP_SYNC: '1'
 
-      - name: Push branch, merge, and deploy
+      - name: Push to main and deploy
         if: steps.commit.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
-          BRANCH=chore/sync-docs
-          SHA=$(git rev-parse HEAD)
-          OWNER="${GITHUB_REPOSITORY_OWNER}"
-          git checkout -B "$BRANCH"
-          git push -u origin "HEAD:refs/heads/${BRANCH}" --force
-
-          # REST `head=owner:branch` is in-repo only (forks cannot match) and is
-          # not capped at the 30 newest PRs like `gh pr list` without --head.
-          find_pr() {
-            gh api -X GET "repos/${GITHUB_REPOSITORY}/pulls" \
-              -f state=open \
-              -f base=main \
-              -f "head=${OWNER}:${BRANCH}" \
-              --jq '.[0].number // empty'
-          }
-
-          existing="$(find_pr)"
-          if [ -n "$existing" ]; then
-            PR="$existing"
-            echo "Updating existing in-repo PR #${PR}"
-          else
-            PR_URL="$(gh pr create \
-              --base main \
-              --head "$BRANCH" \
-              --title "chore: sync documentation from upstream" \
-              --body "$(cat <<'EOF'
-          Automated documentation sync from `OpenTideHQ/opentide` and `OpenTideHQ/specifications`.
-
-          This PR is opened, verified, merged, and deployed by `.github/workflows/sync-docs.yml`. No review is required.
-
-          The landing-page package version is fetched live from PyPI and does **not** wait on this PR.
-          EOF
-          )")" || PR_URL=""
-            if [ -z "$PR_URL" ]; then
-              PR="$(find_pr)"
-              if [ -z "$PR" ]; then
-                echo "::error::Could not create or locate in-repo PR for ${BRANCH}."
-                exit 1
-              fi
-              echo "Using existing in-repo PR #${PR} after create failed"
-            else
-              PR="${PR_URL##*/}"
-              gh pr edit "$PR" --add-label documentation || true
-            fi
-          fi
-
-          echo "Merging PR #${PR} at ${SHA}"
-          merged=false
-          for attempt in 1 2 3 4 5 6; do
-            if gh pr merge "$PR" --squash --delete-branch --match-head-commit "$SHA"; then
-              merged=true
-              break
-            fi
-            echo "Merge not ready (attempt ${attempt}); waiting 10s"
-            sleep 10
-          done
-          if [ "$merged" != true ]; then
-            echo "::error::Could not merge PR #${PR}. Leaving it open for a human."
-            exit 1
-          fi
-
-          # Merges performed with GITHUB_TOKEN do not trigger `on: push` workflows.
-          # Dispatch deploy explicitly against main (which now contains the squash).
+          # GITHUB_TOKEN cannot create pull requests unless the repository
+          # setting "Allow GitHub Actions to create and approve pull requests"
+          # is enabled. The commit is already linted/typechecked/built, so
+          # push it to main and dispatch Pages (token pushes do not fire
+          # on: push workflows).
+          git push origin "HEAD:refs/heads/main"
           echo "Dispatching GitHub Pages deploy"
           gh workflow run deploy.yml --ref main
