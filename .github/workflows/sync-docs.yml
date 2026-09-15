@@ -174,15 +174,17 @@ jobs:
           #
           # Concurrency serializes jobs, but a queued run still checks out
           # github.sha from when the event was accepted. If main moved,
-          # replay the docs paths on top of origin/main instead of FF-only.
+          # replay the docs trees onto origin/main (including deletions)
+          # instead of a fast-forward-only push.
           SYNC_COMMIT=$(git rev-parse HEAD)
           git fetch origin main
           if git merge-base --is-ancestor origin/main "$SYNC_COMMIT"; then
             git push origin "$SYNC_COMMIT:refs/heads/main"
           else
             git checkout --force -B sync-push origin/main
+            git rm -r --quiet --ignore-unmatch -- content/docs
             git checkout "$SYNC_COMMIT" -- vendor/opentide vendor/specifications content/docs
-            git add vendor/opentide vendor/specifications content/docs
+            git add -- vendor/opentide vendor/specifications content/docs
             if git diff --cached --quiet; then
               echo "main already has this documentation"
             else
