@@ -6,7 +6,7 @@
  *   OPENTIDE_DOCS_PATH  → vendor/opentide/docs → ../opentide/docs
  *   SPECIFICATIONS_PATH → vendor/specifications → ../specifications
  */
-import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -15,6 +15,22 @@ const ROOT = resolve(__dirname, '..');
 const OUT = join(ROOT, 'content', 'docs');
 
 const OPENTIDE_SECTIONS = ['usage', 'cli', 'mcp', 'sdk'];
+
+function isSymlink(path) {
+  try {
+    return lstatSync(path).isSymbolicLink();
+  } catch {
+    return false;
+  }
+}
+
+function isRegularFile(path) {
+  try {
+    return lstatSync(path).isFile();
+  } catch {
+    return false;
+  }
+}
 
 function resolvePath(envVar, candidates, validate) {
   if (process.env[envVar]) {
@@ -43,10 +59,10 @@ function isSpecificationsPath(p) {
 }
 
 function copyDir(src, dest, { exclude = [] } = {}) {
-  if (!existsSync(src)) return;
+  if (!existsSync(src) || isSymlink(src)) return;
   mkdirSync(dest, { recursive: true });
   for (const entry of readdirSync(src, { withFileTypes: true })) {
-    if (exclude.includes(entry.name)) continue;
+    if (exclude.includes(entry.name) || entry.isSymbolicLink()) continue;
     const from = join(src, entry.name);
     const to = join(dest, entry.name);
     if (entry.isDirectory()) {
@@ -255,6 +271,7 @@ function postProcessMarkdown(content) {
 
 function postProcessPublishedTree(dir) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    if (entry.isSymbolicLink()) continue;
     const p = join(dir, entry.name);
     if (entry.isDirectory()) {
       postProcessPublishedTree(p);
@@ -269,11 +286,11 @@ function postProcessPublishedTree(dir) {
 }
 
 function syncMarkdownTree(srcDir, destDir, { exclude = [] } = {}) {
-  if (!existsSync(srcDir)) return;
+  if (!existsSync(srcDir) || isSymlink(srcDir)) return;
   mkdirSync(destDir, { recursive: true });
 
   for (const entry of readdirSync(srcDir, { withFileTypes: true })) {
-    if (exclude.includes(entry.name)) continue;
+    if (exclude.includes(entry.name) || entry.isSymbolicLink()) continue;
     const from = join(srcDir, entry.name);
     const to = join(destDir, entry.name);
 
@@ -387,7 +404,7 @@ function main() {
 
   // Conceptual overview: prefer an authored site/index.md, else fall back to the generated stub.
   const authoredIndex = join(specificationsRoot, 'site', 'index.md');
-  if (existsSync(authoredIndex)) {
+  if (isRegularFile(authoredIndex)) {
     writeFileSync(
       join(specOut, 'index.md'),
       transformSpecFrontmatter(readFileSync(authoredIndex, 'utf8'), 'index.md'),
@@ -400,15 +417,14 @@ function main() {
   // RFCs are contributor/provenance docs — kept in the specifications repo, not published to the site.
   for (const file of ['SPECS.md', 'GOVERNANCE.md', 'conformance.md']) {
     const src = join(specificationsRoot, file);
-    if (existsSync(src)) {
-      const dest = join(specOut, file);
-      const raw = readFileSync(src, 'utf8');
-      writeFileSync(dest, transformSpecFrontmatter(raw, file));
-    }
+    if (!isRegularFile(src)) continue;
+    const dest = join(specOut, file);
+    const raw = readFileSync(src, 'utf8');
+    writeFileSync(dest, transformSpecFrontmatter(raw, file));
   }
 
   const siteMeta = join(specificationsRoot, 'site', 'meta.json');
-  if (existsSync(siteMeta)) {
+  if (isRegularFile(siteMeta)) {
     cpSync(siteMeta, join(specOut, 'meta.json'));
   } else {
     writeFileSync(join(specOut, 'meta.json'), `${JSON.stringify(buildSpecificationsMeta(), null, 2)}\n`);
@@ -434,6 +450,7 @@ function main() {
 function countFiles(dir, predicate) {
   let count = 0;
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    if (entry.isSymbolicLink()) continue;
     const p = join(dir, entry.name);
     if (entry.isDirectory()) count += countFiles(p, predicate);
     else if (predicate(p)) count += 1;

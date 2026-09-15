@@ -52,31 +52,42 @@ jobs:
             exit 1
           fi
 
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
+          # Keep deploy keys out of ~/.ssh so a symlink in a submodule cannot
+          # copy them into public content/docs during pnpm sync:content.
+          KEY_DIR="${RUNNER_TEMP}/docs-submodule-keys"
+          mkdir -p "$KEY_DIR"
+          chmod 700 "$KEY_DIR"
+          echo "KEY_DIR=$KEY_DIR" >> "$GITHUB_ENV"
 
           awk '/-----BEGIN OPENTIDE KEY-----/{f=1;next}/-----END OPENTIDE KEY-----/{f=0}f' \
-            <<<"$BUNDLE" > ~/.ssh/opentide
+            <<<"$BUNDLE" > "$KEY_DIR/opentide"
           awk '/-----BEGIN SPECIFICATIONS KEY-----/{f=1;next}/-----END SPECIFICATIONS KEY-----/{f=0}f' \
-            <<<"$BUNDLE" > ~/.ssh/specifications
-          chmod 600 ~/.ssh/opentide ~/.ssh/specifications
+            <<<"$BUNDLE" > "$KEY_DIR/specifications"
+          chmod 600 "$KEY_DIR/opentide" "$KEY_DIR/specifications"
 
-          ssh-keyscan -t ed25519,rsa github.com >> ~/.ssh/known_hosts 2>/dev/null
+          ssh-keyscan -t ed25519,rsa github.com >> "$KEY_DIR/known_hosts" 2>/dev/null
+          chmod 644 "$KEY_DIR/known_hosts"
 
           printf '%s\n' \
             'Host github.com-opentide' \
             '  HostName github.com' \
             '  User git' \
-            '  IdentityFile ~/.ssh/opentide' \
+            "  IdentityFile ${KEY_DIR}/opentide" \
             '  IdentitiesOnly yes' \
+            '  StrictHostKeyChecking yes' \
+            "  UserKnownHostsFile ${KEY_DIR}/known_hosts" \
             '' \
             'Host github.com-specifications' \
             '  HostName github.com' \
             '  User git' \
-            '  IdentityFile ~/.ssh/specifications' \
+            "  IdentityFile ${KEY_DIR}/specifications" \
             '  IdentitiesOnly yes' \
-            > ~/.ssh/config
-          chmod 600 ~/.ssh/config
+            '  StrictHostKeyChecking yes' \
+            "  UserKnownHostsFile ${KEY_DIR}/known_hosts" \
+            > "$KEY_DIR/config"
+          chmod 600 "$KEY_DIR/config"
+
+          echo "GIT_SSH_COMMAND=ssh -F ${KEY_DIR}/config -o IdentitiesOnly=yes" >> "$GITHUB_ENV"
 
           git config submodule.vendor/opentide.url git@github.com-opentide:OpenTideHQ/opentide.git
           git config submodule.vendor/specifications.url git@github.com-specifications:OpenTideHQ/specifications.git
@@ -87,6 +98,15 @@ jobs:
           git config submodule.vendor/opentide.url git@github.com-opentide:OpenTideHQ/opentide.git
           git config submodule.vendor/specifications.url git@github.com-specifications:OpenTideHQ/specifications.git
           git submodule update --init --remote --merge vendor/opentide vendor/specifications
+
+      - name: Remove submodule SSH keys
+        if: always()
+        run: |
+          set -euo pipefail
+          if [ -n "${KEY_DIR:-}" ] && [ -d "$KEY_DIR" ]; then
+            rm -rf "$KEY_DIR"
+          fi
+          echo "GIT_SSH_COMMAND=" >> "$GITHUB_ENV"
 
       - uses: pnpm/action-setup@v4
 
@@ -148,13 +168,23 @@ jobs:
         run: |
           set -euo pipefail
           BRANCH=chore/sync-docs
+          SHA=$(git rev-parse HEAD)
+          OWNER="${GITHUB_REPOSITORY_OWNER}"
           git checkout -B "$BRANCH"
           git push -u origin "HEAD:refs/heads/${BRANCH}" --force
 
-          existing="$(gh pr list --head "$BRANCH" --base main --state open --json number --jq '.[0].number // empty')"
+          # gh pr list --head matches branch name only (not owner:branch), so a
+          # fork PR with the same head ref could otherwise be .[0]. Restrict to
+          # this repository, then require the SHA we just pushed.
+          find_pr() {
+            gh pr list --base main --state open --json number,headRefName,headRepositoryOwner \
+              --jq "[.[] | select(.headRefName == \"${BRANCH}\" and ((.headRepositoryOwner.login // \"\") | ascii_downcase) == (\"${OWNER}\" | ascii_downcase))] | .[0].number // empty"
+          }
+
+          existing="$(find_pr)"
           if [ -n "$existing" ]; then
             PR="$existing"
-            echo "Updating existing PR #${PR}"
+            echo "Updating existing in-repo PR #${PR}"
           else
             PR_URL="$(gh pr create \
               --base main \
@@ -172,10 +202,10 @@ jobs:
             gh pr edit "$PR" --add-label documentation || true
           fi
 
-          echo "Merging PR #${PR}"
+          echo "Merging PR #${PR} at ${SHA}"
           merged=false
           for attempt in 1 2 3 4 5 6; do
-            if gh pr merge "$PR" --squash --delete-branch; then
+            if gh pr merge "$PR" --squash --delete-branch --match-head-commit "$SHA"; then
               merged=true
               break
             fi
