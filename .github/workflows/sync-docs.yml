@@ -169,8 +169,26 @@ jobs:
           # GITHUB_TOKEN cannot create pull requests unless the repository
           # setting "Allow GitHub Actions to create and approve pull requests"
           # is enabled. The commit is already linted/typechecked/built, so
-          # push it to main and dispatch Pages (token pushes do not fire
+          # land it on main and dispatch Pages (token pushes do not fire
           # on: push workflows).
-          git push origin "HEAD:refs/heads/main"
+          #
+          # Concurrency serializes jobs, but a queued run still checks out
+          # github.sha from when the event was accepted. If main moved,
+          # replay the docs paths on top of origin/main instead of FF-only.
+          SYNC_COMMIT=$(git rev-parse HEAD)
+          git fetch origin main
+          if git merge-base --is-ancestor origin/main "$SYNC_COMMIT"; then
+            git push origin "$SYNC_COMMIT:refs/heads/main"
+          else
+            git checkout --force -B sync-push origin/main
+            git checkout "$SYNC_COMMIT" -- vendor/opentide vendor/specifications content/docs
+            git add vendor/opentide vendor/specifications content/docs
+            if git diff --cached --quiet; then
+              echo "main already has this documentation"
+            else
+              git commit -C "$SYNC_COMMIT"
+              git push origin HEAD:refs/heads/main
+            fi
+          fi
           echo "Dispatching GitHub Pages deploy"
           gh workflow run deploy.yml --ref main
