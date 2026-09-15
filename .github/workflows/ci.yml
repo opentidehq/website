@@ -59,3 +59,20 @@ jobs:
           test -f out/.nojekyll
           test -f out/og/site/image.png
           test -f out/og/blog/image.png
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          html = Path('out/index.html').read_text()
+          if 'opentide==' in html:
+              raise SystemExit('Homepage must not pin a package version')
+
+          snapshot = json.loads(Path('lib/generated/pypi-release.json').read_text())
+          version = snapshot.get('version')
+          if not isinstance(version, str) or not version:
+              raise SystemExit('Build did not snapshot a PyPI version')
+          needle = f'{version} on PyPI'
+          if needle not in html:
+              raise SystemExit(f'Homepage is missing {needle!r}')
+          print(f'Homepage advertises {needle} (build snapshot; live visitors re-fetch PyPI)')
+          PY

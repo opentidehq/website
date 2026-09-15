@@ -26,6 +26,9 @@ yarn-error.log*
 !.env.example
 .env*.local
 
+# build-time PyPI snapshot (scripts/fetch-pypi-version.mjs)
+/lib/generated/pypi-release.json
+
 # others
 .vercel
 next-env.d.ts

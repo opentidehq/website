@@ -4,9 +4,10 @@
   "private": true,
   "scripts": {
     "sync:content": "node scripts/sync-content.mjs",
-    "prebuild": "pnpm sync:content",
+    "fetch:pypi": "node scripts/fetch-pypi-version.mjs",
+    "prebuild": "pnpm fetch:pypi && pnpm sync:content",
     "build": "next build && touch out/.nojekyll",
-    "dev": "pnpm sync:content && next dev",
+    "dev": "pnpm fetch:pypi && pnpm sync:content && next dev",
     "start": "serve out",
     "lint": "eslint .",
     "types:check": "fumadocs-mdx && next typegen && tsc --noEmit",

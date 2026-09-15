@@ -3,7 +3,7 @@ import { ArrowRight } from 'lucide-react';
 import { INSTALL_CMD } from '@/lib/pypi';
 import { PypiReleaseLink } from '@/components/landing/pypi-release-link';
 
-export function HeroInstall() {
+export function HeroInstall({ pypiVersion }: { pypiVersion: string | null }) {
   return (
     <div className="mt-8">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
@@ -18,7 +18,7 @@ export function HeroInstall() {
           <ArrowRight className="size-3.5 transition group-hover:translate-x-0.5" aria-hidden />
         </Link>
       </div>
-      <PypiReleaseLink />
+      <PypiReleaseLink initialVersion={pypiVersion} />
     </div>
   );
 }

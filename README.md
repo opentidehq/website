@@ -14,7 +14,7 @@ Built with [Next.js](https://nextjs.org/) and [Fumadocs](https://fumadocs.dev/),
 | Usage, CLI, MCP, SDK | [opentide](https://github.com/OpenTideHQ/opentide) `docs/` | `/docs/{usage,cli,mcp,sdk}` |
 | Blog | This repo `content/blog/` | `/blog/` |
 
-Documentation prose is synced from the opentide and specifications repos via `pnpm sync:content` and **committed** under `content/docs/` so private-repo CI can build without cross-repository access. After upstream doc changes, run sync and commit the diff.
+Documentation prose is synced from the opentide and specifications repos via `pnpm sync:content` and **committed** under `content/docs/` so private-repo CI can build without cross-repository access. A GitHub Actions workflow (`sync-docs.yml`) does this on a schedule and on `repository_dispatch`, then auto-merges and deploys — you do not need to run sync by hand after a package release.
 
 ## Local development
 
@@ -59,8 +59,9 @@ Environment overrides (first match wins):
 | Command | Description |
 |---------|-------------|
 | `pnpm dev` | Sync docs + start dev server |
+| `pnpm fetch:pypi` | Snapshot the current PyPI version for local/dev first paint |
 | `pnpm sync:content` | Copy opentide + specifications docs into `content/docs/` |
-| `pnpm build` | Sync + static export to `out/` |
+| `pnpm build` | Snapshot PyPI + sync docs + static export to `out/` |
 | `pnpm lint` | ESLint |
 | `pnpm types:check` | TypeScript + Fumadocs MDX types |
 
@@ -91,6 +92,25 @@ Open a pull request. Posts appear at `/blog/<filename-without-extension>/`.
 2. **specifications** content must exist in the [specifications](https://github.com/OpenTideHQ/specifications) repository — until published, local builds fall back to `../specifications` when the vendor submodule is empty.
 
 Pushes to `main` deploy to **GitHub Pages** via `.github/workflows/deploy.yml`. Custom domain is `opentide.org` (`public/CNAME`, `siteUrl` in `lib/shared.ts`, and the Pages custom-domain field). Apex DNS is four GitHub A records plus AAAA; `www` CNAMEs to `OpenTideHQ.github.io`. Do not attach `blog.opentide.org` to this Pages site — forward it to `/blog/` at the registrar.
+
+### Package releases
+
+The landing page reads the current `opentide` version from the PyPI JSON API in the browser. Publishing a wheel does **not** require a website rebuild for that number to update.
+
+Docs, changelog pages, and specs **do** need a rebuild. `.github/workflows/sync-docs.yml` handles that without a human:
+
+1. Hourly (and on `repository_dispatch` / `workflow_dispatch`) bump `vendor/opentide` + `vendor/specifications`
+2. Run `pnpm sync:content` and commit `content/docs/`
+3. Lint, typecheck, and build
+4. Open a `documentation` PR, squash-merge it, dispatch GitHub Pages deploy
+
+To notify the site immediately after a PyPI publish (optional, from `OpenTideHQ/opentide`):
+
+```bash
+gh api repos/OpenTideHQ/website/dispatches -f event_type=opentide-released
+```
+
+That call needs a token with `repo` scope on this repository. If it is not wired, the hourly schedule still picks the change up.
 
 ## Related repositories
 

@@ -10,6 +10,7 @@ import { EcosystemGrid } from '@/components/landing/ecosystem-grid';
 import { PipelineFlow } from '@/components/landing/pipeline-flow';
 import { WorkflowStudio, ObjectGraph } from '@/components/landing/landing-heavy';
 import type { Metadata } from 'next';
+import { readBuildTimePypiVersion } from '@/lib/pypi-build';
 import { siteOgImage } from '@/lib/shared';
 
 export const metadata: Metadata = {
@@ -27,7 +28,8 @@ export const metadata: Metadata = {
   },
 };
 
-export default function HomePage() {
+export default async function HomePage() {
+  const pypiVersion = await readBuildTimePypiVersion();
   // `overflow-x-clip` rather than `hidden`: hidden would turn this into a scroll container
   // and break the sticky stage the workflow studio pins against.
   return (
@@ -39,7 +41,7 @@ export default function HomePage() {
               Adopt detection engineering and keep your{' '}
               <span className="text-[var(--landing-accent)]">security operations flowing</span>
             </h1>
-            <HeroInstall />
+            <HeroInstall pypiVersion={pypiVersion} />
           </div>
 
           <div
@@ -136,7 +138,9 @@ export default function HomePage() {
               Explore documentation
               <ArrowRight className="size-4 transition group-hover:translate-x-0.5" aria-hidden />
             </Link>
-            <PypiProjectLink className="landing-btn-secondary">Install from PyPI</PypiProjectLink>
+            <PypiProjectLink className="landing-btn-secondary" initialVersion={pypiVersion}>
+              Install from PyPI
+            </PypiProjectLink>
           </div>
         </div>
       </section>
