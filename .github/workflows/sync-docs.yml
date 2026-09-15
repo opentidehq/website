@@ -173,12 +173,14 @@ jobs:
           git checkout -B "$BRANCH"
           git push -u origin "HEAD:refs/heads/${BRANCH}" --force
 
-          # gh pr list --head matches branch name only (not owner:branch), so a
-          # fork PR with the same head ref could otherwise be .[0]. Restrict to
-          # this repository, then require the SHA we just pushed.
+          # REST `head=owner:branch` is in-repo only (forks cannot match) and is
+          # not capped at the 30 newest PRs like `gh pr list` without --head.
           find_pr() {
-            gh pr list --base main --state open --json number,headRefName,headRepositoryOwner \
-              --jq "[.[] | select(.headRefName == \"${BRANCH}\" and ((.headRepositoryOwner.login // \"\") | ascii_downcase) == (\"${OWNER}\" | ascii_downcase))] | .[0].number // empty"
+            gh api -X GET "repos/${GITHUB_REPOSITORY}/pulls" \
+              -f state=open \
+              -f base=main \
+              -f "head=${OWNER}:${BRANCH}" \
+              --jq '.[0].number // empty'
           }
 
           existing="$(find_pr)"
@@ -197,9 +199,18 @@ jobs:
 
           The landing-page package version is fetched live from PyPI and does **not** wait on this PR.
           EOF
-          )")"
-            PR="${PR_URL##*/}"
-            gh pr edit "$PR" --add-label documentation || true
+          )")" || PR_URL=""
+            if [ -z "$PR_URL" ]; then
+              PR="$(find_pr)"
+              if [ -z "$PR" ]; then
+                echo "::error::Could not create or locate in-repo PR for ${BRANCH}."
+                exit 1
+              fi
+              echo "Using existing in-repo PR #${PR} after create failed"
+            else
+              PR="${PR_URL##*/}"
+              gh pr edit "$PR" --add-label documentation || true
+            fi
           fi
 
           echo "Merging PR #${PR} at ${SHA}"
