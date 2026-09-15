@@ -23,7 +23,7 @@ python Orchestration/validate.py
 ### After (pip package)
 
 ```toml
-dependencies = ["opentide"]
+dependencies = ["opentide==0.1.0"]
 ```
 
 ```python
@@ -46,7 +46,7 @@ Use `--platform`, not legacy `--system`.
 ### 1. Install
 
 ```bash
-pip install opentide
+pip install 'opentide==0.1.0'
 ```
 
 Enable platforms in the repo (not at pip install time):
@@ -55,7 +55,7 @@ Enable platforms in the repo (not at pip install time):
 opentide setup platforms --sentinel --splunk --yes
 ```
 
-Optional MCP server setup: `opentide setup mcp --cursor --yes` (after `pip install opentide`).
+Optional MCP server setup: `opentide setup mcp --cursor --yes` (after `pip install 'opentide==0.1.0'`).
 
 ### 2. Remove submodule
 
@@ -101,7 +101,7 @@ Query validation: **five platforms only** (no CrowdStrike/HarfangLab).
 Remove `submodules: recursive`. Add:
 
 ```yaml
-- run: pip install opentide
+- run: pip install 'opentide==0.1.0'
 - run: opentide validate --strict
   env:
     OPENTIDE_REPO_ROOT: ${{ github.workspace }}
@@ -122,9 +122,20 @@ Or configure manually:
 { "mcpServers": { "opentide": { "command": "opentide-mcp" } } }
 ```
 
+## Layout migration
+
+If the repository still uses CoreTide directory names (`Configurations/`, `Objects/Threat Vectors`, `.opentide/framework/`), preview and apply:
+
+```bash
+opentide migrate objects          # dry-run
+opentide migrate objects --apply
+```
+
+Full flag list: [CLI migrate](../../cli/migrate.md).
+
 ## Agent-assisted migration
 
-opentide no longer provides `opentide migrate`. Use the [CoreTide migration prompt](./prompt.md) with your coding agent to replace submodule imports, Orchestration scripts, and CI configuration.
+Replacing a CoreTide **git submodule**, Orchestration scripts, and Python imports is not a single CLI command. Use the [CoreTide migration prompt](./prompt.md) with your coding agent.
 
 ## Deprecation timeline
 
@@ -135,7 +146,7 @@ opentide no longer provides `opentide migrate`. Use the [CoreTide migration prom
 
 ## Verification checklist
 
-- [ ] `pip install opentide` succeeds
+- [ ] `pip install 'opentide==0.1.0'` succeeds
 - [ ] `OPENTIDE_REPO_ROOT` set
 - [ ] `opentide validate --strict` passes
 - [ ] CI no longer uses submodule
@@ -146,4 +157,4 @@ opentide no longer provides `opentide migrate`. Use the [CoreTide migration prom
 - [Behaviour inventory (internal)](https://github.com/OpenTideHQ/opentide/blob/development/docs/internal/behaviour-inventory.md) — legacy vs new behaviour mapping
 - [Repository setup](../repository-setup.md)
 - [CoreTide migration prompt](./prompt.md)
-- [Repository setup](../repository-setup.md)
+- [CLI migrate](../../cli/migrate.md)

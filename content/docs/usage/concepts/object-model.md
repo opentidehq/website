@@ -40,19 +40,25 @@ metadata:
   uuid: 00000000-0000-4000-8001-000000000001
   schema: threat::1.0
   version: 1
+  created: "2026-01-01"
+  modified: "2026-01-02"
   tlp: clear
 threat:
   description: Simulated threat actor for credential access
-  severity: High
+  severity: Substantial incident
   impact: Data Breach
-  leverage: High
-  viability: High
+  leverage: Information Gathering
+  viability: Likely
   terrain: Endpoint workstations and user devices.
   surface:
     - Windows::Desktop
   att&ck:
     - T1059
+  actors:
+    - name: att&ck::G0006
 ```
+
+Optional `threat.actors` entries are objects. `name` is a scoped key from the bundled actors vocabulary (`att&ck::G0006`, or a MISP cluster ID). Optional `sighting` and `references` sit on the same object — not a bare string list.
 
 ### 2. Objective — what we want to detect
 
@@ -64,16 +70,18 @@ metadata:
   uuid: 00000000-0000-4000-8002-000000000001
   schema: objective::1.0
   version: 1
+  created: "2026-01-01"
+  modified: "2026-01-02"
   tlp: clear
 composition:
-  strategy: synergetic
+  strategy: Combined
   description: Compose signals for credential access detection
 objective:
   priority: High
   type: Threat
   description: Detect credential access techniques
   composition:                 # mirrors the top-level composition
-    strategy: synergetic
+    strategy: Combined
     description: Compose signals for credential access detection
   threats:
     - 00000000-0000-4000-8001-000000000001   # ← the threat above
@@ -81,9 +89,9 @@ objective:
     - name: Suspicious logon signal
       uuid: 00000000-0000-4000-8099-000000000001
       description: Suspicious authentication activity
-      severity: Medium
-      methodology: analytics
-      entities: [host]
+      severity: Moderate incident
+      methodology: Statistical
+      entities: [Hostname]
       data:
         availability: Complete
         requirements: Security event logs
@@ -99,10 +107,12 @@ metadata:
   uuid: 00000000-0000-4000-8003-000000000001
   schema: rule::1.0
   version: 1
+  created: "2026-01-01"
+  modified: "2026-01-02"
   tlp: clear
 description: Detects credential access via suspicious process creation
 status: STAGING
-severity: High
+severity: Substantial incident
 techniques: [T1059]
 detection_model: 00000000-0000-4000-8002-000000000001   # ← the objective above
 response:

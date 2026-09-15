@@ -22,7 +22,7 @@ The MCP `validate_query` and `run_query` tools are **stubs** — they return suc
 ## Install and configure the server
 
 ```bash
-pip install opentide
+pip install 'opentide==0.1.5'
 opentide setup mcp --cursor --yes
 ```
 
@@ -54,7 +54,7 @@ The server uses **stdio transport**. It must know where your content lives, so s
 
 Skills give the agent durable, project-specific instructions (object layout, commands, the validate-before-deploy rule):
 
-Browse the catalogue, then install selected skills from [OpenTideHQ/skills](https://github.com/OpenTideHQ/skills):
+Browse the catalogue, then install selected skills from [OpenTideHQ/skills](https://github.com/OpenTideHQ/skills). Discovery and install always use the live `manifest.json` and skill trees from GitHub — opentide does not ship a packaged snapshot that can go stale. If GitHub is unreachable, the command fails with an actionable error.
 
 ```bash
 opentide setup skills discover

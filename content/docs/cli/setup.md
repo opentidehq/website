@@ -1,6 +1,6 @@
 ---
 title: opentide setup
-description: Repository scaffolding, platform configs, CI pipelines, MCP, agent skills, and VS Code helpers.
+description: Repository scaffolding, platform configs, CI pipelines, env files, Git hooks, MCP, agent skills, and VS Code helpers.
 ---
 
 Primary onboarding entry point for detection repositories.
@@ -10,6 +10,8 @@ opentide setup                              # interactive wizard
 opentide setup --yes --platform sentinel --ci github
 opentide setup platforms --sentinel --splunk --yes
 opentide setup ci github --yes
+opentide setup env --yes
+opentide setup hooks --yes
 ```
 
 The interactive wizard uses arrow-key menus and checkboxes for platforms, CI, MCP hosts, workflow features, and agent targets. It shows a setup plan before writing. No platform, CI provider, editor, or agent environment is selected implicitly.
@@ -69,6 +71,8 @@ Generate CI/CD pipeline files. **CI provider** is the positional argument (`gith
 
 Run `setup platforms` before `setup ci` so `validate query` jobs are included. If none are enabled, `setup ci` still writes the pipeline and returns a `warnings` entry in JSON mode.
 
+Generated pipelines set `OPENTIDE_REPO_ROOT` at workflow (GitHub), `variables` (GitLab), or pipeline (Azure) scope so `opentide` commands resolve the detection repository in CI. Re-run `setup ci` to refresh existing pipeline files.
+
 ```bash
 opentide setup platforms --sentinel --splunk --yes
 opentide setup ci github --path . --yes
@@ -76,6 +80,28 @@ opentide setup ci gitlab --no-staging
 ```
 
 Positional argument: `github`, `gitlab`, or `azure` (CI **provider**, not Sentinel/Splunk/etc.).
+
+### setup env
+
+Write `.env.example` with `OPENTIDE_REPO_ROOT` (same variable as `--repo`) and add `.env` to `.gitignore` so copied secrets stay uncommitted. Existing files are left in place when they already set the variable; a missing line is appended.
+
+```bash
+opentide setup env --yes
+opentide setup env ./detection-repo --yes
+```
+
+Copy `.env.example` to `.env` and adjust the path if the working directory is not the detection repository. opentide does not load `.env` automatically — export the variables or pass `--repo`.
+
+### setup hooks
+
+Configure validate-on-commit hooks. Writes `.pre-commit-config.yaml` (a local `opentide-validate` hook) and a versioned script at `.opentide/hooks/pre-commit`. When the path is a Git repository, copies that script to `.git/hooks/pre-commit` unless a third-party hook is already there.
+
+```bash
+opentide setup hooks --yes
+opentide setup hooks ./detection-repo --yes --no-install
+```
+
+The hook runs `opentide validate --strict`. Set `OPENTIDE_SKIP_HOOKS=1` to bypass it for a single commit. Existing `.pre-commit-config.yaml` files keep other repos; the opentide hook is appended when missing.
 
 ### setup mcp
 
@@ -110,7 +136,7 @@ opentide setup skills show opentide-detection-rule
 opentide setup skills show opentide-detection-rule --path /path/to/repo
 ```
 
-JSON output includes `manifest_source` (`remote` or `bundled`) and `manifest_refreshed` when using `--refresh`.
+JSON output includes `manifest_source` (`remote`) and `manifest_refreshed` when using `--refresh`. Discovery always fetches the live `manifest.json`; there is no packaged catalogue snapshot.
 
 </Step>
 
@@ -125,7 +151,7 @@ opentide setup skills --yes --all --cursor
 opentide setup skills --yes --generic --path /path/to/repo
 ```
 
-Use `--path` / `-C` for the repository root. The positional `[PATH]` remains temporarily as a deprecated compatibility alias.
+Use `--path` / `-C` for the repository root on install, `discover`, and `show`. Do not pass a positional path to `opentide setup skills` itself — Click would treat `discover` / `show` as that path and skip the subcommands.
 
 Installing `--github-copilot` without `--generic` also applies the generic layout; JSON output includes `"also_applied": ["generic"]`.
 
@@ -142,9 +168,9 @@ Installing `--github-copilot` without `--generic` also applies the generic layou
 | `--name`, `--org`, `--description` | Entrypoint metadata |
 | `--refresh` | Re-fetch `manifest.json` from GitHub (`discover` / `show`) |
 
-Catalogue discovery fetches `manifest.json` from [OpenTideHQ/skills](https://github.com/OpenTideHQ/skills) first; the packaged manifest is an offline fallback only. Remote fetch and install require network access to the public skills repository.
+Catalogue discovery fetches `manifest.json` from [OpenTideHQ/skills](https://github.com/OpenTideHQ/skills) on `main`. Default install pulls the starter slugs (`opentide-detection-rule`, `detection-engineering`) from that catalogue; `--install` / `--all` select other live entries. GitHub must be reachable — the wheel does not ship skill trees that can go stale.
 
-The full wizard checks starter skill availability before writing repository files. If the optional remote pack is unavailable, skills are omitted with a warning. The standalone skills command fails without leaving a partial skill tree.
+The full wizard checks skill availability before writing repository files. If the catalogue or a requested slug cannot be fetched, the standalone skills command fails without installing a partial tree. The full `opentide setup` wizard omits the skills step with a warning so the rest of the scaffold can still apply.
 
 ### setup vscode (deprecated)
 

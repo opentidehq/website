@@ -24,7 +24,7 @@ Install opentide into a virtual environment so its dependencies never collide wi
 ```bash
 python -m venv .venv
 source .venv/bin/activate        # Windows: .venv\Scripts\activate
-pip install opentide
+pip install 'opentide==0.1.5'
 ```
 
 </Tab>
@@ -33,7 +33,7 @@ pip install opentide
 
 ```bash
 uv venv
-uv pip install opentide
+uv pip install 'opentide==0.1.5'
 ```
 
 </Tab>
@@ -44,10 +44,11 @@ For agent/MCP hosts, remember the path to this environment's `opentide-mcp` bina
 
 ## PyPI install
 
-Releases publish continuously to [PyPI](https://pypi.org/project/opentide/). Notes: [Releases](./releases.md).
+The latest patch is **0.1.5** (13 September 2026). The first public release was **0.1.0** (9 September 2026). Notes: [Releases](./releases.md).
 
 ```bash
-pip install opentide
+pip install opentide              # latest on PyPI
+pip install 'opentide==0.1.5'     # pin the current patch
 ```
 
 That installs the **DetectionOps engine**: the `opentide` CLI, `opentide-mcp` MCP server, validation, generation, deploy adapters, and all seven platforms. You do **not** pick Sentinel or Splunk at install time — enable platforms in your repo with `opentide setup platforms` (writes `.opentide/configurations/platforms/*.toml`).
@@ -111,7 +112,7 @@ uv run pre-commit install --install-hooks
 | `DEPLOYMENT_PLAN` | Default deployment plan for `deploy` and `validate query` |
 | `DEBUG` | Enable debug logging when set |
 
-Set the repo root before every command, or pass `--repo`:
+Set the repo root before every command, or pass `--repo`. `opentide setup env --yes` writes `.env.example` with `OPENTIDE_REPO_ROOT` (copy to `.env`; opentide does not load dotenv automatically):
 
 ```bash
 export OPENTIDE_REPO_ROOT=/path/to/detection-repo
