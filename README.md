@@ -14,7 +14,7 @@ Built with [Next.js](https://nextjs.org/) and [Fumadocs](https://fumadocs.dev/),
 | Usage, CLI, MCP, SDK | [opentide](https://github.com/OpenTideHQ/opentide) `docs/` | `/docs/{usage,cli,mcp,sdk}` |
 | Blog | This repo `content/blog/` | `/blog/` |
 
-Documentation prose is synced from the opentide and specifications repos via `pnpm sync:content` and **committed** under `content/docs/` so private-repo CI can build without cross-repository access. A GitHub Actions workflow (`sync-docs.yml`) does this on a schedule and on `repository_dispatch`, then auto-merges and deploys — you do not need to run sync by hand after a package release.
+Documentation prose is synced from the opentide and specifications repos via `pnpm sync:content` and **committed** under `content/docs/` so private-repo CI can build without cross-repository access. A GitHub Actions workflow (`sync-docs.yml`) does this on a schedule and on `repository_dispatch`, then deploys — you do not need to run sync by hand after a package release.
 
 ## Local development
 
@@ -102,7 +102,7 @@ Docs, changelog pages, and specs **do** need a rebuild. `.github/workflows/sync-
 1. Hourly (and on `repository_dispatch` / `workflow_dispatch`) bump `vendor/opentide` + `vendor/specifications`
 2. Run `pnpm sync:content` and commit `content/docs/`
 3. Lint, typecheck, and build
-4. Open a `documentation` PR, squash-merge it, dispatch GitHub Pages deploy
+4. Push the verified commit to `main` and dispatch GitHub Pages deploy
 
 To notify the site immediately after a PyPI publish (optional, from `OpenTideHQ/opentide`):
 
