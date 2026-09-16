@@ -241,6 +241,21 @@ test('rewritePublishedLinks sends nested RFC and schema paths to GitHub', () => 
   assert.equal(out.includes('../schemas/'), false);
 });
 
+test('rewritePublishedLinks does not send published specs/vocabularies pages to GitHub', () => {
+  const published = rewritePublishedLinks(
+    'See [format](vocabularies/format.md) and [catalog](./vocabularies/catalog.md).',
+  );
+  assert.equal(published.includes(`${SPECS_BLOB}/vocabularies/`), false);
+  assert.equal(published.includes('](vocabularies/format.md)'), true);
+  assert.equal(published.includes('](./vocabularies/catalog.md)'), true);
+
+  const repoRoot = rewritePublishedLinks(
+    'See [tlp](../vocabularies/tlp.vocab.toml) and [also](../../vocabularies/tlp.vocab.toml).',
+  );
+  assert.equal(repoRoot.includes(`${SPECS_BLOB}/vocabularies/tlp.vocab.toml`), true);
+  assert.equal(repoRoot.includes('../vocabularies/'), false);
+});
+
 test('rewriteBrandName lowercases the product name but keeps OpenTideHQ', () => {
   const camel = 'Open' + 'Tide';
   const out = rewriteBrandName(`Use ${camel} with ${camel}HQ and \`from opentide import ${camel}\`.`);
@@ -299,6 +314,16 @@ test('postProcessMarkdown does not publish unpublished RFC paths under /docs', (
   assert.equal(out.includes('/docs/specifications/rfcs/'), false);
   assert.equal(out.includes(`${SPECS_BLOB}/rfcs/0003-per-key-vocabulary-versioning.md`), true);
   assert.equal(out.includes(`${SPECS_BLOB}/schemas/pins/`), true);
+});
+
+test('postProcessMarkdown keeps published vocabulary spec links on /docs', () => {
+  const out = postProcessMarkdown(
+    'See [format](vocabularies/format.md) and [tlp](../vocabularies/tlp.vocab.toml).',
+    'specifications/specs/metaschema-keywords.mdx',
+  );
+  assert.equal(out.includes('](/docs/specifications/specs/vocabularies/format/)'), true);
+  assert.equal(out.includes(`${SPECS_BLOB}/vocabularies/format.md`), false);
+  assert.equal(out.includes(`${SPECS_BLOB}/vocabularies/tlp.vocab.toml`), true);
 });
 
 test('transformSpecFrontmatter injects title from the body h1', () => {

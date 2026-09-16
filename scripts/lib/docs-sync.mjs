@@ -21,10 +21,11 @@ export const OPENTIDE_SECTIONS = ['usage', 'cli', 'mcp', 'sdk'];
 export const SPECS_BLOB = 'https://github.com/OpenTideHQ/specifications/blob/main';
 const OPENTIDE_BLOB = 'https://github.com/OpenTideHQ/opentide/blob/development/docs';
 
-/** Repo-root trees/files that are not copied into content/docs. */
-const UNPUBLISHED_SPECS_TREES = ['fixtures', 'schemas', 'vocabularies', 'rfcs'];
+/** Repo-root trees that are never published under content/docs (no specs/<tree> pages). */
+const UNPUBLISHED_SPECS_TREES = ['fixtures', 'schemas', 'rfcs'];
 const UNPUBLISHED_SPEC_FILES = ['AGENTS.md', 'CHANGELOG.md', 'llms.txt'];
-const UNPUBLISHED_SPEC_TOP_LEVEL = new Set([...UNPUBLISHED_SPECS_TREES, ...UNPUBLISHED_SPEC_FILES]);
+/** Repo-root `vocabularies/` is unpublished; `specifications/specs/vocabularies/` is published. */
+const UNPUBLISHED_SPEC_TOP_LEVEL = new Set([...UNPUBLISHED_SPECS_TREES, 'vocabularies', ...UNPUBLISHED_SPEC_FILES]);
 
 /**
  * Map a path under content/docs to a GitHub blob when it would 404 on the site.
@@ -253,6 +254,8 @@ export function rewritePublishedLinks(content) {
   for (const tree of UNPUBLISHED_SPECS_TREES) {
     out = out.replace(new RegExp(`\\]\\((?:\\.\\.?/)*${tree}/`, 'g'), `](${SPECS_BLOB}/${tree}/`);
   }
+  // Require `../` so `vocabularies/format.md` under specs/ stays a published page.
+  out = out.replace(/\]\((?:\.\.\/)+vocabularies\//g, `](${SPECS_BLOB}/vocabularies/`);
   for (const file of UNPUBLISHED_SPEC_FILES) {
     const escaped = file.replaceAll('.', '\\.');
     out = out.replace(new RegExp(`\\]\\((?:\\.\\.?/)*${escaped}\\)`, 'g'), `](${SPECS_BLOB}/${file})`);
