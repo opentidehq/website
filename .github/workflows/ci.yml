@@ -30,9 +30,13 @@ jobs:
 
       - run: pnpm lint
 
+      - run: pnpm test
+
       - run: pnpm types:check
         env:
           SKIP_SYNC: '1'
+
+      - run: pnpm check:docs
 
   build:
     runs-on: ubuntu-latest
@@ -76,3 +80,6 @@ jobs:
               raise SystemExit(f'Homepage is missing {needle!r}')
           print(f'Homepage advertises {needle} (build snapshot; live visitors re-fetch PyPI)')
           PY
+
+      - name: Verify synced docs compiled as MDX
+        run: pnpm verify:docs

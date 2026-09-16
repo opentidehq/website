@@ -1,0 +1,78 @@
+---
+title: CLI reference
+description: Complete opentide command-line interface — commands, flags, exit codes, and JSON output.
+icon: Terminal
+---
+
+The `opentide` command is a [Typer](https://typer.tiangolo.com/) application included in the core package:
+
+```bash
+pip install 'opentide==0.1.6'
+```
+
+Run `opentide --help` for the live command tree.
+
+## Command overview
+
+| Command | Purpose |
+|---------|---------|
+| [`setup`](/docs/cli/setup/) | Onboard detection repositories (repo, platforms, CI, MCP, skills) |
+| [`migrate`](/docs/cli/migrate/) | Move legacy `Configurations/` and `Objects/` into the greenfield layout |
+| [`generate`](/docs/cli/generate/) | Documentation, exports, framework artifacts, optional platform import |
+| [`validate`](/docs/cli/validate/) | Object and query validation |
+| [`lint`](/docs/cli/lint/) | Catalogue hygiene (filename slugs, recommended metadata) |
+| [`deploy`](/docs/cli/deploy/) | Platform rule deployment |
+| [`info`](/docs/cli/info/) | Repository and platform statistics |
+
+<Callout type="info">
+
+Top-level `document`, `export`, and `extract` remain as **hidden deprecation shims** for one release. They log a warning and delegate to `opentide generate docs`, `generate exports`, and `generate extract`. `mutate` was removed — use `opentide deploy` for promotion. Layout-only `opentide migrate objects` moves `Configurations/` and `Objects/` into the greenfield tree; CoreTide submodule replacement still uses the [migration prompt](/docs/usage/migration/prompt/).
+
+</Callout>
+
+## Global options
+
+All commands inherit [global options](/docs/cli/global-options/):
+
+| Flag | Env var | Purpose |
+|------|---------|---------|
+| `--repo` | `OPENTIDE_REPO_ROOT` | Detection repository root |
+| `--data` | `OPENTIDE_DATA_ROOT` | Bundled data root override |
+| `--debug` | `DEBUG` | Debug logging |
+| `--no-color` | `NO_COLOR` | Disable Rich colour |
+| `--json` | — | Machine-readable JSON output |
+
+## Typical CI sequence
+
+```bash
+opentide generate
+opentide validate --strict --json
+opentide validate query --platform sentinel
+opentide lint --strict
+opentide deploy --platform sentinel --dry-run
+```
+
+Generated pipelines use `opentide generate docs --output docs` for documentation jobs. Status promotion runs inside `opentide deploy` — there is no separate `mutate promote` step.
+
+## JSON output
+
+With `--json`, every command writes exactly one JSON document to stdout. Successes include `"ok": true`; failures include `"ok": false`, a status, message, and non-zero exit code. Diagnostics use stderr and never prefix the stdout document. (`opentide info` emits the info object through the same contract.)
+
+## Exit codes
+
+Commands set a process exit code so CI can gate without parsing output: `0` success, `1` error, `2` usage error. Full reference: [Exit codes](/docs/cli/exit-codes/).
+
+## Choosing between CLI, SDK, and MCP
+
+The CLI is one of three interfaces to the same engine. For humans and pipelines, use the CLI; to embed in Python, use the [SDK](/docs/sdk/); for AI agents, use [MCP](/docs/mcp/). See [Choosing an interface](/docs/usage/choosing-an-interface/).
+
+## Shell completion
+
+```bash
+opentide --install-completion
+opentide --show-completion
+```
+
+## Source
+
+Command definitions: `src/opentide/cli/__init__.py`, `src/opentide/cli/setup_app.py`.
