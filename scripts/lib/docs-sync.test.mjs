@@ -438,10 +438,16 @@ test('verifyBuiltDocs accepts rendered tablist markup', () => {
   mkdirSync(join(outDir, 'docs/usage/quickstart'), { recursive: true });
   writeFileSync(
     join(outDir, 'docs/usage/installation/index.html'),
-    '<div role="tablist"><button role="tab">venv + pip</button><button role="tab">uv</button></div><p>One install gets the CLI</p>',
+    '<div style="--callout-color: blue"><p>One install gets the CLI</p></div><div role="tablist"><button role="tab">venv + pip</button><button role="tab">uv</button></div>',
   );
-  writeFileSync(join(outDir, 'docs/usage/index.html'), '<a href="/docs/usage/how-it-works/">How opentide works</a>');
-  writeFileSync(join(outDir, 'docs/usage/quickstart/index.html'), '<h3>Install and point at your repo</h3>');
+  writeFileSync(
+    join(outDir, 'docs/usage/index.html'),
+    '<a data-card="true" href="/docs/usage/how-it-works/">How opentide works</a>',
+  );
+  writeFileSync(
+    join(outDir, 'docs/usage/quickstart/index.html'),
+    '<div class="fd-steps"><h3>Install and point at your repo</h3></div>',
+  );
   const result = verifyBuiltDocs(outDir);
   assert.equal(result.installation.includes('role="tablist"'), true);
   assertNoEscapedMdx(result.installation, 'fixture');
@@ -480,4 +486,57 @@ test('checkPublishedDocsFreshness fails when the stamp file is missing', () => {
 
 test('workspace committed docs match vendor gitlinks and are mdx', () => {
   checkPublishedDocsFreshness();
+});
+
+test('verifyBuiltDocs fails when a required page is missing', () => {
+  const outDir = tempDir('docs-sync-verify-missing-');
+  assert.throws(() => verifyBuiltDocs(outDir), /Missing built page/);
+});
+
+test('incomplete OPENTIDE_DOCS_PATH is rejected', () => {
+  const root = tempDir('docs-sync-incomplete-');
+  const docs = join(root, 'docs');
+  mkdirSync(docs, { recursive: true });
+  assert.throws(
+    () =>
+      syncContent({
+        root,
+        outDir: join(root, 'content', 'docs'),
+        env: { OPENTIDE_DOCS_PATH: docs },
+      }),
+    /incomplete documentation tree/,
+  );
+});
+
+test('syncContent falls back to a generated specifications index', () => {
+  const root = tempDir('docs-sync-stub-index-');
+  const opentideRepo = join(root, 'vendor-src', 'opentide');
+  const specificationsRepo = join(root, 'vendor-src', 'specifications');
+  gitInit(opentideRepo);
+  gitInit(specificationsRepo);
+  writeTree(join(opentideRepo, 'docs'), {
+    'usage/meta.json': '{}\n',
+    'usage/index.md': '---\ntitle: Usage\n---\n\nHi.\n',
+    'cli/meta.json': '{}\n',
+    'mcp/meta.json': '{}\n',
+    'sdk/meta.json': '{}\n',
+  });
+  writeTree(specificationsRepo, {
+    'specs/versioning.md': '# Versioning\n\n## Summary\n\nHow versions work.\n',
+  });
+  gitCommitAll(opentideRepo, 'docs');
+  gitCommitAll(specificationsRepo, 'specs');
+
+  const outDir = join(root, 'content', 'docs');
+  syncContent({
+    root,
+    outDir,
+    env: {
+      OPENTIDE_DOCS_PATH: join(opentideRepo, 'docs'),
+      SPECIFICATIONS_PATH: specificationsRepo,
+    },
+  });
+  const index = readFileSync(join(outDir, 'specifications', 'index.mdx'), 'utf8');
+  assert.equal(index.includes('Normative specifications define the contract'), true);
+  assert.equal(index.includes('](/docs/specifications/SPECS/)'), true);
 });

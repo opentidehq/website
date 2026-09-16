@@ -53,6 +53,9 @@ export function verifyBuiltDocs(outDir) {
   if (!installation.includes('One install gets the CLI')) {
     throw new Error('/docs/usage/installation dropped the Callout body');
   }
+  if (!installation.includes('--callout-color') && !installation.toLowerCase().includes('callout')) {
+    throw new Error('/docs/usage/installation did not render a Callout component');
+  }
   assertTabsRendered(installation, '/docs/usage/installation', ['venv + pip', 'uv']);
 
   const usageIndex = readHtml(outDir, 'docs/usage/index.html');
@@ -60,11 +63,17 @@ export function verifyBuiltDocs(outDir) {
   if (!usageIndex.includes('How opentide works')) {
     throw new Error('/docs/usage dropped the Cards content');
   }
+  if (!usageIndex.includes('data-card="true"')) {
+    throw new Error('/docs/usage did not render Card components');
+  }
 
   const quickstart = readHtml(outDir, 'docs/usage/quickstart/index.html');
   assertNoEscapedMdx(quickstart, '/docs/usage/quickstart');
   if (!quickstart.includes('Install and point at your repo')) {
     throw new Error('/docs/usage/quickstart dropped the Steps content');
+  }
+  if (!quickstart.includes('fd-steps')) {
+    throw new Error('/docs/usage/quickstart did not render the Steps component');
   }
 
   return {
