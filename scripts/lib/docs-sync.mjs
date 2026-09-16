@@ -18,8 +18,26 @@ export const STAMP_NAME = '.sync-stamp.json';
 
 export const OPENTIDE_SECTIONS = ['usage', 'cli', 'mcp', 'sdk'];
 
-const SPECS_BLOB = 'https://github.com/OpenTideHQ/specifications/blob/main';
+export const SPECS_BLOB = 'https://github.com/OpenTideHQ/specifications/blob/main';
 const OPENTIDE_BLOB = 'https://github.com/OpenTideHQ/opentide/blob/development/docs';
+
+/** Repo-root trees/files that are not copied into content/docs. */
+const UNPUBLISHED_SPECS_TREES = ['fixtures', 'schemas', 'vocabularies', 'rfcs'];
+const UNPUBLISHED_SPEC_FILES = ['AGENTS.md', 'CHANGELOG.md', 'llms.txt'];
+const UNPUBLISHED_SPEC_TOP_LEVEL = new Set([...UNPUBLISHED_SPECS_TREES, ...UNPUBLISHED_SPEC_FILES]);
+
+/**
+ * Map a path under content/docs to a GitHub blob when it would 404 on the site.
+ * `specifications/specs/vocabularies/` is published; repo-root `vocabularies/` is not.
+ */
+export function unpublishedSpecsUrl(resolved, hash = '') {
+  const normalized = resolved.replace(/\\/g, '/').replace(/^\/+/, '');
+  if (!normalized.startsWith('specifications/')) return null;
+  const rest = normalized.slice('specifications/'.length);
+  const top = rest.split('/')[0];
+  if (!top || !UNPUBLISHED_SPEC_TOP_LEVEL.has(top)) return null;
+  return `${SPECS_BLOB}/${rest}${hash}`;
+}
 
 export function isSymlink(path) {
   try {
@@ -231,24 +249,20 @@ export function stripRedundantSummary(content) {
 }
 
 export function rewritePublishedLinks(content) {
-  return content
-    .replace(/\]\(\.\.\/\.\.\/fixtures\//g, `](${SPECS_BLOB}/fixtures/`)
-    .replace(/\]\(\.\.\/fixtures\//g, `](${SPECS_BLOB}/fixtures/`)
-    .replace(/\]\(fixtures\//g, `](${SPECS_BLOB}/fixtures/`)
-    .replace(/\]\(\.\.\/\.\.\/schemas\//g, `](${SPECS_BLOB}/schemas/`)
-    .replace(/\]\(\.\.\/\.\.\/vocabularies\//g, `](${SPECS_BLOB}/vocabularies/`)
-    .replace(/\]\(\.\.\/vocabularies\//g, `](${SPECS_BLOB}/vocabularies/`)
-    .replace(/\]\(\.\.\/rfcs\//g, `](${SPECS_BLOB}/rfcs/`)
-    .replace(/\]\(rfcs\//g, `](${SPECS_BLOB}/rfcs/`)
-    .replace(/\]\(llms\.txt\)/g, `](${SPECS_BLOB}/llms.txt)`)
-    .replace(/\]\(\.\.\/\.\.\/CHANGELOG\.md\)/g, `](${SPECS_BLOB}/CHANGELOG.md)`)
-    .replace(/\]\(\.\.\/CHANGELOG\.md\)/g, `](${SPECS_BLOB}/CHANGELOG.md)`)
-    .replace(/\]\(CHANGELOG\.md\)/g, `](${SPECS_BLOB}/CHANGELOG.md)`)
+  let out = content;
+  for (const tree of UNPUBLISHED_SPECS_TREES) {
+    out = out.replace(new RegExp(`\\]\\((?:\\.\\.?/)*${tree}/`, 'g'), `](${SPECS_BLOB}/${tree}/`);
+  }
+  for (const file of UNPUBLISHED_SPEC_FILES) {
+    const escaped = file.replaceAll('.', '\\.');
+    out = out.replace(new RegExp(`\\]\\((?:\\.\\.?/)*${escaped}\\)`, 'g'), `](${SPECS_BLOB}/${file})`);
+  }
+  return out
     .replace(
       /https:\/\/github\.com\/(?:OpenTide|opentide)\/opentide/g,
       'https://github.com/OpenTideHQ/opentide',
     )
-    .replace(/\]\(\.\.\/\.\.\/internal\//g, `](${OPENTIDE_BLOB}/internal/`)
+    .replace(/\]\((?:\.\.?\/)*internal\//g, `](${OPENTIDE_BLOB}/internal/`)
     .replace(/\]\(\.agents\//g, '](https://github.com/OpenTideHQ/opentide/blob/development/.agents/')
     .replace(/\]\(\.github\//g, '](https://github.com/OpenTideHQ/specifications/blob/main/.github/');
 }
@@ -294,9 +308,11 @@ export function rewriteHref(href, fromDir) {
   const hashIndex = trimmed.indexOf('#');
   const pathPart = hashIndex === -1 ? trimmed : trimmed.slice(0, hashIndex);
   const hash = hashIndex === -1 ? '' : trimmed.slice(hashIndex);
-  if (!/\.mdx?$/i.test(pathPart)) return href;
   const resolved = posix.normalize(posix.join(fromDir || '.', pathPart)).replace(/\\/g, '/');
   if (resolved.startsWith('..')) return href;
+  const unpublished = unpublishedSpecsUrl(resolved, hash);
+  if (unpublished) return unpublished;
+  if (!/\.mdx?$/i.test(pathPart)) return href;
   const withoutExt = resolved.replace(/\.mdx?$/i, '');
   return toDocsUrl(withoutExt, hash);
 }

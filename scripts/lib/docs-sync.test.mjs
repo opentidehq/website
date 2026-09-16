@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { after, test } from 'node:test';
 import {
   assertNoMarkdownPages,
+  buildSpecificationsIndex,
   checkPublishedDocsFreshness,
   extractTitleAndDescription,
   gitHeadForPath,
@@ -18,6 +19,8 @@ import {
   rewriteHref,
   rewritePublishedLinks,
   rewriteSiteLinks,
+  unpublishedSpecsUrl,
+  SPECS_BLOB,
   stripLeadingH1,
   stripRedundantSummary,
   syncContent,
@@ -182,6 +185,13 @@ How versions work.
 
 See [fixtures](../fixtures/example.json).
 `,
+    'specs/vocabularies/format.md': `---
+title: Vocabulary format
+description: Vocabulary files.
+---
+
+See [RFC 0003](../../rfcs/0003-per-key-vocabulary-versioning.md) and [pins](../schemas/pins/threat.toml).
+`,
   });
 }
 
@@ -221,6 +231,16 @@ test('rewritePublishedLinks sends fixture paths to GitHub', () => {
   assert.equal(out.includes('https://github.com/OpenTideHQ/specifications/blob/main/fixtures/example.json'), true);
 });
 
+test('rewritePublishedLinks sends nested RFC and schema paths to GitHub', () => {
+  const out = rewritePublishedLinks(
+    'See [RFC 0003](../../rfcs/0003-per-key-vocabulary-versioning.md) and [pins](../schemas/pins/).',
+  );
+  assert.equal(out.includes(`${SPECS_BLOB}/rfcs/0003-per-key-vocabulary-versioning.md`), true);
+  assert.equal(out.includes(`${SPECS_BLOB}/schemas/pins/`), true);
+  assert.equal(out.includes('../../rfcs/'), false);
+  assert.equal(out.includes('../schemas/'), false);
+});
+
 test('rewriteBrandName lowercases the product name but keeps OpenTideHQ', () => {
   const camel = 'Open' + 'Tide';
   const out = rewriteBrandName(`Use ${camel} with ${camel}HQ and \`from opentide import ${camel}\`.`);
@@ -236,11 +256,49 @@ test('rewriteHref turns file-relative markdown into /docs URLs', () => {
   assert.equal(rewriteHref('https://example.com/foo.md', 'usage'), 'https://example.com/foo.md');
 });
 
+test('rewriteHref sends unpublished specification trees to GitHub instead of /docs', () => {
+  assert.equal(
+    rewriteHref('../../rfcs/0003-per-key-vocabulary-versioning.md', 'specifications/specs/vocabularies'),
+    `${SPECS_BLOB}/rfcs/0003-per-key-vocabulary-versioning.md`,
+  );
+  assert.equal(
+    rewriteHref('../schemas/inflight.shard.1.0.schema.json', 'specifications/specs'),
+    `${SPECS_BLOB}/schemas/inflight.shard.1.0.schema.json`,
+  );
+  assert.equal(
+    rewriteHref('./AGENTS.md', 'specifications'),
+    `${SPECS_BLOB}/AGENTS.md`,
+  );
+  assert.equal(
+    rewriteHref('./vocabularies/format.md', 'specifications/specs'),
+    '/docs/specifications/specs/vocabularies/format/',
+  );
+});
+
+test('unpublishedSpecsUrl ignores published specification pages', () => {
+  assert.equal(unpublishedSpecsUrl('specifications/specs/vocabularies/format.md'), null);
+  assert.equal(unpublishedSpecsUrl('specifications/GOVERNANCE.md'), null);
+  assert.equal(
+    unpublishedSpecsUrl('specifications/rfcs/0003-per-key-vocabulary-versioning.md'),
+    `${SPECS_BLOB}/rfcs/0003-per-key-vocabulary-versioning.md`,
+  );
+});
+
 test('rewriteSiteLinks rewrites Card hrefs and markdown links', () => {
   const src = '<Card href="./how-it-works.md" />\n\n[Install](./installation.md)\n';
   const out = rewriteSiteLinks(src, 'usage/index.mdx');
   assert.equal(out.includes('href="/docs/usage/how-it-works/"'), true);
   assert.equal(out.includes('](/docs/usage/installation/)'), true);
+});
+
+test('postProcessMarkdown does not publish unpublished RFC paths under /docs', () => {
+  const out = postProcessMarkdown(
+    'See [RFC 0003](../../rfcs/0003-per-key-vocabulary-versioning.md) and [pins](../schemas/pins/).',
+    'specifications/specs/vocabularies/format.mdx',
+  );
+  assert.equal(out.includes('/docs/specifications/rfcs/'), false);
+  assert.equal(out.includes(`${SPECS_BLOB}/rfcs/0003-per-key-vocabulary-versioning.md`), true);
+  assert.equal(out.includes(`${SPECS_BLOB}/schemas/pins/`), true);
 });
 
 test('transformSpecFrontmatter injects title from the body h1', () => {
@@ -295,6 +353,11 @@ test('syncContent emits mdx, stamps SHAs, and rewrites Card hrefs', () => {
 
   const specIndex = readFileSync(join(outDir, 'specifications', 'index.mdx'), 'utf8');
   assert.equal(specIndex.includes('](/docs/specifications/SPECS/)'), true);
+
+  const format = readFileSync(join(outDir, 'specifications', 'specs', 'vocabularies', 'format.mdx'), 'utf8');
+  assert.equal(format.includes('/docs/specifications/rfcs/'), false);
+  assert.equal(format.includes(`${SPECS_BLOB}/rfcs/0003-per-key-vocabulary-versioning.md`), true);
+  assert.equal(format.includes(`${SPECS_BLOB}/schemas/pins/threat.toml`), true);
 
   assert.equal(gitHeadForPath(join(opentideRepo, 'docs')).sha, opentideSha);
 });
@@ -454,6 +517,36 @@ test('verifyBuiltDocs accepts rendered tablist markup', () => {
   assertTabsRendered(result.installation, 'fixture', ['venv + pip', 'uv']);
 });
 
+test('generated specifications index sends AGENTS.md to GitHub', () => {
+  const out = postProcessMarkdown(buildSpecificationsIndex(), 'specifications/index.mdx');
+  assert.equal(out.includes('/docs/specifications/AGENTS/'), false);
+  assert.equal(out.includes(`${SPECS_BLOB}/AGENTS.md`), true);
+});
+
+test('verifyBuiltDocs rejects unpublished RFC /docs links on the format spec', () => {
+  const outDir = tempDir('docs-sync-verify-rfc-');
+  mkdirSync(join(outDir, 'docs/usage/installation'), { recursive: true });
+  mkdirSync(join(outDir, 'docs/usage/quickstart'), { recursive: true });
+  mkdirSync(join(outDir, 'docs/specifications/specs/vocabularies/format'), { recursive: true });
+  writeFileSync(
+    join(outDir, 'docs/usage/installation/index.html'),
+    '<div style="--callout-color: blue"><p>One install gets the CLI</p></div><div role="tablist"><button role="tab">venv + pip</button><button role="tab">uv</button></div>',
+  );
+  writeFileSync(
+    join(outDir, 'docs/usage/index.html'),
+    '<a data-card="true" href="/docs/usage/how-it-works/">How opentide works</a>',
+  );
+  writeFileSync(
+    join(outDir, 'docs/usage/quickstart/index.html'),
+    '<div class="fd-steps"><h3>Install and point at your repo</h3></div>',
+  );
+  writeFileSync(
+    join(outDir, 'docs/specifications/specs/vocabularies/format/index.html'),
+    '<a href="/docs/specifications/rfcs/0003-per-key-vocabulary-versioning/">RFC 0003</a>',
+  );
+  assert.throws(() => verifyBuiltDocs(outDir), /unpublished RFC pages/);
+});
+
 test('postProcessMarkdown is idempotent for site links', () => {
   const once = postProcessMarkdown(
     '---\ntitle: Usage\n---\n\n[Install](./installation.md)\n',
@@ -539,4 +632,6 @@ test('syncContent falls back to a generated specifications index', () => {
   const index = readFileSync(join(outDir, 'specifications', 'index.mdx'), 'utf8');
   assert.equal(index.includes('Normative specifications define the contract'), true);
   assert.equal(index.includes('](/docs/specifications/SPECS/)'), true);
+  assert.equal(index.includes('/docs/specifications/AGENTS/'), false);
+  assert.equal(index.includes(`${SPECS_BLOB}/AGENTS.md`), true);
 });

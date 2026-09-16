@@ -12,7 +12,7 @@ supersedes: null
 
 - Every vocabulary file MUST validate against [schemas/vocabulary.schema.json](https://github.com/OpenTideHQ/specifications/blob/main/schemas/vocabulary.schema.json).
 - Every vocabulary file MUST declare `name` and `field` at the top level.
-- Vocabulary files MUST NOT declare a top-level `version` property; versioning is per `[[keys]]` entry (see [RFC 0003](/docs/specifications/rfcs/0003-per-key-vocabulary-versioning/)).
+- Vocabulary files MUST NOT declare a top-level `version` property; versioning is per `[[keys]]` entry (see [RFC 0003](https://github.com/OpenTideHQ/specifications/blob/main/rfcs/0003-per-key-vocabulary-versioning.md)).
 - Entry keys MUST be declared in `[[keys]]` tables unless using `stages` for scoped vocabularies.
 - Clients MUST NOT override vocabulary files in `.opentide/configurations/`; extensions use `schema.toml` `[[vocabulary.*]]` entries only.
 - The `field` value MUST match the YAML/JSON field path the vocabulary constrains (e.g. `tlp`, `att&ck`, `detection.methodology`).
@@ -66,7 +66,7 @@ A vocabulary contract `field::M.m` resolves to all keys where:
 - `version <= M.m` (cumulative minor semantics), and
 - `removed` is absent or `removed > M.m`.
 
-Object schema revisions pin explicit contracts via [schemas/pins/](https://github.com/OpenTideHQ/specifications/blob/main/schemas/pins/) manifests (see [RFC 0003](/docs/specifications/rfcs/0003-per-key-vocabulary-versioning/)).
+Object schema revisions pin explicit contracts via [schemas/pins/](https://github.com/OpenTideHQ/specifications/blob/main/schemas/pins/) manifests (see [RFC 0003](https://github.com/OpenTideHQ/specifications/blob/main/rfcs/0003-per-key-vocabulary-versioning.md)).
 
 ### Staged vocabularies
 
@@ -91,7 +91,7 @@ description = "Recipients can spread this to the world."
 
 - [catalog.md](/docs/specifications/specs/vocabularies/catalog/) — index of bundled vocabularies
 - [metaschema-keywords.md](/docs/specifications/specs/metaschema-keywords/) — `tide.vocab` keyword resolution
-- [RFC 0003](/docs/specifications/rfcs/0003-per-key-vocabulary-versioning/) — per-key versioning and schema pins
+- [RFC 0003](https://github.com/OpenTideHQ/specifications/blob/main/rfcs/0003-per-key-vocabulary-versioning.md) — per-key versioning and schema pins
 - [configuration.md](/docs/specifications/specs/configuration/) — `schema.toml` vocabulary extensions
 - [validation.md](/docs/specifications/specs/validation/) — vocabulary conformance checks
 
@@ -122,5 +122,5 @@ The sync script is an opentide build concern; this spec defines the data contrac
 
 | Version | Date | Notes |
 |---------|------|-------|
-| 1.1 | 2026-06-26 | Per-key `version`/`removed`; no top-level file version ([RFC 0003](/docs/specifications/rfcs/0003-per-key-vocabulary-versioning/)) |
+| 1.1 | 2026-06-26 | Per-key `version`/`removed`; no top-level file version ([RFC 0003](https://github.com/OpenTideHQ/specifications/blob/main/rfcs/0003-per-key-vocabulary-versioning.md)) |
 | 1.0 | 2026-06-25 | Initial spec from opentide `vocabulary.schema.json` |

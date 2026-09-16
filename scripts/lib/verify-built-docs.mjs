@@ -76,6 +76,19 @@ export function verifyBuiltDocs(outDir) {
     throw new Error('/docs/usage/quickstart did not render the Steps component');
   }
 
+  const formatPath = join(outDir, 'docs/specifications/specs/vocabularies/format/index.html');
+  if (existsSync(formatPath)) {
+    const format = readHtml(outDir, 'docs/specifications/specs/vocabularies/format/index.html');
+    if (format.includes('/docs/specifications/rfcs/')) {
+      throw new Error(
+        '/docs/specifications/specs/vocabularies/format links to unpublished RFC pages under /docs/specifications/rfcs/',
+      );
+    }
+    if (!format.includes('https://github.com/OpenTideHQ/specifications/blob/main/rfcs/')) {
+      throw new Error('/docs/specifications/specs/vocabularies/format did not rewrite RFC links to GitHub');
+    }
+  }
+
   return {
     installation,
     usageIndex,
