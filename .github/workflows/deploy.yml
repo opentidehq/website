@@ -29,10 +29,14 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - run: pnpm check:docs
+
       - name: Build static site
         run: pnpm build
         env:
           SKIP_SYNC: '1'
+
+      - run: pnpm verify:docs
 
       - uses: actions/upload-pages-artifact@v3
         with:

@@ -154,8 +154,11 @@ jobs:
         if: steps.commit.outputs.changed == 'true'
         run: |
           pnpm lint
+          pnpm test
           pnpm types:check
           pnpm build
+          pnpm check:docs
+          pnpm verify:docs
         env:
           SKIP_SYNC: '1'
 

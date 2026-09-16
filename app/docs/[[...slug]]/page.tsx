@@ -12,23 +12,7 @@ import { notFound } from 'next/navigation';
 import { getMDXComponents } from '@/components/mdx';
 import type { Metadata } from 'next';
 import { createRelativeLink } from 'fumadocs-ui/mdx';
-
-function getGithubUrl(slug: string[] | undefined, pagePath: string) {
-  const section = slug?.[0];
-
-  if (section === 'specifications') {
-    const specPath = pagePath.replace(/^specifications\/?/, '');
-    if (specPath.startsWith('specs/') || specPath.startsWith('rfcs/')) {
-      return `https://github.com/OpenTideHQ/specifications/blob/main/${specPath}`;
-    }
-    const rootFile = specPath || 'README.md';
-    const fileName = rootFile.endsWith('.md') ? rootFile : `${rootFile}.md`;
-    return `https://github.com/OpenTideHQ/specifications/blob/main/${fileName === 'index.md' ? 'README.md' : fileName}`;
-  }
-
-  const docsPath = pagePath.replace(/\.mdx?$/, '.md');
-  return `https://github.com/OpenTideHQ/opentide/blob/development/docs/${docsPath}`;
-}
+import { getGithubUrl } from '@/lib/docs-github-url';
 
 export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
   const params = await props.params;

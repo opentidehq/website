@@ -5,12 +5,15 @@
   "scripts": {
     "sync:content": "node scripts/sync-content.mjs",
     "fetch:pypi": "node scripts/fetch-pypi-version.mjs",
+    "check:docs": "node scripts/check-docs-freshness.mjs",
+    "verify:docs": "node scripts/verify-built-docs.mjs",
     "prebuild": "pnpm fetch:pypi && pnpm sync:content",
     "build": "next build && touch out/.nojekyll",
     "dev": "pnpm fetch:pypi && pnpm sync:content && next dev",
     "start": "serve out",
     "lint": "eslint .",
     "types:check": "fumadocs-mdx && next typegen && tsc --noEmit",
+    "test": "node --test --experimental-strip-types --test-reporter spec scripts/lib/*.test.mjs lib/docs-github-url.test.ts",
     "postinstall": "fumadocs-mdx"
   },
   "dependencies": {
