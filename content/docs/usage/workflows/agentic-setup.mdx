@@ -22,7 +22,7 @@ The MCP `validate_query` and `run_query` tools are **stubs** — they return suc
 ## Install and configure the server
 
 ```bash
-pip install 'opentide==0.1.6'
+pip install 'opentide==0.1.7'
 opentide setup mcp --cursor --yes
 ```
 
@@ -43,12 +43,12 @@ The server uses **stdio transport**. It must know where your content lives, so s
 
 ### Supported hosts
 
-| Host | Setup flag | Config path |
-|------|------------|-------------|
-| VS Code | `--vscode` | `.vscode/mcp.json` |
-| Cursor | `--cursor` | `.cursor/mcp.json` |
-| Claude Code | `--claude-code` | `.mcp.json` |
-| Generic | `--generic` | `opentide.mcp.json` |
+| Host | Setup flag | Config path | `OPENTIDE_REPO_ROOT` |
+|------|------------|-------------|----------------------|
+| VS Code | `--vscode` | `.vscode/mcp.json` (`servers`, not `mcpServers`) | `${workspaceFolder}` |
+| Cursor | `--cursor` | `.cursor/mcp.json` | `${workspaceFolder}` |
+| Claude Code | `--claude-code` | `.mcp.json` | `${CLAUDE_PROJECT_DIR}` |
+| Generic | `--generic` | `opentide.mcp.json` | omitted (cwd discovery) |
 
 ## Install agent skills
 
