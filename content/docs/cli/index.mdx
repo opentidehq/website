@@ -7,7 +7,7 @@ icon: Terminal
 The `opentide` command is a [Typer](https://typer.tiangolo.com/) application included in the core package:
 
 ```bash
-pip install 'opentide==0.3.0'
+pip install 'opentide==0.4.0'
 ```
 
 Run `opentide --help` for the live command tree.
@@ -46,7 +46,7 @@ All commands inherit [global options](/docs/cli/global-options/):
 
 ```bash
 opentide generate
-opentide validate --strict --json
+opentide --json validate --strict
 opentide validate query --platform sentinel
 opentide lint --strict
 opentide deploy --platform sentinel --dry-run
