@@ -14,8 +14,8 @@ function BrandMark() {
 
 function navClass(active: boolean) {
   return active
-    ? 'px-3 py-2 font-medium text-[var(--landing-ink)]'
-    : 'px-3 py-2 text-[var(--landing-muted)] transition hover:text-[var(--landing-ink)]';
+    ? 'px-2 py-2 font-medium whitespace-nowrap text-[var(--landing-ink)] sm:px-3'
+    : 'px-2 py-2 whitespace-nowrap text-[var(--landing-muted)] transition hover:text-[var(--landing-ink)] sm:px-3';
 }
 
 export function LandingNav({ children }: { children: ReactNode }) {
@@ -34,7 +34,7 @@ export function LandingNav({ children }: { children: ReactNode }) {
           >
             <BrandMark />
           </Link>
-          <nav className="flex items-center gap-1 text-sm" aria-label="Site">
+          <nav className="flex items-center gap-0.5 overflow-x-auto text-sm sm:gap-1" aria-label="Site">
             {opts.links?.map((link) => {
               if ('type' in link && link.type === 'icon') {
                 return (
@@ -94,6 +94,11 @@ export function LandingNav({ children }: { children: ReactNode }) {
                 <li>
                   <Link href="/docs/usage/" className="transition hover:text-[var(--landing-accent)]">
                     Documentation
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/releases/" className="transition hover:text-[var(--landing-accent)]">
+                    Releases
                   </Link>
                 </li>
                 <li>
