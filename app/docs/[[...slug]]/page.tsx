@@ -1,4 +1,5 @@
 import { getPageImage, getPageMarkdownUrl, source } from '@/lib/source';
+import { DocsReleasesRedirect } from '@/components/docs/docs-releases-redirect';
 import { DocsUsageRedirect } from '@/components/docs/docs-usage-redirect';
 import {
   DocsBody,
@@ -18,6 +19,9 @@ export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
   const params = await props.params;
   if (!params.slug?.length) {
     return <DocsUsageRedirect />;
+  }
+  if (params.slug.join('/') === 'usage/releases') {
+    return <DocsReleasesRedirect />;
   }
   const page = source.getPage(params.slug);
   if (!page) notFound();
@@ -53,6 +57,13 @@ export async function generateMetadata(
   props: PageProps<'/docs/[[...slug]]'>,
 ): Promise<Metadata> {
   const params = await props.params;
+  if (params.slug?.join('/') === 'usage/releases') {
+    return {
+      title: 'Releases',
+      description: 'What shipped in the opentide engine.',
+      alternates: { canonical: '/releases/' },
+    };
+  }
   const page = source.getPage(params.slug);
   if (!page) notFound();
 
