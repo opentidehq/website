@@ -327,11 +327,32 @@ export function rewriteSiteLinks(content, publishedRelPath) {
     .replace(/\bhref=(["'])([^"']+)\1/g, (full, quote, href) => `href=${quote}${rewriteHref(href, fromDir)}${quote}`);
 }
 
+/** Product changelog lives at /releases/, not under the usage docs tree. */
+export function rewriteReleasePageLinks(content) {
+  return content
+    .replaceAll('/docs/usage/releases/', '/releases/')
+    .replaceAll(/\/docs\/usage\/releases(?![/\w])/g, '/releases/');
+}
+
+export function withoutReleasesNav(meta) {
+  if (!meta || typeof meta !== 'object' || !Array.isArray(meta.pages)) return meta;
+  const pages = meta.pages.filter((page) => page !== 'releases' && page !== '!releases');
+  pages.push('!releases');
+  return { ...meta, pages };
+}
+
+export function stripReleasesFromUsageNav(outDir = OUT) {
+  const metaPath = join(outDir, 'usage', 'meta.json');
+  if (!isRegularFile(metaPath)) return;
+  const meta = JSON.parse(readFileSync(metaPath, 'utf8'));
+  writeFileSync(metaPath, `${JSON.stringify(withoutReleasesNav(meta), null, 2)}\n`);
+}
+
 export function postProcessMarkdown(content, publishedRelPath = '') {
   const stripped = stripRedundantSummary(stripLeadingH1(content));
   const linked = rewritePublishedLinks(stripped);
   const withSiteLinks = publishedRelPath ? rewriteSiteLinks(linked, publishedRelPath) : linked;
-  return rewriteBrandName(withSiteLinks);
+  return rewriteReleasePageLinks(rewriteBrandName(withSiteLinks));
 }
 
 export function h1InBody(body) {
@@ -682,6 +703,7 @@ export function syncContent({
 
   const pageCount = countFiles(outDir, (p, name) => name.endsWith('.mdx'));
   postProcessPublishedTree(outDir, outDir);
+  stripReleasesFromUsageNav(outDir);
   assertNoMarkdownPages(outDir);
 
   const opentideSha = gitHeadForPath(opentideDocs).sha;

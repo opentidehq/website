@@ -18,7 +18,9 @@ import {
   rewriteBrandName,
   rewriteHref,
   rewritePublishedLinks,
+  rewriteReleasePageLinks,
   rewriteSiteLinks,
+  stripReleasesFromUsageNav,
   unpublishedSpecsUrl,
   SPECS_BLOB,
   stripLeadingH1,
@@ -624,6 +626,26 @@ test('incomplete OPENTIDE_DOCS_PATH is rejected', () => {
       }),
     /incomplete documentation tree/,
   );
+});
+
+test('release notes leave the docs tree for the product page', () => {
+  assert.equal(
+    rewriteReleasePageLinks('See [Releases](/docs/usage/releases/) and [notes](/docs/usage/releases).'),
+    'See [Releases](/releases/) and [notes](/releases/).',
+  );
+  const out = postProcessMarkdown('[Releases](/docs/usage/releases/)', 'usage/index.mdx');
+  assert.equal(out.includes('](/releases/)'), true);
+  assert.equal(out.includes('/docs/usage/releases'), false);
+
+  const outDir = tempDir('docs-releases-nav-');
+  mkdirSync(join(outDir, 'usage'), { recursive: true });
+  writeFileSync(
+    join(outDir, 'usage', 'meta.json'),
+    `${JSON.stringify({ pages: ['installation', 'releases', 'tutorial'] }, null, 2)}\n`,
+  );
+  stripReleasesFromUsageNav(outDir);
+  const meta = JSON.parse(readFileSync(join(outDir, 'usage', 'meta.json'), 'utf8'));
+  assert.deepEqual(meta.pages, ['installation', 'tutorial', '!releases']);
 });
 
 test('syncContent falls back to a generated specifications index', () => {

@@ -15,7 +15,6 @@
     "choosing-an-interface",
     "---Get started---",
     "installation",
-    "releases",
     "repository-setup",
     "quickstart",
     "tutorial",
@@ -27,6 +26,7 @@
     "---Operate---",
     "troubleshooting",
     "---Migration---",
-    "migration"
+    "migration",
+    "!releases"
   ]
 }
