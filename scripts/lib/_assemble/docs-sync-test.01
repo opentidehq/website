@@ -1,0 +1,91 @@
+`,
+  });
+}
+
+test('publishedDestName converts markdown to mdx once', () => {
+  assert.equal(publishedDestName('installation.md'), 'installation.mdx');
+  assert.equal(publishedDestName('installation.mdx'), 'installation.mdx');
+  assert.equal(publishedDestName('meta.json'), 'meta.json');
+});
+
+test('yamlValue quotes strings that would break YAML', () => {
+  assert.equal(yamlValue('plain'), 'plain');
+  assert.equal(yamlValue('say: hello'), '"say: hello"');
+});
+
+test('extractTitleAndDescription prefers the summary paragraph', () => {
+  const parsed = extractTitleAndDescription('# Title\n\n## Summary\n\nFirst sentence.\n\nMore.\n\n## Next\n');
+  assert.equal(parsed.title, 'Title');
+  assert.equal(parsed.description, 'First sentence.');
+});
+
+test('stripLeadingH1 removes a body heading that duplicates frontmatter', () => {
+  const out = stripLeadingH1('---\ntitle: Hello\n---\n\n# Hello\n\nBody.\n');
+  assert.equal(out.includes('# Hello'), false);
+  assert.equal(out.includes('Body.'), true);
+});
+
+test('stripRedundantSummary drops a duplicated lead paragraph', () => {
+  const out = stripRedundantSummary(
+    '---\ntitle: Versioning\ndescription: How versions work.\n---\n\n## Summary\n\nHow versions work.\n\nKeep me.\n\n## Details\n\nNope.\n',
+  );
+  assert.equal(out.includes('## Summary'), false);
+  assert.equal(out.includes('Keep me.'), true);
+});
+
+test('rewritePublishedLinks sends fixture paths to GitHub', () => {
+  const out = rewritePublishedLinks('See [x](../fixtures/example.json).');
+  assert.equal(out.includes('https://github.com/OpenTideHQ/specifications/blob/main/fixtures/example.json'), true);
+});
+
+test('rewritePublishedLinks sends nested RFC and schema paths to GitHub', () => {
+  const out = rewritePublishedLinks(
+    'See [RFC 0003](../../rfcs/0003-per-key-vocabulary-versioning.md) and [pins](../schemas/pins/).',
+  );
+  assert.equal(out.includes(`${SPECS_BLOB}/rfcs/0003-per-key-vocabulary-versioning.md`), true);
+  assert.equal(out.includes(`${SPECS_BLOB}/schemas/pins/`), true);
+  assert.equal(out.includes('../../rfcs/'), false);
+  assert.equal(out.includes('../schemas/'), false);
+});
+
+test('rewritePublishedLinks does not send published specs/vocabularies pages to GitHub', () => {
+  const published = rewritePublishedLinks(
+    'See [format](vocabularies/format.md) and [catalog](./vocabularies/catalog.md).',
+  );
+  assert.equal(published.includes(`${SPECS_BLOB}/vocabularies/`), false);
+  assert.equal(published.includes('](vocabularies/format.md)'), true);
+  assert.equal(published.includes('](./vocabularies/catalog.md)'), true);
+
+  const repoRoot = rewritePublishedLinks(
+    'See [tlp](../vocabularies/tlp.vocab.toml) and [also](../../vocabularies/tlp.vocab.toml).',
+  );
+  assert.equal(repoRoot.includes(`${SPECS_BLOB}/vocabularies/tlp.vocab.toml`), true);
+  assert.equal(repoRoot.includes('../vocabularies/'), false);
+});
+
+test('rewriteBrandName lowercases the product name but keeps OpenTideHQ', () => {
+  const camel = 'Open' + 'Tide';
+  const out = rewriteBrandName(`Use ${camel} with ${camel}HQ and \`from opentide import ${camel}\`.`);
+  assert.equal(out.includes('Use opentide with'), true);
+  assert.equal(out.includes(camel + 'HQ'), true);
+  assert.equal(out.includes('from opentide import ' + camel), true);
+});
+
+test('rewriteHref turns file-relative markdown into /docs URLs', () => {
+  assert.equal(rewriteHref('./how-it-works.md', 'usage'), '/docs/usage/how-it-works/');
+  assert.equal(rewriteHref('./configuration.md#credentials', 'usage'), '/docs/usage/configuration/#credentials');
+  assert.equal(rewriteHref('../mcp/configuration.md', 'usage'), '/docs/mcp/configuration/');
+  assert.equal(rewriteHref('https://example.com/foo.md', 'usage'), 'https://example.com/foo.md');
+});
+
+test('rewriteHref sends unpublished specification trees to GitHub instead of /docs', () => {
+  assert.equal(
+    rewriteHref('../../rfcs/0003-per-key-vocabulary-versioning.md', 'specifications/specs/vocabularies'),
+    `${SPECS_BLOB}/rfcs/0003-per-key-vocabulary-versioning.md`,
+  );
+  assert.equal(
+    rewriteHref('../schemas/inflight.shard.1.0.schema.json', 'specifications/specs'),
+    `${SPECS_BLOB}/schemas/inflight.shard.1.0.schema.json`,
+  );
+  assert.equal(
+    rewriteHref('./AGENTS.md', 'specifications'),
