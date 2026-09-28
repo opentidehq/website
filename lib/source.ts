@@ -8,6 +8,11 @@ export const source = loader({
   baseUrl: docsRoute,
   source: docs.toFumadocsSource(),
   plugins: [lucideIconsPlugin()],
+  // `!releases` in the usage meta keeps the synced notes file out of the sidebar.
+  // Fallback would otherwise surface that orphan page beside the product /releases page.
+  pageTree: {
+    generateFallback: false,
+  },
 });
 
 export const blog = loader({
