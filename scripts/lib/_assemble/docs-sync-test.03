@@ -1,0 +1,110 @@
+  assert.equal(specIndex.includes('](/docs/specifications/SPECS/)'), true);
+
+  const format = readFileSync(join(outDir, 'specifications', 'specs', 'vocabularies', 'format.mdx'), 'utf8');
+  assert.equal(format.includes('/docs/specifications/rfcs/'), false);
+  assert.equal(format.includes(`${SPECS_BLOB}/rfcs/0003-per-key-vocabulary-versioning.md`), true);
+  assert.equal(format.includes(`${SPECS_BLOB}/schemas/pins/threat.toml`), true);
+
+  assert.equal(gitHeadForPath(join(opentideRepo, 'docs')).sha, opentideSha);
+});
+
+function existsSyncMarkdown(outDir) {
+  try {
+    assertNoMarkdownPages(outDir);
+    return false;
+  } catch {
+    return true;
+  }
+}
+
+test('syncContent throws when source trees are missing', () => {
+  const root = tempDir('docs-sync-missing-');
+  assert.throws(
+    () => syncContent({ root, outDir: join(root, 'content', 'docs'), env: {} }),
+    /Could not resolve OPENTIDE_DOCS_PATH/,
+  );
+});
+
+test('checkPublishedDocsFreshness fails when the stamp does not match gitlinks', () => {
+  const root = tempDir('docs-sync-fresh-');
+  const fakeVendor = tempDir('docs-sync-vendor-');
+  gitInit(root);
+  gitInit(fakeVendor);
+  writeFileSync(join(fakeVendor, 'README'), 'x');
+  const sha = gitCommitAll(fakeVendor, 'init');
+  writeFileSync(join(root, 'README'), 'site');
+  execFileSync('git', ['-C', root, 'add', 'README']);
+  writeGitlinks(root, { opentide: sha, specifications: sha });
+  execFileSync('git', ['-C', root, 'commit', '-m', 'gitlinks'], { stdio: 'ignore' });
+
+  const outDir = join(root, 'content', 'docs');
+  mkdirSync(outDir, { recursive: true });
+  writeFileSync(join(outDir, 'usage.mdx'), '---\ntitle: x\n---\n');
+  writeFileSync(
+    join(outDir, '.sync-stamp.json'),
+    `${JSON.stringify({ format: 'mdx', opentide: '0'.repeat(40), specifications: sha }, null, 2)}\n`,
+  );
+
+  assert.equal(gitLinkSha(root, 'vendor/opentide'), sha);
+  assert.throws(
+    () => checkPublishedDocsFreshness({ root, outDir }),
+    /vendor\/opentide is/,
+  );
+});
+
+test('checkPublishedDocsFreshness passes when stamp matches gitlinks', () => {
+  const root = tempDir('docs-sync-fresh-ok-');
+  const fakeVendor = tempDir('docs-sync-vendor-ok-');
+  gitInit(root);
+  gitInit(fakeVendor);
+  writeFileSync(join(fakeVendor, 'README'), 'x');
+  const sha = gitCommitAll(fakeVendor, 'init');
+  writeFileSync(join(root, 'README'), 'site');
+  execFileSync('git', ['-C', root, 'add', 'README']);
+  writeGitlinks(root, { opentide: sha, specifications: sha });
+  execFileSync('git', ['-C', root, 'commit', '-m', 'gitlinks'], { stdio: 'ignore' });
+
+  const outDir = join(root, 'content', 'docs');
+  mkdirSync(outDir, { recursive: true });
+  writeFileSync(join(outDir, 'usage.mdx'), '---\ntitle: x\n---\n');
+  writeFileSync(
+    join(outDir, '.sync-stamp.json'),
+    `${JSON.stringify({ format: 'mdx', opentide: sha, specifications: sha }, null, 2)}\n`,
+  );
+
+  const result = checkPublishedDocsFreshness({ root, outDir });
+  assert.equal(result.stamp.opentide, sha);
+});
+
+test('checkPublishedDocsFreshness fails when leftover .md pages exist', () => {
+  const root = tempDir('docs-sync-md-');
+  const fakeVendor = tempDir('docs-sync-vendor-md-');
+  gitInit(root);
+  gitInit(fakeVendor);
+  writeFileSync(join(fakeVendor, 'README'), 'x');
+  const sha = gitCommitAll(fakeVendor, 'init');
+  writeFileSync(join(root, 'README'), 'site');
+  execFileSync('git', ['-C', root, 'add', 'README']);
+  writeGitlinks(root, { opentide: sha, specifications: sha });
+  execFileSync('git', ['-C', root, 'commit', '-m', 'gitlinks'], { stdio: 'ignore' });
+
+  const outDir = join(root, 'content', 'docs');
+  mkdirSync(outDir, { recursive: true });
+  writeFileSync(join(outDir, 'usage.md'), '# leftover');
+  writeFileSync(
+    join(outDir, '.sync-stamp.json'),
+    `${JSON.stringify({ format: 'mdx', opentide: sha, specifications: sha }, null, 2)}\n`,
+  );
+
+  assert.throws(
+    () => checkPublishedDocsFreshness({ root, outDir }),
+    /still include \.md pages/,
+  );
+});
+
+test('promoteCommittedMarkdownToMdx converts a committed tree in place', () => {
+  const root = tempDir('docs-sync-promote-');
+  const fakeVendor = tempDir('docs-sync-vendor-promote-');
+  gitInit(root);
+  gitInit(fakeVendor);
+  writeFileSync(join(fakeVendor, 'README'), 'x');

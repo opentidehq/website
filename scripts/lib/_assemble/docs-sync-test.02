@@ -1,0 +1,95 @@
+    `${SPECS_BLOB}/AGENTS.md`,
+  );
+  assert.equal(
+    rewriteHref('./vocabularies/format.md', 'specifications/specs'),
+    '/docs/specifications/specs/vocabularies/format/',
+  );
+});
+
+test('unpublishedSpecsUrl ignores published specification pages', () => {
+  assert.equal(unpublishedSpecsUrl('specifications/specs/vocabularies/format.md'), null);
+  assert.equal(unpublishedSpecsUrl('specifications/GOVERNANCE.md'), null);
+  assert.equal(
+    unpublishedSpecsUrl('specifications/rfcs/0003-per-key-vocabulary-versioning.md'),
+    `${SPECS_BLOB}/rfcs/0003-per-key-vocabulary-versioning.md`,
+  );
+});
+
+test('rewriteSiteLinks rewrites Card hrefs and markdown links', () => {
+  const src = '<Card href="./how-it-works.md" />\n\n[Install](./installation.md)\n';
+  const out = rewriteSiteLinks(src, 'usage/index.mdx');
+  assert.equal(out.includes('href="/docs/usage/how-it-works/"'), true);
+  assert.equal(out.includes('](/docs/usage/installation/)'), true);
+});
+
+test('postProcessMarkdown does not publish unpublished RFC paths under /docs', () => {
+  const out = postProcessMarkdown(
+    'See [RFC 0003](../../rfcs/0003-per-key-vocabulary-versioning.md) and [pins](../schemas/pins/).',
+    'specifications/specs/vocabularies/format.mdx',
+  );
+  assert.equal(out.includes('/docs/specifications/rfcs/'), false);
+  assert.equal(out.includes(`${SPECS_BLOB}/rfcs/0003-per-key-vocabulary-versioning.md`), true);
+  assert.equal(out.includes(`${SPECS_BLOB}/schemas/pins/`), true);
+});
+
+test('postProcessMarkdown keeps published vocabulary spec links on /docs', () => {
+  const out = postProcessMarkdown(
+    'See [format](vocabularies/format.md) and [tlp](../vocabularies/tlp.vocab.toml).',
+    'specifications/specs/metaschema-keywords.mdx',
+  );
+  assert.equal(out.includes('](/docs/specifications/specs/vocabularies/format/)'), true);
+  assert.equal(out.includes(`${SPECS_BLOB}/vocabularies/format.md`), false);
+  assert.equal(out.includes(`${SPECS_BLOB}/vocabularies/tlp.vocab.toml`), true);
+});
+
+test('transformSpecFrontmatter injects title from the body h1', () => {
+  const out = transformSpecFrontmatter('# Versioning\n\n## Summary\n\nHow versions work.\n', 'specifications/specs/versioning.mdx');
+  assert.equal(out.startsWith('---\n'), true);
+  assert.equal(out.includes('title: Versioning'), true);
+  assert.equal(out.includes('description: How versions work.'), true);
+});
+
+test('SKIP_SYNC leaves an existing tree untouched', () => {
+  const root = tempDir('docs-sync-skip-');
+  const outDir = join(root, 'content', 'docs');
+  mkdirSync(outDir, { recursive: true });
+  writeFileSync(join(outDir, 'keep.mdx'), 'stay');
+  const result = main({ root, outDir, env: { SKIP_SYNC: '1' } });
+  assert.equal(result.skipped, true);
+  assert.equal(readFileSync(join(outDir, 'keep.mdx'), 'utf8'), 'stay');
+});
+
+test('syncContent emits mdx, stamps SHAs, and rewrites Card hrefs', () => {
+  const root = tempDir('docs-sync-run-');
+  const opentideRepo = join(root, 'vendor-src', 'opentide');
+  const specificationsRepo = join(root, 'vendor-src', 'specifications');
+  gitInit(opentideRepo);
+  gitInit(specificationsRepo);
+  seedVendorDocs(join(opentideRepo, 'docs'), specificationsRepo);
+  const opentideSha = gitCommitAll(opentideRepo, 'docs');
+  const specificationsSha = gitCommitAll(specificationsRepo, 'specs');
+
+  const outDir = join(root, 'content', 'docs');
+  const result = syncContent({
+    root,
+    outDir,
+    env: {
+      OPENTIDE_DOCS_PATH: join(opentideRepo, 'docs'),
+      SPECIFICATIONS_PATH: specificationsRepo,
+    },
+  });
+
+  assert.equal(result.skipped, false);
+  assert.equal(result.stamp.opentide, opentideSha);
+  assert.equal(result.stamp.specifications, specificationsSha);
+  assert.equal(result.stamp.format, 'mdx');
+
+  const installation = readFileSync(join(outDir, 'usage', 'installation.mdx'), 'utf8');
+  assert.equal(installation.includes('<Tabs items={'), true);
+  assert.equal(installation.includes('](/docs/usage/configuration/#credentials)'), true);
+  assert.equal(existsSyncMarkdown(outDir), false);
+
+  const usageIndex = readFileSync(join(outDir, 'usage', 'index.mdx'), 'utf8');
+  assert.equal(usageIndex.includes('href="/docs/usage/how-it-works/"'), true);
+
+  const specIndex = readFileSync(join(outDir, 'specifications', 'index.mdx'), 'utf8');
