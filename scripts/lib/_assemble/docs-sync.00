@@ -32,7 +32,7 @@ const UNPUBLISHED_SPEC_TOP_LEVEL = new Set([...UNPUBLISHED_SPECS_TREES, 'vocabul
  * `specifications/specs/vocabularies/` is published; repo-root `vocabularies/` is not.
  */
 export function unpublishedSpecsUrl(resolved, hash = '') {
-  const normalized = resolved.replace(/\\/g, '/').replace(/^\\/+/, '');
+  const normalized = resolved.replace(/\\/g, '/').replace(/^\/+/, '');
   if (!normalized.startsWith('specifications/')) return null;
   const rest = normalized.slice('specifications/'.length);
   const top = rest.split('/')[0];
@@ -119,3 +119,5 @@ export function gitHeadForPath(start) {
   }
   return { sha: null, repo: null };
 }
+
+export function gitLinkSha(root, submodulePath) {
