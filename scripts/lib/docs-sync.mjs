@@ -172,7 +172,7 @@ export function extractTitleAndDescription(body) {
 }
 
 export function yamlValue(value) {
-  if (/[:#\n'"]/.test(value)) {
+  if (/[:#\n'"`]/.test(value)) {
     return JSON.stringify(value);
   }
   return value;
