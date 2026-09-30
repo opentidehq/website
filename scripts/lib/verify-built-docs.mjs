@@ -79,13 +79,21 @@ export function verifyBuiltDocs(outDir) {
   const formatPath = join(outDir, 'docs/specifications/specs/vocabularies/format/index.html');
   if (existsSync(formatPath)) {
     const format = readHtml(outDir, 'docs/specifications/specs/vocabularies/format/index.html');
-    if (format.includes('/docs/specifications/rfcs/')) {
-      throw new Error(
-        '/docs/specifications/specs/vocabularies/format links to unpublished RFC pages under /docs/specifications/rfcs/',
-      );
+    if (format.includes('https://github.com/OpenTideHQ/specifications/blob/main/rfcs/')) {
+      throw new Error('/docs/specifications/specs/vocabularies/format still links RFCs to GitHub');
     }
-    if (!format.includes('https://github.com/OpenTideHQ/specifications/blob/main/rfcs/')) {
-      throw new Error('/docs/specifications/specs/vocabularies/format did not rewrite RFC links to GitHub');
+    if (format.includes('/docs/specifications/rfcs/')) {
+      const rfcIndexPath = join(outDir, 'docs/specifications/rfcs/index.html');
+      if (!existsSync(rfcIndexPath)) {
+        throw new Error('format spec links to RFCs but /docs/specifications/rfcs/ was not built');
+      }
+      const rfcIndex = readHtml(outDir, 'docs/specifications/rfcs/index.html');
+      if (!rfcIndex.includes('data-rfc-index')) {
+        throw new Error('/docs/specifications/rfcs did not render the RFC index');
+      }
+      if (!rfcIndex.includes('data-rfc-status')) {
+        throw new Error('/docs/specifications/rfcs did not render RFC status');
+      }
     }
   }
 

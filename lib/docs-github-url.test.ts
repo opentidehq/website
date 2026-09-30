@@ -29,6 +29,23 @@ test('getGithubUrl maps the specifications index to README.md', () => {
   );
 });
 
+test('getGithubUrl maps the RFC index to rfcs/README.md', () => {
+  assert.equal(
+    getGithubUrl(['specifications', 'rfcs'], 'specifications/rfcs/index.mdx'),
+    'https://github.com/OpenTideHQ/specifications/blob/main/rfcs/README.md',
+  );
+});
+
+test('getGithubUrl points RFC pages at rfcs/*.md', () => {
+  assert.equal(
+    getGithubUrl(
+      ['specifications', 'rfcs', '0005-sharing-system'],
+      'specifications/rfcs/0005-sharing-system.mdx',
+    ),
+    'https://github.com/OpenTideHQ/specifications/blob/main/rfcs/0005-sharing-system.md',
+  );
+});
+
 test('getGithubUrl maps specification root files without doubling the extension', () => {
   assert.equal(
     getGithubUrl(['specifications', 'SPECS'], 'specifications/SPECS.mdx'),

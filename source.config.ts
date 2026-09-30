@@ -10,7 +10,10 @@ import { z } from 'zod';
 export const docs = defineDocs({
   dir: 'content/docs',
   docs: {
-    schema: pageSchema,
+    schema: pageSchema.extend({
+      status: z.string().optional(),
+      rfc: z.string().optional(),
+    }),
     postprocess: {
       includeProcessedMarkdown: true,
     },

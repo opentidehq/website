@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { after, test } from 'node:test';
@@ -194,6 +194,57 @@ description: Vocabulary files.
 
 See [RFC 0003](../../rfcs/0003-per-key-vocabulary-versioning.md) and [pins](../schemas/pins/threat.toml).
 `,
+    'rfcs/README.md': `# RFCs
+
+Request for Comments (RFCs) document significant specification changes before they land in \`specs/\`.
+
+## Process
+
+1. Open a GitHub [spec-change issue](../.github/ISSUE_TEMPLATE/spec-change.yml)
+2. Draft an RFC from [0000-template.md](0000-template.md)
+
+## Index
+
+| RFC | Title | Status |
+|-----|-------|--------|
+| [0003](0003-per-key-vocabulary-versioning.md) | Per-key vocabulary versioning | proposed |
+| [0004](https://github.com/OpenTideHQ/specifications/issues/8) | Sysdig Falco deployer | reserved |
+
+## Numbering
+
+\`0000-template.md\` is the template only.
+`,
+    'rfcs/0000-template.md': `# RFC 0000: Template
+
+- **Status:** draft | accepted | rejected | superseded
+
+## Summary
+
+One paragraph overview of the proposal.
+`,
+    'rfcs/0003-per-key-vocabulary-versioning.md': `# RFC 0003: Per-key vocabulary versioning
+
+- **RFC:** 0003
+- **Title:** Per-key vocabulary versioning
+- **Author:** Ada
+- **Status:** proposed
+- **Created:** 2026-06-26
+- **Supersedes:** file-level version in [RFC 0002](0002-vocabulary-versioning.md)
+
+## Summary
+
+Version each vocabulary key on its own. Pins live under \`schemas/pins/\`.
+
+Use \`{field}::1.0\` and a <project> token outside code.
+
+\`\`\`toml
+name = "{field}"
+\`\`\`
+
+## Motivation
+
+Enums drifted.
+`,
   });
 }
 
@@ -221,6 +272,14 @@ test('stripLeadingH1 removes a body heading that duplicates frontmatter', () => 
   assert.equal(out.includes('Body.'), true);
 });
 
+test('stripRedundantSummary keeps the Summary section on RFC pages', () => {
+  const out = stripRedundantSummary(
+    '---\ntitle: RFC 0006\ndescription: Ship the stage.\nrfc: "0006"\n---\n\n## Summary\n\nShip the stage.\n\n## Motivation\n\nWhy.\n',
+  );
+  assert.equal(out.includes('## Summary'), true);
+  assert.equal(out.includes('Ship the stage.'), true);
+});
+
 test('stripRedundantSummary drops a duplicated lead paragraph', () => {
   const out = stripRedundantSummary(
     '---\ntitle: Versioning\ndescription: How versions work.\n---\n\n## Summary\n\nHow versions work.\n\nKeep me.\n\n## Details\n\nNope.\n',
@@ -234,13 +293,13 @@ test('rewritePublishedLinks sends fixture paths to GitHub', () => {
   assert.equal(out.includes('https://github.com/OpenTideHQ/specifications/blob/main/fixtures/example.json'), true);
 });
 
-test('rewritePublishedLinks sends nested RFC and schema paths to GitHub', () => {
+test('rewritePublishedLinks leaves RFC links relative and sends schema paths to GitHub', () => {
   const out = rewritePublishedLinks(
     'See [RFC 0003](../../rfcs/0003-per-key-vocabulary-versioning.md) and [pins](../schemas/pins/).',
   );
-  assert.equal(out.includes(`${SPECS_BLOB}/rfcs/0003-per-key-vocabulary-versioning.md`), true);
+  assert.equal(out.includes('../../rfcs/0003-per-key-vocabulary-versioning.md'), true);
+  assert.equal(out.includes(`${SPECS_BLOB}/rfcs/`), false);
   assert.equal(out.includes(`${SPECS_BLOB}/schemas/pins/`), true);
-  assert.equal(out.includes('../../rfcs/'), false);
   assert.equal(out.includes('../schemas/'), false);
 });
 
@@ -274,10 +333,18 @@ test('rewriteHref turns file-relative markdown into /docs URLs', () => {
   assert.equal(rewriteHref('https://example.com/foo.md', 'usage'), 'https://example.com/foo.md');
 });
 
-test('rewriteHref sends unpublished specification trees to GitHub instead of /docs', () => {
+test('rewriteHref publishes RFC pages and sends other unpublished trees to GitHub', () => {
   assert.equal(
     rewriteHref('../../rfcs/0003-per-key-vocabulary-versioning.md', 'specifications/specs/vocabularies'),
-    `${SPECS_BLOB}/rfcs/0003-per-key-vocabulary-versioning.md`,
+    '/docs/specifications/rfcs/0003-per-key-vocabulary-versioning/',
+  );
+  assert.equal(
+    rewriteHref('rfcs/README.md', 'specifications'),
+    '/docs/specifications/rfcs/',
+  );
+  assert.equal(
+    rewriteHref('../.github/ISSUE_TEMPLATE/spec-change.yml', 'specifications/rfcs'),
+    '../.github/ISSUE_TEMPLATE/spec-change.yml',
   );
   assert.equal(
     rewriteHref('../schemas/inflight.shard.1.0.schema.json', 'specifications/specs'),
@@ -296,9 +363,10 @@ test('rewriteHref sends unpublished specification trees to GitHub instead of /do
 test('unpublishedSpecsUrl ignores published specification pages', () => {
   assert.equal(unpublishedSpecsUrl('specifications/specs/vocabularies/format.md'), null);
   assert.equal(unpublishedSpecsUrl('specifications/GOVERNANCE.md'), null);
+  assert.equal(unpublishedSpecsUrl('specifications/rfcs/0003-per-key-vocabulary-versioning.md'), null);
   assert.equal(
-    unpublishedSpecsUrl('specifications/rfcs/0003-per-key-vocabulary-versioning.md'),
-    `${SPECS_BLOB}/rfcs/0003-per-key-vocabulary-versioning.md`,
+    unpublishedSpecsUrl('specifications/schemas/pins/threat.toml'),
+    `${SPECS_BLOB}/schemas/pins/threat.toml`,
   );
 });
 
@@ -309,13 +377,13 @@ test('rewriteSiteLinks rewrites Card hrefs and markdown links', () => {
   assert.equal(out.includes('](/docs/usage/installation/)'), true);
 });
 
-test('postProcessMarkdown does not publish unpublished RFC paths under /docs', () => {
+test('postProcessMarkdown publishes RFC links on the site and keeps schema links on GitHub', () => {
   const out = postProcessMarkdown(
     'See [RFC 0003](../../rfcs/0003-per-key-vocabulary-versioning.md) and [pins](../schemas/pins/).',
     'specifications/specs/vocabularies/format.mdx',
   );
-  assert.equal(out.includes('/docs/specifications/rfcs/'), false);
-  assert.equal(out.includes(`${SPECS_BLOB}/rfcs/0003-per-key-vocabulary-versioning.md`), true);
+  assert.equal(out.includes('](/docs/specifications/rfcs/0003-per-key-vocabulary-versioning/)'), true);
+  assert.equal(out.includes(`${SPECS_BLOB}/rfcs/0003-per-key-vocabulary-versioning.md`), false);
   assert.equal(out.includes(`${SPECS_BLOB}/schemas/pins/`), true);
 });
 
@@ -344,6 +412,42 @@ test('SKIP_SYNC leaves an existing tree untouched', () => {
   const result = main({ root, outDir, env: { SKIP_SYNC: '1' } });
   assert.equal(result.skipped, true);
   assert.equal(readFileSync(join(outDir, 'keep.mdx'), 'utf8'), 'stay');
+});
+
+test('syncContent does not advertise RFCs when the rfcs directory is a symlink', () => {
+  const root = tempDir('docs-sync-rfc-link-');
+  const opentideRepo = join(root, 'vendor-src', 'opentide');
+  const specificationsRepo = join(root, 'vendor-src', 'specifications');
+  gitInit(opentideRepo);
+  gitInit(specificationsRepo);
+  seedVendorDocs(join(opentideRepo, 'docs'), specificationsRepo);
+  gitCommitAll(opentideRepo, 'docs');
+  gitCommitAll(specificationsRepo, 'specs');
+  rmSync(join(specificationsRepo, 'rfcs'), { recursive: true, force: true });
+  const outside = join(root, 'outside-rfcs');
+  mkdirSync(outside);
+  writeFileSync(
+    join(outside, '0001-leaked.md'),
+    '# RFC 0001: Leaked\n\n- **Title:** Leaked\n- **Status:** proposed\n\n## Summary\n\nSecret.\n',
+  );
+  symlinkSync(outside, join(specificationsRepo, 'rfcs'));
+
+  const outDir = join(root, 'content', 'docs');
+  syncContent({
+    root,
+    outDir,
+    env: {
+      OPENTIDE_DOCS_PATH: join(opentideRepo, 'docs'),
+      SPECIFICATIONS_PATH: specificationsRepo,
+    },
+  });
+
+  const specIndex = readFileSync(join(outDir, 'specifications', 'index.mdx'), 'utf8');
+  assert.equal(specIndex.includes('rfcs/'), false);
+  assert.equal(specIndex.includes('/docs/specifications/rfcs/'), false);
+  assert.equal(existsSync(join(outDir, 'specifications', 'rfcs')), false);
+  const specMeta = JSON.parse(readFileSync(join(outDir, 'specifications', 'meta.json'), 'utf8'));
+  assert.equal(specMeta.pages.includes('rfcs'), false);
 });
 
 test('syncContent emits mdx, stamps SHAs, and rewrites Card hrefs', () => {
@@ -383,9 +487,33 @@ test('syncContent emits mdx, stamps SHAs, and rewrites Card hrefs', () => {
   assert.equal(specIndex.includes('](/docs/specifications/SPECS/)'), true);
 
   const format = readFileSync(join(outDir, 'specifications', 'specs', 'vocabularies', 'format.mdx'), 'utf8');
-  assert.equal(format.includes('/docs/specifications/rfcs/'), false);
-  assert.equal(format.includes(`${SPECS_BLOB}/rfcs/0003-per-key-vocabulary-versioning.md`), true);
+  assert.equal(format.includes('](/docs/specifications/rfcs/0003-per-key-vocabulary-versioning/)'), true);
+  assert.equal(format.includes(`${SPECS_BLOB}/rfcs/0003-per-key-vocabulary-versioning.md`), false);
   assert.equal(format.includes(`${SPECS_BLOB}/schemas/pins/threat.toml`), true);
+
+  const rfcPage = readFileSync(
+    join(outDir, 'specifications', 'rfcs', '0003-per-key-vocabulary-versioning.mdx'),
+    'utf8',
+  );
+  assert.equal(rfcPage.includes('status: proposed'), true);
+  assert.equal(rfcPage.includes('<RfcBanner'), true);
+  assert.equal(rfcPage.includes('- **Status:**'), false);
+  assert.equal(rfcPage.includes('name = "{field}"'), true);
+  assert.equal(rfcPage.includes('&lt;project>'), true);
+
+  const rfcIndex = readFileSync(join(outDir, 'specifications', 'rfcs', 'index.mdx'), 'utf8');
+  assert.equal(rfcIndex.includes('<RfcIndex'), true);
+  assert.equal(rfcIndex.includes('| RFC |'), false);
+  assert.equal(rfcIndex.includes('https://github.com/OpenTideHQ/specifications/issues/8'), true);
+  assert.equal(
+    rfcIndex.includes('https://github.com/OpenTideHQ/specifications/blob/main/.github/ISSUE_TEMPLATE/spec-change.yml'),
+    true,
+  );
+  assert.equal(rfcIndex.includes('](/docs/specifications/rfcs/0000-template/)'), true);
+
+  const specMeta = JSON.parse(readFileSync(join(outDir, 'specifications', 'meta.json'), 'utf8'));
+  assert.equal(specMeta.pages.includes('rfcs'), true);
+  assert.equal(specIndex.includes('](/docs/specifications/rfcs/)'), true);
 
   assert.equal(gitHeadForPath(join(opentideRepo, 'docs')).sha, opentideSha);
 });
@@ -551,7 +679,7 @@ test('generated specifications index sends AGENTS.md to GitHub', () => {
   assert.equal(out.includes(`${SPECS_BLOB}/AGENTS.md`), true);
 });
 
-test('verifyBuiltDocs rejects unpublished RFC /docs links on the format spec', () => {
+test('verifyBuiltDocs rejects a format spec that links RFCs without a rendered index', () => {
   const outDir = tempDir('docs-sync-verify-rfc-');
   mkdirSync(join(outDir, 'docs/usage/installation'), { recursive: true });
   mkdirSync(join(outDir, 'docs/usage/quickstart'), { recursive: true });
@@ -572,7 +700,7 @@ test('verifyBuiltDocs rejects unpublished RFC /docs links on the format spec', (
     join(outDir, 'docs/specifications/specs/vocabularies/format/index.html'),
     '<a href="/docs/specifications/rfcs/0003-per-key-vocabulary-versioning/">RFC 0003</a>',
   );
-  assert.throws(() => verifyBuiltDocs(outDir), /unpublished RFC pages/);
+  assert.throws(() => verifyBuiltDocs(outDir), /was not built/);
 });
 
 test('postProcessMarkdown is idempotent for site links', () => {

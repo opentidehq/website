@@ -32,6 +32,8 @@
     "specs/vocabularies/format",
     "specs/vocabularies/catalog",
     "---Governance---",
-    "GOVERNANCE"
+    "GOVERNANCE",
+    "---RFCs---",
+    "rfcs"
   ]
 }
