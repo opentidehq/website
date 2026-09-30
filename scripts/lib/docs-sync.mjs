@@ -231,6 +231,8 @@ export function stripLeadingH1(content) {
 export function stripRedundantSummary(content) {
   const parts = splitFrontmatter(content);
   if (!parts) return content;
+  // RFCs publish their full markdown; Summary is a required section there.
+  if (frontmatterValue(parts.frontmatter, 'rfc')) return content;
   const description = frontmatterValue(parts.frontmatter, 'description');
   if (!description) return content;
 
