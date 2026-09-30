@@ -5,7 +5,7 @@
  * /docs/specifications/rfcs from the markdown files and the RFC README index,
  * including reserved numbers that do not have a file yet.
  */
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
 export const SPECS_GITHUB = 'https://github.com/OpenTideHQ/specifications/blob/main';
@@ -373,30 +373,55 @@ Non-trivial changes are written up as [RFCs](rfcs/README.md) before they become 
 `;
 }
 
+function isSymlink(path) {
+  try {
+    return lstatSync(path).isSymbolicLink();
+  } catch {
+    return false;
+  }
+}
+
+function isRegularFile(path) {
+  try {
+    return lstatSync(path).isFile();
+  } catch {
+    return false;
+  }
+}
+
 export function readRfcSources(rfcDir) {
-  if (!existsSync(rfcDir)) return [];
-  return readdirSync(rfcDir)
-    .filter((name) => name.endsWith('.md') && name !== 'README.md')
+  if (isSymlink(rfcDir)) return [];
+  let entries;
+  try {
+    entries = readdirSync(rfcDir, { withFileTypes: true });
+  } catch {
+    return [];
+  }
+  return entries
+    .filter((entry) => entry.isFile() && entry.name.endsWith('.md') && entry.name !== 'README.md')
+    .map((entry) => entry.name)
     .sort();
 }
 
 export function syncRfcSection({ specificationsRoot, specOut, outDir, rewriteHref }) {
   const rfcSrc = join(specificationsRoot, 'rfcs');
-  if (!existsSync(rfcSrc)) return null;
+  if (isSymlink(rfcSrc) || !existsSync(rfcSrc)) return null;
 
   const rfcOut = join(specOut, 'rfcs');
   mkdirSync(rfcOut, { recursive: true });
 
   const models = [];
   for (const name of readRfcSources(rfcSrc)) {
-    const model = parseRfcFile(name, readFileSync(join(rfcSrc, name), 'utf8'), rewriteHref);
+    const sourcePath = join(rfcSrc, name);
+    if (!isRegularFile(sourcePath)) continue;
+    const model = parseRfcFile(name, readFileSync(sourcePath, 'utf8'), rewriteHref);
     models.push(model);
     const dest = join(rfcOut, `${model.slug}.mdx`);
     writeFileSync(dest, renderRfcDocument(model));
   }
 
   const readmePath = join(rfcSrc, 'README.md');
-  const readme = existsSync(readmePath)
+  const readme = isRegularFile(readmePath)
     ? readFileSync(readmePath, 'utf8')
     : '# RFCs\n\nProposals for specification changes.\n\n## Index\n\n';
   const entries = mergeRfcCatalog(models, parseReadmeIndex(readme));

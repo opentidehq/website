@@ -1,4 +1,7 @@
 import assert from 'node:assert/strict';
+import { mkdtempSync, mkdirSync, readFileSync, readdirSync, symlinkSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { test } from 'node:test';
 import { rewriteHref } from './docs-sync.mjs';
 import {
@@ -11,6 +14,7 @@ import {
   rfcDescription,
   renderRfcDocument,
   renderRfcIndex,
+  syncRfcSection,
   withRfcNav,
 } from './rfc-sync.mjs';
 
@@ -190,6 +194,54 @@ test('escapeMdxProse leaves inline code and fences untouched', () => {
   const [prose, fence] = escaped.split('```toml\n');
   assert.equal(prose.includes('<!--'), false);
   assert.equal(fence.includes('<!-- keep -->'), true);
+});
+
+test('syncRfcSection skips symlink RFC files and a symlink rfcs directory', () => {
+  const root = mkdtempSync(join(tmpdir(), 'rfc-symlink-'));
+  const specs = join(root, 'specifications');
+  const out = join(root, 'out');
+  const specOut = join(out, 'specifications');
+  mkdirSync(join(specs, 'rfcs'), { recursive: true });
+  mkdirSync(specOut, { recursive: true });
+  const secret = join(root, 'secret.md');
+  writeFileSync(secret, 'DEPLOY KEY MATERIAL');
+  writeFileSync(
+    join(specs, 'rfcs', '0001-real.md'),
+    '# RFC 0001: Real\n\n- **Title:** Real\n- **Status:** proposed\n\n## Summary\n\nReal proposal.\n',
+  );
+  writeFileSync(join(specs, 'rfcs', 'README.md'), '# RFCs\n\n## Index\n\n');
+  symlinkSync(secret, join(specs, 'rfcs', '0002-leaked.md'));
+  symlinkSync(secret, join(specs, 'rfcs', 'README-link.md'));
+
+  const section = syncRfcSection({
+    specificationsRoot: specs,
+    specOut,
+    outDir: out,
+    rewriteHref,
+  });
+  assert.equal(section.count, 1);
+  const published = readdirSync(join(specOut, 'rfcs'));
+  assert.equal(published.includes('0002-leaked.mdx'), false);
+  const page = readFileSync(join(specOut, 'rfcs', '0001-real.mdx'), 'utf8');
+  assert.equal(page.includes('DEPLOY KEY'), false);
+  assert.equal(page.includes('Real proposal.'), true);
+
+  const linkedRoot = join(root, 'linked-specs');
+  mkdirSync(linkedRoot);
+  symlinkSync(join(specs, 'rfcs'), join(linkedRoot, 'rfcs'));
+  const linkedOut = join(root, 'linked-out');
+  const linkedSpecOut = join(linkedOut, 'specifications');
+  mkdirSync(linkedSpecOut, { recursive: true });
+  assert.equal(
+    syncRfcSection({
+      specificationsRoot: linkedRoot,
+      specOut: linkedSpecOut,
+      outDir: linkedOut,
+      rewriteHref,
+    }),
+    null,
+  );
+  assert.equal(readdirSync(linkedSpecOut).includes('rfcs'), false);
 });
 
 test('ensureRfcDiscovery and withRfcNav are idempotent', () => {
