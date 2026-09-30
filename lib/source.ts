@@ -1,13 +1,14 @@
 import { docs, blogPosts } from 'collections/server';
 import { loader } from 'fumadocs-core/source';
 import { lucideIconsPlugin } from 'fumadocs-core/source/plugins/lucide-icons';
+import { rfcSidebarPlugin } from '@/lib/rfc-sidebar';
 import { toFumadocsSource } from 'fumadocs-mdx/runtime/server';
 import { blogImageRoute, docsContentRoute, docsImageRoute, docsRoute } from './shared';
 
 export const source = loader({
   baseUrl: docsRoute,
   source: docs.toFumadocsSource(),
-  plugins: [lucideIconsPlugin()],
+  plugins: [lucideIconsPlugin(), rfcSidebarPlugin()],
   // `!releases` in the usage meta keeps the synced notes file out of the sidebar.
   // Fallback would otherwise surface that orphan page beside the product /releases page.
   pageTree: {

@@ -1,0 +1,25 @@
+---
+title: RFC index
+description: "Request for Comments (RFCs) document significant specification changes before they land in specs/."
+---
+
+## Process
+
+1. Open a GitHub [spec-change issue](https://github.com/OpenTideHQ/specifications/blob/main/.github/ISSUE_TEMPLATE/spec-change.yml) (never Linear; opentide tracking is public GitHub only)
+2. Draft an RFC from [0000-template.md](/docs/specifications/rfcs/0000-template/)
+3. Maintainer review and acceptance
+4. Implement spec + fixture updates in a follow-up PR
+5. Implement opentide changes separately
+
+## Index
+
+
+<RfcIndex entries={"[{\"number\":\"0003\",\"slug\":\"0003-per-key-vocabulary-versioning\",\"title\":\"Per-key vocabulary versioning and schema pins\",\"status\":\"proposed\",\"summary\":\"This RFC replaces file-level vocabulary versioning with per-key lifecycle metadata on each [[keys]] entry.\",\"href\":\"/docs/specifications/rfcs/0003-per-key-vocabulary-versioning/\",\"external\":false},{\"number\":\"0002\",\"slug\":\"0002-vocabulary-versioning\",\"title\":\"Vocabulary identifier versioning and schema pins\",\"status\":\"proposed\",\"summary\":\"This RFC introduces versioned vocabulary identifiers in the form field::major.minor, adds schema-level vocabulary pinning through tide.vocab, and defines bump rules when…\",\"href\":\"/docs/specifications/rfcs/0002-vocabulary-versioning/\",\"external\":false},{\"number\":\"0007\",\"slug\":\"0007-elastic-security-platform\",\"title\":\"Elastic Security detection platform\",\"status\":\"accepted\",\"summary\":\"Add a detection platform, elastic (display name Elastic Security, schema platform::elastic::1.0), that deploys opentide rules as Elastic SIEM detection rules.\",\"href\":\"/docs/specifications/rfcs/0007-elastic-security-platform/\",\"external\":false},{\"number\":\"0006\",\"slug\":\"0006-sharing-ci\",\"title\":\"Sharing on the production merge\",\"status\":\"accepted\",\"summary\":\"opentide setup and opentide setup ci gain an optional sharing stage, default off.\",\"href\":\"/docs/specifications/rfcs/0006-sharing-ci/\",\"external\":false},{\"number\":\"0005\",\"slug\":\"0005-sharing-system\",\"title\":\"Sharing system and MISP connector\",\"status\":\"accepted\",\"summary\":\"Add a first-class sharing subsystem to opentide: pluggable connectors, one workspace file sharing.toml in which every destination is a block under its integration…\",\"href\":\"/docs/specifications/rfcs/0005-sharing-system/\",\"external\":false},{\"number\":\"0001\",\"slug\":\"0001-authority-model\",\"title\":\"Authority model and change process\",\"status\":\"accepted\",\"summary\":\"This RFC establishes the normative authority chain for opentide: markdown specs in the specifications repository are canonical; opentide Pydantic models implement them; JSON…\",\"href\":\"/docs/specifications/rfcs/0001-authority-model/\",\"external\":false},{\"number\":\"0004\",\"slug\":null,\"title\":\"Sysdig Falco deployer (reserved by issue #8; file not yet in tree)\",\"status\":\"reserved\",\"summary\":\"Reserved in the RFC index. The proposal file is not in the repository yet.\",\"href\":\"https://github.com/OpenTideHQ/specifications/issues/8\",\"external\":true}]"} />
+
+
+## Numbering
+
+- Use four-digit zero-padded numbers: `0002`, `0003`, …
+- Filename: `NNNN-short-kebab-title.md`
+- `0000-template.md` is the template only — not a live proposal
+

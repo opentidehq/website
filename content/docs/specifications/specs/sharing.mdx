@@ -251,8 +251,8 @@ A connector spec MUST declare its integration key (the top-level array name), it
 - [validation.md](/docs/specifications/specs/validation/) — `sharing-config` check
 - [metadata.md](/docs/specifications/specs/metadata/) — `metadata.tlp`, optional `metadata.pap`, `metadata.organisation`
 - [platforms.md](/docs/specifications/specs/platforms/) — deployment targets; MISP is not in this matrix
-- [RFC 0005](https://github.com/OpenTideHQ/specifications/blob/main/rfcs/0005-sharing-system.md) — accepted proposal
-- [RFC 0006](https://github.com/OpenTideHQ/specifications/blob/main/rfcs/0006-sharing-ci.md) — production-merge sharing job
+- [RFC 0005](/docs/specifications/rfcs/0005-sharing-system/) — accepted proposal
+- [RFC 0006](/docs/specifications/rfcs/0006-sharing-ci/) — production-merge sharing job
 
 ## Defaults & overrides
 
@@ -268,5 +268,5 @@ Bundled `sharing.toml` ships with no enabled block. A block MUST set `max_tlp`. 
 
 | Version | Date | Notes |
 |---------|------|-------|
-| 1.0 | 2026-09-28 | [RFC 0006](https://github.com/OpenTideHQ/specifications/blob/main/rfcs/0006-sharing-ci.md). Optional sharing stage, default off, runs `opentide share push --changed` only on a push to the default branch. |
-| 1.0 | 2026-09-28 | Initial spec from accepted [RFC 0005](https://github.com/OpenTideHQ/specifications/blob/main/rfcs/0005-sharing-system.md). Integration blocks are top-level arrays (`[[misp]]`) with per-block selection and a required `max_tlp`, merged by `name`. Share state is `.opentide/states/sharing.jsonl`. `preview` writes no files. |
+| 1.0 | 2026-09-28 | [RFC 0006](/docs/specifications/rfcs/0006-sharing-ci/). Optional sharing stage, default off, runs `opentide share push --changed` only on a push to the default branch. |
+| 1.0 | 2026-09-28 | Initial spec from accepted [RFC 0005](/docs/specifications/rfcs/0005-sharing-system/). Integration blocks are top-level arrays (`[[misp]]`) with per-block selection and a required `max_tlp`, merged by `name`. Share state is `.opentide/states/sharing.jsonl`. `preview` writes no files. |

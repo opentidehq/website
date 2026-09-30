@@ -10,6 +10,7 @@ import { cpSync, existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, rm
 import { dirname, join, relative, resolve } from 'node:path';
 import { posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { ensureRfcDiscovery, syncRfcSection, withRfcNav } from './rfc-sync.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 export const ROOT = resolve(__dirname, '..', '..');
@@ -21,8 +22,10 @@ export const OPENTIDE_SECTIONS = ['usage', 'cli', 'mcp', 'sdk'];
 export const SPECS_BLOB = 'https://github.com/OpenTideHQ/specifications/blob/main';
 const OPENTIDE_BLOB = 'https://github.com/OpenTideHQ/opentide/blob/development/docs';
 
-/** Repo-root trees that are never published under content/docs (no specs/<tree> pages). */
-const UNPUBLISHED_SPECS_TREES = ['fixtures', 'schemas', 'rfcs'];
+/** Repo-root trees that are never published under content/docs.
+ *  `rfcs/` is published at /docs/specifications/rfcs/.
+ */
+const UNPUBLISHED_SPECS_TREES = ['fixtures', 'schemas'];
 const UNPUBLISHED_SPEC_FILES = ['AGENTS.md', 'CHANGELOG.md', 'llms.txt'];
 /** Repo-root `vocabularies/` is unpublished; `specifications/specs/vocabularies/` is published. */
 const UNPUBLISHED_SPEC_TOP_LEVEL = new Set([...UNPUBLISHED_SPECS_TREES, 'vocabularies', ...UNPUBLISHED_SPEC_FILES]);
@@ -267,7 +270,10 @@ export function rewritePublishedLinks(content) {
     )
     .replace(/\]\((?:\.\.?\/)*internal\//g, `](${OPENTIDE_BLOB}/internal/`)
     .replace(/\]\(\.agents\//g, '](https://github.com/OpenTideHQ/opentide/blob/development/.agents/')
-    .replace(/\]\(\.github\//g, '](https://github.com/OpenTideHQ/specifications/blob/main/.github/');
+    .replace(
+      /\]\((?:\.\.\/)*\.github\//g,
+      '](https://github.com/OpenTideHQ/specifications/blob/main/.github/',
+    );
 }
 
 /** Brand is lowercase. Keep the GitHub org suffix HQ and the Python registry identifier. */
@@ -315,6 +321,9 @@ export function rewriteHref(href, fromDir) {
   if (resolved.startsWith('..')) return href;
   const unpublished = unpublishedSpecsUrl(resolved, hash);
   if (unpublished) return unpublished;
+  if (/^specifications\/rfcs\/README\.md$/i.test(resolved)) {
+    return toDocsUrl('specifications/rfcs/index', hash);
+  }
   if (!/\.mdx?$/i.test(pathPart)) return href;
   const withoutExt = resolved.replace(/\.mdx?$/i, '');
   return toDocsUrl(withoutExt, hash);
@@ -661,18 +670,21 @@ export function syncContent({
   const specOut = join(outDir, 'specifications');
   mkdirSync(specOut, { recursive: true });
 
+  const hasRfcs = existsSync(join(specificationsRoot, 'rfcs'));
   const authoredIndex = join(specificationsRoot, 'site', 'index.md');
-  if (isRegularFile(authoredIndex)) {
-    writeFileSync(
-      join(specOut, 'index.mdx'),
-      transformSpecFrontmatter(readFileSync(authoredIndex, 'utf8'), 'specifications/index.mdx'),
-    );
-  } else {
-    writeFileSync(
-      join(specOut, 'index.mdx'),
-      postProcessMarkdown(buildSpecificationsIndex(), 'specifications/index.mdx'),
-    );
-  }
+  const indexSource = hasRfcs
+    ? ensureRfcDiscovery(
+        isRegularFile(authoredIndex) ? readFileSync(authoredIndex, 'utf8') : buildSpecificationsIndex(),
+      )
+    : isRegularFile(authoredIndex)
+      ? readFileSync(authoredIndex, 'utf8')
+      : buildSpecificationsIndex();
+  writeFileSync(
+    join(specOut, 'index.mdx'),
+    isRegularFile(authoredIndex) || hasRfcs
+      ? transformSpecFrontmatter(indexSource, 'specifications/index.mdx')
+      : postProcessMarkdown(indexSource, 'specifications/index.mdx'),
+  );
   syncMarkdownTree(join(specificationsRoot, 'specs'), join(specOut, 'specs'), { outRoot: outDir });
 
   for (const file of ['SPECS.md', 'GOVERNANCE.md', 'conformance.md']) {
@@ -683,12 +695,21 @@ export function syncContent({
     writeFileSync(dest, transformSpecFrontmatter(raw, relative(outDir, dest)));
   }
 
+  const rfcSection = syncRfcSection({
+    specificationsRoot,
+    specOut,
+    outDir,
+    rewriteHref,
+  });
+
   const siteMeta = join(specificationsRoot, 'site', 'meta.json');
-  if (isRegularFile(siteMeta)) {
-    cpSync(siteMeta, join(specOut, 'meta.json'));
-  } else {
-    writeFileSync(join(specOut, 'meta.json'), `${JSON.stringify(buildSpecificationsMeta(), null, 2)}\n`);
-  }
+  const specMeta = isRegularFile(siteMeta)
+    ? JSON.parse(readFileSync(siteMeta, 'utf8'))
+    : buildSpecificationsMeta();
+  writeFileSync(
+    join(specOut, 'meta.json'),
+    `${JSON.stringify(rfcSection ? withRfcNav(specMeta) : specMeta, null, 2)}\n`,
+  );
 
   writeFileSync(
     join(outDir, 'meta.json'),

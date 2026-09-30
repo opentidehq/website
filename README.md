@@ -11,6 +11,7 @@ Built with [Next.js](https://nextjs.org/) and [Fumadocs](https://fumadocs.dev/),
 | Landing page | This repo | `/` |
 | Documentation | Synced at build time | `/docs` |
 | Specifications | [specifications](https://github.com/OpenTideHQ/specifications) repo | `/docs/specifications` |
+| RFCs | specifications `rfcs/` | `/docs/specifications/rfcs` |
 | Usage, CLI, MCP, SDK | [opentide](https://github.com/OpenTideHQ/opentide) `docs/` | `/docs/{usage,cli,mcp,sdk}` |
 | Blog | This repo `content/blog/` | `/blog/` |
 

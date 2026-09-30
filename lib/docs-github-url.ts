@@ -12,6 +12,9 @@ export function getGithubUrl(slug: string[] | undefined, pagePath: string): stri
 
   if (section === 'specifications') {
     const specPath = markdownPath.replace(/^specifications\/?/, '');
+    if (specPath === 'rfcs/index.md') {
+      return 'https://github.com/OpenTideHQ/specifications/blob/main/rfcs/README.md';
+    }
     if (specPath.startsWith('specs/') || specPath.startsWith('rfcs/')) {
       return `https://github.com/OpenTideHQ/specifications/blob/main/${specPath}`;
     }

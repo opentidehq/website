@@ -9,6 +9,8 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
 import { CutoverTimeline } from '@/components/blog/cutover-timeline';
 import { SpecStack } from '@/components/blog/spec-stack';
 import { ThenNow } from '@/components/blog/then-now';
+import { RfcBanner } from '@/components/docs/rfc-banner';
+import { RfcIndex } from '@/components/docs/rfc-index';
 import { Mermaid } from '@/components/mdx/mermaid';
 import type { MDXComponents } from 'mdx/types';
 
@@ -25,6 +27,8 @@ export function getMDXComponents(components?: MDXComponents) {
     Files,
     Folder,
     Mermaid,
+    RfcBanner,
+    RfcIndex,
     SpecStack,
     Step,
     Steps,

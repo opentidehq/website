@@ -1,0 +1,19 @@
+{
+  "title": "RFCs",
+  "description": "Proposals for changes to the opentide specifications",
+  "icon": "ScrollText",
+  "defaultOpen": true,
+  "pages": [
+    "index",
+    "---Proposed---",
+    "0003-per-key-vocabulary-versioning",
+    "0002-vocabulary-versioning",
+    "---Accepted---",
+    "0007-elastic-security-platform",
+    "0006-sharing-ci",
+    "0005-sharing-system",
+    "0001-authority-model",
+    "---Template---",
+    "0000-template"
+  ]
+}
