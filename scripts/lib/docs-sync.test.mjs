@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { after, test } from 'node:test';
@@ -412,6 +412,42 @@ test('SKIP_SYNC leaves an existing tree untouched', () => {
   const result = main({ root, outDir, env: { SKIP_SYNC: '1' } });
   assert.equal(result.skipped, true);
   assert.equal(readFileSync(join(outDir, 'keep.mdx'), 'utf8'), 'stay');
+});
+
+test('syncContent does not advertise RFCs when the rfcs directory is a symlink', () => {
+  const root = tempDir('docs-sync-rfc-link-');
+  const opentideRepo = join(root, 'vendor-src', 'opentide');
+  const specificationsRepo = join(root, 'vendor-src', 'specifications');
+  gitInit(opentideRepo);
+  gitInit(specificationsRepo);
+  seedVendorDocs(join(opentideRepo, 'docs'), specificationsRepo);
+  gitCommitAll(opentideRepo, 'docs');
+  gitCommitAll(specificationsRepo, 'specs');
+  rmSync(join(specificationsRepo, 'rfcs'), { recursive: true, force: true });
+  const outside = join(root, 'outside-rfcs');
+  mkdirSync(outside);
+  writeFileSync(
+    join(outside, '0001-leaked.md'),
+    '# RFC 0001: Leaked\n\n- **Title:** Leaked\n- **Status:** proposed\n\n## Summary\n\nSecret.\n',
+  );
+  symlinkSync(outside, join(specificationsRepo, 'rfcs'));
+
+  const outDir = join(root, 'content', 'docs');
+  syncContent({
+    root,
+    outDir,
+    env: {
+      OPENTIDE_DOCS_PATH: join(opentideRepo, 'docs'),
+      SPECIFICATIONS_PATH: specificationsRepo,
+    },
+  });
+
+  const specIndex = readFileSync(join(outDir, 'specifications', 'index.mdx'), 'utf8');
+  assert.equal(specIndex.includes('rfcs/'), false);
+  assert.equal(specIndex.includes('/docs/specifications/rfcs/'), false);
+  assert.equal(existsSync(join(outDir, 'specifications', 'rfcs')), false);
+  const specMeta = JSON.parse(readFileSync(join(outDir, 'specifications', 'meta.json'), 'utf8'));
+  assert.equal(specMeta.pages.includes('rfcs'), false);
 });
 
 test('syncContent emits mdx, stamps SHAs, and rewrites Card hrefs', () => {
