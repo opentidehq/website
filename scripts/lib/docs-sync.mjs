@@ -680,7 +680,8 @@ export function syncContent({
   const specOut = join(outDir, 'specifications');
   mkdirSync(specOut, { recursive: true });
 
-  const hasRfcs = existsSync(join(specificationsRoot, 'rfcs'));
+  const rfcSrc = join(specificationsRoot, 'rfcs');
+  const hasRfcs = existsSync(rfcSrc) && !isSymlink(rfcSrc);
   const authoredIndex = join(specificationsRoot, 'site', 'index.md');
   const indexSource = hasRfcs
     ? ensureRfcDiscovery(
