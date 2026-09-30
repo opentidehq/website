@@ -272,6 +272,14 @@ test('stripLeadingH1 removes a body heading that duplicates frontmatter', () => 
   assert.equal(out.includes('Body.'), true);
 });
 
+test('stripRedundantSummary keeps the Summary section on RFC pages', () => {
+  const out = stripRedundantSummary(
+    '---\ntitle: RFC 0006\ndescription: Ship the stage.\nrfc: "0006"\n---\n\n## Summary\n\nShip the stage.\n\n## Motivation\n\nWhy.\n',
+  );
+  assert.equal(out.includes('## Summary'), true);
+  assert.equal(out.includes('Ship the stage.'), true);
+});
+
 test('stripRedundantSummary drops a duplicated lead paragraph', () => {
   const out = stripRedundantSummary(
     '---\ntitle: Versioning\ndescription: How versions work.\n---\n\n## Summary\n\nHow versions work.\n\nKeep me.\n\n## Details\n\nNope.\n',
