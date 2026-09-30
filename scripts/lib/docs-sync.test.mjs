@@ -257,6 +257,7 @@ test('publishedDestName converts markdown to mdx once', () => {
 test('yamlValue quotes strings that would break YAML', () => {
   assert.equal(yamlValue('plain'), 'plain');
   assert.equal(yamlValue('say: hello'), '"say: hello"');
+  assert.equal(yamlValue('`configurations.splunk` is a saved search'), '"`configurations.splunk` is a saved search"');
 });
 
 test('extractTitleAndDescription prefers the summary paragraph', () => {

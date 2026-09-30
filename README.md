@@ -100,13 +100,15 @@ Pushes to `main` deploy to **GitHub Pages** via `.github/workflows/deploy.yml`. 
 
 The landing page reads the current `opentide` version from the PyPI JSON API in the browser. Publishing a wheel does **not** require a website rebuild for that number to update.
 
-Docs, changelog pages, and specs **do** need a rebuild. `.github/workflows/sync-docs.yml` handles that without a human:
+Docs, changelog pages, specs, and RFCs **do** need a rebuild. `.github/workflows/sync-docs.yml` handles that without a human. RFC pages are not a separate publish step: `pnpm sync:content` rebuilds `/docs/specifications/rfcs/` from `specifications/rfcs/` (including reserved numbers that only exist in the README) every time the specifications pin moves.
 
 1. Hourly (and on `repository_dispatch` / `workflow_dispatch`) bump `vendor/opentide` + `vendor/specifications`
 2. Run `pnpm sync:content` and commit `content/docs/` (including `.sync-stamp.json`)
 3. Lint, test, typecheck, and build
 4. Fail if the stamp does not match the new gitlinks, or if built HTML still contains escaped `<Tabs>`
 5. Push the verified commit to `main` and dispatch GitHub Pages deploy
+
+A new or updated RFC in the specifications repository shows up on the site on the next hourly run. An opentide release dispatch refreshes both pins immediately. Nothing in this repository has to be edited by hand.
 
 To notify the site immediately after a PyPI publish (optional, from `OpenTideHQ/opentide`):
 
