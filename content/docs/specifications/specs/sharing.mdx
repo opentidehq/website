@@ -1,6 +1,6 @@
 ---
 title: Sharing
-description: Sharing publishes Tide objects (threat, objective, rule) to external intelligence platforms. It is a sibling of deployment, not a detection platform. `opentide share` reads one workspace file, `sharing.toml`. Each integration is a top-level array of tables named after its connector — `[[misp]]` today, `[[opencti]]` whe
+description: "Sharing publishes Tide objects (threat, objective, rule) to external intelligence platforms. It is a sibling of deployment, not a detection platform. `opentide share` reads one workspace file, `sharing.toml`. Each integration is a top-level array of tables named after its connector — `[[misp]]` today, `[[opencti]]` whe"
 spec: sharing
 version: "1.0"
 schema_id: null
@@ -250,7 +250,7 @@ A connector spec MUST declare its integration key (the top-level array name), it
 - [workspace.md](/docs/specifications/specs/workspace/) — generated sharing paths
 - [validation.md](/docs/specifications/specs/validation/) — `sharing-config` check
 - [metadata.md](/docs/specifications/specs/metadata/) — `metadata.tlp`, optional `metadata.pap`, `metadata.organisation`
-- [platforms.md](/docs/specifications/specs/platforms/) — deployment targets; MISP is not in this matrix
+- [platforms/index.md](/docs/specifications/specs/platforms/) — deployment targets; MISP is not in this matrix
 - [RFC 0005](https://github.com/OpenTideHQ/specifications/blob/main/rfcs/0005-sharing-system.md) — accepted proposal
 - [RFC 0006](https://github.com/OpenTideHQ/specifications/blob/main/rfcs/0006-sharing-ci.md) — production-merge sharing job
 

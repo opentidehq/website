@@ -172,7 +172,7 @@ export function extractTitleAndDescription(body) {
 }
 
 export function yamlValue(value) {
-  if (/[:#\n'"]/.test(value)) {
+  if (/[:#\n'"`]/.test(value)) {
     return JSON.stringify(value);
   }
   return value;
@@ -501,8 +501,16 @@ export function buildSpecificationsMeta() {
       'specs/configuration',
       'specs/deployment',
       'specs/validation',
-      'specs/platforms',
       'specs/metaschema-keywords',
+      '---Platforms---',
+      'specs/platforms',
+      'specs/platforms/sentinel-1.0',
+      'specs/platforms/defender-for-endpoint-1.0',
+      'specs/platforms/splunk-1.0',
+      'specs/platforms/sentinel-one-1.0',
+      'specs/platforms/carbon-black-cloud-1.0',
+      'specs/platforms/crowdstrike-1.0',
+      'specs/platforms/harfanglab-1.0',
       '---Objects---',
       'specs/objects/threat-1.0',
       'specs/objects/objective-1.0',
