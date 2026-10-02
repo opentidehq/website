@@ -17,7 +17,7 @@ Detection content in opentide is a small graph of typed **objects**, each a YAML
 |--------|--------|---------|------|
 | **Threat** | `threat::1.0` | What do we defend against? | [threat-1.0](/docs/specifications/specs/objects/threat-1.0/) |
 | **Objective** | `objective::1.0` | What are we trying to detect? | [objective-1.0](/docs/specifications/specs/objects/objective-1.0/) |
-| **Rule** | `rule::1.0` | How do we detect it, on which platform? | [rule-1.0](/docs/specifications/specs/objects/rule-1.0/) |
+| **Rule** | `rule::1.0`, `rule::1.1` | How do we detect it, on which platform? | [rule-1.0](/docs/specifications/specs/objects/rule-1.0/), [rule-1.1](/docs/specifications/specs/objects/rule-1.1/) |
 
 ### How objects chain
 
@@ -59,7 +59,7 @@ flowchart LR
 
 1. **[Conformance](/docs/specifications/conformance/)** — how to read the normative keywords.
 2. **[Metadata](/docs/specifications/specs/metadata/)** — the block every object shares.
-3. **The object spec** you care about — [threat](/docs/specifications/specs/objects/threat-1.0/), [objective](/docs/specifications/specs/objects/objective-1.0/), or [rule](/docs/specifications/specs/objects/rule-1.0/).
+3. **The object spec** you care about — [threat](/docs/specifications/specs/objects/threat-1.0/), [objective](/docs/specifications/specs/objects/objective-1.0/), or [rule](/docs/specifications/specs/objects/rule-1.1/) (`rule::1.0` remains valid).
 4. **[Validation](/docs/specifications/specs/validation/)** — what the engine checks and when.
 5. **A platform schema**, when you are writing `configurations.<platform>` — start at [Platforms](/docs/specifications/specs/platforms/), then the block you deploy (for example [Sentinel](/docs/specifications/specs/platforms/sentinel-1.0/)).
 
