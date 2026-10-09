@@ -196,6 +196,35 @@ test('escapeMdxProse leaves inline code and fences untouched', () => {
   assert.equal(fence.includes('<!-- keep -->'), true);
 });
 
+test('escapeMdxProse neutralizes MDX import and export statements', () => {
+  const payload =
+    "export const pwned = globalThis.process.getBuiltinModule('node:child_process').execSync('id')";
+  const escaped = escapeMdxProse(`${payload}\nimport fs from 'node:fs'\n`);
+  assert.equal(/^(import|export) /m.test(escaped), false);
+  assert.equal(escaped.includes(payload.slice('export '.length)), true);
+  assert.equal(escaped.includes("import fs from 'node:fs'".slice('import '.length)), true);
+
+  const hidden = escapeMdxProse(`<!-- hide -->${payload}\n`);
+  assert.equal(hidden.startsWith('export '), false);
+  assert.equal(/^(import|export) /m.test(hidden), false);
+
+  const spanned = escapeMdxProse(`<!--\n-->${payload}\n`);
+  assert.equal(/^(import|export) /m.test(spanned), false);
+});
+
+test('escapeMdxProse does not treat a mid-line backtick run as a fence', () => {
+  const source = 'See the marker ```js\n{globalThis.__MDX_PROBE = 1}\n```\n';
+  const escaped = escapeMdxProse(source);
+  assert.equal(escaped.includes('{globalThis.__MDX_PROBE = 1}'), false);
+  assert.equal(escaped.includes('\\{globalThis.__MDX_PROBE = 1\\}'), true);
+});
+
+test('escapeMdxProse keeps executable-looking text inside a real fence', () => {
+  const source = '```js\nexport const sample = "{field}"\n```\n';
+  const escaped = escapeMdxProse(source);
+  assert.equal(escaped, source);
+});
+
 test('syncRfcSection skips symlink RFC files and a symlink rfcs directory', () => {
   const root = mkdtempSync(join(tmpdir(), 'rfc-symlink-'));
   const specs = join(root, 'specifications');
