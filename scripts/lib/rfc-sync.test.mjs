@@ -196,6 +196,55 @@ test('escapeMdxProse leaves inline code and fences untouched', () => {
   assert.equal(fence.includes('<!-- keep -->'), true);
 });
 
+test('escapeMdxProse ignores a backtick run that is not a CommonMark fence', () => {
+  const source = [
+    'See this ```not a fence',
+    '{globalThis.process.mainModule.require("fs").readFileSync("/etc/hostname","utf8")}',
+    '```',
+    '',
+    '   ```js',
+    'export const kept = "{inside}"',
+    '   ```',
+    '',
+    '    ```js',
+    'export const indented = 1',
+    '    ```',
+    '',
+  ].join('\n');
+  const escaped = escapeMdxProse(source);
+  assert.equal(escaped.includes('```not a fence'), true);
+  assert.equal(
+    escaped.includes('\\{globalThis.process.mainModule.require("fs").readFileSync("/etc/hostname","utf8")\\}'),
+    true,
+  );
+  assert.equal(escaped.includes('export const kept = "{inside}"'), true);
+  assert.equal(escaped.includes(' export const indented = 1'), true);
+  assert.equal(escaped.includes('\nexport const indented'), false);
+});
+
+test('escapeMdxProse keeps column-1 import and export as prose', () => {
+  const source = [
+    'export const pwned = globalThis.process.mainModule.require("fs").readFileSync("/etc/hostname","utf8")',
+    'import fs from "node:fs"',
+    'export default function x() {',
+    'return 1',
+    '}',
+    '',
+    'A paragraph can mention export const in the middle.',
+    '',
+    '`export const literal = 1`',
+    '',
+  ].join('\n');
+  const escaped = escapeMdxProse(source);
+  assert.equal(escaped.includes('\nexport const '), false);
+  assert.equal(escaped.startsWith(' export const pwned'), true);
+  assert.equal(escaped.includes('\n import fs from "node:fs"'), true);
+  assert.equal(escaped.includes('\n export default function x() \\{'), true);
+  assert.equal(escaped.includes('\n\\}'), true);
+  assert.equal(escaped.includes('mention export const in the middle.'), true);
+  assert.equal(escaped.includes('`export const literal = 1`'), true);
+});
+
 test('syncRfcSection skips symlink RFC files and a symlink rfcs directory', () => {
   const root = mkdtempSync(join(tmpdir(), 'rfc-symlink-'));
   const specs = join(root, 'specifications');
