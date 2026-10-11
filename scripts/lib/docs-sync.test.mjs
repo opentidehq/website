@@ -331,6 +331,12 @@ test('rewriteHref turns file-relative markdown into /docs URLs', () => {
   assert.equal(rewriteHref('./configuration.md#credentials', 'usage'), '/docs/usage/configuration/#credentials');
   assert.equal(rewriteHref('../mcp/configuration.md', 'usage'), '/docs/mcp/configuration/');
   assert.equal(rewriteHref('https://example.com/foo.md', 'usage'), 'https://example.com/foo.md');
+  assert.equal(rewriteHref('mailto:docs@example.com', 'usage'), 'mailto:docs@example.com');
+  assert.equal(rewriteHref('/docs/usage/', 'usage'), '/docs/usage/');
+  assert.equal(rewriteHref('//evil.example', 'usage'), '#');
+  assert.equal(rewriteHref('/\\evil.example', 'usage'), '#');
+  assert.equal(rewriteHref('javascript:alert(1)', 'usage'), '#');
+  assert.equal(rewriteHref('data:text/html,hi', 'usage'), '#');
 });
 
 test('rewriteHref publishes RFC pages and sends other unpublished trees to GitHub', () => {
