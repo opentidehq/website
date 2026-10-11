@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { CopyCommand } from '@/components/releases/copy-command';
 import { PypiReleaseLink } from '@/components/landing/pypi-release-link';
 import { INSTALL_CMD } from '@/lib/pypi';
+import { safeHref } from '@/lib/safe-href';
 import {
   CHANGELOG_URL,
   kindLabel,
@@ -39,12 +40,14 @@ function renderInline(text: string, keyPrefix: string): ReactNode[] {
     }
     const link = /^\[([^\]]+)\]\(([^)\s]+)\)$/.exec(part);
     if (link?.[1] && link[2]) {
-      const external = /^https?:/i.test(link[2]);
+      const href = safeHref(link[2]);
+      if (!href) return <span key={key}>{link[1]}</span>;
+      const external = /^https?:/i.test(href);
       if (external) {
         return (
           <a
             key={key}
-            href={link[2]}
+            href={href}
             target="_blank"
             rel="noopener noreferrer"
             className={`text-[var(--landing-accent)] underline decoration-[color-mix(in_srgb,var(--landing-accent)_40%,transparent)] underline-offset-2 ${focusRing}`}
@@ -56,7 +59,7 @@ function renderInline(text: string, keyPrefix: string): ReactNode[] {
       return (
         <Link
           key={key}
-          href={link[2]}
+          href={href}
           className={`text-[var(--landing-accent)] underline decoration-[color-mix(in_srgb,var(--landing-accent)_40%,transparent)] underline-offset-2 ${focusRing}`}
         >
           {link[1]}
@@ -77,19 +80,23 @@ function LinkRow({ release }: { release: ReleaseNote }) {
 
   return (
     <ul className="mt-5 flex flex-wrap gap-x-4 gap-y-2 text-sm">
-      {links.map((link) => (
-        <li key={link.href}>
-          <a
-            href={link.href}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`inline-flex items-center gap-1 font-medium text-[var(--landing-accent)] ${focusRing}`}
-          >
-            {link.label}
-            <ArrowUpRight className="size-3.5" aria-hidden />
-          </a>
-        </li>
-      ))}
+      {links.map((link) => {
+        const href = safeHref(link.href);
+        if (!href) return null;
+        return (
+          <li key={link.href}>
+            <a
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`inline-flex items-center gap-1 font-medium text-[var(--landing-accent)] ${focusRing}`}
+            >
+              {link.label}
+              <ArrowUpRight className="size-3.5" aria-hidden />
+            </a>
+          </li>
+        );
+      })}
     </ul>
   );
 }
