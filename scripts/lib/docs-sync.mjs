@@ -313,8 +313,18 @@ export function toDocsUrl(withoutExt, hash) {
 
 export function rewriteHref(href, fromDir) {
   const trimmed = href.trim();
-  if (!trimmed || trimmed.startsWith('#') || trimmed.startsWith('/') || /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(trimmed)) {
-    return href;
+  if (!trimmed) return href;
+  // Backslash and whitespace become another origin in browsers (`/\host` → `//host`).
+  if (/[\s\\]/.test(trimmed) || trimmed.startsWith('//')) return '#';
+  if (trimmed.startsWith('#') || trimmed.startsWith('/')) return href;
+  if (/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(trimmed)) {
+    try {
+      const url = new URL(trimmed);
+      if (url.protocol === 'https:' || url.protocol === 'http:' || url.protocol === 'mailto:') return href;
+    } catch {
+      return '#';
+    }
+    return '#';
   }
   const hashIndex = trimmed.indexOf('#');
   const pathPart = hashIndex === -1 ? trimmed : trimmed.slice(0, hashIndex);

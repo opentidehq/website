@@ -98,16 +98,7 @@ export function fieldIsWide(label: string, parts: RfcSegment[]): boolean {
   return text.length > 80;
 }
 
-export function safeHref(href: string): string | null {
-  if (href.startsWith('/') || href.startsWith('#')) return href;
-  try {
-    const url = new URL(href);
-    if (url.protocol === 'https:' || url.protocol === 'http:') return href;
-  } catch {
-    return null;
-  }
-  return null;
-}
+export { safeHref } from '@/lib/safe-href';
 
 function isSegment(value: unknown): value is RfcSegment {
   if (typeof value !== 'object' || value === null) return false;
