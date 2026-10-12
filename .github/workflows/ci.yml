@@ -95,10 +95,11 @@ jobs:
           version = snapshot.get('version')
           if not isinstance(version, str) or not version:
               raise SystemExit('Build did not snapshot a PyPI version')
-          needle = f'{version} on PyPI'
+          # The hero's release badge, as rendered text.
+          needle = f'>v{version}<'
           if needle not in html:
-              raise SystemExit(f'Homepage is missing {needle!r}')
-          print(f'Homepage advertises {needle} (build snapshot; live visitors re-fetch PyPI)')
+              raise SystemExit(f'Homepage release badge is missing {needle!r}')
+          print(f'Homepage badge shows v{version} (build snapshot; live visitors re-fetch PyPI)')
           PY
 
       - name: Verify synced docs compiled as MDX

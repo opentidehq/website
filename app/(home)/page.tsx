@@ -1,34 +1,40 @@
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
-import type { ReactNode } from 'react';
+import type { CSSProperties } from 'react';
+import type { Metadata } from 'next';
 import { TideAsciiScene } from '@/components/landing/tide-ascii-scene';
 import { TiltBadge } from '@/components/landing/tilt-badge';
+import { HeroBadge } from '@/components/landing/hero-badge';
 import { HeroInstall } from '@/components/landing/hero-install';
 import { PypiProjectLink } from '@/components/landing/pypi-release-link';
-import { HeroPitch } from '@/components/landing/hero-pitch';
-import { SectionLabel } from '@/components/landing/section-label';
-import { ChapterNav, HeroContents } from '@/components/landing/chapter-nav';
-import { SectionTabs } from '@/components/landing/section-tabs';
+import { ChapterNav } from '@/components/landing/chapter-nav';
+import { RevealOnScroll } from '@/components/landing/reveal';
+import { Accent, BlockHead, Caption, Chapter, ChapterHead, block, wrap } from '@/components/landing/ui';
 import { WhyItMatters } from '@/components/landing/why-it-matters';
-import { SpecLayers } from '@/components/landing/spec-layers';
-import { ObjectQuestions } from '@/components/landing/object-questions';
-import { CoverageTable } from '@/components/landing/coverage-table';
+import { OntologyMap } from '@/components/landing/ontology-map';
+import { TaxonomyRibbon } from '@/components/landing/taxonomy-ribbon';
+import { CoverageFigure } from '@/components/landing/coverage-figure';
 import { PipelineFlow } from '@/components/landing/pipeline-flow';
-import { PlatformMatrix } from '@/components/landing/platform-matrix';
-import { ThreeDoors } from '@/components/landing/three-doors';
-import { AgentNeeds, CliContract } from '@/components/landing/agent-contract';
+import { IntegrationFan } from '@/components/landing/integration-fan';
+import { AgentNeedsStrip } from '@/components/landing/agent-needs-strip';
+import { CliShowcase } from '@/components/landing/cli-showcase';
 import { Guardrails } from '@/components/landing/guardrails';
 import { NorthStar } from '@/components/landing/north-star';
 import { Roadmap } from '@/components/landing/what-comes-next';
 import { GetStarted } from '@/components/landing/get-started';
 import { EcosystemGrid } from '@/components/landing/ecosystem-grid';
-import { WorkflowStudio, ObjectGraph } from '@/components/landing/landing-heavy';
-import type { Metadata } from 'next';
+import { WorkflowStudio } from '@/components/landing/landing-heavy';
 import { readBuildTimePypiVersion } from '@/lib/pypi-build';
 import { appDescription, siteOgImage } from '@/lib/shared';
 import { SPEC_DRIVEN_POST_HREF } from '@/lib/blog';
 
 const title = 'opentide · spec-driven development for detection engineering';
+
+/**
+ * Share of the tide canvas the water fills. The canvas is `--tide / TIDE_FILL` tall, so the
+ * waterline sits `--tide` above the foot of the hero, under the copy's bottom padding.
+ */
+const TIDE_FILL = 0.45;
 
 export const metadata: Metadata = {
   title: { absolute: title },
@@ -43,238 +49,206 @@ export const metadata: Metadata = {
   },
 };
 
-const accent = (text: string) => <span className="text-[var(--landing-accent)]">{text}</span>;
-
-function SectionHead({
-  n,
-  label,
-  title,
-  lead,
-  center,
-}: {
-  n?: string;
-  label?: string;
-  title: ReactNode;
-  lead?: ReactNode;
-  center?: boolean;
-}) {
-  return (
-    <div className={center ? 'mx-auto max-w-3xl text-center' : 'max-w-3xl'}>
-      {label && <SectionLabel n={n} className={center ? 'justify-center' : undefined}>{label}</SectionLabel>}
-      <h2 className={`text-3xl font-bold tracking-[-0.025em] text-balance md:text-[2.75rem] md:leading-[1.08] ${label ? 'mt-5' : ''}`}>
-        {title}
-      </h2>
-      {lead && (
-        <p className={`mt-5 text-lg leading-relaxed text-[var(--landing-muted)] text-pretty ${center ? 'mx-auto max-w-2xl' : 'max-w-2xl'}`}>
-          {lead}
-        </p>
-      )}
-    </div>
-  );
-}
-
-const wrap = 'mx-auto w-full max-w-[1400px] px-4 md:px-6';
-
+/**
+ * The landing, in seven chapters. Each chapter is one idea: a heading, then the one or two
+ * artefacts that prove it. Chapters alternate between the page and a tinted band.
+ */
 export default async function HomePage() {
   const pypiVersion = await readBuildTimePypiVersion();
 
-  // `overflow-x-clip` rather than `hidden`: hidden would turn this into a scroll container
-  // and break the sticky stage the workflow studio pins against.
   return (
     <div className="landing relative overflow-x-clip bg-[var(--landing-bg)]">
+      {/*
+       * The tide runs edge to edge along the foot of the hero and rises behind the copy:
+       * `--tide` is the water left below the content, with as much air again above it for the
+       * spray. The hero fades into the band of the chapter below, so the water has no shore.
+       */}
       <section
         id="top"
-        className="relative mx-auto flex min-h-[min(100svh,920px)] w-full max-w-[1400px] flex-col justify-center gap-10 px-4 py-14 md:px-6 md:py-16 lg:gap-12"
+        data-tide-host
+        className="landing-hero relative isolate overflow-hidden"
+        style={{ '--tide': 'clamp(180px, 27vh, 300px)' } as CSSProperties}
       >
-        <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.95fr)] lg:gap-12 xl:gap-16">
-          <div className="max-w-xl">
-            <h1 className="text-[clamp(2.1rem,5vw,3.6rem)] font-bold leading-[1.05] tracking-[-0.04em] text-balance">
-              The engine behind{' '}
-              <span className="text-[var(--landing-accent)]">agentic detection engineering</span>
-            </h1>
-            <HeroInstall pypiVersion={pypiVersion} />
-          </div>
-
-          <div
-            className="relative aspect-[5/4] w-full overflow-hidden rounded-2xl border border-[var(--landing-border)] bg-[var(--landing-bg)] shadow-[0_24px_80px_-40px_var(--landing-btn-shadow)] sm:aspect-[4/3] lg:aspect-auto lg:min-h-[min(52vh,440px)] lg:h-full"
-            aria-hidden
-          >
-            <TideAsciiScene className="h-full w-full" />
-          </div>
+        <div
+          aria-hidden
+          className="landing-tide absolute inset-x-0 bottom-0 -z-20"
+          style={{ height: `calc(var(--tide) / ${TIDE_FILL})` }}
+        >
+          <TideAsciiScene className="h-full w-full" fill={TIDE_FILL} />
         </div>
-
-        <HeroPitch />
-        <HeroContents />
+        <div
+          className={`landing-hero-copy ${wrap} flex flex-col items-center pb-[calc(var(--tide)+4rem)] pt-20 text-center md:pb-[calc(var(--tide)+2rem)] md:pt-32 lg:pt-36`}
+        >
+          <HeroBadge initialVersion={pypiVersion} />
+          <h1 className="mt-8 max-w-5xl text-[clamp(2.4rem,5.4vw,4.4rem)] font-bold leading-[1.03] tracking-[-0.045em] text-balance">
+            Spec-driven development for <br className="hidden sm:block" />
+            <Accent>agentic detection engineering</Accent>
+          </h1>
+          <p className="mt-6 max-w-2xl text-lg leading-relaxed text-[var(--landing-muted)] text-pretty md:text-xl md:leading-relaxed">
+            opentide gives every detection an{' '}
+            <span className="font-semibold text-[var(--landing-ink)]">ontology and a taxonomy</span>, so
+            it stays threat-aligned, maintainable and fast to ship, with or without agents.
+          </p>
+          <HeroInstall />
+        </div>
       </section>
 
-      <section id="why" className={`landing-section ${wrap}`}>
-        <SectionHead
-          n="01"
+      {/* Fixed to the viewport; early in the DOM so keyboard users reach the chapters first. */}
+      <ChapterNav />
+
+      <Chapter id="why" band>
+        <ChapterHead
+          chapter="why"
           label="why it matters"
           title="Agents made the query cheap. Not threat-aligned."
           lead="Intelligence outruns detection engineering, and agents now write a KQL or SPL query in seconds. What did not get any cheaper is knowing that the query is valid, maps to a real threat and is deployed where it should be."
         />
         <WhyItMatters />
-      </section>
+      </Chapter>
 
-      <section id="what" className={`landing-section ${wrap}`}>
-        <SectionHead
-          n="02"
+      <Chapter id="what">
+        <ChapterHead
+          chapter="what"
           label="what opentide is"
-          title="An ontology, a taxonomy, and an engine you pin."
-          lead="The spec defines what a detection is. The engine enforces it, on a laptop and in CI, the same way every time."
+          title="Three objects. Three questions. One graph."
+          lead="A threat says what you defend against, an objective what to detect, a rule how and where. They link to each other by UUID, threats chain into attack paths, and all of it meets the assets, log sources and detectors of your environment by name and vocabulary."
         />
-        <SpecLayers />
-      </section>
-
-      <section className={`landing-subsection ${wrap}`}>
-        <SectionHead
-          title="Three objects. Three questions."
-          lead="Threats, objectives and rules link by UUID, so every rule can say which threat it serves, and a threat nobody covers shows up as a gap instead of hiding in a heatmap."
-        />
-        <ObjectQuestions />
-        <div className="mt-12">
-          <ObjectGraph />
+        <div data-reveal className="mt-12 md:mt-16">
+          <OntologyMap />
         </div>
-        <div className="mt-20 grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-16">
-          <div>
-            <h3 className="text-2xl font-bold tracking-[-0.02em] text-balance md:text-3xl">
-              Coverage is a graph, not a heatmap.
-            </h3>
-            <p className="mt-4 max-w-md text-lg leading-relaxed text-[var(--landing-muted)] text-pretty">
-              “We cover 85% of ATT&amp;CK” cannot say for which threat, with which signal, or on which
-              platform. A threat-informed graph can.
-            </p>
+        <div data-reveal className="mt-10 md:mt-12">
+          <TaxonomyRibbon />
+        </div>
+
+        <div className={block}>
+          <BlockHead
+            title="Coverage is a graph, not a heatmap."
+            lead="“We cover 85% of ATT&CK” cannot say which threats hit what you run, or where an attack path goes unseen. The graph can: threats meet your assets on their surface, chain into attack paths, and every step traces to the objective and rules that detect it, or shows up as a gap."
+          />
+          <div data-reveal className="mt-10">
+            <CoverageFigure />
           </div>
-          <CoverageTable />
         </div>
-      </section>
+      </Chapter>
 
-      <section className={`landing-subsection ${wrap}`}>
-        <SectionHead
-          title="From YAML to seven platforms."
-          lead="The pipeline every change goes through, the platforms it deploys to, and the three ways in."
+      <Chapter id="how" band>
+        <ChapterHead
+          chapter="how"
+          label="how it runs"
+          title="From YAML to every integration."
+          lead="One pipeline: author, generate, validate, deploy, document. The commands you run on a laptop are the commands CI runs."
         />
-        <SectionTabs
-          label="How opentide runs"
-          tabs={[
-            {
-              id: 'pipeline',
-              label: 'Pipeline',
-              title: 'One pipeline: author, generate, validate, deploy, document.',
-              lead: 'The commands you run on a laptop are the commands CI runs.',
-              content: <PipelineFlow />,
-            },
-            {
-              id: 'platforms',
-              label: 'Seven platforms',
-              title: 'One model. Seven platforms. No rewrites.',
-              content: <PlatformMatrix />,
-            },
-            {
-              id: 'doors',
-              label: 'CLI, SDK, MCP',
-              title: 'Three doors, one engine.',
-              lead: 'The CLI, the Python SDK and the MCP server load the same objects from the same models, in one package.',
-              content: <ThreeDoors />,
-            },
-          ]}
-        />
-      </section>
+        <div id="pipeline" data-reveal className="mt-12 scroll-mt-20 md:mt-16">
+          <PipelineFlow />
+        </div>
+        <div id="platforms" className={`${block} scroll-mt-20`}>
+          <IntegrationFan />
+        </div>
+      </Chapter>
 
-      <section id="why-a-cli" className={`landing-section ${wrap}`}>
-        <SectionHead
-          n="03"
-          label="why we re-released it"
+      <Chapter id="why-a-cli">
+        <ChapterHead
+          chapter="why-a-cli"
+          label="built for agents"
           title="An agent is only as good as the spec it is held to."
-          lead="opentide ran in production for years as a git submodule. We re-released it as one versioned package with a CLI, because people and agents both need a contract, not a folder of scripts."
+          lead="People and agents need the same things from detection tooling. Agents need them stricter: a contract to read, feedback to act on, tools to call, knowledge to load, and gates they cannot skip."
         />
-        <AgentNeeds />
-        <div className="mt-20">
-          <h3 className="text-2xl font-bold tracking-[-0.02em] text-balance md:text-3xl">The CLI is the agent’s API.</h3>
-          <p className="mt-4 max-w-2xl text-lg leading-relaxed text-[var(--landing-muted)] text-pretty">
-            Every command answers the same way, so pipelines and agents act on results, not prose.
-          </p>
-          <div className="mt-10">
-            <CliContract />
+        <div className="mt-12 md:mt-16">
+          <AgentNeedsStrip />
+        </div>
+        <div id="doors" className={`${block} scroll-mt-20`}>
+          <BlockHead
+            title="Three ways in. One model."
+            lead="Every command answers the same way, so pipelines and agents act on results, not prose. The CLI, the Python SDK and the MCP server load the same objects from the same models, in one package."
+          />
+          <div data-reveal className="mt-10">
+            <CliShowcase />
           </div>
         </div>
         <Link
           href={SPEC_DRIVEN_POST_HREF}
-          className="mt-12 inline-flex items-center gap-2 text-base font-semibold text-[var(--landing-ink)] transition hover:text-[var(--landing-accent)]"
+          className="mt-14 inline-flex items-center gap-2 text-base font-semibold text-[var(--landing-ink)] transition hover:text-[var(--landing-accent)]"
         >
-          Read the story: from a submodule to a CLI built for agents
+          Read more: spec-driven detection engineering
           <ArrowRight className="size-4" aria-hidden />
         </Link>
-      </section>
+      </Chapter>
 
-      <section id="agents" className={`landing-section ${wrap}`}>
-        <SectionHead
-          n="04"
+      <Chapter id="agents" band>
+        <ChapterHead
+          chapter="agents"
           label="agentic detection engineering"
-          title="Agents draft. The engine checks. Humans decide what reaches production."
-          lead="Prompt in, objects out: skills draft the chain, the engine validates it, and the pull request meets the same gates as any human change."
+          title="Agents draft. opentide checks. Humans decide what reaches production."
+          lead="Prompt in, objects out: skills draft the chain, opentide validates it, and the pull request meets the same gates as any human change."
         />
-        <div className="mt-12">
+        <div data-reveal className="mt-12 md:mt-16">
           <WorkflowStudio />
         </div>
-        <Guardrails />
-      </section>
-
-      <section id="next" className={`landing-section ${wrap}`}>
-        <SectionHead
-          n="05"
-          label="what comes next"
-          title={<>The north star: intel to a reviewed, deployed detection in {accent('under an hour')}.</>}
-          lead="Agents and the engine carry everything up to STAGING. People keep the gates that decide what reaches production."
-        />
-        <NorthStar />
-
-        <div className="mt-24">
-          <h3 className="text-2xl font-bold tracking-[-0.02em] text-balance md:text-3xl">Where opentide goes next.</h3>
-          <p className="mt-4 max-w-2xl text-lg leading-relaxed text-[var(--landing-muted)] text-pretty">
-            Four directions, tracked in public issues, RFCs and the migration guide, each with a clear
-            status.
-          </p>
-          <Roadmap />
+        <div className={block}>
+          <Guardrails />
         </div>
-      </section>
+      </Chapter>
 
-      <section id="start" className={`landing-section ${wrap}`}>
-        <SectionHead
-          n="06"
+      <Chapter id="next">
+        <ChapterHead
+          chapter="next"
+          label="what comes next"
+          title={
+            <>
+              The north star: intel to a reviewed, deployed detection in <Accent>under an hour</Accent>.
+            </>
+          }
+          lead="Agents and opentide carry everything up to STAGING. People keep the gates that decide what reaches production."
+        />
+        <div data-reveal className="mt-12 md:mt-16">
+          <NorthStar />
+        </div>
+        <div className={block}>
+          <BlockHead
+            title="Where opentide goes next."
+            lead="Four directions, tracked in public issues, RFCs and the migration guide, each with a clear status."
+          />
+          <div className="mt-10">
+            <Roadmap />
+          </div>
+        </div>
+      </Chapter>
+
+      <Chapter id="start" band>
+        <ChapterHead
+          chapter="start"
           label="get started"
           title="Start in five commands."
           lead="From an empty folder to a validated detection repo, with your agent wired in."
         />
-        <GetStarted />
-      </section>
-
-      <section className={`landing-subsection ${wrap}`}>
-        <SectionHead
-          center
-          label="the ecosystem"
-          title="Each repository has one job."
-          lead="The engine, the contract, the content, the interface and the agent brain. Your detection repo stays yours."
-        />
-        <div className="mt-12">
-          <EcosystemGrid />
+        <div data-reveal className="mt-12 md:mt-16">
+          <GetStarted />
         </div>
-      </section>
-
-      {/* Pulled up into the section gap above: the seal is large enough to carry it. */}
-      <section className="-mt-4 pb-20 pt-0 md:-mt-8 md:pb-24">
-        <div className="mx-auto max-w-3xl px-4 text-center">
-          <div className="flex justify-center">
-            <TiltBadge />
+        <div className={block}>
+          <Caption>the ecosystem</Caption>
+          <BlockHead
+            className="mt-3"
+            title="Each repository has one job."
+            lead="The toolchain, the contract, the content, the interface and the agent brain. Your detection repo stays yours."
+          />
+          <div data-reveal className="mt-10">
+            <EcosystemGrid />
           </div>
-          <h2 className="text-3xl font-bold tracking-[-0.025em] text-balance md:text-[2.75rem] md:leading-[1.08]">
-            Agents write the queries. {accent('The spec keeps them aligned.')}
+        </div>
+      </Chapter>
+
+      <section className="landing-chapter">
+        <div data-reveal className="mx-auto max-w-3xl px-4 text-center">
+          <div className="flex justify-center">
+            <TiltBadge size="clamp(132px, 16vw, 188px)" />
+          </div>
+          <h2 className="mt-4 text-[clamp(2rem,4vw,3rem)] font-bold leading-[1.06] tracking-[-0.035em] text-balance">
+            Agents write the queries. <Accent>The spec keeps them aligned.</Accent>
           </h2>
-          <p className="mt-6 text-lg text-[var(--landing-muted)] text-pretty">
-            Ontology, taxonomy, engine and gates. Open source and forever free: the spec under
-            CC-BY-4.0, the engine under EUPL-1.2. You choose how much runs with you, and how much runs
-            on its own.
+          <p className="mt-6 text-lg leading-relaxed text-[var(--landing-muted)] text-pretty">
+            An ontology, a taxonomy, and the gates that hold every detection to them. Open source and
+            forever free: the spec under CC-BY-4.0, opentide under EUPL-1.2. You choose how much runs
+            with you, and how much runs on its own.
           </p>
           <div className="mt-10 flex flex-wrap justify-center gap-4">
             <Link href="/docs/usage/" className="landing-btn-primary group">
@@ -288,7 +262,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <ChapterNav />
+      <RevealOnScroll />
     </div>
   );
 }

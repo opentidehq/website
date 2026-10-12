@@ -46,32 +46,30 @@ const ALPHA_BUCKETS = 16;
 const SPEED = 0.9;
 const GRAVITY = -25;
 const FLIP_RATIO = 0.3;
-const FILL_HEIGHT = 0.4;
+/** Share of the tank the water fills at rest, unless the caller sets its own. */
+const FILL_HEIGHT = 0.56;
 const OVER_RELAXATION = 1.5;
 const PRESSURE_ITERS = 30;
 const SEPARATION_ITERS = 3;
 const CURSOR_RADIUS = 0.25;
 const CURSOR_FORCE = 66;
 const GRID_RES = 52;
+/** Upper bound on particles, which bounds what the simulation costs per step. */
+const MAX_PARTICLES = 7000;
 const AUTO_WAVE = true;
 
 const BLUE = { r: 0, g: 20, b: 137 };
 const YELLOW = { r: 255, g: 204, b: 0 };
 
-function parseRgb(css: string): { r: number; g: number; b: number } | null {
-  const m = css.match(/rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)/i);
-  if (!m) return null;
-  return { r: Number(m[1]), g: Number(m[2]), b: Number(m[3]) };
-}
-
-export function TideAsciiScene({ className }: { className?: string }) {
+export function TideAsciiScene({ className, fill = FILL_HEIGHT }: { className?: string; fill?: number }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const reduced = usePrefersReducedMotion();
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d', { alpha: false });
+    // Transparent: the page behind shows through, so the water can sit on any background.
+    const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
     let w = 0;
@@ -91,12 +89,10 @@ export function TideAsciiScene({ className }: { className?: string }) {
     // on that change, so a theme switch recolours the water without restarting it.
     const isDark = () => document.documentElement.classList.contains('dark');
 
-    const themeColors = () => {
+    // Resolved once and on theme changes, not every frame: getComputedStyle is not free.
+    const readInk = () => {
       const dark = isDark();
       const styles = getComputedStyle(canvas.closest('.landing') ?? document.documentElement);
-      const bgParsed =
-        parseRgb(styles.getPropertyValue('--landing-bg').trim()) ??
-        (dark ? { r: 0, g: 0, b: 0 } : { r: 255, g: 255, b: 255 });
       let ink = dark ? YELLOW : BLUE;
       const accentCss = styles.getPropertyValue('--landing-accent').trim();
       if (accentCss.startsWith('#') && accentCss.length >= 7) {
@@ -106,21 +102,27 @@ export function TideAsciiScene({ className }: { className?: string }) {
           b: parseInt(accentCss.slice(5, 7), 16),
         };
       }
-      return { bg: bgParsed, ink };
+      return ink;
     };
+    let ink = readInk();
 
     const build = () => {
       tankH = 1;
       tankW = Math.max(0.55, w / Math.max(1, h));
-      const spacing = tankH / GRID_RES;
+      // Particles pack at 0.6 × 0.52 of a cell, so filling the tank takes about
+      // tankW · fill · res² / 0.312 of them. A wide horizon holds far more water than the tank
+      // these constants were tuned on: coarsen the grid just enough that the fill stays under
+      // the cap. Drawing still scales with the canvas, which the idle frame rate offsets.
+      const res = Math.max(24, Math.min(GRID_RES, Math.floor(Math.sqrt((MAX_PARTICLES * 0.312) / (tankW * fill)))));
+      const spacing = tankH / res;
       const particleRadius = 0.3 * spacing;
       const dx = 2 * particleRadius;
       const dy = (Math.sqrt(3) / 2) * dx;
-      const waterH = FILL_HEIGHT * tankH;
+      const waterH = fill * tankH;
       const waterW = tankW - 2 * spacing;
       const numX = Math.max(1, Math.floor((waterW - 2 * particleRadius) / dx));
       const numY = Math.max(1, Math.floor((waterH - 2 * particleRadius) / dy));
-      const maxParticles = Math.min(10000, numX * numY + 64);
+      const maxParticles = Math.min(MAX_PARTICLES, numX * numY + 64);
 
       fluid = new FlipFluid({
         tankWidth: tankW,
@@ -130,7 +132,7 @@ export function TideAsciiScene({ className }: { className?: string }) {
         maxParticles,
       });
       fluid.setupTankSolids();
-      fluid.fillBottom(FILL_HEIGHT, tankW, tankH);
+      fluid.fillBottom(fill, tankW, tankH);
       // Settle the freshly filled tank so the first paint already has water in it: reduced
       // motion keeps this frame, and a tab opened in the background shows it until visible.
       for (let i = 0; i < 12; i++) {
@@ -148,12 +150,13 @@ export function TideAsciiScene({ className }: { className?: string }) {
 
     const draw = () => {
       if (!fluid || w < 1 || h < 1) return;
-      const { bg, ink } = themeColors();
-      ctx.fillStyle = `rgb(${bg.r},${bg.g},${bg.b})`;
-      ctx.fillRect(0, 0, w, h);
+      ctx.clearRect(0, 0, w, h);
 
       const cols = Math.max(8, Math.ceil(w / CELL_W));
       const rows = Math.max(8, Math.ceil(h / CELL_H));
+      // Rows hang from the bottom edge, so the densest line of water is whole and any partial
+      // row is the top one, which is air.
+      const top = h - rows * CELL_H;
       const len = QUERY_SOURCE.length;
       for (const list of buckets) list.length = 0;
 
@@ -161,7 +164,7 @@ export function TideAsciiScene({ className }: { className?: string }) {
         // Where this row picks up in the query. Rows stay contiguous runs of it, so the
         // text still reads left to right wherever the fluid happens to expose it.
         const rowStart = row * (cols + ROW_STAGGER);
-        const ny = 1 - (row + 0.5) / rows;
+        const ny = 1 - (top + (row + 0.5) * CELL_H) / h;
 
         for (let col = 0; col < cols; col++) {
           const dens = fluid.sampleDensity01((col + 0.5) / cols, ny);
@@ -186,7 +189,7 @@ export function TideAsciiScene({ className }: { className?: string }) {
         if (!list.length) continue;
         ctx.fillStyle = `rgba(${ink.r},${ink.g},${ink.b},${((b + 0.5) / ALPHA_BUCKETS).toFixed(3)})`;
         for (let i = 0; i < list.length; i += 3) {
-          ctx.fillText(QUERY_SOURCE[list[i + 2]], list[i] * CELL_W, list[i + 1] * CELL_H + dy);
+          ctx.fillText(QUERY_SOURCE[list[i + 2]], list[i] * CELL_W, top + list[i + 1] * CELL_H + dy);
         }
       }
     };
@@ -194,7 +197,7 @@ export function TideAsciiScene({ className }: { className?: string }) {
     const resize = () => {
       const parent = canvas.parentElement;
       if (!parent) return;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
       const nw = parent.clientWidth;
       const nh = parent.clientHeight;
       if (nw < 1 || nh < 1) return;
@@ -222,6 +225,10 @@ export function TideAsciiScene({ className }: { className?: string }) {
 
     const onPointer = (e: PointerEvent) => {
       if (reduced) return;
+      if (e.clientY < canvas.getBoundingClientRect().top) {
+        onLeave();
+        return;
+      }
       const p = pointerToTank(e.clientX, e.clientY);
       const now = performance.now();
       const dt = Math.max(0.008, (now - lastMove) / 1000);
@@ -241,10 +248,22 @@ export function TideAsciiScene({ className }: { className?: string }) {
       mouse.vy = 0;
     };
 
-    const loop = () => {
+    let lastFrame = 0;
+    const loop = (now: number) => {
       raf = 0;
       if (!fluid || reduced) return;
-      const dt = Math.min(1 / 30, (1 / 60) * SPEED);
+      // A resting pointer stops stirring: after a moment the ambient wave takes over again.
+      if (mouse.active && now - lastMove > 1400) onLeave();
+      // Idle, the ambient wave runs at about 30 fps; a pointer in the water gets up to 60. Steps
+      // follow the clock, so the water moves at the same speed on any refresh rate.
+      const every = mouse.active ? 1000 / 60 - 2 : 1000 / 30 - 2;
+      const elapsed = now - lastFrame;
+      if (elapsed < every) {
+        raf = requestAnimationFrame(loop);
+        return;
+      }
+      lastFrame = now;
+      const dt = Math.min(1 / 30, (elapsed / 1000) * SPEED);
       t += dt;
 
       let ox = mouse.x;
@@ -261,7 +280,7 @@ export function TideAsciiScene({ className }: { className?: string }) {
         ovy = clamp(mouse.vy, -40, 40) * force;
       } else if (AUTO_WAVE && idle) {
         const waveX = tankW * (0.55 + 0.28 * Math.sin(t * 1.1));
-        const waveY = tankH * (FILL_HEIGHT + 0.06 + 0.04 * Math.sin(t * 1.7));
+        const waveY = tankH * (fill + 0.06 + 0.04 * Math.sin(t * 1.7));
         ox = waveX;
         oy = waveY;
         orad = CURSOR_RADIUS * 0.55 * Math.min(tankW, tankH);
@@ -302,13 +321,14 @@ export function TideAsciiScene({ className }: { className?: string }) {
     resize();
     lastMove = performance.now();
     lastOx = tankW * 0.7;
-    lastOy = tankH * FILL_HEIGHT;
+    lastOy = tankH * fill;
 
     start();
     // Repaint once the mono face has loaded, or the first frames keep the fallback metrics.
     document.fonts?.load(font).then(draw, () => undefined);
 
-    const host = canvas.parentElement ?? canvas;
+    // The water can sit behind other content: stir it from the whole host, not just the canvas.
+    const host = canvas.closest<HTMLElement>('[data-tide-host]') ?? canvas.parentElement ?? canvas;
     if (!reduced) {
       host.addEventListener('pointermove', onPointer as EventListener);
       host.addEventListener('pointerdown', onPointer as EventListener);
@@ -316,7 +336,10 @@ export function TideAsciiScene({ className }: { className?: string }) {
     }
     const ro = new ResizeObserver(resize);
     ro.observe(canvas.parentElement ?? canvas);
-    const mo = new MutationObserver(() => draw());
+    const mo = new MutationObserver(() => {
+      ink = readInk();
+      draw();
+    });
     mo.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
     const io = new IntersectionObserver(([entry]) => {
       onScreen = entry?.isIntersecting ?? true;
@@ -336,7 +359,7 @@ export function TideAsciiScene({ className }: { className?: string }) {
       io.disconnect();
       document.removeEventListener('visibilitychange', onVisibility);
     };
-  }, [reduced]);
+  }, [reduced, fill]);
 
   return (
     <canvas

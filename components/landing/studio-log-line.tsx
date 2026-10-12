@@ -98,12 +98,10 @@ export function LogLine({ line, className }: { line: string; className?: string 
   const section = /^(?:==|──) (.+) (?:==|──)$/.exec(line);
   if (section) {
     return (
-      <p
-        className={cls(
-          'mt-1.5 border-l-2 border-fuchsia-500/60 pl-2 font-medium text-fuchsia-700 dark:text-fuchsia-300',
-        )}
-      >
+      <p className={cls('mt-1.5 flex items-center gap-2 font-medium text-fuchsia-700 dark:text-fuchsia-300')}>
+        <span aria-hidden className="h-px w-3 shrink-0 bg-current opacity-50" />
         {section[1]}
+        <span aria-hidden className="h-px flex-1 bg-current opacity-50" />
       </p>
     );
   }

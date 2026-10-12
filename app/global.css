@@ -176,26 +176,19 @@ html > body[data-scroll-locked] {
   font-family: var(--font-mono), ui-monospace, monospace;
 }
 
-/* Landing accents */
-@keyframes landing-fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.landing-card {
-  animation: landing-fade-in 0.55s cubic-bezier(0.25, 1, 0.5, 1) both;
-  animation-delay: calc(var(--i, 0) * 70ms);
-}
-
+/*
+ * Landing.
+ *
+ * One small vocabulary for every chapter: a chapter alternates between the page and a tinted
+ * band, content that needs a frame sits in a panel, real artefacts sit in a navy code panel.
+ * Light is white + Reflex Blue; dark is black + EU Yellow.
+ */
 .landing {
-  /* Light: white + Pantone Reflex Blue (matches docs) */
   --landing-bg: #ffffff;
+  /* Alternate chapters sit on this band, so where one ends and the next begins is visible. */
+  --landing-band: #f5f6fa;
+  /* Panels: white on the band, framed by a border on the page. */
+  --landing-panel: #ffffff;
   --landing-surface-deep: #f7f7f9;
   --landing-surface: #f2f2f5;
   --landing-surface-raised: #ebebf0;
@@ -226,26 +219,14 @@ html > body[data-scroll-locked] {
   color: var(--landing-ink);
 }
 
-/* The base layer rings every outline at 50% gray, too faint to find on white or black.
-   Landing links get the accent instead, whether or not they set their own focus style. */
-.landing a:focus-visible {
-  outline: 2px solid var(--landing-accent);
-  outline-offset: 2px;
-  border-radius: 2px;
-}
-
-/* Keep headings clear of the 3.5rem sticky header when scrolled to. Scoped to
-   the landing chrome — docs headings carry their own scroll-m-* offsets. */
-.landing :is(h1, h2, h3, h4) {
-  scroll-margin-top: 4.5rem;
-}
-
 .dark .landing {
-  /* Dark: black + EU yellow */
   --landing-bg: #000000;
-  --landing-surface-deep: #050505;
-  --landing-surface: #0a0a0a;
-  --landing-surface-raised: #111111;
+  --landing-band: #0a0a0b;
+  --landing-panel: #0e0e10;
+  /* Flat black: dark never stacks grey slabs behind content. */
+  --landing-surface-deep: #000000;
+  --landing-surface: #000000;
+  --landing-surface-raised: #000000;
   --landing-ink: #fafafa;
   --landing-muted: #c4c4cc;
   --landing-subtle: #9a9aa3;
@@ -262,95 +243,144 @@ html > body[data-scroll-locked] {
   --brand-mark-ink: #000000;
 }
 
-.landing-surface-card {
-  border-radius: 1rem;
-  border: 1px solid var(--landing-border);
-  background-color: var(--landing-surface);
+/* The base layer rings every outline at 50% gray, too faint to find on white or black.
+   Landing links get the accent instead. Layered, so a link's own focus utilities still win,
+   and without a radius, so the ring follows the link's corners. */
+@layer base {
+  .landing a:focus-visible {
+    outline: 2px solid var(--landing-accent);
+    outline-offset: 2px;
+  }
 }
 
-.landing-btn-primary {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  border-radius: 0.5rem;
-  background-color: var(--landing-accent);
-  padding: 0.75rem 1.5rem;
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: var(--brand-accent-foreground);
-  box-shadow: 0 0 0 1px var(--landing-btn-shadow);
-  transition: background-color 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+/* Keep headings clear of the 3.5rem sticky header when scrolled to. Scoped to
+   the landing chrome — docs headings carry their own scroll-m-* offsets. */
+.landing :is(h1, h2, h3, h4) {
+  scroll-margin-top: 4.5rem;
 }
 
-.landing-btn-primary:hover {
-  background-color: var(--landing-accent-lift);
-}
+/* Component classes sit in a layer so Tailwind utilities can still override them. */
+@layer components {
+  .landing-chapter {
+    padding-block: 5rem;
+  }
 
-.landing-btn-primary:focus-visible {
-  outline: 2px solid var(--landing-accent);
-  outline-offset: 2px;
-}
+  @media (min-width: 768px) {
+    .landing-chapter {
+      padding-block: 6.5rem;
+    }
+  }
 
-.landing-btn-secondary {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  border-radius: 0.5rem;
-  border: 1px solid color-mix(in srgb, var(--landing-accent) 50%, transparent);
-  background-color: var(--landing-surface-raised);
-  padding: 0.75rem 1.5rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--landing-accent);
-  transition:
-    border-color 0.2s cubic-bezier(0.25, 1, 0.5, 1),
-    background-color 0.2s cubic-bezier(0.25, 1, 0.5, 1);
-}
+  .landing-band {
+    background-color: var(--landing-band);
+  }
 
-.landing-btn-secondary:hover {
-  border-color: var(--landing-accent);
-  background-color: var(--landing-hover);
-}
+  .landing-panel {
+    border-radius: 1rem;
+    border: 1px solid var(--landing-border);
+    background-color: var(--landing-panel);
+  }
 
-.landing-btn-secondary:focus-visible {
-  outline: 2px solid var(--landing-accent);
-  outline-offset: 2px;
-}
+  /* Kept for blog embeds that frame a card without a fill. */
+  .landing-surface-card {
+    border-radius: 1rem;
+    border: 1px solid var(--landing-border);
+    background-color: transparent;
+  }
 
-.landing-section {
-  padding-block: 4.5rem;
-}
+  /* Chapter anchors land with the label just under the 3.5rem sticky header. */
+  .landing section[id] {
+    scroll-margin-top: 0;
+  }
 
-@media (min-width: 768px) {
-  .landing-section {
-    padding-block: 6rem;
+  @media (min-width: 768px) {
+    .landing section[id] {
+      scroll-margin-top: -2rem;
+    }
+  }
+
+  /* The hero sinks into the band of the chapter below, so the water has no hard shore. */
+  .landing-hero {
+    background: linear-gradient(to bottom, var(--landing-bg) 58%, var(--landing-band));
+  }
+
+  /* The tide runs edge to edge; only its spray thins out at the top and its depths at the foot. */
+  .landing-tide {
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 18%, #000 88%, transparent);
+    mask-image: linear-gradient(to bottom, transparent, #000 18%, #000 88%, transparent);
+  }
+
+  .landing-btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: 0.5rem;
+    background-color: var(--landing-accent);
+    padding: 0.75rem 1.5rem;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--brand-accent-foreground);
+    box-shadow: 0 0 0 1px var(--landing-btn-shadow);
+    transition: background-color 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+
+  .landing-btn-primary:hover {
+    background-color: var(--landing-accent-lift);
+  }
+
+  .landing-btn-primary:focus-visible {
+    outline: 2px solid var(--landing-accent);
+    outline-offset: 2px;
+  }
+
+  .landing-btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: 0.5rem;
+    border: 1px solid color-mix(in srgb, var(--landing-accent) 50%, transparent);
+    background-color: transparent;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--landing-accent);
+    transition:
+      border-color 0.2s cubic-bezier(0.25, 1, 0.5, 1),
+      background-color 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+
+  .landing-btn-secondary:hover {
+    border-color: var(--landing-accent);
+    background-color: var(--landing-hover);
+  }
+
+  .landing-btn-secondary:focus-visible {
+    outline: 2px solid var(--landing-accent);
+    outline-offset: 2px;
   }
 }
 
 /* Floating chapter dock. The bar spans the viewport so it can centre the pill, but only the
-   pill takes pointer events; while hidden it also leaves the tab order. */
+   pill takes pointer events. While the hero is on screen it is out of sight but not out of
+   reach: it stays in the accessibility tree and shows itself when a keyboard focuses it.
+   Keyboard focus only: a link a mouse clicked keeps focus, and must not pin the dock open. */
 .landing-dock {
   pointer-events: none;
   opacity: 0;
   transform: translateY(0.75rem);
-  visibility: hidden;
   transition:
     opacity 0.25s cubic-bezier(0.25, 1, 0.5, 1),
-    transform 0.25s cubic-bezier(0.25, 1, 0.5, 1),
-    visibility 0s linear 0.25s;
+    transform 0.25s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-.landing-dock-visible {
+.landing-dock-visible,
+.landing-dock:has(:focus-visible) {
   opacity: 1;
   transform: none;
-  visibility: visible;
-  transition:
-    opacity 0.25s cubic-bezier(0.25, 1, 0.5, 1),
-    transform 0.25s cubic-bezier(0.25, 1, 0.5, 1),
-    visibility 0s;
 }
 
-.landing-dock-visible > * {
+.landing-dock-visible > *,
+.landing-dock:has(:focus-visible) > * {
   pointer-events: auto;
 }
 
@@ -362,88 +392,253 @@ html > body[data-scroll-locked] {
   }
 }
 
-/* Chapter anchors land with the label just under the 3.5rem sticky header. */
-.landing section[id] {
-  scroll-margin-top: 0;
+/* Scroll reveals (RevealOnScroll): content hides only once the observer is running. */
+.landing-reveal [data-reveal] {
+  transition:
+    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: calc(var(--reveal-i, 0) * 80ms);
 }
 
-@media (min-width: 768px) {
-  .landing section[id] {
-    scroll-margin-top: -1.5rem;
+.landing-reveal [data-reveal]:not([data-shown]) {
+  opacity: 0;
+  transform: translateY(1.25rem);
+}
+
+@media print {
+  .landing-reveal [data-reveal]:not([data-shown]) {
+    opacity: 1;
+    transform: none;
   }
 }
 
-/* A section that continues the chapter above it, so it sits closer. */
-.landing-subsection {
-  padding-block: 3rem;
+/* Endless animations run only while their chapter is on screen (RevealOnScroll marks it). */
+.landing-reveal .landing section:not([data-live]) :is(.landing-flow, .landing-marquee, .landing-voyage, .landing-ring, .landing-spin, .landing-caret, .landing-ping) {
+  animation-play-state: paused;
+}
+
+/* Hero: a soft clearing behind the copy keeps it legible where the spray rises. It follows the
+   copy's own box, from below the top padding to the waterline. */
+.landing-hero-copy {
+  position: relative;
+}
+
+/* Narrow screens: the copy spans the column, so the clearing is a vertical fade behind all of
+   it. Wider: an ellipse that leaves the water visible around the copy. */
+.landing-hero-copy::before {
+  content: '';
+  position: absolute;
+  inset: 3rem -1rem var(--tide) -1rem;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(to bottom, transparent, var(--landing-bg) 10%, var(--landing-bg) 88%, transparent);
 }
 
 @media (min-width: 768px) {
-  .landing-subsection {
-    padding-block: 3.5rem;
+  .landing-hero-copy::before {
+    inset: 3rem 0 var(--tide) 0;
+    background: radial-gradient(
+      closest-side,
+      var(--landing-bg) 62%,
+      color-mix(in srgb, var(--landing-bg) 70%, transparent) 82%,
+      transparent
+    );
+  }
+}
+
+/* Diagram edges draw in once, then the links of whatever is selected carry a moving dash. */
+.landing-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.landing-draw[data-drawn] {
+  stroke-dashoffset: 0;
+}
+
+/* Dashed links cannot draw in by their dash, so they fade in instead. */
+.landing-fade-line {
+  opacity: 0;
+  transition: opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.landing-fade-line[data-drawn] {
+  opacity: 1;
+}
+
+@keyframes landing-flow {
+  to {
+    stroke-dashoffset: -18;
+  }
+}
+
+.landing-flow {
+  stroke-dasharray: 4 14;
+  stroke-linecap: round;
+  animation: landing-flow 0.8s linear infinite;
+}
+
+@keyframes landing-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.landing-progress {
+  transform-origin: left;
+  animation: landing-progress linear forwards;
+}
+
+/* A slow ribbon of vocabulary names. Doubled content, so -50% is one seamless loop. */
+@keyframes landing-marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.landing-marquee {
+  animation: landing-marquee 70s linear infinite;
+}
+
+.landing-marquee:hover {
+  animation-play-state: paused;
+}
+
+.landing-fade-x {
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+}
+
+@keyframes landing-ping {
+  0% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  80%,
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+.landing-ping {
+  animation: landing-ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes landing-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  70%,
+  100% {
+    transform: scale(1.12);
+    opacity: 0;
+  }
+}
+
+.landing-ring {
+  animation: landing-ring 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes landing-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.landing-spin {
+  animation: landing-spin 2.4s linear infinite;
+}
+
+@keyframes landing-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.landing-caret {
+  animation: landing-blink 1s steps(1) infinite;
+}
+
+/* The north star: a pulse that runs the track, slows along the human wait, then ships. */
+/* Stop centres come from the track as --voyage-from, --voyage-wait (STAGING), --voyage-merge
+   (human review) and --voyage-to (PRODUCTION). */
+@keyframes landing-voyage {
+  0% {
+    transform: translateX(var(--voyage-from));
+    opacity: 0;
+  }
+  4% {
+    opacity: 1;
+  }
+  42% {
+    transform: translateX(var(--voyage-wait));
+  }
+  76% {
+    transform: translateX(var(--voyage-merge));
+  }
+  86% {
+    transform: translateX(var(--voyage-to));
+  }
+  94% {
+    transform: translateX(var(--voyage-to));
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(var(--voyage-to));
+    opacity: 0;
+  }
+}
+
+.landing-voyage {
+  animation: landing-voyage 7.5s cubic-bezier(0.45, 0, 0.25, 1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-draw {
+    transition: none;
+    stroke-dashoffset: 0;
+  }
+
+  .landing-fade-line {
+    transition: none;
+    opacity: 1;
+  }
+
+  .landing-flow,
+  .landing-progress,
+  .landing-marquee,
+  .landing-ping,
+  .landing-ring,
+  .landing-spin,
+  .landing-caret,
+  .landing-voyage {
+    animation: none;
   }
 }
 
 /*
- * Workflow Studio stage.
- *
- * The studio sits in a tall track. As that track scrolls past, `--stage-open` (written by
- * useScrollStage) runs 0 → 1 → 0, so the pinned panel claims the viewport while you are
- * reading it and hands the space back once you scroll on. Below `lg` the panel stacks and
- * keeps its resting size — pinning a stacked IDE is worse than not pinning at all.
+ * Workflow Studio: a fixed stage that plays the scenario in place. Below `lg` the panes
+ * stack and the frame grows with them.
  */
 .landing-studio {
-  --stage-open: 0;
-  --studio-rest: min(58vh, 560px);
-  --studio-full: min(calc(100svh - 13rem), 940px);
-  --studio-bleed: 0px;
-
   display: flex;
   flex-direction: column;
-  justify-content: center;
   gap: 1rem;
 }
 
 .landing-studio-body {
-  height: calc(
-    var(--studio-rest) + (var(--studio-full) - var(--studio-rest)) * var(--stage-open)
-  );
-}
-
-.landing-studio-frame {
-  margin-inline: calc(-1 * var(--studio-bleed));
-  /* rounded.md at rest, tightening to rounded.sm once the frame reaches full bleed */
-  border-radius: calc(1rem - 0.5rem * var(--stage-open));
+  height: min(82svh, 680px);
 }
 
 @media (min-width: 1024px) {
-  .landing-studio-track {
-    /* 100svh is spent pinned; the rest is the travel that opens and closes the stage. */
-    height: 190svh;
-  }
-
-  .landing-studio {
-    position: sticky;
-    top: 3.5rem; /* clears the sticky site header */
-    height: calc(100svh - 3.5rem);
-    /* Reach for the viewport edge, but never past the track's own gutter. */
-    --studio-bleed: calc(var(--stage-open) * (min(100vw - 4rem, 1760px) - 100%) / 2);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .landing-studio-track {
-    height: auto;
-  }
-
-  .landing-studio {
-    position: static;
-    height: auto;
-    --studio-bleed: 0px;
-  }
-
   .landing-studio-body {
-    height: var(--studio-rest);
+    height: min(72vh, 640px);
   }
 }
 
@@ -539,59 +734,6 @@ html > body[data-scroll-locked] {
   }
 }
 
-/*
- * Object-graph edge flow.
- *
- * Only the edge feeding the currently selected node runs one of these, so the graph reads
- * as a path being traced. Straight links get a comet riding the rail; fork arms get a
- * spark, because their elbow is drawn with borders rather than a stroked path.
- */
-@keyframes landing-edge-comet {
-  from {
-    stroke-dashoffset: 0;
-  }
-  to {
-    stroke-dashoffset: -36;
-  }
-}
-
-.landing-edge-comet {
-  animation: landing-edge-comet 1.5s linear infinite;
-}
-
-@keyframes landing-edge-spark {
-  0% {
-    transform: translate(0, -50%) scale(0.4);
-    opacity: 0;
-  }
-  20%,
-  70% {
-    opacity: 1;
-  }
-  100% {
-    transform: translate(18px, -50%) scale(0.4);
-    opacity: 0;
-  }
-}
-
-.landing-edge-spark {
-  animation: landing-edge-spark 1.5s ease-out infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .landing-edge-comet,
-  .landing-edge-spark {
-    display: none;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .landing-card {
-    animation: none;
-  }
-}
-
-/* Thin themed scrollbars for landing code / YAML panes */
 @keyframes landing-fade-slide {
   from {
     opacity: 0;
@@ -613,6 +755,7 @@ html > body[data-scroll-locked] {
   }
 }
 
+/* Thin themed scrollbars for landing code / YAML panes */
 .landing-code-scroll,
 .landing-code-scroll pre {
   scrollbar-width: thin;

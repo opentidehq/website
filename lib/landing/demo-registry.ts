@@ -6,6 +6,7 @@ export const DEMO_BRANCH = 'feat/lsass-credential-access';
 
 export const UUID = {
   threatGateway: '00000000-0000-4000-8001-000000000010',
+  threatLsass: '00000000-0000-4000-8001-000000000020',
   objectiveCredential: '00000000-0000-4000-8002-000000000001',
   ruleLsass: '00000000-0000-4000-8003-000000000001',
   signalLsass: '00000000-0000-4000-8099-000000000001',
@@ -179,6 +180,7 @@ export const ADVISORY: AdvisoryPage = {
 };
 
 export const DEMO_PATHS = [
+  'objects/threats/credential-dumping-from-lsass.yaml',
   'objects/threats/gateway-exploitation-cve-2026-0300.yaml',
   'objects/objectives/credential-access-via-lsass.yaml',
   'objects/rules/lsass-memory-access.yaml',
@@ -187,6 +189,44 @@ export const DEMO_PATHS = [
 ] as const;
 
 export type DemoPath = (typeof DEMO_PATHS)[number];
+
+/**
+ * The environment the chain lands in: assets tagged with the surface vocabulary, the log
+ * sources collected from them and the integration each one lands in, and a detector that
+ * already watches the workstations. `opentide generate` turns these names into schema enums,
+ * so a signal's `logsources` complete in the editor.
+ */
+export const VISIBILITY_PATH = '.opentide/configurations/visibility.toml';
+
+export const VISIBILITY_TOML = `[[assets]]
+name = "Edge firewalls"
+description = "Internet-facing PA-Series and VM-Series firewalls"
+criticality = "High"
+surface = ["Infrastructure::Firewalls::Palo Alto Networks"]
+
+[[assets]]
+name = "Corporate workstations"
+description = "Managed Windows 11 endpoints"
+criticality = "Medium"
+surface = ["OS::Windows::Desktop::11"]
+
+[[logsources]]
+name = "Endpoint process events"
+description = "Defender for Endpoint DeviceProcessEvents, forwarded to Sentinel"
+system = "sentinel"
+assets = ["Corporate workstations"]
+
+[[logsources]]
+name = "Firewall traffic"
+description = "PAN-OS traffic and threat logs"
+system = "splunk"
+assets = ["Edge firewalls"]
+
+[[detectors]]
+name = "Defender for Endpoint"
+description = "Built-in credential theft alerts"
+assets = ["Corporate workstations"]
+`;
 
 export const RULE_PATH = 'objects/rules/lsass-memory-access.yaml' satisfies DemoPath;
 
@@ -205,6 +245,40 @@ const SENTINEL_QUERY_TUNED = `      let BenignAccessors = dynamic(["csrss.exe", 
       | where InitiatingProcessCommandLine !has "inventory-scan"`;
 
 export const DEMO_FILES: Record<DemoPath, string> = {
+  // Already in the repository before the scenario: the gateway threat chains to it.
+  'objects/threats/credential-dumping-from-lsass.yaml': `name: Credential dumping from LSASS
+criticality: High
+
+metadata:
+  uuid: ${UUID.threatLsass}
+  schema: threat::1.0
+  version: 1.0.0
+  created: "2026-03-02"
+  modified: "2026-03-02"
+  tlp: clear
+  author: detection-team
+  organisation:
+    uuid: 00000000-0000-4000-8000-000000000099
+    name: Example Corp
+
+threat:
+  description: |
+    Adversaries with a foothold on a Windows host read LSASS process
+    memory to recover credentials and reuse them across the estate.
+  severity: Significant incident
+  impact:
+    - Identity Theft
+  leverage:
+    - Information Disclosure
+  viability: Likely
+  terrain: Managed Windows workstations where a local administrator can open LSASS
+  surface:
+    - OS::Windows::Desktop::11
+  mitre_attack:
+    - T1003.001
+  killchain:
+    - Credential Access
+`,
   'objects/threats/gateway-exploitation-cve-2026-0300.yaml': `name: Gateway exploitation (CVE-2026-0300)
 criticality: High
 
@@ -234,12 +308,18 @@ threat:
   viability: Likely
   terrain: Internet-facing PA-Series and VM-Series firewalls with the User-ID Authentication Portal enabled
   surface:
-    - Firewalls::Palo Alto Networks
+    - Infrastructure::Firewalls::Palo Alto Networks
   mitre_attack:
     - T1190
     - T1133
   killchain:
     - Exploitation
+  chaining:
+    - relation: sequence::preceeds
+      vector: ${UUID.threatLsass}
+      description: |
+        Root on the gateway is the foothold for credential dumping
+        on the internal estate.
   cve:
     - CVE-2026-0300
 
@@ -274,6 +354,7 @@ objective:
       not a single noisy process-access event on its own.
   threats:
     - ${UUID.threatGateway}
+    - ${UUID.threatLsass}
   mitre_attack:
     - T1003.001
   signals:
@@ -289,6 +370,13 @@ objective:
       data:
         availability: Complete
         requirements: EDR process and handle telemetry
+        logsources:
+          - Endpoint process events
+      detectors:
+        - name: Defender for Endpoint
+          technology: EDR
+          description: |
+            Built-in alert for suspicious LSASS access.
 `,
   'objects/rules/lsass-memory-access.yaml': `name: LSASS memory access
 

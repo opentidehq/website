@@ -1,44 +1,9 @@
-import { CodePanel, tok } from '@/components/landing/code-panel';
+import { AGENT_NEEDS as NEEDS } from '@/lib/landing/agent-needs';
 
-const NEEDS = [
-  {
-    need: 'A contract it can read',
-    before: 'JSON Schemas generated in-tree; no separate spec',
-    now: 'Normative specs, generated JSON Schema, 36 versioned vocabularies',
-  },
-  {
-    need: 'Feedback it can act on',
-    before: 'Scripts and logs to interpret',
-    now: '--json results, exit codes, file:line findings',
-  },
-  {
-    need: 'Tools it can call',
-    before: 'None: shell out to scripts',
-    now: 'MCP: search, chaining, coverage, validation, dry-run deploy',
-  },
-  {
-    need: 'Knowledge it can load',
-    before: 'Skills and an AGENTS.md in a separate repo, copied in by hand',
-    now: 'The same skills and an agent entry point (AGENTS.md or CLAUDE.md), installed by opentide setup skills',
-  },
-  {
-    need: 'Gates it cannot skip',
-    before: 'CI glue rewritten per instance',
-    now: 'setup ci: strict validate and lint, live query checks, staging first',
-  },
-] as const;
-
-const RULES = [
-  { title: 'One JSON document on stdout', body: '"ok": true or false, a status, a message. Nothing else.' },
-  { title: 'Diagnostics on stderr', body: 'Logs never prefix or corrupt the document.' },
-  { title: 'Exit codes gate CI', body: '0 success · 1 error · 2 usage. No parsing needed.' },
-  { title: 'Explicit by design', body: 'An unsupported check fails with a reason CI can gate on.' },
-] as const;
-
-/** What an agent needs from a detection engine, then and now. */
+/** What an agent needs from detection tooling, then and now. */
 export function AgentNeeds() {
   return (
-    <div className="mt-12">
+    <div>
       {/* Narrow screens: one stacked row per need, so the answer column never scrolls away. */}
       <ol className="m-0 list-none p-0 md:hidden">
         {NEEDS.map((row, i) => (
@@ -90,49 +55,10 @@ export function AgentNeeds() {
           ))}
         </tbody>
       </table>
-      <p className="mt-6 text-xl font-semibold tracking-[-0.02em] text-[var(--landing-ink)] text-balance">
+      <p className="mt-8 text-xl font-semibold tracking-[-0.02em] text-[var(--landing-ink)] text-balance">
         A submodule gave agents scripts to run.{' '}
         <span className="text-[var(--landing-accent)]">A package gives them a spec to follow.</span>
       </p>
-    </div>
-  );
-}
-
-/** The CLI is the agent's API: one JSON document, diagnostics on stderr, exit codes CI can gate on. */
-export function CliContract() {
-  return (
-    <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:items-center lg:gap-12">
-      <CodePanel caption="zsh · detection-repo" aside="--json">
-        {tok.dim('$ ')}opentide {tok.key('--json')} validate query {tok.key('--platform')} crowdstrike{'\n'}
-        {'{\n'}
-        {'  '}
-        {tok.key('"platform"')}
-        {': "crowdstrike",\n'}
-        {'  '}
-        {tok.key('"valid"')}: null,{'\n'}
-        {'  '}
-        <span className="rounded bg-[#ffcc00]/15 px-1 text-[var(--landing-code-str)]">&quot;supported&quot;: false</span>,
-        {'\n'}
-        {'  '}
-        {tok.key('"ok"')}: false,{'\n'}
-        {'  '}
-        {tok.key('"status"')}
-        {': "failed",\n'}
-        {'  '}
-        {tok.key('"message"')}
-        {': "query validation not supported for crowdstrike"\n'}
-        {'}\n'}
-        {tok.dim('$ ')}echo $?{'\n'}1
-      </CodePanel>
-
-      <dl className="m-0 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-1">
-        {RULES.map((rule) => (
-          <div key={rule.title} className="border-l-2 border-[var(--landing-accent)] pl-4">
-            <dt className="font-semibold text-[var(--landing-ink)]">{rule.title}</dt>
-            <dd className="m-0 mt-1 text-sm leading-relaxed text-[var(--landing-muted)]">{rule.body}</dd>
-          </div>
-        ))}
-      </dl>
     </div>
   );
 }
