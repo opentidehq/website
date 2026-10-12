@@ -1,174 +1,23 @@
 'use client';
 
-import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ThemeSwitch } from 'fumadocs-ui/layouts/shared/slots/theme-switch';
-import { OpentideLicensePill, OpentideWordmark } from '@/components/brand/opentide-mark';
-import { baseOptions } from '@/lib/layout.shared';
-import { ecosystemLinks, gitConfig } from '@/lib/shared';
 import type { ReactNode } from 'react';
+import { SiteFooter } from '@/components/landing/site-footer';
+import { SiteHeader } from '@/components/landing/site-header';
 
-function BrandMark() {
-  return <OpentideWordmark height={32} />;
-}
-
-function navClass(active: boolean) {
-  return active
-    ? 'px-2 py-2 font-medium whitespace-nowrap text-[var(--landing-ink)] sm:px-3'
-    : 'px-2 py-2 whitespace-nowrap text-[var(--landing-muted)] transition hover:text-[var(--landing-ink)] sm:px-3';
-}
-
-export function LandingNav({ children }: { children: ReactNode }) {
+/**
+ * The marketing chrome around the landing, the blog and the releases: a floating header over
+ * the page, and the footer. The header takes no room, so pages other than the landing, whose
+ * hero runs under it, start below it.
+ */
+export function LandingNav({ children, version }: { children: ReactNode; version?: string | null }) {
   const pathname = usePathname();
-  const opts = baseOptions();
 
   return (
     <div className="landing flex min-h-screen flex-col">
-      {/* --landing-bg is pure white/black, so the 5% that shows through needs a
-          heavy blur or high-contrast headings ghost through as readable text. */}
-      <header className="sticky top-0 z-40 border-b border-[var(--landing-border)] bg-[var(--landing-bg)]/95 backdrop-blur-xl">
-        <div className="mx-auto flex h-14 max-w-[1400px] items-center justify-between gap-4 px-4 md:px-6">
-          <Link
-            href="/"
-            className="shrink-0 rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--landing-accent)]"
-          >
-            <BrandMark />
-          </Link>
-          <nav className="flex items-center gap-0.5 overflow-x-auto text-sm sm:gap-1" aria-label="Site">
-            {opts.links?.map((link) => {
-              if ('type' in link && link.type === 'icon') {
-                return (
-                  <a
-                    key={link.label}
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hidden rounded-md p-2 text-[var(--landing-subtle)] transition hover:bg-[var(--landing-hover)] hover:text-[var(--landing-accent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--landing-accent)] sm:inline-flex"
-                    aria-label={link.label}
-                  >
-                    {link.icon}
-                  </a>
-                );
-              }
-              if ('text' in link && link.url) {
-                const href = link.url;
-                const active =
-                  href === '/'
-                    ? pathname === '/'
-                    : pathname === href || pathname.startsWith(`${href.replace(/\/$/, '')}/`);
-                return (
-                  <Link
-                    key={String(link.text)}
-                    href={href}
-                    className={`${navClass(active)} focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--landing-accent)]`}
-                  >
-                    {link.text}
-                  </Link>
-                );
-              }
-              return null;
-            })}
-            <ThemeSwitch className="ml-1 border-[var(--landing-border)] text-[var(--landing-subtle)]" />
-          </nav>
-        </div>
-      </header>
-      <main className="flex-1">{children}</main>
-      <footer className="border-t border-[var(--landing-border)] bg-[var(--landing-bg)]">
-        <div className="mx-auto max-w-[1400px] px-4 py-12 md:px-6">
-          <div className="grid gap-10 md:grid-cols-[1.2fr_1fr_1fr]">
-            <div>
-              <OpentideWordmark height={36} />
-              <p className="mt-4 max-w-sm text-sm leading-relaxed text-[var(--landing-muted)]">
-                Spec-driven development for detection engineering: an ontology, a taxonomy and the
-                tools that hold every detection to them. Forever free.
-              </p>
-              <div className="mt-4">
-                <OpentideLicensePill />
-              </div>
-            </div>
-            <div>
-              <p className="font-mono text-xs text-[var(--landing-subtle)]">product</p>
-              <ul className="mt-4 space-y-2 text-sm text-[var(--landing-subtle)]">
-                <li>
-                  <Link href="/docs/usage/" className="transition hover:text-[var(--landing-accent)]">
-                    Documentation
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/releases/" className="transition hover:text-[var(--landing-accent)]">
-                    Releases
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/docs/mcp/" className="transition hover:text-[var(--landing-accent)]">
-                    MCP reference
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/docs/usage/concepts/platforms/"
-                    className="transition hover:text-[var(--landing-accent)]"
-                  >
-                    Integrations
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/blog/" className="transition hover:text-[var(--landing-accent)]">
-                    Blog
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <p className="font-mono text-xs text-[var(--landing-subtle)]">ecosystem</p>
-              <ul className="mt-4 space-y-2 text-sm text-[var(--landing-subtle)]">
-                {ecosystemLinks.map((repo) => (
-                  <li key={repo.name}>
-                    {repo.href ? (
-                      <a
-                        href={repo.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="transition hover:text-[var(--landing-accent)]"
-                      >
-                        {repo.name}
-                      </a>
-                    ) : (
-                      <span>{repo.name}</span>
-                    )}
-                  </li>
-                ))}
-                <li>
-                  <a
-                    href={`https://github.com/${gitConfig.user}/${gitConfig.repo}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="transition hover:text-[var(--landing-accent)]"
-                  >
-                    GitHub
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="https://pypi.org/project/opentide/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="transition hover:text-[var(--landing-accent)]"
-                  >
-                    PyPI
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div className="mt-10 border-t border-[var(--landing-border-subtle)] pt-6 text-xs text-[var(--landing-dim)]">
-            <p>
-              © {new Date().getFullYear()} opentide ·{' '}
-              <span className="text-[var(--landing-accent)]">EUPL-1.2</span> · forever free
-            </p>
-          </div>
-        </div>
-      </footer>
+      <SiteHeader pathname={pathname} />
+      <main className={`flex-1 ${pathname === '/' ? '' : 'pt-16'}`}>{children}</main>
+      <SiteFooter version={version} />
     </div>
   );
 }

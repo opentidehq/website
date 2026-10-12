@@ -213,6 +213,10 @@ html > body[data-scroll-locked] {
   --landing-code-dim: #8fa8d4;
   --landing-code-key: #7ec8e3;
   --landing-code-str: var(--color-yellow-lift);
+  /* The hero's sea: its query ink, and the light of a detection firing. */
+  --landing-sea-ink: #001489;
+  --landing-sea-glow: #f0a800;
+  --landing-sea-strength: 0.9;
 
   font-family: var(--font-sans), system-ui, sans-serif;
   background-color: var(--landing-bg);
@@ -241,6 +245,9 @@ html > body[data-scroll-locked] {
   --brand-accent-foreground: #000000;
   --brand-mark-fill: var(--eu-yellow);
   --brand-mark-ink: #000000;
+  --landing-sea-ink: #9db1ef;
+  --landing-sea-glow: #ffcc00;
+  --landing-sea-strength: 1.25;
 }
 
 /* The base layer rings every outline at 50% gray, too faint to find on white or black.
@@ -304,10 +311,117 @@ html > body[data-scroll-locked] {
     background: linear-gradient(to bottom, var(--landing-bg) 58%, var(--landing-band));
   }
 
-  /* The tide runs edge to edge; only its spray thins out at the top and its depths at the foot. */
-  .landing-tide {
-    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 18%, #000 88%, transparent);
-    mask-image: linear-gradient(to bottom, transparent, #000 18%, #000 88%, transparent);
+  /* The sea runs edge to edge and dissolves into the band of the next chapter at its foot. */
+  .landing-sea {
+    -webkit-mask-image: linear-gradient(to bottom, #000 84%, transparent);
+    mask-image: linear-gradient(to bottom, #000 84%, transparent);
+  }
+
+  /* The floating header: a glass pill that tightens and lifts once the page scrolls. */
+  .landing-pill {
+    max-width: 1120px;
+    border-radius: 1.625rem;
+    border: 1px solid var(--landing-border);
+    background-color: color-mix(in srgb, var(--landing-bg) 64%, transparent);
+    -webkit-backdrop-filter: blur(18px) saturate(1.6);
+    backdrop-filter: blur(18px) saturate(1.6);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.45);
+    transition:
+      max-width 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+      background-color 0.3s,
+      box-shadow 0.3s;
+  }
+
+  .landing-pill[data-scrolled] {
+    max-width: 1000px;
+    background-color: color-mix(in srgb, var(--landing-bg) 82%, transparent);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.5),
+      0 14px 36px -18px rgb(0 20 80 / 0.4),
+      0 2px 6px -3px rgb(0 0 0 / 0.1);
+  }
+
+  .dark .landing-pill {
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.07);
+  }
+
+  .dark .landing-pill[data-scrolled] {
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.08),
+      0 18px 40px -18px rgb(0 0 0 / 0.9);
+  }
+
+  .landing-pill-link {
+    color: var(--landing-muted);
+    transition: color 0.2s;
+  }
+
+  .landing-pill-link:hover,
+  .landing-pill-link[aria-current='page'] {
+    color: var(--landing-ink);
+  }
+
+  .landing-pill-link[aria-current='page']::after {
+    content: '';
+    position: absolute;
+    bottom: 0.2rem;
+    left: 50%;
+    width: 0.25rem;
+    height: 0.25rem;
+    border-radius: 9999px;
+    background-color: var(--landing-accent);
+    transform: translateX(-50%);
+  }
+
+  .landing-pill-mark {
+    background-color: color-mix(in srgb, var(--landing-ink) 7%, transparent);
+    transition:
+      transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+      width 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 0.2s;
+  }
+
+  .landing-pill-icon {
+    display: inline-flex;
+    width: 2.25rem;
+    height: 2.25rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    color: var(--landing-muted);
+    transition:
+      background-color 0.2s,
+      color 0.2s;
+  }
+
+  .landing-pill-icon:hover {
+    background-color: var(--landing-hover);
+    color: var(--landing-ink);
+  }
+
+  .landing-pill-cta {
+    height: 2.25rem;
+    align-items: center;
+    gap: 0.375rem;
+    border-radius: 9999px;
+    background-color: var(--landing-accent);
+    padding: 0 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--brand-accent-foreground);
+    box-shadow: 0 8px 18px -10px var(--landing-btn-shadow);
+    transition: background-color 0.2s;
+  }
+
+  .landing-pill-cta:hover {
+    background-color: var(--landing-accent-lift);
+  }
+
+  .landing-pill-focus:focus-visible,
+  .landing-pill-icon:focus-visible,
+  .landing-pill-cta:focus-visible {
+    outline: 2px solid var(--landing-accent);
+    outline-offset: 2px;
   }
 
   .landing-btn-primary {
@@ -357,6 +471,129 @@ html > body[data-scroll-locked] {
   .landing-btn-secondary:focus-visible {
     outline: 2px solid var(--landing-accent);
     outline-offset: 2px;
+  }
+}
+
+/* Rings running out from the closing badge. */
+.landing-ripples {
+  width: clamp(132px, 16vw, 188px);
+  aspect-ratio: 1;
+}
+
+.landing-ripples > span {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  border: 1px solid color-mix(in srgb, var(--landing-accent) 40%, transparent);
+  opacity: 0;
+  animation: landing-ripple 4.8s cubic-bezier(0.2, 0.6, 0.35, 1) infinite;
+}
+
+.landing-ripples > span:nth-child(2) {
+  animation-delay: 1.6s;
+}
+
+.landing-ripples > span:nth-child(3) {
+  animation-delay: 3.2s;
+}
+
+@keyframes landing-ripple {
+  0% {
+    transform: scale(0.92);
+    opacity: 0.8;
+  }
+
+  100% {
+    transform: scale(2.7);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-ripples {
+    display: none;
+  }
+}
+
+/* The footer: the name, full width, with water sliding through its letters. */
+.landing-footer {
+  background: linear-gradient(to bottom, var(--landing-bg), var(--landing-band));
+}
+
+.landing-footer-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  border: 1px solid var(--landing-border);
+  padding: 0.25rem 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--landing-muted);
+  transition:
+    border-color 0.2s,
+    color 0.2s;
+}
+
+a.landing-footer-chip:hover {
+  border-color: color-mix(in srgb, var(--landing-accent) 45%, transparent);
+  color: var(--landing-ink);
+}
+
+a.landing-footer-chip:focus-visible {
+  outline: 2px solid var(--landing-accent);
+  outline-offset: 2px;
+}
+
+.landing-footmark-type {
+  font-family: var(--font-inter), Inter, system-ui, sans-serif;
+  font-size: 205px;
+  font-weight: 800;
+}
+
+.landing-footmark-fill {
+  fill: color-mix(in srgb, var(--landing-accent) 7%, transparent);
+}
+
+.landing-footmark-water {
+  transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.landing-footer:hover .landing-footmark-water {
+  transform: translateY(-46px);
+}
+
+.landing-footmark-wave {
+  animation: landing-footmark-swell 9s linear infinite;
+}
+
+.landing-footmark-back {
+  fill: color-mix(in srgb, var(--landing-accent) 26%, transparent);
+  animation-duration: 15s;
+  animation-direction: reverse;
+}
+
+.landing-footmark-front {
+  fill: color-mix(in srgb, var(--landing-accent) 72%, transparent);
+}
+
+@keyframes landing-footmark-swell {
+  to {
+    transform: translateX(-1000px);
+  }
+}
+
+.landing-footmark:not([data-live]) .landing-footmark-wave {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-footmark-wave {
+    animation: none;
+  }
+
+  .landing-footmark-water {
+    transition: none;
   }
 }
 
@@ -413,7 +650,7 @@ html > body[data-scroll-locked] {
 }
 
 /* Endless animations run only while their chapter is on screen (RevealOnScroll marks it). */
-.landing-reveal .landing section:not([data-live]) :is(.landing-flow, .landing-marquee, .landing-voyage, .landing-ring, .landing-spin, .landing-caret, .landing-ping) {
+.landing-reveal .landing section:not([data-live]) :is(.landing-flow, .landing-marquee, .landing-voyage, .landing-ring, .landing-spin, .landing-caret, .landing-ping, .landing-ripples > span) {
   animation-play-state: paused;
 }
 

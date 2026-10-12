@@ -10,6 +10,9 @@ export const blogIndexOgImage = `${blogImageRoute}/image.png`;
 export const docsContentRoute = '/llms.mdx/docs';
 export const siteUrl = 'https://opentide.org';
 
+/** The organisation: every repository of the project, not just this site's. */
+export const GITHUB_ORG = 'https://github.com/OpenTideHQ';
+
 export const gitConfig = {
   user: 'OpenTideHQ',
   repo: 'website',

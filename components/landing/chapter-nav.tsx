@@ -27,7 +27,7 @@ export function useChapterJump() {
 }
 
 /**
- * Floating chapter dock. Hidden while the hero is on screen; otherwise it tracks the current
+ * Floating chapter dock. Hidden while the hero or the footer is on screen; otherwise it tracks the current
  * chapter and how far down the page the reader is. Below `xl` it collapses to one pill with a
  * menu.
  */
@@ -54,7 +54,11 @@ export function ChapterNav() {
       setActive(current);
 
       const hero = document.getElementById('top');
-      setVisible(hero ? hero.getBoundingClientRect().bottom < vh * 0.25 : window.scrollY > vh);
+      const pastHero = hero ? hero.getBoundingClientRect().bottom < vh * 0.25 : window.scrollY > vh;
+      // The footer carries its own navigation: the dock steps aside as it comes into view.
+      const footer = document.querySelector('.landing-footer');
+      const atFooter = footer ? footer.getBoundingClientRect().top < vh - 48 : false;
+      setVisible(pastHero && !atFooter);
 
       const max = document.documentElement.scrollHeight - vh;
       if (progressRef.current) {

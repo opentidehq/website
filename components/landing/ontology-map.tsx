@@ -92,10 +92,11 @@ function loop(b: Box): Drawn {
   };
 }
 
-function straight(a: Box, b: Box): Drawn {
+function straight(a: Box, b: Box): Drawn | null {
   const dx = b.x - a.x;
   const dy = b.y - a.y;
-  const len = Math.hypot(dx, dy) || 1;
+  if (dx === 0 && dy === 0) return null;
+  const len = Math.hypot(dx, dy);
   const gap = 6 / len;
   const ta = exit(dx, dy, a.hw, a.hh) + gap;
   const tb = exit(dx, dy, b.hw, b.hh) + gap;
@@ -238,14 +239,17 @@ export function OntologyMap() {
     const boxes: Partial<Record<NodeId, Box>> = {};
     for (const id of IDS) {
       const el = nodeRefs.current[id];
-      if (el) boxes[id] = { x: el.offsetLeft, y: el.offsetTop, hw: el.offsetWidth / 2, hh: el.offsetHeight / 2 };
+      // A map without layout (a hidden tab, a collapsed parent) puts every node at 0,0: skip it,
+      // or coinciding centres turn the edges into NaN. The observer measures again once it shows.
+      if (el && el.offsetWidth > 0) boxes[id] = { x: el.offsetLeft, y: el.offsetTop, hw: el.offsetWidth / 2, hh: el.offsetHeight / 2 };
     }
     const next: Partial<Record<number, Drawn>> = {};
     EDGES.forEach((edge, i) => {
       const a = boxes[edge.from];
       const b = boxes[edge.to];
       if (!a || !b) return;
-      next[i] = edge.from === edge.to ? loop(a) : straight(a, b);
+      const g = edge.from === edge.to ? loop(a) : straight(a, b);
+      if (g) next[i] = g;
     });
     setDrawn(next);
   }, []);

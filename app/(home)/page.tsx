@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import type { CSSProperties } from 'react';
 import type { Metadata } from 'next';
-import { TideAsciiScene } from '@/components/landing/tide-ascii-scene';
+import { TideSea } from '@/components/landing/tide-sea';
 import { TiltBadge } from '@/components/landing/tilt-badge';
 import { HeroBadge } from '@/components/landing/hero-badge';
 import { HeroInstall } from '@/components/landing/hero-install';
@@ -30,12 +30,6 @@ import { SPEC_DRIVEN_POST_HREF } from '@/lib/blog';
 
 const title = 'opentide · spec-driven development for detection engineering';
 
-/**
- * Share of the tide canvas the water fills. The canvas is `--tide / TIDE_FILL` tall, so the
- * waterline sits `--tide` above the foot of the hero, under the copy's bottom padding.
- */
-const TIDE_FILL = 0.45;
-
 export const metadata: Metadata = {
   title: { absolute: title },
   description: appDescription,
@@ -59,25 +53,21 @@ export default async function HomePage() {
   return (
     <div className="landing relative overflow-x-clip bg-[var(--landing-bg)]">
       {/*
-       * The tide runs edge to edge along the foot of the hero and rises behind the copy:
-       * `--tide` is the water left below the content, with as much air again above it for the
-       * spray. The hero fades into the band of the chapter below, so the water has no shore.
+       * The sea fills the hero edge to edge, its horizon behind the headline: far water is haze
+       * behind the copy, and `--tide` is the near water left below it, where the query reads.
+       * The hero fades into the band of the chapter below, so the water has no shore.
        */}
       <section
         id="top"
         data-tide-host
         className="landing-hero relative isolate overflow-hidden"
-        style={{ '--tide': 'clamp(180px, 27vh, 300px)' } as CSSProperties}
+        style={{ '--tide': 'clamp(210px, 30vh, 340px)' } as CSSProperties}
       >
-        <div
-          aria-hidden
-          className="landing-tide absolute inset-x-0 bottom-0 -z-20"
-          style={{ height: `calc(var(--tide) / ${TIDE_FILL})` }}
-        >
-          <TideAsciiScene className="h-full w-full" fill={TIDE_FILL} />
+        <div aria-hidden className="landing-sea absolute inset-0 -z-20">
+          <TideSea />
         </div>
         <div
-          className={`landing-hero-copy ${wrap} flex flex-col items-center pb-[calc(var(--tide)+4rem)] pt-20 text-center md:pb-[calc(var(--tide)+2rem)] md:pt-32 lg:pt-36`}
+          className={`landing-hero-copy ${wrap} flex flex-col items-center pb-[calc(var(--tide)+2rem)] pt-32 text-center md:pt-44 lg:pt-48`}
         >
           <HeroBadge initialVersion={pypiVersion} />
           <h1 className="mt-8 max-w-5xl text-[clamp(2.4rem,5.4vw,4.4rem)] font-bold leading-[1.03] tracking-[-0.045em] text-balance">
@@ -239,7 +229,13 @@ export default async function HomePage() {
 
       <section className="landing-chapter">
         <div data-reveal className="mx-auto max-w-3xl px-4 text-center">
-          <div className="flex justify-center">
+          {/* The tide starts here: rings run out from the badge, like the hero's detections. */}
+          <div className="relative flex justify-center">
+            <span aria-hidden className="landing-ripples pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+              <span />
+              <span />
+              <span />
+            </span>
             <TiltBadge size="clamp(132px, 16vw, 188px)" />
           </div>
           <h2 className="mt-4 text-[clamp(2rem,4vw,3rem)] font-bold leading-[1.06] tracking-[-0.035em] text-balance">
