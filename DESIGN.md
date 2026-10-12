@@ -106,6 +106,7 @@ Landing uses flat tonal layering (borders `landing-border`, rings on brand yello
 - **Secondary button** (`.landing-btn-secondary`): raised surface, yellow border/text.
 - **Surface card** (`.landing-surface-card`): 1rem radius, surface fill, `landing-border`.
 - **Nav wordmark**: theme-aware tsunami mark + open/tide split (`--brand-accent`).
+- **Chapter navigation**: the landing's chapters (`components/landing/chapters.ts`) appear as a row of links under the hero and as a floating dock (`ChapterNav`) once the hero scrolls away — current chapter filled, a thin progress line, hidden while the workflow studio holds the viewport, one pill with a menu below `lg`. Blocks that belong to one chapter but need not be read in a row use `SectionTabs` (hash-addressable, e.g. `#platforms`).
 - **Docs root switcher**: Fumadocs popover; Usage default; accent focus ring.
 - **MDX**: Callout, Cards, Steps, Tabs, TypeTable, Mermaid (Fumadocs UI + remark plugins).
 

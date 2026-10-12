@@ -624,7 +624,7 @@ function InlineEditWidget({
 
 export function WorkflowStudio() {
   const reduced = usePrefersReducedMotion();
-  const { trackRef, stageRef, onScreen } = useScrollStage({ enabled: !reduced });
+  const { trackRef, stageRef, onScreen } = useScrollStage({ growTo: 0.2, enabled: !reduced });
 
   const [cursor, setCursor] = useState({ idx: 0, jumped: false });
   const [phase, setPhase] = useState<Phase>(reduced ? 'dwell' : 'work');
