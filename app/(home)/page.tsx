@@ -19,14 +19,12 @@ import { ThreeDoors } from '@/components/landing/three-doors';
 import { AgentNeeds, CliContract } from '@/components/landing/agent-contract';
 import { Guardrails } from '@/components/landing/guardrails';
 import { NorthStar } from '@/components/landing/north-star';
-import { Roadmap, Velocity } from '@/components/landing/what-comes-next';
+import { Roadmap } from '@/components/landing/what-comes-next';
 import { GetStarted } from '@/components/landing/get-started';
 import { EcosystemGrid } from '@/components/landing/ecosystem-grid';
 import { WorkflowStudio, ObjectGraph } from '@/components/landing/landing-heavy';
 import type { Metadata } from 'next';
 import { readBuildTimePypiVersion } from '@/lib/pypi-build';
-import { loadReleaseNotes } from '@/lib/releases';
-import { releaseVelocity } from '@/lib/landing/velocity';
 import { appDescription, siteOgImage } from '@/lib/shared';
 import { SPEC_DRIVEN_POST_HREF } from '@/lib/blog';
 
@@ -78,8 +76,7 @@ function SectionHead({
 const wrap = 'mx-auto w-full max-w-[1400px] px-4 md:px-6';
 
 export default async function HomePage() {
-  const [pypiVersion, releases] = await Promise.all([readBuildTimePypiVersion(), loadReleaseNotes()]);
-  const velocity = releaseVelocity(releases);
+  const pypiVersion = await readBuildTimePypiVersion();
 
   // `overflow-x-clip` rather than `hidden`: hidden would turn this into a scroll container
   // and break the sticky stage the workflow studio pins against.
@@ -229,15 +226,9 @@ export default async function HomePage() {
           n="05"
           label="what comes next"
           title={<>The north star: intel to a reviewed, deployed detection in {accent('under an hour')}.</>}
+          lead="Agents and the engine carry everything up to STAGING. People keep the gates that decide what reaches production."
         />
         <NorthStar />
-
-        <div className="mt-24">
-          <h3 className="text-2xl font-bold tracking-[-0.02em] text-balance md:text-3xl">
-            We build opentide the way we want detections built.
-          </h3>
-          <Velocity velocity={velocity} />
-        </div>
 
         <div className="mt-24">
           <h3 className="text-2xl font-bold tracking-[-0.02em] text-balance md:text-3xl">Where opentide goes next.</h3>

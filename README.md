@@ -63,7 +63,7 @@ Environment overrides (first match wins):
 | `pnpm fetch:pypi` | Snapshot the current PyPI version for local/dev first paint |
 | `pnpm sync:content` | Copy opentide + specifications docs into `content/docs/` as `.mdx` |
 | `pnpm check:docs` | Fail if `content/docs` does not match the pinned vendor gitlinks |
-| `pnpm test` | Unit tests for sync, freshness, GitHub source URLs, and release cadence |
+| `pnpm test` | Unit tests for sync, freshness, and GitHub source URLs |
 | `pnpm verify:demos` | Run the landing demo objects through `opentide validate --strict`, `lint --strict` and a dry-run deploy (needs `pip install opentide`) |
 | `pnpm build` | Snapshot PyPI + sync docs + static export to `out/` |
 | `pnpm lint` | ESLint |
