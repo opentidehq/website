@@ -10,7 +10,15 @@ Detection engineers, security platform operators, and AI-agent integrators build
 
 ## Product purpose
 
-Marketing site and documentation hub for opentide — the DetectionOps engine. Help visitors evaluate the project, install the CLI/SDK/MCP stack, read normative specifications, and adopt DetectionOps workflows.
+Marketing site and documentation hub for opentide — spec-driven development for detection engineering. Help visitors evaluate the project, install the CLI/SDK/MCP stack, read normative specifications, and adopt DetectionOps workflows.
+
+## Positioning
+
+opentide is **spec-driven development for detection engineering**: an **ontology** (threat → objective → rule, linked by UUID) and a **taxonomy** (versioned vocabularies) that keep every detection threat-aligned, maintainable and fast to ship, with or without agents. The engine (one package: CLI, SDK, MCP) enforces the spec; your detection repo stays the source of truth.
+
+- Lead with **threat alignment, maintainability, speed and quality**.
+- The agent story: agents made the query cheap; the spec keeps their output aligned. Agents go through the same gates as a human change.
+- Do **not** frame the product around honesty ("tools that never lie", "honest adapters", "never fake a pass"). State capabilities as plain facts — for example, CrowdStrike and HarfangLab are deploy-only.
 
 ## Brand personality
 
@@ -27,4 +35,5 @@ Generic SaaS gradients, glassmorphism hero cards, identical icon+heading card gr
 - One signature motion: ASCII tide hero (FLIP liquid sim rendered as monospace glyphs); restrained CSS elsewhere
 - Landing follows theme: light white+blue, dark black+yellow (same rule as docs)
 - Docs sidebar always shows root dropdown; Usage is the default entry
-- Honest platform capability messaging; never fake validation claims
+- Accurate platform capability claims: say what deploys and what validates, never more
+- Prefer real artefacts (YAML, commands, JSON envelopes) over illustrations
