@@ -314,7 +314,7 @@ function IntelTriggerPanel() {
           </li>
           <li>
             <span className="text-emerald-500">→</span>{' '}
-            <strong className="text-[var(--landing-ink)]">rule::1.0</strong> Entra + inbox rule
+            <strong className="text-[var(--landing-ink)]">rule::1.1</strong> Entra + inbox rule
           </li>
         </ul>
       </div>

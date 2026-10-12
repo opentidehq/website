@@ -11,7 +11,7 @@ export type AgentEvent =
   | { kind: 'reasoning'; text: string }
   | { kind: 'response'; text: string }
   | { kind: 'skill'; skill: string; action: string; detail?: string }
-  /** `server` names the MCP server when it isn't opentide-mcp — the agent's browser, say. */
+  /** `server` names the MCP server when it isn't opentide's own — the agent's browser, say. */
   | { kind: 'mcp'; tool: string; input?: string; output: string; server?: string }
   | { kind: 'cli'; command: string; output?: string };
 
@@ -97,7 +97,7 @@ export function EventCard({ event, animate }: { event: AgentEvent; animate?: boo
         <div className="flex items-center gap-2">
           <Icon className="size-3.5 text-[var(--landing-accent)]" aria-hidden />
           <span className="font-mono text-[9px] font-semibold uppercase tracking-wider text-[var(--landing-accent)]">
-            {event.server ?? 'opentide-mcp'}
+            {event.server ?? 'opentide'}
           </span>
           <span className="rounded bg-[color-mix(in_srgb,var(--landing-accent)_16%,transparent)] px-1.5 py-0.5 font-mono text-[8px] text-[var(--landing-accent)]">
             tool

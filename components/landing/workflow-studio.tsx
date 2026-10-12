@@ -46,8 +46,8 @@ const REVIEW_TAB = 'review' as const;
 const BROWSER_TAB = 'advisory' as const;
 type TabId = DemoPath | typeof REVIEW_TAB | typeof BROWSER_TAB;
 
-const THREAT_FILE = 'objects/threats/gateway-exploitation.yaml' satisfies DemoPath;
-const OBJECTIVE_FILE = 'objects/objectives/credential-access.yaml' satisfies DemoPath;
+const THREAT_FILE = 'objects/threats/gateway-exploitation-cve-2026-0300.yaml' satisfies DemoPath;
+const OBJECTIVE_FILE = 'objects/objectives/credential-access-via-lsass.yaml' satisfies DemoPath;
 const SENTINEL_TOML = '.opentide/configurations/platforms/sentinel.toml' satisfies DemoPath;
 const SPLUNK_TOML = '.opentide/configurations/platforms/splunk.toml' satisfies DemoPath;
 
@@ -162,11 +162,11 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
     events: [
       {
         kind: 'reasoning',
-        text: 'Frame as edge-gateway exploitation: High severity, High leverage, killchain=Exploitation, ATT&CK T1190+T1133.',
+        text: 'Frame it as edge-gateway exploitation: Significant incident severity, Infrastructure Compromise leverage, Likely viability, surface Firewalls::Palo Alto Networks, mitre_attack T1190 + T1133.',
       },
       {
         kind: 'skill',
-        skill: 'opentide-threat',
+        skill: 'opentide-threat-vector',
         action: 'Scaffold threat::1.0 with stable UUID and ATT&CK bindings',
       },
       {
@@ -178,31 +178,26 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
       {
         kind: 'cli',
         command: `opentide validate --file ${THREAT_FILE}`,
-        output: 'all_content_successfully_passed_validation',
+        output: 'OK Validation passed',
       },
       {
         kind: 'response',
-        text: 'Threat vector is in and valid. CVE-2026-0300 scores High severity on Edge Gateway terrain; the objective can now reference uuid …010.',
+        text: 'Threat vector is in and valid: CVE-2026-0300 on Palo Alto firewalls, severity Significant incident. The objective can now reference uuid …010.',
       },
     ],
     cmd: `opentide validate --file ${THREAT_FILE}`,
-    out: [
-      '09:12:38  INFO     validates_all_opentide_objects_via_model_validate',
-      '09:12:40  INFO     step_completed',
-      '  detail: Successfully verified 1 opentide object',
-      '09:12:40  INFO     all_content_successfully_passed_validation',
-    ],
+    out: ['OK Validation passed'],
   },
   objective: {
     events: [
       {
         kind: 'reasoning',
-        text: 'Follow-on risk is LSASS credential access — one objective, synergetic signals, linked to threat …010.',
+        text: 'Follow-on risk is LSASS credential access — one objective, combined signals, linked to threat …010.',
       },
       {
         kind: 'skill',
-        skill: 'opentide-detection-rule',
-        action: 'Compose objective::1.0 with signal + detection_model contract',
+        skill: 'opentide-detection-objective',
+        action: 'Compose objective::1.0 with a signal the rule can implement',
       },
       {
         kind: 'mcp',
@@ -213,7 +208,7 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
       {
         kind: 'cli',
         command: `opentide validate --file ${OBJECTIVE_FILE}`,
-        output: 'all_content_successfully_passed_validation',
+        output: 'OK Validation passed',
       },
       {
         kind: 'response',
@@ -221,12 +216,7 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
       },
     ],
     cmd: `opentide validate --file ${OBJECTIVE_FILE}`,
-    out: [
-      '09:19:04  INFO     validates_all_opentide_objects_via_model_validate',
-      '09:19:06  INFO     step_completed',
-      '  detail: Successfully verified 2 opentide objects',
-      '09:19:06  INFO     all_content_successfully_passed_validation',
-    ],
+    out: ['OK Validation passed'],
   },
   rule: {
     events: [
@@ -241,7 +231,7 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
       },
       {
         kind: 'skill',
-        skill: 'splunk-es',
+        skill: 'splunk-spl-processing',
         action: 'Translate the same signal to SPL over Sysmon EventCode 10',
         detail: 'throttle by host + SourceImage · risk on host and user',
       },
@@ -249,12 +239,12 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
         kind: 'mcp',
         tool: 'write_file',
         input: RULE_PATH,
-        output: 'rule::1.0 · detection_model → objective …001',
+        output: 'rule::1.1 · detection_model → objective …001',
       },
       {
         kind: 'cli',
         command: `opentide validate --file ${RULE_PATH}`,
-        output: 'all_content_successfully_passed_validation',
+        output: 'OK Validation passed',
       },
       {
         kind: 'response',
@@ -262,12 +252,7 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
       },
     ],
     cmd: `opentide validate --file ${RULE_PATH}`,
-    out: [
-      '09:26:41  INFO     validates_all_opentide_objects_via_model_validate',
-      '09:26:44  INFO     step_completed',
-      '  detail: Successfully verified 3 opentide objects',
-      '09:26:44  INFO     all_content_successfully_passed_validation',
-    ],
+    out: ['OK Validation passed'],
   },
   inline: {
     events: [
@@ -284,21 +269,18 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
       },
       {
         kind: 'cli',
-        command: 'opentide validate query --platform sentinel',
-        output: 'the_query_is_a_valid_sentinel_kql',
+        command: 'opentide validate query --platform sentinel --live',
+        output: 'OK Query validation passed for sentinel',
       },
       {
         kind: 'response',
-        text: 'Exclusions now live in a BenignAccessors set with the inventory-scan command line filtered out. Splunk keeps its own exclusion list, and the tuned KQL still parses against the staging workspace.',
+        text: 'Exclusions now live in a BenignAccessors set with the inventory-scan command line filtered out. Splunk keeps its own exclusion list, and the tuned KQL still passes the live check against the staging workspace.',
       },
     ],
-    cmd: 'opentide validate query --platform sentinel',
+    cmd: 'opentide validate query --platform sentinel --live',
     out: [
-      '== Query Validation - Microsoft Sentinel ==',
-      '09:31:19  INFO     sending_query_to_azure_monitor_workspace',
-      '  detail: LSASS memory access (…8003-000000000001)',
-      '09:31:22  INFO     the_query_is_a_valid_sentinel_kql',
-      '  detail: LSASS memory access (…8003-000000000001)',
+      '── Query Validation - Microsoft Sentinel ──',
+      'OK Query validation passed for sentinel',
     ],
   },
   ci: {
@@ -321,7 +303,7 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
       },
       {
         kind: 'response',
-        text: 'CI enforced the same contract end to end: strict validation, KQL and SPL query checks, then a dry-run and a staged deploy to both platforms. Production promotion still waits on a protected approval.',
+        text: 'CI enforced the same contract end to end: strict validation and lint, live KQL and SPL checks against the tenants, then a dry-run and a staged deploy to both platforms. Production waits for a human to merge.',
       },
     ],
     cmd: '',
@@ -608,7 +590,7 @@ function InlineEditWidget({
         {state === 'working' && (
           <>
             <Loader className="size-2.5 animate-spin text-[var(--landing-accent)]" aria-hidden />
-            <span className="text-[var(--landing-muted)]">opentide-mcp · apply_edit…</span>
+            <span className="text-[var(--landing-muted)]">opentide · apply_edit…</span>
           </>
         )}
         {state === 'applied' && (

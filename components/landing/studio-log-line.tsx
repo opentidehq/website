@@ -1,10 +1,11 @@
 /**
  * Renderer for opentide console output.
  *
- * The CLI writes structlog records through a Rich renderer: a dim timestamp, a padded
- * level, the snake_case event name, then one indented `key: value` line per field.
- * Sections arrive as `== Title ==` panels. CI logs wrap all of that in GitHub Actions
- * group headers. This component reproduces that shape line by line.
+ * A default run prints Rich section rules (`── Title ──`, or `== Title ==` under
+ * `--no-color`) and ends on one `OK …` result line. Structlog records (a dim timestamp, a
+ * padded level, the snake_case event name, then one indented `key: value` line per field)
+ * only appear with `--debug`. CI logs wrap all of that in GitHub Actions group headers.
+ * This component reproduces that shape line by line.
  *
  * See vendor/opentide/src/opentide/core/logging/{render,console}.py
  */
@@ -93,15 +94,25 @@ export function LogLine({ line, className }: { line: string; className?: string 
     );
   }
 
-  // opentide section panel
-  if (line.startsWith('== ') && line.endsWith(' ==')) {
+  // opentide section: a Rich rule, or a plain `== Title ==` panel under --no-color
+  const section = /^(?:==|──) (.+) (?:==|──)$/.exec(line);
+  if (section) {
     return (
       <p
         className={cls(
           'mt-1.5 border-l-2 border-fuchsia-500/60 pl-2 font-medium text-fuchsia-700 dark:text-fuchsia-300',
         )}
       >
-        {line.slice(3, -3)}
+        {section[1]}
+      </p>
+    );
+  }
+
+  // Command result: `OK <message>`
+  if (line.startsWith('OK ')) {
+    return (
+      <p className={cls('text-[var(--landing-ink)]')}>
+        <span className="font-semibold text-emerald-700 dark:text-emerald-400">OK</span> {line.slice(3)}
       </p>
     );
   }
