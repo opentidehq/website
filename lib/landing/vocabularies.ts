@@ -43,18 +43,21 @@ export const VOCABULARIES = [
   'violation',
 ] as const;
 
-/** The vocabularies the ontology map's objects use, lit on the ribbon. */
+/** The vocabularies the demo objects use, lit on the ribbon. */
 export const LIT_VOCABULARIES: ReadonlySet<string> = new Set([
   'surface',
   'att&ck',
-  'actors',
   'chaining_relations',
   'severity',
   'impact',
   'leverage',
   'viability',
   'criticality',
+  'killchain',
   'signal.entities',
   'detection.methodology',
+  'detection.composition',
+  'detection.types',
   'alert_severity',
+  'tlp',
 ]);

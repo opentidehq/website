@@ -96,7 +96,8 @@ export function GetStarted() {
         aside={
           <>
             python 3.10–3.14
-            {done && started && (
+            {/* Stays mounted while it replays, so a keyboard press keeps focus where it was. */}
+            {started && (
               <button
                 type="button"
                 onClick={() => {

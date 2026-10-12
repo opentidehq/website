@@ -16,7 +16,7 @@ const HUMANS: ReactNode[] = [
   'Real, non-dry-run deploys to production',
   <>Bulk promotion to {code('PRODUCTION')}</>,
   <>Credentials and deployment plans in {code('.opentide/configurations/')}</>,
-  'Trusting a query check that did not run against the tenant',
+  'Reviewing and merging the pull request',
   'Regenerating or hand-editing UUIDs',
 ];
 

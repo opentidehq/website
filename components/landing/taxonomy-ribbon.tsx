@@ -6,8 +6,9 @@ import { LIT_VOCABULARIES, VOCABULARIES } from '@/lib/landing/vocabularies';
 
 function Chips({ hidden }: { hidden?: boolean }) {
   // Each copy carries its own trailing gap, so -50% is exactly one period and the loop is seamless.
+  // Without motion there is no loop, and the second copy would list every vocabulary twice.
   return (
-    <ul className="m-0 flex list-none gap-2 p-0 pr-2" aria-hidden={hidden}>
+    <ul className={`m-0 flex list-none gap-2 p-0 pr-2 ${hidden ? 'motion-reduce:hidden' : ''}`} aria-hidden={hidden}>
       {VOCABULARIES.map((name) => {
         const lit = LIT_VOCABULARIES.has(name);
         return (

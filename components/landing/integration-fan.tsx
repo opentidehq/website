@@ -2,9 +2,9 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Check } from 'lucide-react';
 import { useCallback, useRef, useState } from 'react';
-import { BlockHead, Tag } from '@/components/landing/ui';
+import { BlockHead } from '@/components/landing/ui';
 import { useMeasure } from '@/lib/hooks/use-measure';
 import { useOnScreen } from '@/lib/hooks/use-on-screen';
 import { usePrefersReducedMotion } from '@/lib/hooks/use-prefers-reduced-motion';
@@ -12,22 +12,24 @@ import { usePrefersReducedMotion } from '@/lib/hooks/use-prefers-reduced-motion'
 type Integration = {
   key: string;
   name: string;
-  language: string;
-  live: boolean;
+  /** What `opentide deploy` creates there, in the platform specs' words. */
+  deploys: string;
   src: string;
   kind: 'color' | 'mono' | 'raster';
 };
 
-/** Capabilities as of opentide 0.12: every integration deploys; most also take a live tenant query check. */
 const INTEGRATIONS: Integration[] = [
-  { key: 'sentinel', name: 'Microsoft Sentinel', language: 'KQL', live: true, src: '/icons/platforms/sentinel.svg', kind: 'color' },
-  { key: 'defender_for_endpoint', name: 'Defender for Endpoint', language: 'KQL', live: true, src: '/icons/platforms/defender.svg', kind: 'color' },
-  { key: 'splunk', name: 'Splunk Enterprise Security', language: 'SPL', live: true, src: '/icons/platforms/splunk.svg', kind: 'mono' },
-  { key: 'sentinel_one', name: 'SentinelOne', language: 'S1QL', live: true, src: '/icons/platforms/sentinelone.svg', kind: 'color' },
-  { key: 'carbon_black_cloud', name: 'Carbon Black Cloud', language: 'Lucene', live: true, src: '/icons/platforms/carbon-black.png', kind: 'raster' },
-  { key: 'crowdstrike', name: 'CrowdStrike Falcon', language: 'correlation filter', live: false, src: '/icons/platforms/crowdstrike.png', kind: 'raster' },
-  { key: 'harfanglab', name: 'HarfangLab', language: 'Sigma or YARA', live: false, src: '/icons/platforms/harfanglab.png', kind: 'raster' },
+  { key: 'sentinel', name: 'Microsoft Sentinel', deploys: 'KQL analytics rule', src: '/icons/platforms/sentinel.svg', kind: 'color' },
+  { key: 'defender_for_endpoint', name: 'Defender for Endpoint', deploys: 'KQL custom detection', src: '/icons/platforms/defender.svg', kind: 'color' },
+  { key: 'splunk', name: 'Splunk Enterprise Security', deploys: 'SPL saved search', src: '/icons/platforms/splunk.svg', kind: 'mono' },
+  { key: 'sentinel_one', name: 'SentinelOne', deploys: 'S1QL STAR rule', src: '/icons/platforms/sentinelone.svg', kind: 'color' },
+  { key: 'carbon_black_cloud', name: 'Carbon Black Cloud', deploys: 'Lucene watchlist IOC', src: '/icons/platforms/carbon-black.png', kind: 'raster' },
+  { key: 'crowdstrike', name: 'CrowdStrike Falcon', deploys: 'correlation rule', src: '/icons/platforms/crowdstrike.png', kind: 'raster' },
+  { key: 'harfanglab', name: 'HarfangLab', deploys: 'Sigma or YARA rule', src: '/icons/platforms/harfanglab.png', kind: 'raster' },
 ];
+
+/** When a wire has drawn in: the check on its tile lands just after. */
+const wireDelay = (i: number) => 150 + i * 90;
 
 function Logo({ src, kind }: { src: string; kind: Integration['kind'] }) {
   if (kind === 'raster') {
@@ -52,7 +54,8 @@ type Wire = { d: string; x1: number; y1: number; dashed?: boolean };
  */
 export function IntegrationFan() {
   const reduced = usePrefersReducedMotion();
-  const { ref: viewRef, seen: inView } = useOnScreen<HTMLDivElement>();
+  // Starts with the block's reveal, so the wires draw in where they can be seen.
+  const { ref: viewRef, seen: inView } = useOnScreen<HTMLDivElement>({ rootMargin: '0px 0px -15% 0px' });
   const stageRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLElement>(null);
   const keyRefs = useRef<(HTMLSpanElement | null)[]>([]);
@@ -90,20 +93,20 @@ export function IntegrationFan() {
       <div data-reveal>
         <BlockHead title="One model. Every integration. No rewrites." />
         <p className="mt-4 max-w-prose text-lg leading-relaxed text-[var(--landing-muted)] text-pretty">
-          A rule carries one configuration block per integration, so adding one adds a block, not a
-          rewrite: threats and objectives stay as they are. opentide deploys the same rule to each, and
-          checks the query against the tenant wherever the integration allows it.
+          A rule carries one configuration block per integration, so adding an integration adds a block,
+          not a rewrite. Threats and objectives stay as they are.
         </p>
         <p className="mt-5 max-w-prose text-lg leading-relaxed text-[var(--landing-muted)] text-pretty">
-          <span className="font-semibold text-[var(--landing-ink)]">CrowdStrike and HarfangLab are deploy-only today</span>
-          , and their query checks say so:{' '}
-          <code className="font-mono text-base text-[var(--landing-ink)]">&quot;supported&quot;: false</code>.
+          <code className="font-mono text-base text-[var(--landing-ink)]">opentide deploy</code>{' '}turns each
+          block into that integration&rsquo;s own detection, from a Sentinel analytics rule to a Splunk saved
+          search. The rule&rsquo;s status decides where it lands: staging tenants while you refine it,
+          production once it is live.
         </p>
         <Link
-          href="/docs/usage/concepts/platforms/"
+          href="/docs/usage/workflows/detection-as-code/"
           className="mt-8 inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--landing-ink)] transition hover:text-[var(--landing-accent)]"
         >
-          Capability matrix <ArrowRight className="size-3.5" aria-hidden />
+          The detection-as-code workflow <ArrowRight className="size-3.5" aria-hidden />
         </Link>
       </div>
 
@@ -162,7 +165,7 @@ export function IntegrationFan() {
                   strokeDasharray={wire.dashed ? '3 4' : undefined}
                   className={wire.dashed ? undefined : 'landing-draw'}
                   data-drawn={inView || reduced ? '' : undefined}
-                  style={{ transitionDelay: `${150 + i * 90}ms` }}
+                  style={{ transitionDelay: `${wireDelay(i)}ms` }}
                 />
                 <circle
                   cx={wire.x1}
@@ -197,9 +200,18 @@ export function IntegrationFan() {
                 <Logo src={p.src} kind={p.kind} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold leading-snug text-[var(--landing-ink)]">{p.name}</p>
-                  <p className="truncate font-mono text-[11px] text-[var(--landing-subtle)]">{p.language}</p>
+                  <p className="truncate font-mono text-[11px] text-[var(--landing-subtle)]">{p.deploys}</p>
                 </div>
-                <Tag tone={p.live ? 'accent' : 'outline'}>{p.live ? 'live check' : 'deploy-only'}</Tag>
+                {/* Lands once the block's wire has drawn in: the rule, deployed. */}
+                <span
+                  aria-hidden
+                  className={`grid size-5 shrink-0 place-items-center rounded-full bg-[var(--landing-accent)] text-[var(--brand-accent-foreground)] transition-[opacity,scale] duration-300 ${
+                    inView || reduced ? 'scale-100 opacity-100' : 'scale-50 opacity-0'
+                  }`}
+                  style={{ transitionDelay: reduced ? undefined : `${wireDelay(i) + 800}ms` }}
+                >
+                  <Check className="size-3" strokeWidth={3} />
+                </span>
               </li>
             ))}
             <li

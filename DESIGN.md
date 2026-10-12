@@ -78,13 +78,13 @@ The landing is seven chapters (`components/landing/chapters.ts`), each one idea:
 
 Each chapter carries one illustration built from real artefacts, never a stock icon grid:
 
-- **Ontology map** (`ontology-map.tsx`, data in `lib/landing/ontology.ts`): threat, objective, its signals and rule in `objects/`, threats chained to threats (a loop on the threat), and the environment from `visibility.toml` and `platforms/*.toml` they land in: assets on a surface, log sources, detectors, integrations. Edges are labelled with the field that makes the link; solid edges are UUID references that `opentide validate` resolves, dashed ones are names or vocabulary values. A guided tour walks the nodes; the detail panel shows an excerpt of the real demo file with the linking lines marked. Below `sm` the graph becomes two labelled groups of nodes.
-- **Coverage figure**: an ATT&CK heatmap beside an attack path: chained threats, each on one of your assets through its surface, each step covered by an objective and its rules or flagged as a gap. A replay walks the path; four questions under it light up the part of the graph that answers them.
-- **Integration fan**: one rule's `configurations` keys wired to each integration.
+- **Ontology map** (`ontology-map.tsx`, data in `lib/landing/ontology.ts`): threat, objective, its signals and rule in `objects/`, threats chained to threats (a loop on the threat), and the environment from `visibility.toml` and `platforms/*.toml` they land in: assets on a surface, log sources, detectors, integrations. Edges are labelled with the field that makes the link; solid edges are UUID references that `opentide validate` resolves, dashed ones are names or vocabulary values. Each node has a type icon and carries the demo objects it stands for: names and values from the files, with the threat card showing the chain itself. The map is a fixed canvas scaled to its column; past 80% it scrolls sideways instead, and the tour pans to each node. A guided tour walks the nodes; the detail panel lists every link a node holds or receives, with what it means, its value in the demo file and the object it resolves to, then an excerpt of the real file with the linking lines marked. Every node's detail shares one grid cell, so the panel keeps its height through the tour.
+- **Coverage figure**: an ATT&CK heatmap beside an attack path: chained threats, each on one of your assets through its surface, each step covered by an objective and its rules or flagged as a gap. A replay walks the path; four questions under it light up the part of the graph that answers them. A click, tap or keypress pins a question; a mouse hover previews one.
+- **Integration fan**: one rule's `configurations` keys wired to each integration; each tile names what `opentide deploy` creates there, and a check lands as its wire arrives.
 - **CLI · SDK · MCP showcase**: typed commands with output captured from the released opentide against the demo repository (a broken reference, a vocabulary error, the `--json` report, a dry-run plan); the promise each run demonstrates lights up beside it.
 - **Pipeline, north star, get started**: the pipeline runs like CI, a pulse rides the north-star track, and the repository tree grows as the setup commands play.
 
-The studio's demo objects pass `opentide validate --strict`, `lint --strict` and a dry-run deploy in `pnpm verify:demos`, against the released package. The ontology map's excerpts and the showcase's transcripts are checked against those same files by `pnpm test` (`lib/landing/*.test.ts`), as is the taxonomy ribbon against the synced vocabulary catalog. The coverage figure's attack path is illustrative.
+The studio's demo objects pass `opentide validate --strict`, `lint --strict` and a dry-run deploy in `pnpm verify:demos`, against the released package. The ontology map's excerpts, records and link values and the showcase's transcripts are checked against those same files by `pnpm test` (`lib/landing/*.test.ts`), as is the taxonomy ribbon against the synced vocabulary catalog. The coverage figure's attack path is illustrative.
 
 ### Motion
 
@@ -133,7 +133,7 @@ Landing uses flat tonal layering: chapters alternate page and `landing-band`, co
 - **Secondary button** (`.landing-btn-secondary`): transparent, accent border and text.
 - **Chapter** (`Chapter`, `ChapterHead`, `BlockHead` in `components/landing/ui.tsx`): lowercase mono label with the chapter number, h2, at most one lead; blocks inside a chapter are spaced by `block`. Component classes live in `@layer components` so utilities can override them.
 - **Panel** (`.landing-panel`) and **surface card** (`.landing-surface-card`, unfilled, for blog embeds).
-- **Tag** (`Tag`): four tones, used the same way everywhere — `solid` (accepted), `accent` (supported, live check, in progress), `outline` (planned, gated, deploy-only), `dashed` (proposed, not implemented, unsupported). No green or red outside code panels and the workflow studio.
+- **Tag** (`Tag`): four tones, used the same way everywhere — `solid` (accepted), `accent` (supported, in progress), `outline` (planned, gated), `dashed` (proposed, not implemented). No green or red outside code panels and the workflow studio.
 - **Nav wordmark**: theme-aware tsunami mark + open/tide split (`--brand-accent`).
 - **Chapter navigation**: a floating dock (`ChapterNav`) once the hero scrolls away — every chapter at `xl` with the current one filled and a thin progress line, one pill with a menu below `xl`. Blocks keep their old anchors (`#pipeline`, `#platforms`, `#doors`).
 - **Workflow studio**: plays its six-step scenario in a fixed frame and idles off screen; it never pins or resizes with scroll.
@@ -147,7 +147,7 @@ Landing uses flat tonal layering: chapters alternate page and `landing-band`, co
 - Use official brand SVGs from `public/brand/` (or theme-aware React mark).
 - Register Fumadocs MDX components before authoring rich synced docs.
 - Cross-link Usage pages to normative Specifications.
-- Keep platform capability claims accurate (CrowdStrike/HarfangLab: deploy only) and state them as facts.
+- Keep integrations about detection-as-code and deployment: what each one deploys as, never which checks it lacks. Capability nuances (live query checks, deploy-only integrations) belong in the docs' capability matrix, stated as facts, not on the landing.
 
 **Don't**
 - Gradient text, glassmorphism heroes, or uppercase tracked eyebrows on every section — section labels are lowercase mono.

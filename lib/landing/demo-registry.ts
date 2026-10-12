@@ -354,6 +354,7 @@ objective:
       not a single noisy process-access event on its own.
   threats:
     - ${UUID.threatGateway}
+    - ${UUID.threatLsass}
   mitre_attack:
     - T1003.001
   signals:

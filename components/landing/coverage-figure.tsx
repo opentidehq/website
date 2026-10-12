@@ -64,6 +64,20 @@ const COVERED = PATH.filter((s) => s.objective).length;
 
 type Focus = 'assets' | 'path' | 'detection' | 'gap';
 
+/** The graph's columns, and the links between them. */
+type Col = 'asset' | 'surface' | 'threat' | 'cover' | 'objective' | 'implement' | 'rules';
+
+/** What each question lights; the rest of the graph fades. Asking about the gap also fades every covered step. */
+const LIT: Record<Focus, Col[]> = {
+  assets: ['asset', 'surface', 'threat'],
+  path: ['threat'],
+  detection: ['threat', 'cover', 'objective', 'implement', 'rules'],
+  gap: ['asset', 'surface', 'threat', 'cover', 'objective', 'implement', 'rules'],
+};
+
+const faded = (focus: Focus | null, col: Col, covered: boolean) =>
+  focus !== null && (!LIT[focus].includes(col) || (focus === 'gap' && covered));
+
 const QUESTIONS: { key: Focus; question: string; answer: string }[] = [
   { key: 'assets', question: 'Does it hit what we run?', answer: 'Each threat’s surface meets your assets, ranked by criticality.' },
   { key: 'path', question: 'How does the attack unfold?', answer: 'Threats chain into an attack path, one step after another.' },
@@ -127,7 +141,6 @@ function Link({ on, gap, dim }: { on: boolean; gap?: boolean; dim: boolean }) {
 }
 
 function AttackPath({ at, focus }: { at: number; focus: Focus | null }) {
-  const dim = (...parts: Focus[]) => focus !== null && !parts.includes(focus);
 
   return (
     <div className="grid grid-cols-[minmax(0,0.95fr)_1rem_minmax(0,1.15fr)_1rem_minmax(0,1fr)_1rem_minmax(0,0.85fr)] gap-y-7">
@@ -141,12 +154,11 @@ function AttackPath({ at, focus }: { at: number; focus: Focus | null }) {
         const reached = i <= at;
         const current = i === at;
         const covered = step.objective !== null;
-        // Asking about the gap fades every step that is covered.
-        const row = focus === 'gap' && covered ? 'opacity-25' : '';
+        const fade = (col: Col) => (faded(focus, col, covered) ? 'opacity-25' : '');
         return (
           <div key={step.threat} className="contents">
             <div
-              className={`${node} ${row || (dim('assets') ? 'opacity-25' : '')} ${
+              className={`${node} ${fade('asset')} ${
                 focus === 'assets' ? 'border-[var(--landing-accent)]' : 'border-[var(--landing-border)]'
               }`}
             >
@@ -157,10 +169,10 @@ function AttackPath({ at, focus }: { at: number; focus: Focus | null }) {
               <p className="mt-1 font-mono text-[10.5px] text-[var(--landing-muted)]">criticality {step.criticality}</p>
             </div>
 
-            <Link on={reached} dim={Boolean(row) || dim('assets', 'path')} />
+            <Link on={reached} dim={faded(focus, 'surface', covered)} />
 
             <div
-              className={`relative ${node} ${row || (dim('path', 'gap') ? 'opacity-25' : '')} ${
+              className={`relative ${node} ${fade('threat')} ${
                 current || focus === 'path'
                   ? 'border-[var(--landing-accent)] shadow-[0_8px_24px_-14px_var(--landing-btn-shadow)]'
                   : reached
@@ -191,11 +203,11 @@ function AttackPath({ at, focus }: { at: number; focus: Focus | null }) {
               )}
             </div>
 
-            <Link on={reached && covered} gap={!covered} dim={Boolean(row) || dim('detection', 'gap')} />
+            <Link on={reached && covered} gap={!covered} dim={faded(focus, 'cover', covered)} />
 
             {covered ? (
               <div
-                className={`${node} ${row || (dim('detection') ? 'opacity-25' : '')} ${
+                className={`${node} ${fade('objective')} ${
                   reached ? 'border-[color-mix(in_srgb,var(--landing-accent)_45%,transparent)]' : 'border-[var(--landing-border)]'
                 }`}
               >
@@ -204,9 +216,9 @@ function AttackPath({ at, focus }: { at: number; focus: Focus | null }) {
               </div>
             ) : (
               <div
-                className={`relative flex flex-col justify-center rounded-xl border border-dashed px-3 py-2.5 transition-[border-color,opacity] duration-300 ${
-                  dim('detection', 'gap') ? 'opacity-25' : ''
-                } ${reached || focus === 'gap' ? 'border-[var(--landing-accent)]' : 'border-[color-mix(in_srgb,var(--landing-ink)_30%,transparent)]'}`}
+                className={`relative flex flex-col justify-center rounded-xl border border-dashed px-3 py-2.5 transition-[border-color,opacity] duration-300 ${fade(
+                  'objective',
+                )} ${reached || focus === 'gap' ? 'border-[var(--landing-accent)]' : 'border-[color-mix(in_srgb,var(--landing-ink)_30%,transparent)]'}`}
               >
                 {reached && (
                   <span
@@ -225,9 +237,9 @@ function AttackPath({ at, focus }: { at: number; focus: Focus | null }) {
               </div>
             )}
 
-            <Link on={reached && covered} gap={!covered} dim={Boolean(row) || dim('detection', 'gap')} />
+            <Link on={reached && covered} gap={!covered} dim={faded(focus, 'implement', covered)} />
 
-            <div className={`flex flex-col justify-center gap-1.5 transition-opacity duration-300 ${row || (dim('detection', 'gap') ? 'opacity-25' : '')}`}>
+            <div className={`flex flex-col justify-center gap-1.5 transition-opacity duration-300 ${fade('rules')}`}>
               {covered ? (
                 step.rules.map((rule) => (
                   <span
@@ -256,7 +268,9 @@ function AttackPath({ at, focus }: { at: number; focus: Focus | null }) {
 }
 
 /** Narrow screens: the same path as a list, each step with its asset and what covers it. */
-function AttackPathList({ at }: { at: number }) {
+function AttackPathList({ at, focus }: { at: number; focus: Focus | null }) {
+  // One line per question: the asset, the threat, or what covers it; the gap fades covered steps.
+  const lit = (col: Col) => (focus === 'assets' && col === 'asset') || (focus === 'path' && col === 'threat');
   return (
     <ol className="m-0 list-none space-y-3 p-0">
       {PATH.map((step, i) => {
@@ -265,7 +279,9 @@ function AttackPathList({ at }: { at: number }) {
         return (
           <li
             key={step.threat}
-            className={`rounded-xl border p-3.5 transition-colors duration-300 ${
+            className={`rounded-xl border p-3.5 transition-[border-color,opacity] duration-300 ${
+              focus === 'gap' && covered ? 'opacity-40' : ''
+            } ${
               !covered && reached
                 ? 'border-dashed border-[var(--landing-accent)]'
                 : reached
@@ -273,11 +289,21 @@ function AttackPathList({ at }: { at: number }) {
                   : 'border-[var(--landing-border)]'
             }`}
           >
-            <p className="font-mono text-[10.5px] text-[var(--landing-subtle)]">
+            <p className={`font-mono text-[10.5px] ${lit('asset') ? 'text-[var(--landing-accent)]' : 'text-[var(--landing-subtle)]'}`}>
               {String(i + 1).padStart(2, '0')} · {step.asset} · {step.criticality}
             </p>
-            <p className="mt-1 text-sm font-semibold text-[var(--landing-ink)]">{step.threat}</p>
-            <p className={`mt-1 text-[13px] ${covered ? 'text-[var(--landing-muted)]' : 'font-semibold text-[var(--landing-accent)]'}`}>
+            <p className={`mt-1 text-sm font-semibold ${lit('threat') ? 'text-[var(--landing-accent)]' : 'text-[var(--landing-ink)]'}`}>
+              {step.threat}
+            </p>
+            <p
+              className={`mt-1 text-[13px] ${
+                !covered
+                  ? 'font-semibold text-[var(--landing-accent)]'
+                  : focus === 'detection'
+                    ? 'font-medium text-[var(--landing-ink)]'
+                    : 'text-[var(--landing-muted)]'
+              }`}
+            >
               {covered ? `${step.objective} → ${step.rules.join(', ')}` : 'Gap: no objective covers it'}
             </p>
           </li>
@@ -294,11 +320,15 @@ function AttackPathList({ at }: { at: number }) {
  */
 export function CoverageFigure() {
   const reduced = usePrefersReducedMotion();
-  const { ref, onScreen, seen } = useOnScreen<HTMLDivElement>();
+  // Starts with the block's reveal, so the heatmap fills in where it can be seen.
+  const { ref, onScreen, seen } = useOnScreen<HTMLDivElement>({ rootMargin: '0px 0px -15% 0px' });
   // The step the replay has reached; PATH.length means the whole path is shown, which is also
   // the static render, so the page reads the same without JavaScript.
   const [at, setAt] = useState(PATH.length);
-  const [focus, setFocus] = useState<Focus | null>(null);
+  // A question is picked by click, tap or keyboard; a mouse hovering one previews it.
+  const [picked, setPicked] = useState<Focus | null>(null);
+  const [preview, setPreview] = useState<Focus | null>(null);
+  const focus = preview ?? picked;
 
   const playing = onScreen && !reduced && focus === null;
 
@@ -347,7 +377,7 @@ export function CoverageFigure() {
             <AttackPath at={shownAt} focus={focus} />
           </div>
           <div className="mt-6 sm:hidden">
-            <AttackPathList at={shownAt} />
+            <AttackPathList at={shownAt} focus={focus} />
           </div>
         </figure>
       </div>
@@ -359,10 +389,17 @@ export function CoverageFigure() {
             <li key={q.key} className="bg-[var(--landing-panel)]">
               <button
                 type="button"
-                onPointerEnter={() => setFocus(q.key)}
-                onPointerLeave={() => setFocus(null)}
-                onFocus={() => setFocus(q.key)}
-                onBlur={() => setFocus(null)}
+                aria-pressed={picked === q.key}
+                onClick={() => setPicked((current) => (current === q.key ? null : q.key))}
+                // Touch sends enter and leave around every tap: only a mouse previews.
+                onPointerEnter={(e) => {
+                  if (e.pointerType === 'mouse') setPreview(q.key);
+                }}
+                onPointerLeave={() => setPreview(null)}
+                onFocus={(e) => {
+                  if (e.currentTarget.matches(':focus-visible')) setPreview(q.key);
+                }}
+                onBlur={() => setPreview(null)}
                 className={`flex h-full w-full flex-col items-start p-5 text-left transition-colors duration-300 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--landing-accent)] ${
                   on ? 'bg-[color-mix(in_srgb,var(--landing-accent)_6%,var(--landing-panel))]' : ''
                 }`}

@@ -207,7 +207,7 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
     events: [
       {
         kind: 'reasoning',
-        text: 'Follow-on risk is LSASS credential access — one objective, combined signals, linked to threat …010.',
+        text: 'Follow-on risk is LSASS credential access — one objective, combined signals, covering the gateway threat …010 and the LSASS threat …020 it chains to.',
       },
       {
         kind: 'skill',
@@ -219,7 +219,7 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
         server: 'editor',
         tool: 'write_file',
         input: OBJECTIVE_FILE,
-        output: 'objective links threat …010 · 1 signal',
+        output: 'objective covers threats …010, …020 · 1 signal',
       },
       {
         kind: 'cli',

@@ -1,9 +1,9 @@
 /**
  * The ontology map's data: the objects of the demo repository, how they link, and the
- * excerpt each node shows. Every excerpt line is copied verbatim from the demo files in
- * lib/landing/demo-registry.ts, in order; `ontology.test.ts` fails when they drift apart.
- * A leading `>` marks a line that carries a link. Kept free of imports so the map does not
- * pull the demo registry into the landing's first load.
+ * excerpt each node shows. Every excerpt line, record and link value is copied verbatim from
+ * the demo files in lib/landing/demo-registry.ts; `ontology.test.ts` fails when they drift
+ * apart. A leading `>` marks an excerpt line that carries a link. Kept free of imports so the
+ * map does not pull the demo registry into the landing's first load.
  */
 
 export type NodeId =
@@ -16,6 +16,16 @@ export type NodeId =
   | 'detectors'
   | 'integrations';
 
+/** One demo object as its node shows it: its name, and the values that identify it. */
+export type NodeRecord = {
+  name: string;
+  facts: string[];
+  /** The demo file that holds it, when it is not the node's file. */
+  file?: string;
+  /** The chaining relation from the record above, as the node's file records it. */
+  via?: string;
+};
+
 export type OntologyNode = {
   /** The detection catalogue under `objects/`, or the environment it lands in. */
   zone: 'catalogue' | 'environment';
@@ -25,17 +35,42 @@ export type OntologyNode = {
   body: string;
   file: string;
   excerpt: string[];
-  /** Centre on the map, in percent of its width and height. */
+  records: NodeRecord[];
+  /** Centre on the map's canvas, in px. */
   at: [number, number];
-  /** Signals are part of the objective: drawn smaller, and inside the catalogue. */
+  /** Signals are part of the objective: drawn inside the catalogue, without a schema of their own. */
   nested?: boolean;
 };
 
 /**
  * `uuid`: a reference by UUID that validation resolves. `nested`: a part of the object.
- * `name`: a name or a vocabulary value.
+ * `name`: a name from the configuration. `vocabulary`: a value from a versioned vocabulary.
  */
-export type Edge = { from: NodeId; to: NodeId; field: string; kind: 'uuid' | 'nested' | 'name' };
+export type EdgeKind = 'uuid' | 'nested' | 'name' | 'vocabulary';
+
+export type Edge = {
+  from: NodeId;
+  to: NodeId;
+  field: string;
+  kind: EdgeKind;
+  /** The link read from the object that holds the field. */
+  says: string;
+  /** The same link read from the object it names. */
+  back: string;
+  /** The field's value in the holder's demo file, a line at a time. */
+  value: string[];
+  /** The objects the value names, when the value is not their name already. */
+  resolves?: string[];
+};
+
+/** The map is drawn on a fixed canvas and scaled to fit, so the layout holds at any width. */
+export const CANVAS = { w: 900, h: 960 } as const;
+
+/** Where each zone's band sits on the canvas, top and bottom, in px. */
+export const ZONES = {
+  catalogue: { top: 0, bottom: 520, caption: 'objects/' },
+  environment: { top: 548, bottom: 960, caption: '.opentide/configurations/' },
+} as const;
 
 const VISIBILITY = '.opentide/configurations/visibility.toml';
 const OBJECTIVE_FILE = 'objects/objectives/credential-access-via-lsass.yaml';
@@ -62,7 +97,16 @@ export const NODES: Record<NodeId, OntologyNode> = {
       '>    - relation: sequence::preceeds',
       '>      vector: 00000000-0000-4000-8001-000000000020',
     ],
-    at: [13, 18],
+    records: [
+      { name: 'Gateway exploitation (CVE-2026-0300)', facts: ['T1190', 'Significant incident'] },
+      {
+        name: 'Credential dumping from LSASS',
+        facts: ['T1003.001', 'Significant incident'],
+        file: 'objects/threats/credential-dumping-from-lsass.yaml',
+        via: 'sequence::preceeds',
+      },
+    ],
+    at: [122, 206],
   },
   objective: {
     zone: 'catalogue',
@@ -80,10 +124,12 @@ export const NODES: Record<NodeId, OntologyNode> = {
       '    strategy: Combined',
       '>  threats:',
       '>    - 00000000-0000-4000-8001-000000000010',
+      '>    - 00000000-0000-4000-8001-000000000020',
       '>  signals:',
       '>    - name: LSASS process access',
     ],
-    at: [50, 18],
+    records: [{ name: 'Credential access via LSASS', facts: ['High', 'Threat', 'Combined'] }],
+    at: [450, 206],
   },
   signals: {
     zone: 'catalogue',
@@ -104,7 +150,8 @@ export const NODES: Record<NodeId, OntologyNode> = {
       '>      detectors:',
       '>        - name: Defender for Endpoint',
     ],
-    at: [50, 44],
+    records: [{ name: 'LSASS process access', facts: ['High', 'Behavioural'] }],
+    at: [450, 418],
     nested: true,
   },
   rule: {
@@ -127,7 +174,8 @@ export const NODES: Record<NodeId, OntologyNode> = {
       '    query: |',
       '      `sysmon` EventCode=10 TargetImage="*\\\\lsass.exe"',
     ],
-    at: [87, 18],
+    records: [{ name: 'LSASS memory access', facts: ['STAGING', 'sentinel', 'splunk'] }],
+    at: [790, 206],
   },
   detectors: {
     zone: 'environment',
@@ -142,7 +190,8 @@ export const NODES: Record<NodeId, OntologyNode> = {
       'description = "Built-in credential theft alerts"',
       '>assets = ["Corporate workstations"]',
     ],
-    at: [28, 67],
+    records: [{ name: 'Defender for Endpoint', facts: ['Corporate workstations'] }],
+    at: [272, 618],
   },
   assets: {
     zone: 'environment',
@@ -161,7 +210,11 @@ export const NODES: Record<NodeId, OntologyNode> = {
       'name = "Corporate workstations"',
       '>surface = ["Windows::Desktop::11"]',
     ],
-    at: [13, 88],
+    records: [
+      { name: 'Edge firewalls', facts: ['High', 'Firewalls::Palo Alto Networks'] },
+      { name: 'Corporate workstations', facts: ['Medium', 'Windows::Desktop::11'] },
+    ],
+    at: [122, 836],
   },
   logsources: {
     zone: 'environment',
@@ -177,7 +230,11 @@ export const NODES: Record<NodeId, OntologyNode> = {
       '>system = "sentinel"',
       '>assets = ["Corporate workstations"]',
     ],
-    at: [50, 88],
+    records: [
+      { name: 'Endpoint process events', facts: ['sentinel'] },
+      { name: 'Firewall traffic', facts: ['splunk'] },
+    ],
+    at: [450, 836],
   },
   integrations: {
     zone: 'environment',
@@ -195,23 +252,120 @@ export const NODES: Record<NodeId, OntologyNode> = {
       'name = "SOC Staging"',
       'deployment = "STAGING"',
     ],
-    at: [87, 88],
+    records: [
+      { name: 'Microsoft Sentinel', facts: ['sentinel'] },
+      { name: 'Splunk Enterprise Security', facts: ['splunk'], file: '.opentide/configurations/platforms/splunk.toml' },
+    ],
+    at: [790, 836],
   },
 };
 
 /** References point from the object that holds the field to the one it names. */
 export const EDGES: Edge[] = [
-  { from: 'threat', to: 'threat', field: 'chaining', kind: 'uuid' },
-  { from: 'objective', to: 'threat', field: 'threats', kind: 'uuid' },
-  { from: 'rule', to: 'objective', field: 'detection_model', kind: 'uuid' },
-  { from: 'objective', to: 'signals', field: 'signals[]', kind: 'nested' },
-  { from: 'threat', to: 'assets', field: 'surface', kind: 'name' },
-  { from: 'signals', to: 'logsources', field: 'data.logsources', kind: 'name' },
-  { from: 'signals', to: 'detectors', field: 'detectors', kind: 'name' },
-  { from: 'rule', to: 'integrations', field: 'configurations', kind: 'name' },
-  { from: 'logsources', to: 'assets', field: 'assets', kind: 'name' },
-  { from: 'logsources', to: 'integrations', field: 'system', kind: 'name' },
-  { from: 'detectors', to: 'assets', field: 'assets', kind: 'name' },
+  {
+    from: 'threat',
+    to: 'threat',
+    field: 'chaining',
+    kind: 'uuid',
+    says: 'Other threats, and how this one relates to them: it precedes, implements or enables them.',
+    back: 'Threats that chain into this one.',
+    value: ['relation: sequence::preceeds', 'vector: 00000000-0000-4000-8001-000000000020'],
+    resolves: ['Credential dumping from LSASS'],
+  },
+  {
+    from: 'objective',
+    to: 'threat',
+    field: 'threats',
+    kind: 'uuid',
+    says: 'The threats this objective covers.',
+    back: 'Objectives that cover this threat.',
+    value: ['- 00000000-0000-4000-8001-000000000010', '- 00000000-0000-4000-8001-000000000020'],
+    resolves: ['Gateway exploitation (CVE-2026-0300)', 'Credential dumping from LSASS'],
+  },
+  {
+    from: 'rule',
+    to: 'objective',
+    field: 'detection_model',
+    kind: 'uuid',
+    says: 'The objective this rule implements.',
+    back: 'Rules that implement this objective.',
+    value: ['detection_model: 00000000-0000-4000-8002-000000000001'],
+    resolves: ['Credential access via LSASS'],
+  },
+  {
+    from: 'objective',
+    to: 'signals',
+    field: 'signals[]',
+    kind: 'nested',
+    says: 'The evidence that, combined, satisfies the objective.',
+    back: 'Each signal lives inside the objective it serves.',
+    value: ['- name: LSASS process access'],
+  },
+  {
+    from: 'threat',
+    to: 'assets',
+    field: 'surface',
+    kind: 'vocabulary',
+    says: 'Where the threat lands, in the surface vocabulary your assets use too.',
+    back: 'Threats whose surface matches this asset’s.',
+    value: ['- Firewalls::Palo Alto Networks'],
+    resolves: ['Edge firewalls'],
+  },
+  {
+    from: 'signals',
+    to: 'logsources',
+    field: 'data.logsources',
+    kind: 'name',
+    says: 'The telemetry this signal needs.',
+    back: 'Signals that need this telemetry.',
+    value: ['- Endpoint process events'],
+  },
+  {
+    from: 'signals',
+    to: 'detectors',
+    field: 'detectors',
+    kind: 'name',
+    says: 'Detectors that already see this signal.',
+    back: 'Signals this detector already covers.',
+    value: ['- name: Defender for Endpoint'],
+  },
+  {
+    from: 'rule',
+    to: 'integrations',
+    field: 'configurations',
+    kind: 'name',
+    says: 'One block per integration the rule deploys to.',
+    back: 'Rules with a configuration block for this integration.',
+    value: ['sentinel:', 'splunk:'],
+  },
+  {
+    from: 'logsources',
+    to: 'assets',
+    field: 'assets',
+    kind: 'name',
+    says: 'The assets this telemetry comes from.',
+    back: 'Log sources collected from this asset.',
+    value: ['assets = ["Corporate workstations"]'],
+  },
+  {
+    from: 'logsources',
+    to: 'integrations',
+    field: 'system',
+    kind: 'name',
+    says: 'The integration this telemetry lands in.',
+    back: 'Log sources that land in this integration.',
+    value: ['system = "sentinel"'],
+    resolves: ['Microsoft Sentinel'],
+  },
+  {
+    from: 'detectors',
+    to: 'assets',
+    field: 'assets',
+    kind: 'name',
+    says: 'The assets this detector watches.',
+    back: 'Detectors that watch this asset.',
+    value: ['assets = ["Corporate workstations"]'],
+  },
 ];
 
 /** The guided tour reads like the story: what, where it lands, what to detect, how, where it runs. */

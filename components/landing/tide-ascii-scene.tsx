@@ -254,15 +254,16 @@ export function TideAsciiScene({ className, fill = FILL_HEIGHT }: { className?: 
       if (!fluid || reduced) return;
       // A resting pointer stops stirring: after a moment the ambient wave takes over again.
       if (mouse.active && now - lastMove > 1400) onLeave();
-      // Idle, the ambient wave runs at about 30 fps with steps twice as long: the same speed for
-      // half the work. A pointer in the water gets every frame.
-      const every = mouse.active ? 0 : 1000 / 30 - 2;
-      if (now - lastFrame < every) {
+      // Idle, the ambient wave runs at about 30 fps; a pointer in the water gets up to 60. Steps
+      // follow the clock, so the water moves at the same speed on any refresh rate.
+      const every = mouse.active ? 1000 / 60 - 2 : 1000 / 30 - 2;
+      const elapsed = now - lastFrame;
+      if (elapsed < every) {
         raf = requestAnimationFrame(loop);
         return;
       }
       lastFrame = now;
-      const dt = Math.min(1 / 30, (1 / 60) * SPEED * (mouse.active ? 1 : 2));
+      const dt = Math.min(1 / 30, (elapsed / 1000) * SPEED);
       t += dt;
 
       let ox = mouse.x;

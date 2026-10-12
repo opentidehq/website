@@ -362,7 +362,8 @@ html > body[data-scroll-locked] {
 
 /* Floating chapter dock. The bar spans the viewport so it can centre the pill, but only the
    pill takes pointer events. While the hero is on screen it is out of sight but not out of
-   reach: it stays in the accessibility tree and shows itself when a keyboard focuses it. */
+   reach: it stays in the accessibility tree and shows itself when a keyboard focuses it.
+   Keyboard focus only: a link a mouse clicked keeps focus, and must not pin the dock open. */
 .landing-dock {
   pointer-events: none;
   opacity: 0;
@@ -373,13 +374,13 @@ html > body[data-scroll-locked] {
 }
 
 .landing-dock-visible,
-.landing-dock:focus-within {
+.landing-dock:has(:focus-visible) {
   opacity: 1;
   transform: none;
 }
 
 .landing-dock-visible > *,
-.landing-dock:focus-within > * {
+.landing-dock:has(:focus-visible) > * {
   pointer-events: auto;
 }
 
@@ -422,18 +423,27 @@ html > body[data-scroll-locked] {
   position: relative;
 }
 
+/* Narrow screens: the copy spans the column, so the clearing is a vertical fade behind all of
+   it. Wider: an ellipse that leaves the water visible around the copy. */
 .landing-hero-copy::before {
   content: '';
   position: absolute;
-  inset: 3rem 0 var(--tide) 0;
+  inset: 3rem -1rem var(--tide) -1rem;
   z-index: -1;
   pointer-events: none;
-  background: radial-gradient(
-    closest-side,
-    var(--landing-bg) 62%,
-    color-mix(in srgb, var(--landing-bg) 70%, transparent) 82%,
-    transparent
-  );
+  background: linear-gradient(to bottom, transparent, var(--landing-bg) 10%, var(--landing-bg) 88%, transparent);
+}
+
+@media (min-width: 768px) {
+  .landing-hero-copy::before {
+    inset: 3rem 0 var(--tide) 0;
+    background: radial-gradient(
+      closest-side,
+      var(--landing-bg) 62%,
+      color-mix(in srgb, var(--landing-bg) 70%, transparent) 82%,
+      transparent
+    );
+  }
 }
 
 /* Diagram edges draw in once, then the links of whatever is selected carry a moving dash. */
