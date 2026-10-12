@@ -318,23 +318,69 @@ html > body[data-scroll-locked] {
 }
 
 .landing-section {
-  padding-block: 6rem;
+  padding-block: 4.5rem;
 }
 
 @media (min-width: 768px) {
   .landing-section {
-    padding-block: 8rem;
+    padding-block: 6rem;
+  }
+}
+
+/* Floating chapter dock. The bar spans the viewport so it can centre the pill, but only the
+   pill takes pointer events; while hidden it also leaves the tab order. */
+.landing-dock {
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(0.75rem);
+  visibility: hidden;
+  transition:
+    opacity 0.25s cubic-bezier(0.25, 1, 0.5, 1),
+    transform 0.25s cubic-bezier(0.25, 1, 0.5, 1),
+    visibility 0s linear 0.25s;
+}
+
+.landing-dock-visible {
+  opacity: 1;
+  transform: none;
+  visibility: visible;
+  transition:
+    opacity 0.25s cubic-bezier(0.25, 1, 0.5, 1),
+    transform 0.25s cubic-bezier(0.25, 1, 0.5, 1),
+    visibility 0s;
+}
+
+.landing-dock-visible > * {
+  pointer-events: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-dock,
+  .landing-dock-visible {
+    transform: none;
+    transition: none;
+  }
+}
+
+/* Chapter anchors land with the label just under the 3.5rem sticky header. */
+.landing section[id] {
+  scroll-margin-top: 0;
+}
+
+@media (min-width: 768px) {
+  .landing section[id] {
+    scroll-margin-top: -1.5rem;
   }
 }
 
 /* A section that continues the chapter above it, so it sits closer. */
 .landing-subsection {
-  padding-block: 3.5rem;
+  padding-block: 3rem;
 }
 
 @media (min-width: 768px) {
   .landing-subsection {
-    padding-block: 4.5rem;
+    padding-block: 3.5rem;
   }
 }
 
@@ -373,7 +419,7 @@ html > body[data-scroll-locked] {
 @media (min-width: 1024px) {
   .landing-studio-track {
     /* 100svh is spent pinned; the rest is the travel that opens and closes the stage. */
-    height: 260svh;
+    height: 190svh;
   }
 
   .landing-studio {
