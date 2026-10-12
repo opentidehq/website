@@ -79,8 +79,8 @@ export function LandingNav({ children }: { children: ReactNode }) {
             <div>
               <OpentideWordmark height={36} />
               <p className="mt-4 max-w-sm text-sm leading-relaxed text-[var(--landing-muted)]">
-                The DetectionOps engine. Structure detection engineering from intel to deploy.
-                Forever free.
+                Spec-driven development for detection engineering: an ontology, a taxonomy and an
+                engine you pin. Forever free.
               </p>
               <div className="mt-4">
                 <OpentideLicensePill />

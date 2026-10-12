@@ -1,4 +1,4 @@
-import { ArrowUpRight, BookOpen, Boxes, Code2, Compass, Package, Sparkles, Wand2 } from 'lucide-react';
+import { ArrowUpRight, BookOpen, Boxes, Code2, Compass, FolderGit2, Package, Sparkles, Wand2 } from 'lucide-react';
 import { ecosystemLinks, type EcosystemItem } from '@/lib/shared';
 
 const ICONS: Record<string, typeof Package> = {
@@ -60,14 +60,37 @@ function EcosystemCard({ item }: { item: EcosystemItem }) {
   );
 }
 
+/** Not an OpenTideHQ repository, so it stays out of the footer list: the repo the engine runs against. */
+function YourRepoCard() {
+  return (
+    <div className="flex h-full flex-col rounded-2xl border border-dashed border-[color-mix(in_srgb,var(--landing-accent)_45%,transparent)] p-6">
+      <div className="flex items-start justify-between gap-3">
+        <span className="flex size-10 items-center justify-center rounded-xl bg-[var(--landing-accent)] text-[var(--brand-accent-foreground)]">
+          <FolderGit2 className="size-5" aria-hidden />
+        </span>
+        <span className="rounded-full bg-[color-mix(in_srgb,var(--landing-accent)_14%,transparent)] px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-[var(--landing-ink)]">
+          Yours
+        </span>
+      </div>
+      <h3 className="mt-5 text-lg font-semibold tracking-tight text-[var(--landing-ink)]">your detection repo</h3>
+      <p className="mt-2 text-sm leading-relaxed text-[var(--landing-muted)]">
+        Your content: private objects, platform configuration and CI. The source of truth, in git.
+      </p>
+    </div>
+  );
+}
+
 export function EcosystemGrid() {
   return (
-    <ul className="grid list-none gap-4 p-0 sm:grid-cols-2 lg:grid-cols-3">
+    <ul className="grid list-none gap-4 p-0 sm:grid-cols-2 lg:grid-cols-4">
       {ecosystemLinks.map((item) => (
         <li key={item.name}>
           <EcosystemCard item={item} />
         </li>
       ))}
+      <li>
+        <YourRepoCard />
+      </li>
     </ul>
   );
 }

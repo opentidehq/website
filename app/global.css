@@ -177,14 +177,6 @@ html > body[data-scroll-locked] {
 }
 
 /* Landing accents */
-.landing-fade-in {
-  animation: landing-fade-in 0.7s cubic-bezier(0.25, 1, 0.5, 1) both;
-}
-
-.landing-delay-2 {
-  animation-delay: 0.2s;
-}
-
 @keyframes landing-fade-in {
   from {
     opacity: 0;
@@ -199,19 +191,6 @@ html > body[data-scroll-locked] {
 .landing-card {
   animation: landing-fade-in 0.55s cubic-bezier(0.25, 1, 0.5, 1) both;
   animation-delay: calc(var(--i, 0) * 70ms);
-}
-
-.landing-marquee {
-  animation: landing-marquee 40s linear infinite;
-}
-
-@keyframes landing-marquee {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-50%);
-  }
 }
 
 .landing {
@@ -334,9 +313,15 @@ html > body[data-scroll-locked] {
   }
 }
 
-.landing-marquee-wrap:hover .landing-marquee,
-.landing-marquee-wrap:focus-within .landing-marquee {
-  animation-play-state: paused;
+/* A section that continues the chapter above it, so it sits closer. */
+.landing-subsection {
+  padding-block: 3.5rem;
+}
+
+@media (min-width: 768px) {
+  .landing-subsection {
+    padding-block: 4.5rem;
+  }
 }
 
 /*
@@ -540,90 +525,10 @@ html > body[data-scroll-locked] {
   }
 }
 
-@keyframes landing-mcp-ping {
-  0% {
-    transform: scale(1);
-    opacity: 0.5;
-  }
-  70%,
-  100% {
-    transform: scale(2);
-    opacity: 0;
-  }
-}
-
-.landing-mcp-ping {
-  animation: landing-mcp-ping 2s cubic-bezier(0.25, 1, 0.5, 1) infinite;
-}
-
-@keyframes landing-wave {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-50%);
-  }
-}
-
-.landing-wave-a {
-  animation: landing-wave 14s ease-in-out infinite alternate;
-  transform-origin: center;
-}
-
-.landing-wave-b {
-  animation: landing-wave 18s ease-in-out infinite alternate-reverse;
-  transform-origin: center;
-}
-
-@keyframes landing-scroll-cue {
-  0%,
-  100% {
-    transform: translateY(0);
-    opacity: 0.6;
-  }
-  50% {
-    transform: translateY(4px);
-    opacity: 1;
-  }
-}
-
-.landing-scroll-cue {
-  animation: landing-scroll-cue 2.4s cubic-bezier(0.25, 1, 0.5, 1) infinite;
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .landing-fade-in,
-  .landing-card,
-  .landing-marquee,
-  .landing-scroll-cue {
+  .landing-card {
     animation: none;
   }
-
-  .landing-mcp-ping {
-    animation: none;
-    opacity: 0.3;
-  }
-}
-
-/* Hero terminal — shiki output */
-.hero-terminal-body pre,
-.hero-terminal-pre {
-  margin: 0;
-  padding: 0;
-  background: transparent !important;
-  overflow: visible;
-}
-
-.hero-terminal-body code,
-.hero-terminal-code {
-  font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: inherit;
-  line-height: inherit;
-  background: transparent !important;
-}
-
-.landing-pipeline-card {
-  will-change: transform;
 }
 
 /* Thin themed scrollbars for landing code / YAML panes */

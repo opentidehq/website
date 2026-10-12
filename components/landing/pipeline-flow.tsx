@@ -1,108 +1,119 @@
-'use client';
+import { ChevronRight, GitMerge } from 'lucide-react';
+import type { CSSProperties, ReactNode } from 'react';
 
-import { FileText, Layers, Rocket, Shield } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
-import type { CSSProperties } from 'react';
-import { useState } from 'react';
-
-const steps: { label: string; icon: LucideIcon; desc: string }[] = [
+const STAGES = [
   {
-    label: 'Validate',
-    icon: Shield,
-    desc: 'Schema, query, and platform honesty checks',
+    title: 'Author',
+    body: 'Threats, objectives and rules as YAML, from generated templates.',
+    command: 'objects/*.yaml',
   },
   {
-    label: 'Generate',
-    icon: Layers,
-    desc: 'Schemas, templates, and indexes from your repo',
+    title: 'Generate',
+    body: 'Deterministic schemas, templates, vocabularies and snippets. Safe to commit.',
+    command: 'opentide generate',
   },
   {
-    label: 'Deploy',
-    icon: Rocket,
-    desc: 'Seven platforms, dry-run before production',
+    title: 'Validate',
+    body: 'Schema, unique UUIDs, references, vocabularies. Exit 1 blocks the merge.',
+    command: 'opentide validate --strict',
   },
   {
-    label: 'Document',
-    icon: FileText,
-    desc: 'Published narratives for analysts and auditors',
+    title: 'Deploy',
+    body: 'Per platform and tenant. Staging from the pull request, production on merge.',
+    command: 'opentide deploy',
   },
-];
+  {
+    title: 'Document',
+    body: 'Wiki pages with chaining diagrams and ATT&CK coverage.',
+    command: 'opentide generate docs',
+  },
+] as const;
 
-export function PipelineFlow() {
-  const [active, setActive] = useState<number | null>(null);
+const PR_LANE = [
+  'validate --strict',
+  'lint --strict',
+  'validate query --live',
+  'generate',
+  'deploy --plan STAGING',
+] as const;
 
+function Chip({ children, solid }: { children: string; solid?: boolean }) {
   return (
-    <div className="mt-16">
-      <div className="hidden lg:flex lg:items-stretch lg:gap-0">
-        {steps.map((step, i) => (
-          <div key={step.label} className="flex flex-1 items-stretch">
-            <button
-              type="button"
-              className="landing-card group relative flex-1 list-none text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--landing-accent)]"
-              style={{ '--i': i } as CSSProperties}
-              onMouseEnter={() => setActive(i)}
-              onMouseLeave={() => setActive(null)}
-              onFocus={() => setActive(i)}
-              onBlur={() => setActive(null)}
-            >
-              <div
-                className={`landing-pipeline-card landing-surface-card h-full p-6 transition-all duration-300 ${
-                  active === i
-                    ? 'scale-[1.03] border-[var(--landing-accent)]/50 shadow-[0_0_40px_-12px_var(--landing-btn-shadow)]'
-                    : active !== null
-                      ? 'opacity-60'
-                      : 'hover:border-[var(--landing-border)]'
-                }`}
-              >
-                <div
-                  className={`mb-4 inline-flex rounded-xl bg-[color-mix(in_srgb,var(--landing-accent)_12%,transparent)] p-2.5 text-[var(--landing-accent)] ring-1 transition-all duration-300 ${
-                    active === i ? 'scale-110 ring-[var(--landing-accent)]/40' : 'ring-[var(--landing-border)]'
-                  }`}
-                >
-                  <step.icon className="size-5" aria-hidden />
-                </div>
-                <h3
-                  className={`text-lg font-semibold transition-colors ${
-                    active === i ? 'text-[var(--landing-accent)]' : ''
-                  }`}
-                >
-                  {step.label}
-                </h3>
-                <p className="mt-2 text-sm text-[var(--landing-subtle)]">{step.desc}</p>
-              </div>
-            </button>
-            {i < steps.length - 1 && (
-              <div className="flex w-10 shrink-0 items-center justify-center self-center" aria-hidden>
-                <div className="relative h-px w-full bg-gradient-to-r from-[var(--landing-accent)]/20 via-[var(--landing-accent)]/55 to-[var(--landing-accent)]">
-                  <span
-                    className={`absolute right-0 top-1/2 size-1.5 -translate-y-1/2 rounded-full bg-[var(--landing-accent)] transition-transform duration-300 ${
-                      active === i ? 'scale-150' : ''
-                    }`}
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
+    <span
+      className={`inline-flex items-center rounded-lg px-2.5 py-1 font-mono text-xs ${
+        solid
+          ? 'bg-[var(--landing-accent)] text-[var(--brand-accent-foreground)]'
+          : 'border border-[var(--landing-border)] bg-[var(--landing-bg)] text-[var(--landing-ink)]'
+      }`}
+    >
+      {children}
+    </span>
+  );
+}
 
-      <ol className="grid gap-4 sm:grid-cols-2 lg:hidden">
-        {steps.map((step, i) => (
+function Lane({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="grid gap-3 md:grid-cols-[9rem_minmax(0,1fr)] md:items-center md:gap-6">
+      <p className="font-mono text-xs text-[var(--landing-subtle)]">{label}</p>
+      <div className="flex flex-wrap items-center gap-x-1.5 gap-y-2">{children}</div>
+    </div>
+  );
+}
+
+const arrow = <ChevronRight className="size-3.5 shrink-0 text-[var(--landing-dim)]" aria-hidden />;
+
+/** Author → generate → validate → deploy → document, and the CI that `opentide setup ci` writes for it. */
+export function PipelineFlow() {
+  return (
+    <div className="mt-12">
+      <ol className="grid list-none gap-3 p-0 sm:grid-cols-2 lg:grid-cols-5">
+        {STAGES.map((stage, i) => (
           <li
-            key={step.label}
-            className="landing-card group relative list-none"
+            key={stage.title}
+            className="landing-card landing-surface-card flex flex-col p-5"
             style={{ '--i': i } as CSSProperties}
           >
-            <div className="landing-pipeline-card landing-surface-card h-full p-6 transition-all duration-300 active:scale-[0.98]">
-              <div className="mb-4 inline-flex rounded-xl bg-[color-mix(in_srgb,var(--landing-accent)_12%,transparent)] p-2.5 text-[var(--landing-accent)] ring-1 ring-[var(--landing-border)]">
-                <step.icon className="size-5" aria-hidden />
-              </div>
-              <h3 className="text-lg font-semibold">{step.label}</h3>
-              <p className="mt-2 text-sm text-[var(--landing-subtle)]">{step.desc}</p>
-            </div>
+            <span className="font-mono text-xs text-[var(--landing-accent)]">
+              {String(i + 1).padStart(2, '0')}
+            </span>
+            <h3 className="mt-3 text-lg font-semibold tracking-[-0.01em] text-[var(--landing-ink)]">{stage.title}</h3>
+            <p className="mt-2 flex-1 text-sm leading-relaxed text-[var(--landing-muted)]">{stage.body}</p>
+            <code className="mt-4 self-start rounded-md bg-[color-mix(in_srgb,var(--landing-ink)_5%,transparent)] px-2 py-1 font-mono text-[11px] text-[var(--landing-ink)]">
+              {stage.command}
+            </code>
           </li>
         ))}
       </ol>
+
+      <div className="mt-6 rounded-2xl border border-[var(--landing-border)] p-5 md:p-6">
+        <div className="flex flex-wrap items-baseline justify-between gap-2 font-mono text-xs text-[var(--landing-subtle)]">
+          <p>
+            ci, generated by <span className="text-[var(--landing-ink)]">opentide setup ci</span> github · gitlab
+            · azure
+          </p>
+          <p>pins the opentide version you ran</p>
+        </div>
+        <div className="mt-5 space-y-4">
+          <Lane label="pull request">
+            {PR_LANE.map((step, i) => (
+              <span key={step} className="inline-flex items-center gap-1.5">
+                {i > 0 && arrow}
+                <Chip solid={i === PR_LANE.length - 1}>{step}</Chip>
+              </span>
+            ))}
+          </Lane>
+          <Lane label="merge to main">
+            <span className="inline-flex items-center gap-2 rounded-lg bg-[var(--landing-ink)] px-2.5 py-1 font-mono text-xs text-[var(--landing-bg)]">
+              <GitMerge className="size-3.5" aria-hidden />a human merges
+            </span>
+            {arrow}
+            <Chip solid>deploy --plan PRODUCTION</Chip>
+            <span className="ml-2 font-mono text-xs text-[var(--landing-subtle)]">
+              protect the environment for a second approval
+            </span>
+          </Lane>
+        </div>
+      </div>
     </div>
   );
 }
