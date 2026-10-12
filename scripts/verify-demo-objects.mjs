@@ -27,12 +27,18 @@ const { GRAPH_NODES, GRAPH_YAML } = await load('lib/landing/graph-demo.ts');
 
 const failures = [];
 
+// opentide reads TF_BUILD, GITHUB_ACTIONS and CI to pick a CI flavour and then diffs against
+// the CI's remote branches. The scratch repos are plain local checkouts with no remote, so run
+// the engine without those markers, as a developer would on a laptop.
+const CI_MARKERS = new Set(['TF_BUILD', 'GITHUB_ACTIONS', 'CI', 'GITLAB_CI']);
+const localEnv = Object.fromEntries(Object.entries(process.env).filter(([name]) => !CI_MARKERS.has(name)));
+
 function opentide(cwd, args, env) {
   const label = `opentide ${args.join(' ')}`;
   try {
     const out = execFileSync('opentide', args, {
       cwd,
-      env: { ...process.env, COLUMNS: '120', ...env },
+      env: { ...localEnv, COLUMNS: '120', ...env },
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'pipe'],
     });
@@ -48,6 +54,7 @@ function opentide(cwd, args, env) {
 function scratchRepo(name) {
   const dir = mkdtempSync(join(tmpdir(), `opentide-demo-${name}-`));
   execFileSync('opentide', ['setup', '--yes', '--path', dir, '--platform', 'sentinel', '--platform', 'splunk', '--ci', 'none'], {
+    env: localEnv,
     stdio: 'ignore',
   });
   // The STAGING plan selects rules that changed in git, so the scratch repo needs a checkout.
