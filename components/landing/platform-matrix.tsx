@@ -54,18 +54,18 @@ function Logo({ src, kind }: { src: string; kind: Platform['kind'] }) {
 /** One model, seven platforms: what each one deploys and checks, with the flag you pass. */
 export function PlatformMatrix() {
   return (
-    <div className="mt-12 grid gap-10 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:gap-14">
+    <div className="mt-12 grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:gap-14">
       <div>
         <p className="max-w-prose text-lg leading-relaxed text-[var(--landing-muted)] text-pretty">
-          A rule carries one configuration block per platform. The same object deploys to each of
-          them, and validation runs against the tenant wherever the platform exposes a query check.
+          A rule carries one configuration block per platform, so adding a platform adds a block,
+          not a rewrite: threats and objectives stay as they are. The same rule deploys to all seven,
+          and on five of them opentide checks the query against the tenant.
         </p>
         <p className="mt-5 max-w-prose text-lg leading-relaxed text-[var(--landing-ink)] text-pretty">
-          Five platforms get a live query check in CI.{' '}
           <span className="font-semibold text-[var(--landing-accent)]">
             CrowdStrike and HarfangLab are deploy-only today
           </span>
-          , and every result says so:{' '}
+          , and their query checks say so:{' '}
           <code className="font-mono text-base">&quot;supported&quot;: false</code>.
         </p>
 

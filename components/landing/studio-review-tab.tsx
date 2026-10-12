@@ -36,7 +36,7 @@ function StatusDot({ status }: { status: JobStatus }) {
   return <CircleDashed className="size-4 shrink-0 text-[var(--landing-dim)]" aria-hidden />;
 }
 
-/** Merge request page as an IDE tab: MR metadata, CI checks with logs, merge footer. */
+/** Pull request page as an IDE tab: PR metadata, CI checks with logs, merge footer. */
 export function StudioReviewTab({
   mr,
   jobs,

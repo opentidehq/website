@@ -24,9 +24,10 @@ const SCARCE = [
 
 function MeterRow({ meter, shown, reduced }: { meter: Meter; shown: boolean; reduced: boolean }) {
   const bar = 'h-2.5 rounded-full';
-  // The result label follows the bar, so the bar scales within the row minus room for it.
+  // Both bars share one track: the row minus room for the result label that follows.
+  const track = '(100% - 6rem)';
   const grow = (to: number) => ({
-    width: `calc((100% - 6rem) * ${shown || reduced ? to : 0})`,
+    width: `calc(${track} * ${shown || reduced ? to : 0})`,
     transition: reduced ? undefined : 'width 900ms cubic-bezier(0.22, 1, 0.36, 1) 150ms',
   });
 
@@ -36,11 +37,15 @@ function MeterRow({ meter, shown, reduced }: { meter: Meter; shown: boolean; red
       <dl className="mt-3 grid grid-cols-[6.5rem_minmax(0,1fr)] items-center gap-x-4 gap-y-2.5 font-mono text-xs">
         <dt className="text-[var(--landing-subtle)]">by hand</dt>
         <dd className="m-0">
-          <span className={`${bar} block bg-[color-mix(in_srgb,var(--landing-ink)_22%,transparent)]`} />
+          <span
+            className={`${bar} block bg-[color-mix(in_srgb,var(--landing-ink)_22%,transparent)]`}
+            style={{ width: `calc(${track})` }}
+          />
+          <span className="sr-only">the baseline</span>
         </dd>
         <dt className="text-[var(--landing-subtle)]">with agents</dt>
         <dd className="m-0 flex items-center gap-3">
-          <span className={`${bar} block shrink-0 bg-[var(--landing-accent)]`} style={grow(meter.withAgents)} />
+          <span className={`${bar} block shrink-0 bg-[var(--landing-accent)]`} style={grow(meter.withAgents)} aria-hidden />
           <span className="shrink-0 font-semibold text-[var(--landing-accent)]">{meter.result}</span>
         </dd>
       </dl>
@@ -54,7 +59,7 @@ export function WhyItMatters() {
   const { ref, inView } = useInView<HTMLDivElement>();
 
   return (
-    <div ref={ref} className="mt-12 grid gap-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-20">
+    <div ref={ref} className="mt-12 grid grid-cols-1 gap-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-20">
       <div>
         <div className="space-y-10">
           {METERS.map((m) => (

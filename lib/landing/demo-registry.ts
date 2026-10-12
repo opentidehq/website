@@ -211,8 +211,8 @@ criticality: High
 metadata:
   uuid: ${UUID.threatGateway}
   schema: threat::1.0
-  version: 1.1.0
-  created: "2026-05-06"
+  version: 1.0.0
+  created: "2026-05-08"
   modified: "2026-05-08"
   tlp: clear
   author: detection-team
@@ -252,9 +252,9 @@ references:
 metadata:
   uuid: ${UUID.objectiveCredential}
   schema: objective::1.0
-  version: 1.2.0
-  created: "2026-01-01"
-  modified: "2026-03-01"
+  version: 1.0.0
+  created: "2026-05-08"
+  modified: "2026-05-08"
   tlp: clear
   author: detection-team
   organisation:
@@ -295,9 +295,9 @@ objective:
 metadata:
   uuid: ${UUID.ruleLsass}
   schema: rule::1.1
-  version: 1.3.0
-  created: "2026-01-01"
-  modified: "2026-03-01"
+  version: 1.0.0
+  created: "2026-05-08"
+  modified: "2026-05-08"
   tlp: clear
   author: detection-team
   organisation:
@@ -486,9 +486,9 @@ export const INLINE_EDIT = {
   tuned: DEMO_FILES[RULE_PATH].replace(SENTINEL_QUERY_BASE, SENTINEL_QUERY_TUNED),
 } as const;
 
-/** Merge request opened once the object chain is authored. */
+/** Pull request opened once the object chain is authored. */
 export const REVIEW_MR = {
-  id: '!142',
+  id: '#142',
   title: 'Detect LSASS credential access after PAN-OS gateway exploitation',
   branch: DEMO_BRANCH,
   target: 'main',
@@ -500,7 +500,7 @@ export const REVIEW_MR = {
   ],
   approval: 'SOC lead approved these changes',
   promotion:
-    'STAGING deployed from this merge request. Merging runs Deploy Production on main; protect that environment so promotion waits for its own approval.',
+    'STAGING deployed from this pull request. Merging runs Deploy Production on main; put that job behind a protected environment if promotion needs its own approval.',
 } as const;
 
 export type ReviewMr = typeof REVIEW_MR;
@@ -515,7 +515,8 @@ export type ReviewJob = {
 };
 
 /**
- * Jobs mirror the workflow `opentide setup ci github` writes into a detection repo:
+ * Jobs mirror the workflow `opentide setup ci github` writes into a detection repo, with the
+ * platform SDK extras the live checks need added to the install step:
  * Validate → Generate → Deploy Staging on the pull request; production deploys on merge.
  * Log lines are what a default (non-debug) run prints: Rich section rules and the `OK …`
  * result line. INFO events only appear with `--debug` or `--json`, so they are left out.
@@ -525,7 +526,7 @@ export const REVIEW_JOBS: ReviewJob[] = [
     id: 'validate',
     name: 'Validate',
     trigger: 'on: pull_request',
-    meta: 'ubuntu-latest · python 3.12 · the opentide version you ran setup with',
+    meta: 'ubuntu-latest · python 3.12 · pinned opentide[sentinel,splunk]',
     duration: '48s',
     lines: [
       '::group::Validate objects',

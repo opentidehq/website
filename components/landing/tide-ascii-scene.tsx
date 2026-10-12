@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { useTheme } from 'next-themes';
 import { usePrefersReducedMotion } from '@/lib/hooks/use-prefers-reduced-motion';
 import { FlipFluid } from '@/components/landing/liquid-ascii/flip-fluid';
 
@@ -25,7 +24,7 @@ const QUERY_SOURCE = [
   '| where Parameters has_any ("ForwardTo", "RedirectTo", "MoveToFolder")',
   'index=o365 sourcetype=o365:management:activity Operation=New-InboxRule',
   '| stats values(Parameters) as params by UserId, ClientIP',
-  'status: PRODUCTION  severity: High  techniques: T1528, T1078.004',
+  'status: PRODUCTION  severity: Substantial incident  techniques: T1528, T1078.004',
   'opentide validate --strict && opentide deploy --plan STAGING --dry-run',
 ].join('   ');
 
@@ -68,7 +67,6 @@ function parseRgb(css: string): { r: number; g: number; b: number } | null {
 export function TideAsciiScene({ className }: { className?: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const reduced = usePrefersReducedMotion();
-  const { resolvedTheme } = useTheme();
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -89,8 +87,9 @@ export function TideAsciiScene({ className }: { className?: string }) {
 
     const mouse = { x: 0.72, y: 0.45, vx: 0, vy: 0, active: false };
 
-    const isDark = () =>
-      document.documentElement.classList.contains('dark') || resolvedTheme === 'dark';
+    // next-themes toggles the `dark` class on <html>; the MutationObserver below repaints
+    // on that change, so a theme switch recolours the water without restarting it.
+    const isDark = () => document.documentElement.classList.contains('dark');
 
     const themeColors = () => {
       const dark = isDark();
@@ -210,6 +209,8 @@ export function TideAsciiScene({ className }: { className?: string }) {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       if (needsBuild) build();
       draw();
+      // The tank may only exist now (the hero had no size at mount); make sure it animates.
+      start();
     };
 
     const pointerToTank = (clientX: number, clientY: number) => {
@@ -241,6 +242,7 @@ export function TideAsciiScene({ className }: { className?: string }) {
     };
 
     const loop = () => {
+      raf = 0;
       if (!fluid || reduced) return;
       const dt = Math.min(1 / 30, (1 / 60) * SPEED);
       t += dt;
@@ -334,7 +336,7 @@ export function TideAsciiScene({ className }: { className?: string }) {
       io.disconnect();
       document.removeEventListener('visibilitychange', onVisibility);
     };
-  }, [reduced, resolvedTheme]);
+  }, [reduced]);
 
   return (
     <canvas

@@ -214,10 +214,24 @@ html > body[data-scroll-locked] {
   --brand-accent-foreground: #ffffff;
   --brand-mark-fill: var(--eu-blue);
   --brand-mark-ink: #ffffff;
+  /* Deep-tide terminal panels: the same navy in both themes, as content, never as a page. */
+  --landing-code-bg: #000b1f;
+  --landing-code-ink: #e8f0ff;
+  --landing-code-dim: #8fa8d4;
+  --landing-code-key: #7ec8e3;
+  --landing-code-str: var(--color-yellow-lift);
 
   font-family: var(--font-sans), system-ui, sans-serif;
   background-color: var(--landing-bg);
   color: var(--landing-ink);
+}
+
+/* The base layer rings every outline at 50% gray, too faint to find on white or black.
+   Landing links get the accent instead, whether or not they set their own focus style. */
+.landing a:focus-visible {
+  outline: 2px solid var(--landing-accent);
+  outline-offset: 2px;
+  border-radius: 2px;
 }
 
 /* Keep headings clear of the 3.5rem sticky header when scrolled to. Scoped to

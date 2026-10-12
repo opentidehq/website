@@ -11,7 +11,7 @@ export type AgentEvent =
   | { kind: 'reasoning'; text: string }
   | { kind: 'response'; text: string }
   | { kind: 'skill'; skill: string; action: string; detail?: string }
-  /** `server` names the MCP server when it isn't opentide's own — the agent's browser, say. */
+  /** `server` names who answers the call when it isn't opentide's MCP server: the editor, the browser, GitHub. */
   | { kind: 'mcp'; tool: string; input?: string; output: string; server?: string }
   | { kind: 'cli'; command: string; output?: string };
 

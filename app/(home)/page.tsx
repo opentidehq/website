@@ -109,7 +109,7 @@ export default async function HomePage() {
           n="01"
           label="why it matters"
           title="Agents made the query cheap. Not threat-aligned."
-          lead="Intelligence outruns detection engineering, and agents now write a KQL or SPL query in seconds. Knowing that the query is valid, maps to a real threat and is deployed where it should be did not get any cheaper."
+          lead="Intelligence outruns detection engineering, and agents now write a KQL or SPL query in seconds. What did not get any cheaper is knowing that the query is valid, maps to a real threat and is deployed where it should be."
         />
         <WhyItMatters />
       </section>
@@ -133,7 +133,7 @@ export default async function HomePage() {
         <div className="mt-12">
           <ObjectGraph />
         </div>
-        <div className="mt-20 grid gap-10 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-16">
+        <div className="mt-20 grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-16">
           <div>
             <h3 className="text-2xl font-bold tracking-[-0.02em] text-balance md:text-3xl">
               Coverage is a graph, not a heatmap.
@@ -199,7 +199,7 @@ export default async function HomePage() {
           n="04"
           label="agentic detection engineering"
           title="Agents draft. The engine checks. Humans decide what reaches production."
-          lead="Prompt in, objects out: skills draft the chain, the engine validates it, and the merge request meets the same gates as any human change."
+          lead="Prompt in, objects out: skills draft the chain, the engine validates it, and the pull request meets the same gates as any human change."
         />
         <div className="mt-12">
           <WorkflowStudio />
@@ -211,7 +211,7 @@ export default async function HomePage() {
         <SectionHead
           n="05"
           label="what comes next"
-          title={<>The north star: intel to reviewed, deployed detection in {accent('under an hour')}.</>}
+          title={<>The north star: intel to a reviewed, deployed detection in {accent('under an hour')}.</>}
         />
         <NorthStar />
 
@@ -225,7 +225,8 @@ export default async function HomePage() {
         <div className="mt-24">
           <h3 className="text-2xl font-bold tracking-[-0.02em] text-balance md:text-3xl">Where opentide goes next.</h3>
           <p className="mt-4 max-w-2xl text-lg leading-relaxed text-[var(--landing-muted)] text-pretty">
-            Four directions, each tracked in a public issue or RFC, each with a clear status.
+            Four directions, tracked in public issues, RFCs and the migration guide, each with a clear
+            status.
           </p>
           <Roadmap />
         </div>
@@ -262,8 +263,9 @@ export default async function HomePage() {
             Agents write the queries. {accent('The spec keeps them aligned.')}
           </h2>
           <p className="mt-6 text-lg text-[var(--landing-muted)] text-pretty">
-            Ontology, taxonomy, engine and gates. Open source, EUPL-1.2, forever free. You choose how
-            much runs with you, and how much runs on its own.
+            Ontology, taxonomy, engine and gates. Open source and forever free: the spec under
+            CC-BY-4.0, the engine under EUPL-1.2. You choose how much runs with you, and how much runs
+            on its own.
           </p>
           <div className="mt-10 flex flex-wrap justify-center gap-4">
             <Link href="/docs/usage/" className="landing-btn-primary group">

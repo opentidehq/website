@@ -7,7 +7,6 @@ import { Step, Steps } from 'fumadocs-ui/components/steps';
 import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
 import { TypeTable } from 'fumadocs-ui/components/type-table';
 import { CutoverTimeline } from '@/components/blog/cutover-timeline';
-import { AgentNeeds, NorthStar, Roadmap } from '@/components/blog/landing-embeds';
 import { SpecStack } from '@/components/blog/spec-stack';
 import { ThenNow } from '@/components/blog/then-now';
 import { RfcBanner } from '@/components/docs/rfc-banner';
@@ -20,7 +19,6 @@ export function getMDXComponents(components?: MDXComponents) {
     ...defaultMdxComponents,
     Accordion,
     Accordions,
-    AgentNeeds,
     Callout,
     Card,
     Cards,
@@ -29,10 +27,8 @@ export function getMDXComponents(components?: MDXComponents) {
     Files,
     Folder,
     Mermaid,
-    NorthStar,
     RfcBanner,
     RfcIndex,
-    Roadmap,
     SpecStack,
     Step,
     Steps,

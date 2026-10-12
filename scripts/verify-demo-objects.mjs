@@ -3,7 +3,7 @@
  * Run the landing page's demo objects through the real engine.
  *
  * The workflow studio and the object graph show threats, objectives, rules and platform
- * configs as if a detection repo held them. This writes each demo into a scratch repo made
+ * configs as if a detection repo held them. This writes each demo into a scratch folder made
  * by `opentide setup`, then runs the gates the site describes:
  *
  *   opentide validate --strict
@@ -28,8 +28,8 @@ const { GRAPH_NODES, GRAPH_YAML } = await load('lib/landing/graph-demo.ts');
 const failures = [];
 
 // opentide reads TF_BUILD, GITHUB_ACTIONS and CI to pick a CI flavour and then diffs against
-// the CI's remote branches. The scratch repos are plain local checkouts with no remote, so run
-// the engine without those markers, as a developer would on a laptop.
+// the CI's remote branches. The scratch folders have no git history, so run the engine without
+// those markers: in local mode it scopes the deploy to the rules folder, as on a laptop.
 const CI_MARKERS = new Set(['TF_BUILD', 'GITHUB_ACTIONS', 'CI', 'GITLAB_CI']);
 const localEnv = Object.fromEntries(Object.entries(process.env).filter(([name]) => !CI_MARKERS.has(name)));
 
@@ -53,12 +53,14 @@ function opentide(cwd, args, env) {
 
 function scratchRepo(name) {
   const dir = mkdtempSync(join(tmpdir(), `opentide-demo-${name}-`));
-  execFileSync('opentide', ['setup', '--yes', '--path', dir, '--platform', 'sentinel', '--platform', 'splunk', '--ci', 'none'], {
-    env: localEnv,
-    stdio: 'ignore',
-  });
-  // The STAGING plan selects rules that changed in git, so the scratch repo needs a checkout.
-  execFileSync('git', ['init', '-q'], { cwd: dir });
+  const args = ['setup', '--yes', '--path', dir, '--platform', 'sentinel', '--platform', 'splunk', '--ci', 'none'];
+  try {
+    execFileSync('opentide', args, { env: localEnv, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+  } catch (error) {
+    console.error(`opentide ${args.join(' ')} failed:`);
+    console.error(String(error.stdout ?? '') + String(error.stderr ?? ''));
+    throw error;
+  }
   return dir;
 }
 

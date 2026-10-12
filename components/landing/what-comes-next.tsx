@@ -1,9 +1,9 @@
 import { formatReleaseDay, type ReleaseVelocity } from '@/lib/landing/velocity';
 
 /**
- * Project activity in OpenTideHQ/opentide since 0.1.0, counted on the date below (merged pull
- * requests and closed issues from 9 September 2026). Release numbers come from the synced
- * release notes instead, so they move with every docs sync.
+ * Project activity in OpenTideHQ/opentide from 9 September 2026, the day 0.1.0 shipped, counted
+ * on the date below. Release numbers come from the synced release notes instead, so they move
+ * with every docs sync.
  */
 const ACTIVITY = {
   asOf: '12 October 2026',
@@ -34,7 +34,7 @@ export function Velocity({ velocity }: { velocity: ReleaseVelocity | null }) {
 
   return (
     <div className="mt-12">
-      <div className="grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
         {velocity && (
           <Stat
             value={String(velocity.count)}
@@ -44,7 +44,7 @@ export function Velocity({ velocity }: { velocity: ReleaseVelocity | null }) {
         )}
         <Stat
           value={String(ACTIVITY.mergedPrs)}
-          label="pull requests merged since 0.1.0"
+          label="pull requests merged since 9 September"
           sub={`as of ${ACTIVITY.asOf}`}
         />
         <Stat
@@ -55,13 +55,13 @@ export function Velocity({ velocity }: { velocity: ReleaseVelocity | null }) {
         />
         <Stat
           value={String(ACTIVITY.closedIssues)}
-          label="issues closed since 0.1.0"
+          label="issues closed since 9 September"
           sub="bugs, docs, setup, migration"
         />
       </div>
       <p className="mt-8 font-mono text-xs text-[var(--landing-subtle)]">
-        the same gates for every author: tests on Python 3.10–3.14 · 85% coverage gate · CodeQL on every push
-        and pull request
+        the same gates for every author: tests on Python 3.10–3.14 · 85% coverage gate · CodeQL on every pull
+        request
       </p>
       <p className="mt-6 text-xl font-semibold tracking-[-0.02em] text-[var(--landing-ink)]">
         Agents draft most of the changes.{' '}
@@ -76,6 +76,8 @@ type Item = {
   detail: string;
   status: 'rfc accepted' | 'in progress' | 'planned' | 'proposed';
   issue: string;
+  /** For items tracked outside the issue tracker, such as the migration guide. */
+  href?: string;
   code?: boolean;
 };
 
@@ -91,7 +93,7 @@ const ROADMAP: { title: string; items: Item[] }[] = [
     title: 'In the editor',
     items: [
       { name: 'Language server', detail: 'KQL · SPL · Tide YAML, in opentide[lsp]', status: 'in progress', issue: '332' },
-      { name: 'VS Code extension', detail: 'replaces opentide setup vscode', status: 'planned', issue: '46' },
+      { name: 'VS Code extension', detail: 'replaces opentide setup vscode', status: 'planned', issue: '47' },
       { name: 'Agent plugins from the engine', detail: 'skills + MCP in one install', status: 'planned', issue: '431' },
     ],
   },
@@ -106,7 +108,13 @@ const ROADMAP: { title: string; items: Item[] }[] = [
   {
     title: 'Toward 1.0',
     items: [
-      { name: 'Legacy CoreTide imports removed', detail: 'they warn today and end at 1.0', status: 'planned', issue: '' },
+      {
+        name: 'Legacy CoreTide imports removed',
+        detail: 'deprecated in 0.x, removed at 1.0',
+        status: 'planned',
+        issue: '',
+        href: '/docs/usage/migration/',
+      },
       { name: 'Per-platform skill packs', detail: 'sentinel-ops, splunk-ops, …', status: 'planned', issue: '50' },
       { name: '--logs json|verbose|debug', detail: 'one flag for output modes', status: 'proposed', issue: '187', code: true },
     ],
@@ -124,7 +132,7 @@ const STATUS_CLASS: Record<Item['status'], string> = {
 export function Roadmap() {
   return (
     <div className="@container mt-12">
-      <div className="grid gap-10 @xl:grid-cols-2 @5xl:grid-cols-4 @5xl:gap-8">
+      <div className="grid grid-cols-1 gap-10 @xl:grid-cols-2 @5xl:grid-cols-4 @5xl:gap-8">
         {ROADMAP.map((col) => (
           <div key={col.title}>
             <p className="border-b-2 border-[var(--landing-accent)] pb-3 text-lg font-semibold text-[var(--landing-ink)]">
@@ -139,7 +147,7 @@ export function Roadmap() {
                     >
                       {item.name}
                     </p>
-                    <span className={`shrink-0 rounded-full px-2 py-0.5 font-mono text-[10px] ${STATUS_CLASS[item.status]}`}>
+                    <span className={`shrink-0 rounded-full px-2 py-0.5 font-mono text-[10px] leading-4 ${STATUS_CLASS[item.status]}`}>
                       {item.status}
                     </span>
                   </div>
@@ -155,6 +163,14 @@ export function Roadmap() {
                           className="underline-offset-2 hover:text-[var(--landing-accent)] hover:underline"
                         >
                           #{item.issue}
+                        </a>
+                      </>
+                    )}
+                    {item.href && (
+                      <>
+                        {' · '}
+                        <a href={item.href} className="underline-offset-2 hover:text-[var(--landing-accent)] hover:underline">
+                          migration guide
                         </a>
                       </>
                     )}

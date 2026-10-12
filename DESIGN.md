@@ -92,13 +92,13 @@ Docs: `--color-fd-primary` / `--brand-accent` map to blue in light mode and yell
 ## Typography
 
 - **Sans**: Inter for all UI and marketing headings (no separate display font).
-- **Mono**: JetBrains Mono for CLI snippets, MCP demo, and prose code blocks.
+- **Mono**: JetBrains Mono for CLI snippets, MCP tool calls, the workflow studio, and prose code blocks.
 - **Headlines**: `clamp(2.25rem, 5.5vw, 3.75rem)`, weight 700, tracking `-0.02em`, `text-wrap: balance`.
 - **Body**: 1rem–1.25rem, max ~65ch in prose sections, `text-wrap: pretty` on long copy.
 
 ## Elevation
 
-Landing uses flat tonal layering (borders `landing-border`, rings on brand yellow) — no drop-shadow stacks except a single `shadow-lg` on the hero terminal card. Docs rely on Fumadocs sidebar/card surfaces; avoid nested card grids on marketing sections.
+Landing uses flat tonal layering (borders `landing-border`, rings on brand yellow) — no drop-shadow stacks except the soft shadow under the hero tide card. Code panels are deep-tide navy (`--landing-code-*`) in both themes, as content. Docs rely on Fumadocs sidebar/card surfaces; avoid nested card grids on marketing sections.
 
 ## Components
 

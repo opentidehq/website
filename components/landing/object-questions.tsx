@@ -28,7 +28,7 @@ const OBJECTS = [
 export function ObjectQuestions() {
   return (
     <div className="mt-12">
-      <ol className="grid list-none gap-8 p-0 md:grid-cols-3 md:gap-6">
+      <ol className="grid list-none grid-cols-1 gap-8 p-0 md:grid-cols-3 md:gap-6">
         {OBJECTS.map((o) => (
           <li key={o.name} className="border-t-2 border-[var(--landing-accent)] pt-5">
             <div className="flex items-center justify-between gap-3 font-mono text-xs">
@@ -44,7 +44,7 @@ export function ObjectQuestions() {
         ))}
       </ol>
 
-      <div className="mt-8 grid gap-4 font-mono text-xs md:grid-cols-2 md:gap-6">
+      <div className="mt-8 grid grid-cols-1 gap-4 font-mono text-xs md:grid-cols-2 md:gap-6">
         <p className="flex items-start gap-3 rounded-xl bg-[color-mix(in_srgb,var(--landing-ink)_4%,transparent)] px-4 py-3 text-[var(--landing-muted)]">
           <ArrowLeft className="mt-px size-3.5 shrink-0 text-[var(--landing-accent)]" aria-hidden />
           <span>

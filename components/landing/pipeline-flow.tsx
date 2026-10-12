@@ -53,7 +53,7 @@ function Chip({ children, solid }: { children: string; solid?: boolean }) {
 
 function Lane({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="grid gap-3 md:grid-cols-[9rem_minmax(0,1fr)] md:items-center md:gap-6">
+    <div className="grid grid-cols-1 gap-3 md:grid-cols-[9rem_minmax(0,1fr)] md:items-center md:gap-6">
       <p className="font-mono text-xs text-[var(--landing-subtle)]">{label}</p>
       <div className="flex flex-wrap items-center gap-x-1.5 gap-y-2">{children}</div>
     </div>
@@ -66,7 +66,7 @@ const arrow = <ChevronRight className="size-3.5 shrink-0 text-[var(--landing-dim
 export function PipelineFlow() {
   return (
     <div className="mt-12">
-      <ol className="grid list-none gap-3 p-0 sm:grid-cols-2 lg:grid-cols-5">
+      <ol className="grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2 lg:grid-cols-5">
         {STAGES.map((stage, i) => (
           <li
             key={stage.title}
@@ -109,7 +109,7 @@ export function PipelineFlow() {
             {arrow}
             <Chip solid>deploy --plan PRODUCTION</Chip>
             <span className="ml-2 font-mono text-xs text-[var(--landing-subtle)]">
-              protect the environment for a second approval
+              add a protected environment for a second approval
             </span>
           </Lane>
         </div>

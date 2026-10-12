@@ -62,7 +62,7 @@ type StepFocus = {
   select: readonly DemoPath[];
   /** Inline ⌘K edit beat on the active file. */
   inlineEdit?: boolean;
-  /** Merge request review tab instead of an editor buffer. */
+  /** Pull request review tab instead of an editor buffer. */
   review?: boolean;
   /** Advisory opened in a browser tab instead of an editor buffer. */
   browser?: boolean;
@@ -105,7 +105,7 @@ const stepFocus: Record<Step, StepFocus> = {
     opens: [SENTINEL_TOML, SPLUNK_TOML],
     active: REVIEW_TAB,
     type: false,
-    select: [THREAT_FILE, OBJECTIVE_FILE, RULE_PATH, SENTINEL_TOML, SPLUNK_TOML],
+    select: [THREAT_FILE, OBJECTIVE_FILE, RULE_PATH],
     review: true,
   },
 };
@@ -140,9 +140,16 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
       },
       {
         kind: 'mcp',
+        server: 'editor',
         tool: 'read_file',
         input: '.opentide/configurations/platforms/*.toml',
-        output: 'sentinel enabled · splunk enabled · staging + production tenants',
+        output: 'sentinel: staging + production tenants · splunk: staging tenant',
+      },
+      {
+        kind: 'mcp',
+        tool: 'search',
+        input: 'technique="T1190"',
+        output: 'no threat covers T1190 yet',
       },
       {
         kind: 'skill',
@@ -171,6 +178,7 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
       },
       {
         kind: 'mcp',
+        server: 'editor',
         tool: 'write_file',
         input: THREAT_FILE,
         output: 'threat::1.0 · uuid …010 · fields complete',
@@ -201,6 +209,7 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
       },
       {
         kind: 'mcp',
+        server: 'editor',
         tool: 'write_file',
         input: OBJECTIVE_FILE,
         output: 'objective links threat …010 · 1 signal',
@@ -237,6 +246,7 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
       },
       {
         kind: 'mcp',
+        server: 'editor',
         tool: 'write_file',
         input: RULE_PATH,
         output: 'rule::1.1 · detection_model → objective …001',
@@ -245,6 +255,12 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
         kind: 'cli',
         command: `opentide validate --file ${RULE_PATH}`,
         output: 'OK Validation passed',
+      },
+      {
+        kind: 'mcp',
+        tool: 'deploy_rule',
+        input: 'uuid=…8003-000000000001 · platform="sentinel" · dry_run=true',
+        output: 'action: dry-run · nothing deployed',
       },
       {
         kind: 'response',
@@ -263,9 +279,10 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
       },
       {
         kind: 'mcp',
+        server: 'editor',
         tool: 'apply_edit',
         input: 'objects/rules/lsass-memory-access.yaml · configurations.sentinel.query',
-        output: '1 hunk applied · +2 −1',
+        output: '1 hunk applied · +3 −1',
       },
       {
         kind: 'cli',
@@ -291,12 +308,14 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
       },
       {
         kind: 'mcp',
-        tool: 'open_merge_request',
+        server: 'github',
+        tool: 'open_pull_request',
         input: `${DEMO_BRANCH} → main`,
-        output: `${REVIEW_MR.id} opened · 5 files · pipeline queued`,
+        output: `${REVIEW_MR.id} opened · 3 files · pipeline queued`,
       },
       {
         kind: 'mcp',
+        server: 'github',
         tool: 'pipeline_status',
         input: `mr=${REVIEW_MR.id}`,
         output: 'Validate 48s · Generate 33s · Deploy Staging 1m12s',
@@ -590,7 +609,7 @@ function InlineEditWidget({
         {state === 'working' && (
           <>
             <Loader className="size-2.5 animate-spin text-[var(--landing-accent)]" aria-hidden />
-            <span className="text-[var(--landing-muted)]">opentide · apply_edit…</span>
+            <span className="text-[var(--landing-muted)]">editor · apply_edit…</span>
           </>
         )}
         {state === 'applied' && (
@@ -852,7 +871,8 @@ export function WorkflowStudio() {
 
   const reviewFiles = useMemo(
     () =>
-      DEMO_PATHS.map((path) => ({
+      // The pull request adds the object chain; the platform configs were already there.
+      DEMO_PATHS.filter((path) => path.startsWith('objects/')).map((path) => ({
         path,
         added: (path === RULE_PATH ? INLINE_EDIT.tuned : DEMO_FILES[path])
           .trimEnd()

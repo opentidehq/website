@@ -59,12 +59,12 @@ function List({ title, items, icon }: { title: string; items: ReactNode[]; icon:
 /** Where the line sits between agents and people, and what the MCP tools actually return. */
 export function Guardrails() {
   return (
-    <div className="mt-16 grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-16">
+    <div className="mt-16 grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-16">
       <div>
         <h3 className="text-2xl font-bold tracking-[-0.02em] text-[var(--landing-ink)] text-balance">
           What agents may do, and what stays human.
         </h3>
-        <div className="mt-8 grid gap-8 sm:grid-cols-2">
+        <div className="mt-8 grid grid-cols-1 gap-8 sm:grid-cols-2">
           <List title="Let agents" items={AGENTS} icon="agent" />
           <List title="Keep a human in the loop" items={HUMANS} icon="human" />
         </div>
@@ -96,7 +96,7 @@ export function Guardrails() {
                   )}
                 </th>
                 <td className="py-3">
-                  <span className={`inline-block whitespace-nowrap rounded-full px-2.5 py-0.5 font-mono text-[11px] ${TONE[row.tone]}`}>
+                  <span className={`inline-block rounded-full px-2.5 py-0.5 font-mono text-[11px] sm:whitespace-nowrap ${TONE[row.tone]}`}>
                     {row.status}
                   </span>
                 </td>

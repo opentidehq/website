@@ -27,7 +27,7 @@ const STOPS: Stop[] = [
   { title: 'PR opened', lines: ['branch + diff', 'CI gates run'], icon: GitPullRequest, actor: 'agent' },
   { title: 'STAGING', lines: ['from the pull request', '--plan STAGING'], icon: Rocket, actor: 'env' },
   { title: 'Human review', lines: ['a reviewer', 'approves the merge'], icon: Lock, actor: 'human' },
-  { title: 'PRODUCTION', lines: ['on merge, behind a', 'protected environment'], icon: ShieldCheck, actor: 'env' },
+  { title: 'PRODUCTION', lines: ['on merge', '--plan PRODUCTION'], icon: ShieldCheck, actor: 'env' },
 ];
 
 /** SEGMENTS[i] joins STOPS[i] → STOPS[i + 1]. Dotted runs are time spent waiting on a person. */
@@ -123,7 +123,7 @@ export function NorthStar() {
       </div>
 
       {/* Wide containers: one horizontal track. */}
-      <ol className="mt-10 hidden list-none p-0 @4xl:grid @4xl:grid-cols-7">
+      <ol className="mt-10 hidden list-none p-0 @5xl:grid @5xl:grid-cols-7">
         {STOPS.map((stop, i) => (
           <li key={stop.title} className="flex flex-col items-center text-center">
             <div className="flex w-full items-center">
@@ -144,7 +144,7 @@ export function NorthStar() {
       </ol>
 
       {/* Narrow containers: the same track, vertical. */}
-      <ol className="mt-10 list-none p-0 @4xl:hidden">
+      <ol className="mt-10 list-none p-0 @5xl:hidden">
         {STOPS.map((stop, i) => (
           <li key={stop.title} className="flex gap-5">
             <div className="flex flex-col items-center">

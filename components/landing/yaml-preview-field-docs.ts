@@ -27,7 +27,7 @@ export const FIELD_DOCS: Record<string, string> = {
   strategy: 'Composition vocabulary — e.g. Combined, Independent, Sequence.',
   threats: 'Threat vector UUIDs this objective responds to.',
   description: 'Plain-language summary of what this object represents.',
-  severity: 'Severity on the shared incident scale (severity vocabulary).',
+  severity: 'Incident scale on threats and rules; alert scale (alert_severity) on signals.',
   status: 'Lifecycle stage (e.g. STAGING before production).',
   priority: 'How urgently this objective should be covered.',
   type: 'Detection type vocabulary (e.g. Threat).',

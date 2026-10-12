@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
+import { CodePanel, tok } from '@/components/landing/code-panel';
 
 /** Commands and the result line each one prints, as run against opentide 0.12 in an empty folder. */
 const STEPS = [
@@ -15,7 +16,11 @@ const STEPS = [
     cmd: 'opentide setup skills --claude-code --yes --install opentide-detection-rule',
     ok: 'Agent skills installed',
   },
-  { note: 'the same strict gate your CI runs', cmd: 'opentide validate --strict', ok: 'Validation passed' },
+  {
+    note: 'the same strict gate your CI runs',
+    cmd: 'opentide validate --strict',
+    ok: 'Validation passed, but no detection objects were found under ~/detection-repo',
+  },
 ] as const;
 
 const TREE: [string, string][] = [
@@ -31,41 +36,33 @@ const TREE: [string, string][] = [
 /** From an empty folder to a validated detection repo with an agent wired in. */
 export function GetStarted() {
   return (
-    <div className="mt-12 grid gap-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:gap-8">
-      <figure className="m-0 overflow-hidden rounded-2xl bg-[#000b1f] text-[#e8f0ff] ring-1 ring-[var(--landing-border)]">
-        <figcaption className="flex items-center justify-between border-b border-white/10 px-4 py-2.5 font-mono text-[11px] text-[#8fa8d4]">
-          <span>a new detection repo</span>
-          <span>python 3.10 – 3.14</span>
-        </figcaption>
-        <pre className="landing-code-scroll m-0 overflow-x-auto px-4 py-4 font-mono text-[12.5px] leading-[1.7]">
-          <code>
-            {STEPS.map((step, i) => (
-              <span key={step.cmd}>
-                {i > 0 && '\n'}
-                <span className="text-[#8fa8d4]"># {step.note}</span>
+    <div className="mt-12 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:gap-8">
+      <CodePanel caption="a new detection repo" aside="python 3.10–3.14">
+        {STEPS.map((step, i) => (
+          <span key={step.cmd}>
+            {i > 0 && '\n'}
+            {tok.dim(`# ${step.note}`)}
+            {'\n'}
+            {tok.dim('$ ')}
+            {step.cmd}
+            {step.ok && (
+              <>
                 {'\n'}
-                <span className="text-[#8fa8d4]">$ </span>
-                {step.cmd}
-                {step.ok && (
-                  <>
-                    {'\n'}
-                    <span className="text-emerald-300">OK</span> {step.ok}
-                  </>
-                )}
-                {'\n'}
-              </span>
-            ))}
-          </code>
-        </pre>
-      </figure>
+                {tok.ok('OK')} {step.ok}
+              </>
+            )}
+            {'\n'}
+          </span>
+        ))}
+      </CodePanel>
 
-      <div className="flex flex-col">
+      <div className="flex min-w-0 flex-col">
         <div className="rounded-2xl border border-[var(--landing-border)] p-5">
           <p className="font-mono text-xs text-[var(--landing-subtle)]">what you get</p>
           <ul className="mt-3 list-none space-y-1.5 p-0 font-mono text-[12.5px]">
             {TREE.map(([path, note]) => (
               <li key={path} className="flex flex-wrap gap-x-3">
-                <span className="text-[var(--landing-ink)]">{path}</span>
+                <span className="text-[var(--landing-ink)] [overflow-wrap:anywhere]">{path}</span>
                 {note && <span className="text-[var(--landing-subtle)]">{note}</span>}
               </li>
             ))}

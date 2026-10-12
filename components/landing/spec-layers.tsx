@@ -40,7 +40,8 @@ const LAYERS: Layer[] = [
     meta: 'yours · in git',
     lines: [
       { label: 'objects/', value: 'threats, objectives and rules as YAML' },
-      { label: '.opentide/', value: 'platform configuration, your CI, your reviews, your history' },
+      { label: '.opentide/', value: 'platform configuration, generated schemas and templates' },
+      { label: 'git', value: 'your CI, your reviews, your history' },
     ],
     repo: 'private or public',
   },
@@ -59,14 +60,14 @@ function LayerCard({ layer }: { layer: Layer }) {
 
   return (
     <div className={`rounded-2xl px-6 py-6 md:px-8 md:py-7 ${shell}`}>
-      <div className="grid gap-5 md:grid-cols-[minmax(0,17rem)_minmax(0,1fr)] md:gap-10">
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-[minmax(0,17rem)_minmax(0,1fr)] md:gap-10">
         <div>
           <p className={`font-mono text-xs ${quiet}`}>{layer.kicker}</p>
           <p className="mt-2 text-2xl font-bold tracking-[-0.03em]">{layer.name}</p>
           <p className={`mt-1 font-mono text-xs ${quiet}`}>{layer.meta}</p>
         </div>
         <div className="flex flex-col justify-between gap-4">
-          <dl className="grid gap-2.5 text-sm sm:grid-cols-[6.5rem_minmax(0,1fr)] sm:gap-x-4">
+          <dl className="grid grid-cols-1 gap-2.5 text-sm sm:grid-cols-[6.5rem_minmax(0,1fr)] sm:gap-x-4">
             {layer.lines.map((line) => (
               <div key={line.label} className="contents">
                 <dt className={`font-mono text-xs sm:pt-0.5 ${quiet}`}>{line.label}</dt>

@@ -128,14 +128,18 @@ export function LandingNav({ children }: { children: ReactNode }) {
               <ul className="mt-4 space-y-2 text-sm text-[var(--landing-subtle)]">
                 {ecosystemLinks.map((repo) => (
                   <li key={repo.name}>
-                    <a
-                      href={repo.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="transition hover:text-[var(--landing-accent)]"
-                    >
-                      {repo.name}
-                    </a>
+                    {repo.href ? (
+                      <a
+                        href={repo.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="transition hover:text-[var(--landing-accent)]"
+                      >
+                        {repo.name}
+                      </a>
+                    ) : (
+                      <span>{repo.name}</span>
+                    )}
                   </li>
                 ))}
                 <li>

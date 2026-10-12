@@ -1,3 +1,5 @@
+import { CodePanel, tok } from '@/components/landing/code-panel';
+
 const NEEDS = [
   {
     need: 'A contract it can read',
@@ -16,8 +18,8 @@ const NEEDS = [
   },
   {
     need: 'Knowledge it can load',
-    before: 'One AGENTS.md in a separate repo',
-    now: 'Agent skills and AGENTS.md, installed by opentide setup skills',
+    before: 'Skills and an AGENTS.md in a separate repo, copied in by hand',
+    now: 'The same skills and an agent entry point (AGENTS.md or CLAUDE.md), installed by opentide setup skills',
   },
   {
     need: 'Gates it cannot skip',
@@ -99,37 +101,31 @@ export function AgentNeeds() {
 /** The CLI is the agent's API: one JSON document, diagnostics on stderr, exit codes CI can gate on. */
 export function CliContract() {
   return (
-    <div className="grid gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:items-center lg:gap-12">
-      <figure className="m-0 overflow-hidden rounded-2xl bg-[#000b1f] text-[13px] text-[#e8f0ff] ring-1 ring-[var(--landing-border)]">
-        <figcaption className="flex items-center justify-between border-b border-white/10 px-4 py-2.5 font-mono text-[11px] text-[#8fa8d4]">
-          <span>zsh · detection-repo</span>
-          <span>--json</span>
-        </figcaption>
-        <pre className="landing-code-scroll m-0 overflow-x-auto px-4 py-4 font-mono leading-relaxed">
-          <code>
-            <span className="text-[#8fa8d4]">$ </span>opentide <span className="text-[#7ec8e3]">--json</span> validate
-            query <span className="text-[#7ec8e3]">--platform</span> crowdstrike{'\n'}
-            {'{\n'}
-            {'  '}
-            <span className="text-[#7ec8e3]">&quot;platform&quot;</span>: &quot;crowdstrike&quot;,{'\n'}
-            {'  '}
-            <span className="text-[#7ec8e3]">&quot;valid&quot;</span>: null,{'\n'}
-            {'  '}
-            <span className="rounded bg-[#ffcc00]/15 px-1 text-[#ffe566]">&quot;supported&quot;: false</span>,{'\n'}
-            {'  '}
-            <span className="text-[#7ec8e3]">&quot;ok&quot;</span>: false,{'\n'}
-            {'  '}
-            <span className="text-[#7ec8e3]">&quot;status&quot;</span>: &quot;failed&quot;,{'\n'}
-            {'  '}
-            <span className="text-[#7ec8e3]">&quot;message&quot;</span>: &quot;query validation not supported for
-            crowdstrike&quot;{'\n'}
-            {'}\n'}
-            <span className="text-[#8fa8d4]">$ </span>echo $?{'\n'}1
-          </code>
-        </pre>
-      </figure>
+    <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:items-center lg:gap-12">
+      <CodePanel caption="zsh · detection-repo" aside="--json">
+        {tok.dim('$ ')}opentide {tok.key('--json')} validate query {tok.key('--platform')} crowdstrike{'\n'}
+        {'{\n'}
+        {'  '}
+        {tok.key('"platform"')}
+        {': "crowdstrike",\n'}
+        {'  '}
+        {tok.key('"valid"')}: null,{'\n'}
+        {'  '}
+        <span className="rounded bg-[#ffcc00]/15 px-1 text-[var(--landing-code-str)]">&quot;supported&quot;: false</span>,
+        {'\n'}
+        {'  '}
+        {tok.key('"ok"')}: false,{'\n'}
+        {'  '}
+        {tok.key('"status"')}
+        {': "failed",\n'}
+        {'  '}
+        {tok.key('"message"')}
+        {': "query validation not supported for crowdstrike"\n'}
+        {'}\n'}
+        {tok.dim('$ ')}echo $?{'\n'}1
+      </CodePanel>
 
-      <dl className="m-0 grid gap-5 sm:grid-cols-2 lg:grid-cols-1">
+      <dl className="m-0 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-1">
         {RULES.map((rule) => (
           <div key={rule.title} className="border-l-2 border-[var(--landing-accent)] pl-4">
             <dt className="font-semibold text-[var(--landing-ink)]">{rule.title}</dt>
