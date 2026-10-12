@@ -1,0 +1,153 @@
+---
+title: Spec-driven detection engineering
+description: Agents made the query cheap. The spec keeps it threat-aligned. Why we re-released opentide as a CLI for agentic detection engineering, and what comes next.
+author: opentide
+date: 2026-10-12
+tags:
+  - agents
+  - detection-engineering
+---
+
+opentide is spec-driven development for detection engineering. An ontology and a taxonomy say what a detection is. An engine you pin checks every change against them, on a laptop and in CI. Your detection repository stays the source of truth.
+
+We re-released the engine as a CLI on 9 September. This post explains why, and where it goes next.
+
+## Agents made the query cheap
+
+Intelligence moves faster than detection engineering can. Advisories, CVEs and campaigns arrive every day. The number of people who can turn a report into a validated, deployed detection does not grow with them.
+
+Agents changed part of that. A model writes a KQL or SPL query in seconds. Everything around the query stayed expensive: does it map to a real threat, does it duplicate a rule you already have, is it valid on the platform, is it deployed where it should be, who reviewed it.
+
+That work needs something to stand on:
+
+- **A spec.** An ontology and a taxonomy for what a detection is.
+- **Threat alignment.** Every rule traces to an objective and a threat.
+- **Quality gates.** Strict validation in CI, for humans and agents alike.
+- **Maintainability.** One model across seven platforms, versioned in git.
+
+Without them, detection engineering breaks in predictable ways at scale. The same rule gets described two ways. Rules exist that nobody can trace to a threat. One idea is rewritten per SIEM and EDR. Engines are shared by copying them into every repository. Scripts, and now agents, edit YAML with no schema and no gate. That last one gets worse with every agent you add.
+
+## What spec-driven means here
+
+<SpecStack />
+
+The **ontology** is three objects that answer three questions:
+
+- A **threat** (`threat::1.0`): what do we defend against?
+- An **objective** (`objective::1.0`): what are we trying to detect, broken down into signals?
+- A **rule** (`rule::1.1`): how do we detect it, on which platform?
+
+References point back by UUID: a rule's `detection_model` names its objective, and an objective lists its threats. Coverage flows the other way. See the [object model](/docs/usage/concepts/object-model/).
+
+The **taxonomy** is 36 versioned vocabularies: severity, impact, leverage, viability, surface, kill chain, signal entities, ATT&CK and more. A threat cannot say `severity: High` when the scale says `Significant incident`. `opentide validate --strict` stops it and names the file and line.
+
+The spec lives in [specifications](https://github.com/OpenTideHQ/specifications) under CC-BY-4.0, and every change goes through an RFC. The engine implements it. Its JSON Schema is generated from the same Pydantic models as the code, so the two cannot drift.
+
+That is also why coverage stops being a heatmap. "We cover 85% of ATT&CK" cannot say for which threat, with which signal, or on which platform. A graph of threats, objectives, signals and rules can, and a threat that no objective covers shows up as a gap.
+
+## Why a CLI
+
+The engine is not new. As CoreTide, it ran in production for more than two years before it was open-sourced in February 2025. It lived inside each detection repository as a git submodule. That shape worked for one team. It did not work for many, and it could not serve agents.
+
+Our own issue trackers made the case:
+
+- Client CI pulled whatever the engine was that day: "Looks like commit 9ef7a58 introduced a new bug." ([CoreTide#3](https://github.com/OpenTideHQ/CoreTide/issues/3))
+- The CI template included a file from CoreTide that included more files, and broke on GitLab. ([InitTide#5](https://github.com/OpenTideHQ/InitTide/issues/5))
+- The template's own sample rule did not pass validation. Expected behaviour, but "it can be (understandably) confusing for newcomers". ([InitTide#12](https://github.com/OpenTideHQ/InitTide/issues/12))
+- `python Orchestration/validate.py` failed outside CI. ([CoreTide#61](https://github.com/OpenTideHQ/CoreTide/issues/61))
+- Schemas lived in three places, a "triple-maintenance data framework" of YAML metaschemas, Python dataclasses and manual conversion. ([CoreTide#65](https://github.com/OpenTideHQ/CoreTide/issues/65))
+- "CoreTide currently has zero unit tests — validation is entirely pipeline-driven." ([CoreTide#71](https://github.com/OpenTideHQ/CoreTide/issues/71))
+
+In April we wrote the plan down as Project TideKit ([CoreTide#60](https://github.com/OpenTideHQ/CoreTide/issues/60)): turn the submodule into "a versioned Python package on PyPI with a CLI, MCP server, and clean API surface." The plan was written to be executed by an autonomous agent fleet, and it was. The new repository was created on 22 June, and phases 0 to 9 were merged into it the same day.
+
+A few decisions shaped it:
+
+- **A new repository, not a rewrite in place.** Every pinned submodule SHA keeps resolving while instances migrate.
+- **One entry point.** `opentide`, with `setup`, `validate`, `lint`, `generate`, `deploy`, `share`, `info`, `rules`, `migrate` and `mcp`.
+- **Platforms are repository configuration.** `opentide setup` enables them per repository. They are not picked at install time ([#107](https://github.com/OpenTideHQ/opentide/pull/107)).
+- **Onboarding is a command.** `opentide setup` replaces the template repository and writes CI for GitHub, GitLab or Azure DevOps ([#64](https://github.com/OpenTideHQ/opentide/issues/64), [#28](https://github.com/OpenTideHQ/opentide/pull/28)).
+- **Migration is a guide and a prompt.** Moving off CoreTide is a [documented path](/docs/usage/migration/) with an agent prompt, reviewed as a diff ([#104](https://github.com/OpenTideHQ/opentide/pull/104)).
+
+The result is a tool on your `PATH` instead of scripts in your tree:
+
+| | Submodule era | opentide CLI | Evidence |
+| --- | --- | --- | --- |
+| Install | Clone, init the submodule, patch `sys.path` | `pip install opentide`, Python 3.10 to 3.14 | [CoreTide#60](https://github.com/OpenTideHQ/CoreTide/issues/60) |
+| Upgrade | CI pulled whatever the engine was that day | Pin a version, read the changelog | [CoreTide#3](https://github.com/OpenTideHQ/CoreTide/issues/3) |
+| Onboard | Copy a template; the sample rule failed | `opentide setup`, as a wizard or with flags | [InitTide#12](https://github.com/OpenTideHQ/InitTide/issues/12), [#64](https://github.com/OpenTideHQ/opentide/issues/64) |
+| Operate | Orchestration scripts that only ran in CI | One command tree; `--help` in about 0.2 s | [CoreTide#61](https://github.com/OpenTideHQ/CoreTide/issues/61), [#142](https://github.com/OpenTideHQ/opentide/pull/142) |
+| Automate | CI glue through remote includes | `opentide setup ci` for GitHub, GitLab and Azure DevOps | [InitTide#5](https://github.com/OpenTideHQ/InitTide/issues/5), [#28](https://github.com/OpenTideHQ/opentide/pull/28) |
+| Read results | Logs, plus a legacy exit code 19 | `--json`, exit codes 0, 1 and 2, file and line | [#135](https://github.com/OpenTideHQ/opentide/pull/135), [#139](https://github.com/OpenTideHQ/opentide/pull/139) |
+| Work with agents | Agents shell out and guess | An MCP server and skills, wired by `setup` | [CoreTide#68](https://github.com/OpenTideHQ/CoreTide/issues/68), [#59](https://github.com/OpenTideHQ/opentide/issues/59) |
+
+On 9 September we published 0.1.0 and archived six repositories. Each one became one part of a single stack:
+
+| Archived | Became |
+| --- | --- |
+| CoreTide | [opentide](https://github.com/OpenTideHQ/opentide): the CLI, SDK and MCP server, in one package |
+| InitTide | `opentide setup` |
+| ShareTide | [library](https://github.com/OpenTideHQ/library) |
+| WikiTide | `opentide generate docs` and the [explorer](https://github.com/OpenTideHQ/explorer) |
+| AgentTide | [skills](https://github.com/OpenTideHQ/skills) |
+| SyntaxTide | the [language server](https://github.com/OpenTideHQ/language-server), in progress |
+
+History stays, and pinned SHAs keep working. New work goes into the package.
+
+## Built for agents
+
+An agent is only as good as the spec it is held to.
+
+<AgentNeeds />
+
+A CLI is the most universal tool interface an agent has, so the contract matters. With `--json`, every command writes exactly one JSON document to stdout. Diagnostics go to stderr, and exit codes are 0, 1 or 2. A check that a platform cannot run fails, and says why:
+
+```bash
+$ opentide --json validate query --platform crowdstrike
+{
+  "platform": "crowdstrike",
+  "valid": null,
+  "supported": false,
+  "ok": false,
+  "status": "failed",
+  "message": "query validation not supported for crowdstrike"
+}
+$ echo $?
+1
+```
+
+The loop has two zones. In the first, an agent searches the graph, reads the lineage with `get_chaining`, drafts YAML with the skills, runs `validation_report` until it is clean, checks queries against the tenant with `validate query --live`, and previews the deploy with `deploy_rule(dry_run=true)`. Nothing in that zone deploys. Its output is a pull request. In the second zone, people own every gate: review, merge, and promotion to production. The [agentic setup guide](/docs/usage/workflows/agentic-setup/) has the details.
+
+We hold our own tools to the same bar. On 22 September, a first-user simulation against 0.3.0 filed twenty issues ([#239](https://github.com/OpenTideHQ/opentide/issues/239) to [#258](https://github.com/OpenTideHQ/opentide/issues/258)). Two of them were about what agents read. MCP `validate_query` returned `valid: true` for garbage queries ([#245](https://github.com/OpenTideHQ/opentide/issues/245)). And `run_query` returned `rows: 0`, "which an agent reads as 'the query ran and matched nothing'" ([#258](https://github.com/OpenTideHQ/opentide/issues/258)). All twenty were closed that day, and 0.4.0 shipped the same day. Since 0.11.0, a query check is a check against the tenant: a bare `validate query` refuses and names `--live` ([#456](https://github.com/OpenTideHQ/opentide/issues/456)).
+
+## How we build it
+
+We build opentide the way we want detections built. Between 0.1.0 on 9 September and 0.12.1 on 9 October we shipped 28 releases. As of 12 October, 160 pull requests have been merged since 0.1.0, and 142 of them were drafted on cloud-agent branches. The same CI checks every pull request: tests on Python 3.10 to 3.14, an 85% coverage gate, and CodeQL on every push and pull request.
+
+## What comes next
+
+The north star: intel to a reviewed, deployed detection in under an hour, with a human approving every promotion.
+
+<NorthStar />
+
+Four directions, each tracked in a public issue or RFC:
+
+<Roadmap />
+
+## Start
+
+```bash
+pip install 'opentide[mcp]'
+opentide setup --yes --platform sentinel --ci github
+opentide setup mcp --claude-code --yes
+opentide setup skills --claude-code --yes --install opentide-detection-rule
+opentide validate --strict
+```
+
+That is a detection repository with Sentinel and GitHub CI, an agent wired to the MCP server, the rule-authoring skill installed, and the same strict gate your CI runs. Generated pipelines install the exact version you ran setup with, so upgrades arrive as a diff you review.
+
+<Cards>
+  <Card title="Quickstart" href="/docs/usage/quickstart/" description="From an empty folder to a validated detection repository." />
+  <Card title="Agentic setup" href="/docs/usage/workflows/agentic-setup/" description="MCP, skills, and the guardrails to give your agent." />
+  <Card title="Migration" href="/docs/usage/migration/" description="From the CoreTide submodule to the package." />
+  <Card title="Releases" href="/releases/" description="Every version on PyPI, and what changed." />
+</Cards>

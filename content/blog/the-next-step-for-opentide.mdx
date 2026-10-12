@@ -77,6 +77,10 @@ You install a package, not a submodule SHA. `pip install opentide`, then lock it
 
 CLI, SDK, and MCP are the same package — `opentide validate`, `from opentide import OpenTide`, `opentide-mcp`. Not three implementations, and not a pile of `Orchestration/` scripts.
 
+<Callout type="info" title="Updated 12 October 2026">
+Since 0.12.0 the MCP server starts with `opentide mcp start`, and the `opentide-mcp` command is gone. Re-run `opentide setup mcp` to rewrite your editor configuration. The [releases page](/releases/) has the details.
+</Callout>
+
 JSON Schema is generated from the models, so the types and the schema cannot drift. Detection content stays in your repo.
 
 A threat is still what you defend against. An objective is still what you are trying to detect. A rule is still how you detect it on a platform. References still point rule → objective → threat; coverage still flows the other way. See the [object model](/docs/usage/concepts/object-model/).
@@ -131,7 +135,7 @@ The package works. For four weeks we are not adding platforms. We will fix what 
 If something is wrong, file it on [OpenTideHQ/opentide](https://github.com/OpenTideHQ/opentide/issues). That is the package now. The archived tree will not grow new fixes.
 </Callout>
 
-The old implementation ran in production for years before it was open-sourced. 0.1.0 is that same work, installable, and honest about which platforms can check a query. Then we take four weeks of bug reports.
+The old implementation ran in production for years before it was open-sourced. 0.1.0 is that same work, installable, and explicit about which platforms can check a query. Then we take four weeks of bug reports.
 
 <Cards>
   <Card title="Releases" href="/releases/" description="What's on PyPI — then migrate when you next touch CI." />
