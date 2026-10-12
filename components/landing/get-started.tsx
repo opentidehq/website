@@ -8,7 +8,7 @@ import { useOnScreen } from '@/lib/hooks/use-on-screen';
 import { usePrefersReducedMotion } from '@/lib/hooks/use-prefers-reduced-motion';
 
 /**
- * Commands and the result line each one prints, as run against opentide 0.12 in an empty
+ * Commands and the result line each one prints, as run against opentide 0.13 in an empty
  * folder, and the tree entries each one leaves behind.
  */
 const STEPS = [

@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { Fragment, type ReactNode } from 'react';
 import { CHAPTERS, type ChapterId } from '@/components/landing/chapters';
 
 /**
@@ -111,4 +111,18 @@ export function Tag({
 /** Small lowercase mono caption above a list or a figure. */
 export function Caption({ children, className }: { children: ReactNode; className?: string }) {
   return <p className={`font-mono text-xs text-[var(--landing-subtle)] ${className ?? ''}`}>{children}</p>;
+}
+
+/** A vocabulary value that breaks only after its `::` separators, never inside a word. */
+export function VocabValue({ value }: { value: string }) {
+  const parts = value.split('::');
+  return parts.map((part, k) => (
+    <Fragment key={k}>
+      {k > 0 && <wbr />}
+      <span className="whitespace-nowrap">
+        {part}
+        {k < parts.length - 1 && '::'}
+      </span>
+    </Fragment>
+  ));
 }

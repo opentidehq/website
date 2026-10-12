@@ -202,13 +202,13 @@ export const VISIBILITY_TOML = `[[assets]]
 name = "Edge firewalls"
 description = "Internet-facing PA-Series and VM-Series firewalls"
 criticality = "High"
-surface = ["Firewalls::Palo Alto Networks"]
+surface = ["Infrastructure::Firewalls::Palo Alto Networks"]
 
 [[assets]]
 name = "Corporate workstations"
 description = "Managed Windows 11 endpoints"
 criticality = "Medium"
-surface = ["Windows::Desktop::11"]
+surface = ["OS::Windows::Desktop::11"]
 
 [[logsources]]
 name = "Endpoint process events"
@@ -273,7 +273,7 @@ threat:
   viability: Likely
   terrain: Managed Windows workstations where a local administrator can open LSASS
   surface:
-    - Windows::Desktop::11
+    - OS::Windows::Desktop::11
   mitre_attack:
     - T1003.001
   killchain:
@@ -308,7 +308,7 @@ threat:
   viability: Likely
   terrain: Internet-facing PA-Series and VM-Series firewalls with the User-ID Authentication Portal enabled
   surface:
-    - Firewalls::Palo Alto Networks
+    - Infrastructure::Firewalls::Palo Alto Networks
   mitre_attack:
     - T1190
     - T1133

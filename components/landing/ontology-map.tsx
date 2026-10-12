@@ -15,8 +15,8 @@ import {
   Target,
   type LucideIcon,
 } from 'lucide-react';
-import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
-import { Tag } from '@/components/landing/ui';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Tag, VocabValue } from '@/components/landing/ui';
 import {
   CANVAS,
   EDGES,
@@ -119,7 +119,7 @@ function ExcerptLine({ text }: { text: string }) {
     );
   }
   // A key ends at `:` followed by a space or the line end, or at `=`: in
-  // `- Firewalls::Palo Alto Networks` nothing is a key.
+  // `- Infrastructure::Firewalls::Palo Alto Networks` nothing is a key.
   const pair = text.match(/^(\s*-?\s*)([\w.[\]-]+)(\s*(?::(?=\s|$)|=))(.*)$/);
   if (!pair) return <>{text}</>;
   const value = pair[4];
@@ -166,20 +166,6 @@ function Excerpt({ node }: { node: OntologyNode }) {
   );
 }
 
-/** A value that breaks only after a vocabulary's `::` separators, never inside a word. */
-function Fact({ value }: { value: string }) {
-  const parts = value.split('::');
-  return parts.map((part, k) => (
-    <Fragment key={k}>
-      {k > 0 && <wbr />}
-      <span className="whitespace-nowrap">
-        {part}
-        {k < parts.length - 1 && '::'}
-      </span>
-    </Fragment>
-  ));
-}
-
 /** The demo objects behind a node: names and values from the files, and the chain between threats. */
 function Records({ records }: { records: NodeRecord[] }) {
   return (
@@ -199,7 +185,7 @@ function Records({ records }: { records: NodeRecord[] }) {
                 key={fact}
                 className="rounded bg-[color-mix(in_srgb,var(--landing-ink)_6%,transparent)] px-1 py-px font-mono text-[10px] leading-[14px] text-[var(--landing-muted)]"
               >
-                <Fact value={fact} />
+                <VocabValue value={fact} />
               </span>
             ))}
           </span>

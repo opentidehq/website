@@ -2,7 +2,7 @@
 
 import { ArrowDown, Radio } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Tag } from '@/components/landing/ui';
+import { Tag, VocabValue } from '@/components/landing/ui';
 import { useOnScreen } from '@/lib/hooks/use-on-screen';
 import { usePrefersReducedMotion } from '@/lib/hooks/use-prefers-reduced-motion';
 
@@ -24,7 +24,7 @@ type Step = {
 const PATH: Step[] = [
   {
     asset: 'Edge firewalls',
-    surface: 'Firewalls::Palo Alto Networks',
+    surface: 'Infrastructure::Firewalls::Palo Alto Networks',
     criticality: 'High',
     threat: 'Gateway exploitation',
     ref: 'T1190 · CVE-2026-0300',
@@ -33,7 +33,7 @@ const PATH: Step[] = [
   },
   {
     asset: 'Corporate workstations',
-    surface: 'Windows::Desktop::11',
+    surface: 'OS::Windows::Desktop::11',
     criticality: 'Medium',
     threat: 'Credential dumping from LSASS',
     ref: 'T1003.001',
@@ -42,7 +42,7 @@ const PATH: Step[] = [
   },
   {
     asset: 'Windows servers',
-    surface: 'Windows::Server::2022',
+    surface: 'OS::Windows::Server::2022',
     criticality: 'High',
     threat: 'Lateral movement over SMB',
     ref: 'T1021.002',
@@ -51,7 +51,7 @@ const PATH: Step[] = [
   },
   {
     asset: 'File servers',
-    surface: 'Windows::Server::2022',
+    surface: 'OS::Windows::Server::2022',
     criticality: 'Severe',
     threat: 'Ransomware deployment',
     ref: 'T1486',
@@ -163,8 +163,8 @@ function AttackPath({ at, focus }: { at: number; focus: Focus | null }) {
               }`}
             >
               <p className="text-[13px] font-semibold leading-snug text-[var(--landing-ink)]">{step.asset}</p>
-              <p className="mt-0.5 font-mono text-[10.5px] leading-snug text-[var(--landing-subtle)] [overflow-wrap:anywhere]">
-                {step.surface}
+              <p className="mt-0.5 font-mono text-[10.5px] leading-snug text-[var(--landing-subtle)]">
+                <VocabValue value={step.surface} />
               </p>
               <p className="mt-1 font-mono text-[10.5px] text-[var(--landing-muted)]">criticality {step.criticality}</p>
             </div>

@@ -176,7 +176,7 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
     events: [
       {
         kind: 'reasoning',
-        text: 'Frame it as edge-gateway exploitation: Significant incident severity, Infrastructure Compromise leverage, Likely viability, surface Firewalls::Palo Alto Networks, mitre_attack T1190 + T1133. Chain it to the existing LSASS threat …020 with sequence::preceeds: root on the gateway comes before credential dumping inside.',
+        text: 'Frame it as edge-gateway exploitation: Significant incident severity, Infrastructure Compromise leverage, Likely viability, surface Infrastructure::Firewalls::Palo Alto Networks, mitre_attack T1190 + T1133. Chain it to the existing LSASS threat …020 with sequence::preceeds: root on the gateway comes before credential dumping inside.',
       },
       {
         kind: 'skill',

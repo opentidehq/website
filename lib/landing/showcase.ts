@@ -25,9 +25,10 @@ const o = (text: string, mark?: boolean): Line => ({ kind: 'out', text, mark });
 const n = (text: string): Line => ({ kind: 'note', text });
 
 /**
- * Runs captured from opentide 0.12.1 against the demo repository this page shows: the same
- * threat, objective and rule. Absolute paths are cut to the repository, the Rich panel border
- * is dropped and its lines re-wrapped, and long payloads are cut to `…`.
+ * Runs captured from opentide 0.12.1, and unchanged in 0.13.0, against the demo repository
+ * this page shows: the same threat, objective and rule. Absolute paths are cut to the
+ * repository, the Rich panel border is dropped and its lines re-wrapped, and long payloads
+ * are cut to `…`.
  */
 export const DOORS: Door[] = [
   {
