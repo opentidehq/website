@@ -1,6 +1,6 @@
 export const appName = 'opentide';
 export const appDescription =
-  'The DetectionOps engine for detection-as-code — validate, generate, deploy, and document rules across seven security platforms.';
+  'Spec-driven development for detection engineering: an ontology and a taxonomy, an engine you pin, and threat-aligned detections that ship fast.';
 export const docsRoute = '/docs';
 export const docsImageRoute = '/og/docs';
 export const blogImageRoute = '/og/blog';
@@ -40,48 +40,49 @@ export type EcosystemItem = {
 export const ecosystemLinks: EcosystemItem[] = [
   {
     name: 'opentide',
-    description: 'DetectionOps engine on PyPI: validate, generate, deploy, document.',
+    description: 'The engine: CLI, Python SDK and MCP server in one package on PyPI.',
     href: 'https://github.com/OpenTideHQ/opentide',
     status: 'live',
     tag: 'Engine',
   },
   {
     name: 'specifications',
-    description: 'Normative object specs, schemas, and vocabularies.',
+    description: 'The contract: normative object specs, 36 versioned vocabularies and RFCs.',
     href: 'https://github.com/OpenTideHQ/specifications',
     status: 'live',
-    tag: 'Specs',
+    tag: 'Contract',
   },
   {
     name: 'library',
-    description: 'Public registry of published detection objects.',
+    description: 'Shared content: published threats, objectives and rules at TLP:CLEAR.',
     href: 'https://github.com/OpenTideHQ/library',
     status: 'live',
-    tag: 'Registry',
+    tag: 'Content',
   },
   {
     name: 'explorer',
-    description: 'Deployable app for exploring opentide objects end to end.',
+    description: 'The interface: browse threats, objectives, signals, rules and their chains.',
     href: 'https://github.com/OpenTideHQ/explorer',
     status: 'live',
-    tag: 'App',
+    tag: 'Interface',
   },
   {
     name: 'skills',
-    description: 'Canonical agent skills for opentide detection engineering.',
+    description: 'The agent brain: 27 skills for Claude Code, Cursor, Codex, Copilot and Kiro.',
     href: 'https://github.com/OpenTideHQ/skills',
     status: 'live',
     tag: 'Agents',
   },
   {
     name: 'language-server',
-    description: 'LSP for opentide object and query authoring in any editor.',
+    description: 'Rust and tree-sitter language server for KQL, SPL and Tide YAML. In progress.',
+    href: 'https://github.com/OpenTideHQ/language-server',
     status: 'soon',
     tag: 'Editor',
   },
   {
     name: 'vscode-extension',
-    description: 'VS Code tooling for schemas, validation, and detection workflows.',
+    description: 'VS Code onboarding, validation and authoring, built on the language server.',
     status: 'soon',
     tag: 'Editor',
   },

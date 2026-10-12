@@ -36,7 +36,7 @@ export const docTabs = [
   {
     key: 'mcp',
     title: 'MCP',
-    description: 'Agent-native tools with honest validation output',
+    description: 'Search, coverage, validation and dry-run deploys for agents',
     url: '/docs/mcp/',
     icon: 'Bot' as const,
     iconColor: '#ffcc00',

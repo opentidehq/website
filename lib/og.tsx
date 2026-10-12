@@ -206,6 +206,6 @@ export async function generateOgImage(props: OgImageProps) {
 }
 
 export const defaultOgProps: OgImageProps = {
-  title: 'The DetectionOps engine',
+  title: 'The engine behind agentic detection engineering',
   description: appDescription,
 };

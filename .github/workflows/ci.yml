@@ -38,6 +38,26 @@ jobs:
 
       - run: pnpm check:docs
 
+  demos:
+    # The landing page shows demo threats, objectives, rules and platform configs as if a
+    # detection repo held them. Run them through the latest released engine so a spec change
+    # cannot leave the site showing objects that opentide rejects.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - run: pip install opentide
+
+      - run: node --experimental-strip-types --no-warnings scripts/verify-demo-objects.mjs
+
   build:
     runs-on: ubuntu-latest
     needs: [lint]

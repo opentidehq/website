@@ -1,6 +1,6 @@
 import { Inter, JetBrains_Mono } from 'next/font/google';
 import { Provider } from '@/components/provider';
-import { siteOgImage, siteUrl } from '@/lib/shared';
+import { appDescription, siteOgImage, siteUrl } from '@/lib/shared';
 import type { Metadata } from 'next';
 import './global.css';
 
@@ -24,8 +24,7 @@ export const metadata: Metadata = {
     default: 'opentide',
     template: '%s | opentide',
   },
-  description:
-    'The DetectionOps engine for detection-as-code — validate, generate, deploy, and document rules across seven security platforms.',
+  description: appDescription,
   openGraph: {
     type: 'website',
     locale: 'en_US',

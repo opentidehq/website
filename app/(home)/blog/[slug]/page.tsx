@@ -1,5 +1,6 @@
 import { blog, getBlogImage } from '@/lib/source';
 import { getMDXComponents } from '@/components/mdx';
+import { AgentNeeds, NorthStar, Roadmap, SpecLayers } from '@/components/blog/landing-embeds';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
@@ -45,7 +46,7 @@ export default async function BlogPostPage(props: PageProps<'/blog/[slug]'>) {
       </header>
 
       <div className="prose prose-neutral dark:prose-invert max-w-none">
-        <MDX components={getMDXComponents()} />
+        <MDX components={getMDXComponents({ AgentNeeds, NorthStar, Roadmap, SpecLayers })} />
       </div>
     </article>
   );

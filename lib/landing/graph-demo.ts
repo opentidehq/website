@@ -59,24 +59,33 @@ metadata:
   modified: "2026-07-01"
   tlp: clear
   author: detection-team
+  organisation:
+    uuid: 00000000-0000-4000-8000-000000000099
+    name: Example Corp
 
 threat:
   description: |
     Adversaries phish operators into completing an OAuth device-code
     flow, then redeem the issued tokens against Microsoft 365 APIs
     for mailbox and directory access — without stealing passwords.
-  severity: High
-  impact: Data Breach
-  leverage: High
-  viability: High
-  terrain: Identity
-  killchain: Exploitation
-  att&ck:
+  severity: Significant incident
+  impact:
+    - Data Breach
+    - Identity Theft
+  leverage:
+    - Spoofing
+    - Information Disclosure
+  viability: Likely
+  terrain: Users who can complete a device-code sign-in to Microsoft 365
+  surface:
+    - Entra ID
+    - Microsoft::Microsoft 365
+  mitre_attack:
     - T1528
     - T1078.004
     - T1114.003
-  actors:
-    - Unknown
+  killchain:
+    - Social Engineering
 `,
   'obj-oauth': `name: Anomalous device-code OAuth grant
 
@@ -87,55 +96,62 @@ metadata:
   created: "2026-06-12"
   modified: "2026-07-01"
   tlp: clear
-
-composition:
-  strategy: synergetic
-  description: |
-    Correlate device-code auth with unusual client app, geo,
-    and first-seen device — not a single sign-in event alone.
+  author: detection-team
+  organisation:
+    uuid: 00000000-0000-4000-8000-000000000099
+    name: Example Corp
 
 objective:
   priority: High
   type: Threat
   description: |
     Detect suspicious OAuth device-code completions that indicate
-    token theft against Entra ID / Microsoft 365.
+    token theft against Entra ID and Microsoft 365.
   composition:
-    strategy: synergetic
-    description: Device-code + anomalous client/geo must concur
+    strategy: Combined
+    description: |
+      Device-code sign-in, an unusual client app and an unusual
+      location must concur; one sign-in event alone is not enough.
   threats:
     - ${GRAPH_UUID.threatDeviceCode}
-  attack:
+  mitre_attack:
     - T1528
     - T1078.004
   signals:
     - name: Device code from atypical client
       uuid: ${GRAPH_UUID.signalDeviceCode}
-      description: DeviceCode flow completed by a rare or unverified client app
+      description: |
+        Device-code flow completed by a rare or unverified client app.
       severity: High
-      methodology: analytics
+      methodology: Anomaly
       entities:
-        - user
-        - application
+        - User
+        - Token
+        - Authentication
       data:
         availability: Complete
-        requirements: Entra ID sign-in & audit logs
+        requirements: Entra ID sign-in and audit logs
 `,
   'rule-entra': `name: Suspicious device-code OAuth grant
 
 metadata:
   uuid: ${GRAPH_UUID.ruleEntra}
-  schema: rule::1.0
+  schema: rule::1.1
   version: 1.0.0
   created: "2026-06-14"
   modified: "2026-07-01"
   tlp: clear
+  author: detection-team
+  organisation:
+    uuid: 00000000-0000-4000-8000-000000000099
+    name: Example Corp
+  reviewed: "2026-07-01"
 
 description: |
   Flags device-code OAuth completions from atypical clients or
   geographies. Implements the anomalous device-code objective.
 status: STAGING
-severity: High
+severity: Substantial incident
 techniques:
   - T1528
   - T1078.004
@@ -173,54 +189,60 @@ metadata:
   created: "2026-06-12"
   modified: "2026-07-01"
   tlp: clear
-
-composition:
-  strategy: synergetic
-  description: |
-    After a suspected token theft, watch for inbox rules and
-    forwarding that enable silent mail collection.
+  author: detection-team
+  organisation:
+    uuid: 00000000-0000-4000-8000-000000000099
+    name: Example Corp
 
 objective:
   priority: High
   type: Threat
   description: |
-    Detect mailbox persistence and exfil patterns that follow
+    Detect mailbox persistence and exfiltration patterns that follow
     device-code phishing against the identity threat vector.
   composition:
-    strategy: synergetic
-    description: New inbox rule + unusual forwarding destination
+    strategy: Combined
+    description: |
+      A new inbox rule and an unusual forwarding destination,
+      after a suspected token theft.
   threats:
     - ${GRAPH_UUID.threatDeviceCode}
-  attack:
+  mitre_attack:
     - T1114.003
   signals:
     - name: Suspicious inbox rule
       uuid: ${GRAPH_UUID.signalInboxRule}
-      description: Inbox rule created that hides or forwards mail externally
+      description: |
+        Inbox rule created that hides or forwards mail externally.
       severity: High
-      methodology: analytics
+      methodology: Behavioural
       entities:
-        - user
-        - mailbox
+        - User
+        - Email
       data:
         availability: Complete
-        requirements: Exchange Online audit / Unified Audit Log
+        requirements: Exchange Online audit logs (Unified Audit Log)
 `,
   'rule-exo': `name: Suspicious inbox rule after token use
 
 metadata:
   uuid: ${GRAPH_UUID.ruleExo}
-  schema: rule::1.0
+  schema: rule::1.1
   version: 1.0.0
   created: "2026-06-14"
   modified: "2026-07-01"
   tlp: clear
+  author: detection-team
+  organisation:
+    uuid: 00000000-0000-4000-8000-000000000099
+    name: Example Corp
+  reviewed: "2026-07-01"
 
 description: |
   New inbox rules that forward or hide mail shortly after anomalous
   OAuth activity. Implements the post-auth mailbox abuse objective.
 status: STAGING
-severity: High
+severity: Substantial incident
 techniques:
   - T1114.003
 detection_model: ${GRAPH_UUID.objectiveMailbox}
@@ -281,17 +303,17 @@ export const GRAPH_NODES: Record<GraphNodeId, GraphNodeMeta> = {
     blurb:
       'This is the hub of the graph. Both detection objectives below reference this UUID so every rule still answers “why do we care?”',
     points: [
-      'Required severity / impact / leverage / viability / terrain',
-      'ATT&CK list is mandatory',
+      'Required severity, impact, leverage, viability, terrain and surface',
+      'mitre_attack is mandatory',
       'Stable UUID — objectives link via objective.threats',
     ],
     facts: [
       { label: 'Criticality', value: 'High' },
-      { label: 'Terrain', value: 'Identity' },
+      { label: 'Surface', value: 'Entra ID · M365' },
       { label: 'ATT&CK', value: 'T1528 · T1078.004' },
     ],
     next: 'Branch into objectives — one per detection intent.',
-    path: 'objects/threats/device-code-phishing.yaml',
+    path: 'objects/threats/device-code-phishing-saas-identity.yaml',
     yaml: GRAPH_YAML.threat,
     lane: 'threat',
   },
@@ -317,7 +339,7 @@ export const GRAPH_NODES: Record<GraphNodeId, GraphNodeMeta> = {
       { label: 'Signal', value: 'Atypical client' },
     ],
     next: 'Implement with an MDR rule on SigninLogs.',
-    path: 'objects/objectives/anomalous-device-code-oauth.yaml',
+    path: 'objects/objectives/anomalous-device-code-oauth-grant.yaml',
     yaml: GRAPH_YAML['obj-oauth'],
     lane: 'left',
   },
@@ -327,7 +349,7 @@ export const GRAPH_NODES: Record<GraphNodeId, GraphNodeMeta> = {
     label: 'Rule',
     short: 'Entra grant',
     title: 'Suspicious device-code OAuth grant',
-    schema: 'rule::1.0',
+    schema: 'rule::1.1',
     intent:
       'Deployable MDR: Sentinel KQL (and peers) linked to the OAuth objective via detection_model.',
     blurb:
@@ -343,7 +365,7 @@ export const GRAPH_NODES: Record<GraphNodeId, GraphNodeMeta> = {
       { label: 'Technique', value: 'T1528' },
     ],
     next: 'Walk the second branch — post-auth mailbox abuse.',
-    path: 'objects/rules/suspicious-device-code-oauth.yaml',
+    path: 'objects/rules/suspicious-device-code-oauth-grant.yaml',
     yaml: GRAPH_YAML['rule-entra'],
     lane: 'left',
   },
@@ -379,7 +401,7 @@ export const GRAPH_NODES: Record<GraphNodeId, GraphNodeMeta> = {
     label: 'Rule',
     short: 'Inbox rule',
     title: 'Suspicious inbox rule after token use',
-    schema: 'rule::1.0',
+    schema: 'rule::1.1',
     intent:
       'Branch B leaf — MDR on OfficeActivity / Unified Audit for malicious inbox rules.',
     blurb:
@@ -395,7 +417,7 @@ export const GRAPH_NODES: Record<GraphNodeId, GraphNodeMeta> = {
       { label: 'Technique', value: 'T1114.003' },
     ],
     next: 'opentide validate --strict · deploy --dry-run',
-    path: 'objects/rules/suspicious-inbox-rule.yaml',
+    path: 'objects/rules/suspicious-inbox-rule-after-token-use.yaml',
     yaml: GRAPH_YAML['rule-exo'],
     lane: 'right',
   },

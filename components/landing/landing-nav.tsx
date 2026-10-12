@@ -79,8 +79,8 @@ export function LandingNav({ children }: { children: ReactNode }) {
             <div>
               <OpentideWordmark height={36} />
               <p className="mt-4 max-w-sm text-sm leading-relaxed text-[var(--landing-muted)]">
-                The DetectionOps engine. Structure detection engineering from intel to deploy.
-                Forever free.
+                Spec-driven development for detection engineering: an ontology, a taxonomy and an
+                engine you pin. Forever free.
               </p>
               <div className="mt-4">
                 <OpentideLicensePill />
@@ -128,14 +128,18 @@ export function LandingNav({ children }: { children: ReactNode }) {
               <ul className="mt-4 space-y-2 text-sm text-[var(--landing-subtle)]">
                 {ecosystemLinks.map((repo) => (
                   <li key={repo.name}>
-                    <a
-                      href={repo.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="transition hover:text-[var(--landing-accent)]"
-                    >
-                      {repo.name}
-                    </a>
+                    {repo.href ? (
+                      <a
+                        href={repo.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="transition hover:text-[var(--landing-accent)]"
+                      >
+                        {repo.name}
+                      </a>
+                    ) : (
+                      <span>{repo.name}</span>
+                    )}
                   </li>
                 ))}
                 <li>

@@ -1,6 +1,6 @@
 ---
 name: opentide
-description: DetectionOps engine — EU coastal precision on the marketing site; Fumadocs clarity in docs.
+description: Spec-driven development for detection engineering — EU coastal precision on the marketing site; Fumadocs clarity in docs.
 colors:
   eu-blue: "#001489"
   eu-yellow: "#ffcc00"
@@ -68,7 +68,7 @@ components:
 
 ## Overview
 
-opentide uses two registers on one codebase: an expressive **brand** landing (FLIP liquid ASCII hero, EU blue/yellow) and a restrained **product** docs shell (Fumadocs neutral theme). Typography is Inter everywhere; JetBrains Mono for code and terminal demos. Motion is intentional: one canvas liquid-ASCII hero, restrained section transitions - all gated by `prefers-reduced-motion`. Landing light mode is white+blue; dark is black+yellow.
+opentide uses two registers on one codebase: an expressive **brand** landing (FLIP liquid ASCII hero, EU blue/yellow) and a restrained **product** docs shell (Fumadocs neutral theme). Typography is Inter everywhere; JetBrains Mono for code and terminal demos. Motion is intentional: one canvas liquid-ASCII hero, restrained section transitions - all gated by `prefers-reduced-motion`. The tide draws real detection content (KQL, SPL, object fields) on true monospace cells (advance 0.6em, line 1.28em) in the page's JetBrains Mono, paints a settled frame before animating, and pauses when off screen or in a background tab. Landing light mode is white+blue; dark is black+yellow.
 
 Logo and logotype assets live in `public/brand/` (synced from OpenTideHQ/.github): Material Tsunami circle mark + **opentide** wordmark.
 
@@ -92,13 +92,13 @@ Docs: `--color-fd-primary` / `--brand-accent` map to blue in light mode and yell
 ## Typography
 
 - **Sans**: Inter for all UI and marketing headings (no separate display font).
-- **Mono**: JetBrains Mono for CLI snippets, MCP demo, and prose code blocks.
+- **Mono**: JetBrains Mono for CLI snippets, MCP tool calls, the workflow studio, and prose code blocks.
 - **Headlines**: `clamp(2.25rem, 5.5vw, 3.75rem)`, weight 700, tracking `-0.02em`, `text-wrap: balance`.
 - **Body**: 1rem–1.25rem, max ~65ch in prose sections, `text-wrap: pretty` on long copy.
 
 ## Elevation
 
-Landing uses flat tonal layering (borders `landing-border`, rings on brand yellow) — no drop-shadow stacks except a single `shadow-lg` on the hero terminal card. Docs rely on Fumadocs sidebar/card surfaces; avoid nested card grids on marketing sections.
+Landing uses flat tonal layering (borders `landing-border`, rings on brand yellow) — no drop-shadow stacks except the soft shadow under the hero tide card. Code panels are deep-tide navy (`--landing-code-*`) in both themes, as content. Docs rely on Fumadocs sidebar/card surfaces; avoid nested card grids on marketing sections.
 
 ## Components
 
@@ -116,10 +116,10 @@ Landing uses flat tonal layering (borders `landing-border`, rings on brand yello
 - Use official brand SVGs from `public/brand/` (or theme-aware React mark).
 - Register Fumadocs MDX components before authoring rich synced docs.
 - Cross-link Usage pages to normative Specifications.
-- Keep platform capability claims honest (CrowdStrike/HarfangLab: deploy only).
+- Keep platform capability claims accurate (CrowdStrike/HarfangLab: deploy only) and state them as facts.
 
 **Don't**
-- Gradient text, glassmorphism heroes, or uppercase tracked eyebrows on every section.
+- Gradient text, glassmorphism heroes, or uppercase tracked eyebrows on every section — section labels are lowercase mono.
 - Invent PyPI extras that don't exist in `pyproject.toml`.
 - Duplicate H1 from frontmatter title in synced markdown bodies.
 - Wrap all content in an extra docs index folder — root dropdown only.

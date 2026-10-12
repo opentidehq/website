@@ -179,8 +179,8 @@ export const ADVISORY: AdvisoryPage = {
 };
 
 export const DEMO_PATHS = [
-  'objects/threats/gateway-exploitation.yaml',
-  'objects/objectives/credential-access.yaml',
+  'objects/threats/gateway-exploitation-cve-2026-0300.yaml',
+  'objects/objectives/credential-access-via-lsass.yaml',
   'objects/rules/lsass-memory-access.yaml',
   '.opentide/configurations/platforms/sentinel.toml',
   '.opentide/configurations/platforms/splunk.toml',
@@ -205,17 +205,20 @@ const SENTINEL_QUERY_TUNED = `      let BenignAccessors = dynamic(["csrss.exe", 
       | where InitiatingProcessCommandLine !has "inventory-scan"`;
 
 export const DEMO_FILES: Record<DemoPath, string> = {
-  'objects/threats/gateway-exploitation.yaml': `name: Gateway exploitation (CVE-2026-0300)
+  'objects/threats/gateway-exploitation-cve-2026-0300.yaml': `name: Gateway exploitation (CVE-2026-0300)
 criticality: High
 
 metadata:
   uuid: ${UUID.threatGateway}
   schema: threat::1.0
-  version: 1.1.0
-  created: "2026-05-06"
+  version: 1.0.0
+  created: "2026-05-08"
   modified: "2026-05-08"
   tlp: clear
   author: detection-team
+  organisation:
+    uuid: 00000000-0000-4000-8000-000000000099
+    name: Example Corp
 
 threat:
   description: |
@@ -223,37 +226,40 @@ threat:
     buffer overflow (CVE-2026-0300) for unauthenticated root RCE on
     internet-facing PA-Series and VM-Series firewalls, then pivot
     toward credential access on the internal estate.
-  severity: High
-  impact: Data Breach
-  leverage: High
-  viability: High
-  terrain: Edge Gateway
-  killchain: Exploitation
-  att&ck:
+  severity: Significant incident
+  impact:
+    - Data Breach
+  leverage:
+    - Infrastructure Compromise
+  viability: Likely
+  terrain: Internet-facing PA-Series and VM-Series firewalls with the User-ID Authentication Portal enabled
+  surface:
+    - Firewalls::Palo Alto Networks
+  mitre_attack:
     - T1190
     - T1133
-  actors:
-    - Unknown
+  killchain:
+    - Exploitation
+  cve:
+    - CVE-2026-0300
 
 references:
   public:
     1: https://cert.europa.eu/publications/security-advisories/2026-006/
 `,
-  'objects/objectives/credential-access.yaml': `name: Credential access via LSASS
+  'objects/objectives/credential-access-via-lsass.yaml': `name: Credential access via LSASS
 
 metadata:
   uuid: ${UUID.objectiveCredential}
   schema: objective::1.0
-  version: 1.2.0
-  created: "2026-01-01"
-  modified: "2026-03-01"
+  version: 1.0.0
+  created: "2026-05-08"
+  modified: "2026-05-08"
   tlp: clear
-
-composition:
-  strategy: synergetic
-  description: |
-    Require corroborating LSASS-access signals after a gateway
-    foothold — not a single noisy process-access event alone.
+  author: detection-team
+  organisation:
+    uuid: 00000000-0000-4000-8000-000000000099
+    name: Example Corp
 
 objective:
   priority: High
@@ -262,40 +268,48 @@ objective:
     Detect credential dumping that follows initial access via the
     PAN-OS gateway threat vector.
   composition:
-    strategy: synergetic
-    description: Signals must corroborate unusual LSASS handle access
+    strategy: Combined
+    description: |
+      Corroborate unusual LSASS handle access after a gateway foothold,
+      not a single noisy process-access event on its own.
   threats:
     - ${UUID.threatGateway}
-  attack:
+  mitre_attack:
     - T1003.001
   signals:
     - name: LSASS process access
       uuid: ${UUID.signalLsass}
-      description: Suspicious handle access to lsass.exe from an unusual process
+      description: |
+        Suspicious handle access to lsass.exe from an unusual process.
       severity: High
-      methodology: analytics
+      methodology: Behavioural
       entities:
-        - host
-        - process
+        - Hostname
+        - Process
       data:
         availability: Complete
-        requirements: EDR process / handle telemetry
+        requirements: EDR process and handle telemetry
 `,
   'objects/rules/lsass-memory-access.yaml': `name: LSASS memory access
 
 metadata:
   uuid: ${UUID.ruleLsass}
-  schema: rule::1.0
-  version: 1.3.0
-  created: "2026-01-01"
-  modified: "2026-03-01"
+  schema: rule::1.1
+  version: 1.0.0
+  created: "2026-05-08"
+  modified: "2026-05-08"
   tlp: clear
+  author: detection-team
+  organisation:
+    uuid: 00000000-0000-4000-8000-000000000099
+    name: Example Corp
+  reviewed: "2026-05-08"
 
 description: |
   Suspicious handle access to LSASS. Implements the credential-access
   objective so every alert traces back to the gateway threat narrative.
 status: STAGING
-severity: High
+severity: Substantial incident
 techniques:
   - T1003.001
 detection_model: ${UUID.objectiveCredential}
@@ -393,7 +407,6 @@ name = "SOC Staging"
 description = "Pre-production workspace — receives STAGING content"
 deployment = "STAGING"
 [tenants.setup]
-proxy = false
 ssl = true
 resource_group = "rg-secops-sentinel-stg"
 workspace_name = "law-secops-staging"
@@ -408,7 +421,6 @@ name = "SOC Production"
 description = "Production workspace — promotion gated by a protected environment"
 deployment = "PRODUCTION"
 [tenants.setup]
-proxy = false
 ssl = true
 resource_group = "rg-secops-sentinel-prd"
 workspace_name = "law-secops-prod"
@@ -441,7 +453,6 @@ name = "ES Staging"
 description = "Enterprise Security search head — receives STAGING content"
 deployment = "STAGING"
 [tenants.setup]
-proxy = false
 ssl = true
 url = "$SPLUNK_URL"
 port = "$SPLUNK_PORT"
@@ -475,9 +486,9 @@ export const INLINE_EDIT = {
   tuned: DEMO_FILES[RULE_PATH].replace(SENTINEL_QUERY_BASE, SENTINEL_QUERY_TUNED),
 } as const;
 
-/** Merge request opened once the object chain is authored. */
+/** Pull request opened once the object chain is authored. */
 export const REVIEW_MR = {
-  id: '!142',
+  id: '#142',
   title: 'Detect LSASS credential access after PAN-OS gateway exploitation',
   branch: DEMO_BRANCH,
   target: 'main',
@@ -489,7 +500,7 @@ export const REVIEW_MR = {
   ],
   approval: 'SOC lead approved these changes',
   promotion:
-    'Production promotion runs from a protected environment and needs its own approval — this merge only reaches STAGING.',
+    'STAGING deployed from this pull request. Merging runs Deploy Production on main; put that job behind a protected environment if promotion needs its own approval.',
 } as const;
 
 export type ReviewMr = typeof REVIEW_MR;
@@ -504,41 +515,33 @@ export type ReviewJob = {
 };
 
 /**
- * Jobs mirror the workflow `opentide setup ci github` writes into a detection repo:
- * Validate → Generate → Deploy Staging, with production promotion held behind an
- * environment approval. Log lines follow the real structlog/Rich console format
- * (`HH:MM:SS  LEVEL  event_name` + indented fields, `== Section ==` panels).
+ * Jobs mirror the workflow `opentide setup ci github` writes into a detection repo, with the
+ * platform SDK extras the live checks need added to the install step:
+ * Validate → Generate → Deploy Staging on the pull request; production deploys on merge.
+ * Log lines are what a default (non-debug) run prints: Rich section rules and the `OK …`
+ * result line. INFO events only appear with `--debug` or `--json`, so they are left out.
  */
 export const REVIEW_JOBS: ReviewJob[] = [
   {
     id: 'validate',
     name: 'Validate',
     trigger: 'on: pull_request',
-    meta: 'ubuntu-latest · python 3.12 · pip install opentide',
+    meta: 'ubuntu-latest · python 3.12 · pinned opentide[sentinel,splunk]',
     duration: '48s',
     lines: [
       '::group::Validate objects',
-      '$ opentide validate',
-      '09:41:02  INFO     validates_all_opentide_objects_via_model_validate',
-      '09:41:04  INFO     step_completed',
-      '  detail: Successfully verified 5 opentide objects',
-      '09:41:04  INFO     all_content_successfully_passed_validation',
+      '$ opentide validate --strict',
+      'OK Validation passed',
+      '$ opentide lint --strict',
+      'OK Catalogue lint passed',
       '::group::Validate Sentinel queries',
-      '$ opentide validate query --platform sentinel',
-      '== Query Validation - Microsoft Sentinel ==',
-      '09:41:11  INFO     acquiring_azure_credentials_for_tenant',
-      '  detail: SOC Staging',
-      '09:41:14  INFO     sending_query_to_azure_monitor_workspace',
-      '  detail: LSASS memory access (…8003-000000000001)',
-      '09:41:17  INFO     the_query_is_a_valid_sentinel_kql',
-      '  detail: LSASS memory access (…8003-000000000001)',
+      '$ opentide validate query --platform sentinel --live',
+      '── Query Validation - Microsoft Sentinel ──',
+      'OK Query validation passed for sentinel',
       '::group::Validate Splunk queries',
-      '$ opentide validate query --platform splunk',
-      '== Query Validation - Splunk Enterprise Security ==',
-      '09:41:23  INFO     validating_spl_query',
-      '  mdr_name: LSASS memory access',
-      '09:41:26  INFO     valid_spl_query',
-      '  mdr_name: LSASS memory access',
+      '$ opentide validate query --platform splunk --live',
+      '── Query Validation - Splunk Enterprise Security ──',
+      'OK Query validation passed for splunk',
     ],
   },
   {
@@ -550,39 +553,31 @@ export const REVIEW_JOBS: ReviewJob[] = [
     lines: [
       '::group::Generate schemas, exports and docs',
       '$ opentide generate',
-      '== Object vocabulary generation ==',
-      '09:41:44  INFO     generated_all_json_schemas',
-      '== Export generation ==',
-      '09:41:49  INFO     correctly_exported',
-      '  detail: navigator-layer.json',
-      '== Documentation generation ==',
-      '09:41:53  INFO     index_written',
-      '  output: docs',
-      '09:41:53  INFO     step_completed',
-      '  detail: Completed successfully',
+      '── Documentation generation ──',
+      '── Export generation ──',
+      '── Object vocabulary generation ──',
+      '── Template generation ──',
+      '── JSON schema generation ──',
+      '── VS Code snippet generation ──',
+      'OK Full generation pipeline completed',
     ],
   },
   {
     id: 'deploy-staging',
     name: 'Deploy Staging',
-    trigger: 'environment: staging',
+    trigger: 'on: pull_request',
     duration: '1m 12s',
-    meta: 'DEPLOYMENT_PLAN=STAGING · secrets from environment',
+    meta: '--plan STAGING · credentials from CI secrets',
     lines: [
       '::group::Deploy to staging tenants',
-      '$ opentide deploy --plan STAGING',
-      '== MDR Deployment ==',
-      '09:42:06  INFO     currently_targeting_tenant',
-      '  detail: SOC Staging',
-      '09:42:09  INFO     processing_rule',
-      '  detail: LSASS memory access',
-      '09:42:14  INFO     deployed_mdr_successfully',
-      '  arg0: [STAGING] LSASS memory access',
-      '09:42:18  INFO     currently_targeting_tenant',
-      '  tenant: ES Staging',
-      '09:42:24  INFO     deployed_on_splunk',
-      '  name: LSASS memory access',
-      '09:42:24  INFO     all_content_passed_deployment',
+      '$ opentide deploy --dry-run --plan STAGING',
+      '── MDR Deployment ──',
+      '── MDR Deployment ──',
+      'OK Deployment completed',
+      '$ opentide deploy --plan STAGING --skip-unconfigured',
+      '── MDR Deployment ──',
+      '── MDR Deployment ──',
+      'OK Deployment completed',
     ],
   },
 ];
@@ -630,13 +625,13 @@ export const OBJECT_BLURBS: Record<string, ObjectBlurb> = {
     blurb:
       'Threat vectors are the “why” node. Objectives and rules link back here so every detection stays anchored to a scenario your org actually cares about.',
     points: [
-      'Required body: severity, impact, leverage, viability, terrain',
-      'ATT&CK list is mandatory (non-empty)',
+      'Required body: severity, impact, leverage, viability, terrain, surface',
+      'mitre_attack is mandatory (non-empty)',
       'Stable UUID for objectives to reference in objective.threats',
     ],
     facts: [
       { label: 'Criticality', value: 'High' },
-      { label: 'Terrain', value: 'Edge Gateway' },
+      { label: 'Surface', value: 'PAN-OS firewalls' },
       { label: 'ATT&CK', value: 'T1190 · T1133' },
     ],
     next: 'Define an objective: what behaviours prove this threat is underway.',
@@ -651,12 +646,12 @@ export const OBJECT_BLURBS: Record<string, ObjectBlurb> = {
       'Objectives separate detection intent from deployable queries. Rules implement an objective via detection_model; they do not replace it.',
     points: [
       'Signals declare entities, methodology, and data requirements',
-      'Composition strategy (e.g. synergetic) defines how signals combine',
+      'Composition strategy (e.g. Combined) defines how signals concur',
       'threats[] chains back to the gateway exploitation vector',
     ],
     facts: [
       { label: 'Priority', value: 'High' },
-      { label: 'Strategy', value: 'synergetic' },
+      { label: 'Strategy', value: 'Combined' },
       { label: 'Signals', value: '1 (LSASS process access)' },
     ],
     next: 'Ship MDR rules with platform configs that implement this objective.',
@@ -664,11 +659,11 @@ export const OBJECT_BLURBS: Record<string, ObjectBlurb> = {
   rule: {
     title: 'LSASS memory access',
     kind: 'Detection rule (MDR)',
-    schema: 'rule::1.0',
+    schema: 'rule::1.1',
     intent:
       'The deployable unit: platform queries, lifecycle status, ATT&CK techniques, and optional response guidance — linked to an objective UUID.',
     blurb:
-      'One rule carries a Sentinel analytics rule and a Splunk ES correlation search. Honest adapters validate queries where the platform supports it; deploy-only elsewhere.',
+      'One rule carries a Sentinel analytics rule and a Splunk ES correlation search. Both platforms check the query against a live tenant before anything deploys.',
     points: [
       'detection_model → objective UUID (chaining check in validate)',
       'configurations.* hold native queries per platform (KQL, SPL)',
