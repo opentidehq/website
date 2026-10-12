@@ -1,95 +1,66 @@
-import { ArrowUpRight, BookOpen, Boxes, Code2, Compass, FolderGit2, Package, Sparkles, Wand2 } from 'lucide-react';
-import { ecosystemLinks, type EcosystemItem } from '@/lib/shared';
+import { ArrowUpRight } from 'lucide-react';
+import { ecosystemLinks } from '@/lib/shared';
+import { Tag } from '@/components/landing/ui';
 
-const ICONS: Record<string, typeof Package> = {
-  opentide: Package,
-  specifications: BookOpen,
-  library: Boxes,
-  explorer: Compass,
-  skills: Wand2,
-  'language-server': Code2,
-  'vscode-extension': Sparkles,
-};
+const cell = 'flex h-full flex-col bg-[var(--landing-panel)] p-6';
 
-function EcosystemCard({ item }: { item: EcosystemItem }) {
-  const Icon = ICONS[item.name] ?? Package;
-  const inner = (
-    <>
-      <div className="flex items-start justify-between gap-3">
-        <span className="flex size-10 items-center justify-center rounded-xl bg-[color-mix(in_srgb,var(--landing-accent)_12%,transparent)] text-[var(--landing-accent)]">
-          <Icon className="size-5" aria-hidden />
-        </span>
-        <span
-          className={`rounded-full px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider ${
-            item.status === 'live'
-              ? 'bg-[color-mix(in_srgb,var(--landing-accent)_14%,transparent)] text-[var(--landing-ink)]'
-              : 'bg-[color-mix(in_srgb,var(--landing-ink)_6%,transparent)] text-[var(--landing-subtle)]'
-          }`}
-        >
-          {item.status === 'live' ? item.tag : 'Coming soon'}
-        </span>
-      </div>
-      <h3 className="mt-5 text-lg font-semibold tracking-tight text-[var(--landing-ink)]">
-        {item.name}
-        {item.href && (
-          <ArrowUpRight
-            className="ml-1 inline size-4 translate-y-[-1px] text-[var(--landing-dim)] transition group-hover:text-[var(--landing-accent)]"
-            aria-hidden
-          />
-        )}
-      </h3>
-      <p className="mt-2 text-sm leading-relaxed text-[var(--landing-muted)]">{item.description}</p>
-    </>
-  );
-
-  const className =
-    'group flex h-full flex-col rounded-2xl bg-[color-mix(in_srgb,var(--landing-ink)_4%,var(--landing-bg))] p-6 transition hover:bg-[color-mix(in_srgb,var(--landing-ink)_7%,var(--landing-bg))] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--landing-accent)]';
-
-  if (item.href) {
-    return (
-      <a href={item.href} target="_blank" rel="noopener noreferrer" className={className}>
-        {inner}
-      </a>
-    );
-  }
-
-  return (
-    <div className={`${className} opacity-90`}>
-      {inner}
-    </div>
-  );
-}
-
-/** Not an OpenTideHQ repository, so it stays out of the footer list: the repo the engine runs against. */
-function YourRepoCard() {
-  return (
-    <div className="flex h-full flex-col rounded-2xl border border-dashed border-[color-mix(in_srgb,var(--landing-accent)_45%,transparent)] p-6">
-      <div className="flex items-start justify-between gap-3">
-        <span className="flex size-10 items-center justify-center rounded-xl bg-[var(--landing-accent)] text-[var(--brand-accent-foreground)]">
-          <FolderGit2 className="size-5" aria-hidden />
-        </span>
-        <span className="rounded-full bg-[color-mix(in_srgb,var(--landing-accent)_14%,transparent)] px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-[var(--landing-ink)]">
-          Yours
-        </span>
-      </div>
-      <h3 className="mt-5 text-lg font-semibold tracking-tight text-[var(--landing-ink)]">your detection repo</h3>
-      <p className="mt-2 text-sm leading-relaxed text-[var(--landing-muted)]">
-        Your content: private objects, platform configuration and CI. The source of truth, in git.
-      </p>
-    </div>
-  );
-}
-
+/**
+ * Each repository and its one job, as a directory rather than a wall of icon cards. The last
+ * cell is the repository that is not ours: the detection repo opentide runs against.
+ */
 export function EcosystemGrid() {
   return (
-    <ul className="grid list-none gap-4 p-0 sm:grid-cols-2 lg:grid-cols-4">
-      {ecosystemLinks.map((item) => (
-        <li key={item.name}>
-          <EcosystemCard item={item} />
-        </li>
-      ))}
+    <ul className="landing-panel m-0 grid list-none grid-cols-1 gap-px overflow-hidden bg-[var(--landing-border)] p-0 sm:grid-cols-2 lg:grid-cols-4">
+      {ecosystemLinks.map((item) => {
+        const head = (
+          <div className="flex items-start justify-between gap-3">
+            <span className="inline-flex items-center gap-1 font-semibold text-[var(--landing-ink)]">
+              {item.name}
+              {item.href && (
+                <ArrowUpRight
+                  className="size-4 text-[var(--landing-dim)] transition group-hover:text-[var(--landing-accent)]"
+                  aria-hidden
+                />
+              )}
+            </span>
+            <Tag tone={item.status === 'live' ? 'accent' : 'dashed'}>
+              {item.status === 'live' ? item.tag.toLowerCase() : 'coming soon'}
+            </Tag>
+          </div>
+        );
+        const body = <p className="mt-2 text-sm leading-relaxed text-[var(--landing-muted)]">{item.description}</p>;
+
+        return (
+          <li key={item.name}>
+            {item.href ? (
+              <a
+                href={item.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`group ${cell} transition-colors hover:bg-[color-mix(in_srgb,var(--landing-ink)_3%,var(--landing-panel))] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--landing-accent)]`}
+              >
+                {head}
+                {body}
+              </a>
+            ) : (
+              <div className={cell}>
+                {head}
+                {body}
+              </div>
+            )}
+          </li>
+        );
+      })}
       <li>
-        <YourRepoCard />
+        <div className={cell}>
+          <div className="flex items-start justify-between gap-3">
+            <span className="font-semibold text-[var(--landing-ink)]">your detection repo</span>
+            <Tag tone="solid">yours</Tag>
+          </div>
+          <p className="mt-2 text-sm leading-relaxed text-[var(--landing-muted)]">
+            Your content: private objects, platform configuration and CI. The source of truth, in git.
+          </p>
+        </div>
       </li>
     </ul>
   );

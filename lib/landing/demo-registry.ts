@@ -188,6 +188,44 @@ export const DEMO_PATHS = [
 
 export type DemoPath = (typeof DEMO_PATHS)[number];
 
+/**
+ * The environment the chain lands in: assets tagged with the surface vocabulary, the log
+ * sources collected from them and the integration each one lands in, and a detector that
+ * already watches the workstations. `opentide generate` turns these names into schema enums,
+ * so a signal's `logsources` complete in the editor.
+ */
+export const VISIBILITY_PATH = '.opentide/configurations/visibility.toml';
+
+export const VISIBILITY_TOML = `[[assets]]
+name = "Edge firewalls"
+description = "Internet-facing PA-Series and VM-Series firewalls"
+criticality = "High"
+surface = ["Firewalls::Palo Alto Networks"]
+
+[[assets]]
+name = "Corporate workstations"
+description = "Managed Windows 11 endpoints"
+criticality = "Medium"
+surface = ["Windows::Desktop::11"]
+
+[[logsources]]
+name = "Endpoint process events"
+description = "Defender for Endpoint DeviceProcessEvents, forwarded to Sentinel"
+system = "sentinel"
+assets = ["Corporate workstations"]
+
+[[logsources]]
+name = "Firewall traffic"
+description = "PAN-OS traffic and threat logs"
+system = "splunk"
+assets = ["Edge firewalls"]
+
+[[detectors]]
+name = "Defender for Endpoint"
+description = "Built-in credential theft alerts"
+assets = ["Corporate workstations"]
+`;
+
 export const RULE_PATH = 'objects/rules/lsass-memory-access.yaml' satisfies DemoPath;
 
 /** Sentinel KQL before the inline tuning pass — kept as a constant so the patch always applies. */
@@ -289,6 +327,13 @@ objective:
       data:
         availability: Complete
         requirements: EDR process and handle telemetry
+        logsources:
+          - Endpoint process events
+      detectors:
+        - name: Defender for Endpoint
+          technology: EDR
+          description: |
+            Built-in alert for suspicious LSASS access.
 `,
   'objects/rules/lsass-memory-access.yaml': `name: LSASS memory access
 

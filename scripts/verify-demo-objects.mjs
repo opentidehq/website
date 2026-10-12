@@ -2,13 +2,13 @@
 /**
  * Run the landing page's demo objects through the real engine.
  *
- * The workflow studio and the object graph show threats, objectives, rules and platform
- * configs as if a detection repo held them. This writes each demo into a scratch folder made
+ * The workflow studio shows threats, objectives, rules and platform configs as if a
+ * detection repo held them. This writes them into a scratch folder made
  * by `opentide setup`, then runs the gates the site describes:
  *
  *   opentide validate --strict
  *   opentide lint --strict
- *   opentide deploy --dry-run --plan STAGING   (studio only, with placeholder credentials)
+ *   opentide deploy --dry-run --plan STAGING   (with placeholder credentials)
  *
  * Needs `opentide` on PATH (pip install opentide) and Node with --experimental-strip-types,
  * because the demo data lives in TypeScript modules: `pnpm verify:demos`.
@@ -22,8 +22,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const load = (rel) => import(pathToFileURL(join(root, rel)).href);
 
-const { DEMO_FILES, INLINE_EDIT } = await load('lib/landing/demo-registry.ts');
-const { GRAPH_NODES, GRAPH_YAML } = await load('lib/landing/graph-demo.ts');
+const { DEMO_FILES, INLINE_EDIT, VISIBILITY_PATH, VISIBILITY_TOML } = await load('lib/landing/demo-registry.ts');
 
 const failures = [];
 
@@ -85,6 +84,7 @@ try {
   const studio = scratchRepo('studio');
   dirs.push(studio);
   for (const [path, body] of Object.entries(DEMO_FILES)) write(studio, path, body);
+  write(studio, VISIBILITY_PATH, VISIBILITY_TOML);
   const env = placeholderCredentials(Object.values(DEMO_FILES));
   opentide(studio, ['validate', '--strict']);
   opentide(studio, ['lint', '--strict']);
@@ -92,15 +92,6 @@ try {
   write(studio, INLINE_EDIT.path, INLINE_EDIT.tuned);
   console.log('  after the inline edit:');
   opentide(studio, ['validate', '--strict']);
-
-  console.log('object graph');
-  const graph = scratchRepo('graph');
-  dirs.push(graph);
-  for (const [id, node] of Object.entries(GRAPH_NODES)) {
-    if (node.path && id in GRAPH_YAML) write(graph, node.path, GRAPH_YAML[id]);
-  }
-  opentide(graph, ['validate', '--strict']);
-  opentide(graph, ['lint', '--strict']);
 } finally {
   for (const dir of dirs) rmSync(dir, { recursive: true, force: true });
 }

@@ -9,6 +9,8 @@ colors:
   white: "#ffffff"
   black: "#000000"
   landing-bg: "#000000"
+  landing-band: "#0a0a0b"
+  landing-panel: "#0e0e10"
   landing-surface-deep: "#050505"
   landing-surface: "#0a0a0a"
   landing-surface-raised: "#111111"
@@ -50,8 +52,9 @@ rounded:
   lg: "1.25rem"
   full: "9999px"
 spacing:
-  section: "6rem"
-  section-lg: "8rem"
+  chapter: "5rem"
+  chapter-md: "6.5rem"
+  block: "6rem"
   card: "1.5rem"
 components:
   button-primary:
@@ -68,7 +71,29 @@ components:
 
 ## Overview
 
-opentide uses two registers on one codebase: an expressive **brand** landing (FLIP liquid ASCII hero, EU blue/yellow) and a restrained **product** docs shell (Fumadocs neutral theme). Typography is Inter everywhere; JetBrains Mono for code and terminal demos. Motion is intentional: one canvas liquid-ASCII hero, restrained section transitions - all gated by `prefers-reduced-motion`. The tide draws real detection content (KQL, SPL, object fields) on true monospace cells (advance 0.6em, line 1.28em) in the page's JetBrains Mono, paints a settled frame before animating, and pauses when off screen or in a background tab. Landing light mode is white+blue; dark is black+yellow.
+opentide uses two registers on one codebase: an expressive **brand** landing (FLIP liquid ASCII hero, EU blue/yellow) and a restrained **product** docs shell (Fumadocs neutral theme). Typography is Inter everywhere; JetBrains Mono for code and terminal demos. Motion is intentional: one canvas liquid-ASCII hero, restrained section transitions - all gated by `prefers-reduced-motion`. The tide runs edge to edge along the foot of the hero on a transparent canvas, rising behind the centred copy, and the hero fades into the band of chapter 01 so the water has no shore; it draws real detection content (KQL, SPL, object fields) on true monospace cells (advance 0.6em, line 1.28em) in the page's JetBrains Mono, hangs its rows from the bottom edge, coarsens its grid on wide screens so a frame costs the same, paints a settled frame before animating, and pauses when off screen or in a background tab. Landing light mode is white+blue; dark is black+yellow.
+
+The landing is seven chapters (`components/landing/chapters.ts`), each one idea: a chapter head, then the one or two artefacts that prove it. Chapters alternate between the page and a tinted band, so where one ends and the next begins reads at a glance. Every section composes the same few parts from `components/landing/ui.tsx`; nothing scroll-pins, and nothing hides content behind tabs except alternative views of one artefact (the CLI · SDK · MCP showcase).
+
+### Illustrations
+
+Each chapter carries one illustration built from real artefacts, never a stock icon grid:
+
+- **Ontology map** (`ontology-map.tsx`): threat, objective, its signals and rule in `objects/`, and the environment from `visibility.toml` and `platforms/*.toml` they land in: assets on a surface, log sources, detectors, integrations. Edges are labelled with the field that makes the link; solid edges are UUID references that `opentide validate` resolves, dashed ones are names or vocabulary values. A guided tour walks the nodes; the detail panel shows the YAML or TOML with the linking lines marked. Below `sm` the graph becomes two labelled groups of nodes.
+- **Coverage figure**: an ATT&CK heatmap beside the opentide graph, with a threat that no objective covers flagged as a gap.
+- **Integration fan**: one rule's `configurations` keys wired to each integration.
+- **CLI · SDK · MCP showcase**: typed commands with output captured from the released opentide against the demo repository (a broken reference, a vocabulary error, the `--json` report, a dry-run plan); the promise each run demonstrates lights up beside it.
+- **Pipeline, north star, get started**: the pipeline runs like CI, a pulse rides the north-star track, and the repository tree grows as the setup commands play.
+
+Every demo object the page shows is validated by `pnpm verify:demos` against the released engine.
+
+### Motion
+
+Highlights are fills, never a bar on the left edge. Content reveals as it scrolls in (`RevealOnScroll`, `data-reveal`, `data-reveal-group` for staggered children); content is never hidden without JavaScript. Diagrams draw their edges once (`.landing-draw`), and the links that matter carry a moving dash (`.landing-flow`). Demos idle off screen and stop for `prefers-reduced-motion`, which shows each finished state instead.
+
+### Copy
+
+Say opentide, the CLI, the SDK or the MCP server, never "the engine". Integrations are integrations: do not lead with how many there are. The landing does not tell the re-release story; the blog does.
 
 Logo and logotype assets live in `public/brand/` (synced from OpenTideHQ/.github): Material Tsunami circle mark + **opentide** wordmark.
 
@@ -81,9 +106,10 @@ Logo and logotype assets live in `public/brand/` (synced from OpenTideHQ/.github
 | Brand primary (light) | `eu-blue` | `#001489` | Pantone Reflex Blue — docs primary, light mark |
 | Brand accent (dark) | `eu-yellow` | `#ffcc00` | Dark mark, landing CTAs, active nav |
 | Yellow lift | `yellow-lift` | `#ffe566` | Primary button hover |
-| Landing bg | `landing-bg` | `#000000` | Marketing base |
-| Landing surface | `landing-surface` | `#0a0a0a` | Cards, panels |
-| Landing raised | `landing-surface-raised` | `#111111` | Hover / featured |
+| Landing bg | `landing-bg` | `#ffffff` / `#000000` | Marketing base (light / dark) |
+| Landing band | `landing-band` | `#f5f6fa` / `#0a0a0b` | Every other chapter |
+| Landing panel | `landing-panel` | `#ffffff` / `#0e0e10` | Panels, tiles, the ecosystem directory |
+| Landing surface | `landing-surface` | `#f2f2f5` / `#000000` | Workflow studio chrome |
 | Landing ink | `landing-ink` | `#fafafa` | Headings on landing |
 | Landing muted | `landing-muted` | `#a1a1aa` | Body on landing |
 
@@ -93,20 +119,25 @@ Docs: `--color-fd-primary` / `--brand-accent` map to blue in light mode and yell
 
 - **Sans**: Inter for all UI and marketing headings (no separate display font).
 - **Mono**: JetBrains Mono for CLI snippets, MCP tool calls, the workflow studio, and prose code blocks.
-- **Headlines**: `clamp(2.25rem, 5.5vw, 3.75rem)`, weight 700, tracking `-0.02em`, `text-wrap: balance`.
+- **Hero**: `clamp(2.5rem, 5.6vw, 4.5rem)`, weight 700, tracking `-0.045em`, centred.
+- **Chapter heads** (h2): `clamp(2rem, 4vw, 3rem)`, weight 700, tracking `-0.035em`, `text-wrap: balance`. **Block heads** (h3): 1.5–1.75rem. Nothing else is a heading.
+- **Mono**: 12px for labels and captions, 13px in code panels, 11px for tags only.
 - **Body**: 1rem–1.25rem, max ~65ch in prose sections, `text-wrap: pretty` on long copy.
 
 ## Elevation
 
-Landing uses flat tonal layering (borders `landing-border`, rings on brand yellow) — no drop-shadow stacks except the soft shadow under the hero tide card. Code panels are deep-tide navy (`--landing-code-*`) in both themes, as content. Docs rely on Fumadocs sidebar/card surfaces; avoid nested card grids on marketing sections.
+Landing uses flat tonal layering: chapters alternate page and `landing-band`, content that needs a frame sits in one panel style (`.landing-panel`: 1rem radius, `landing-border`, `landing-panel` fill), and grids of cells share one panel with 1px dividers rather than becoming separate cards. The only drop shadow is under the workflow studio. Code panels are deep-tide navy (`--landing-code-*`) in both themes, as content. Docs rely on Fumadocs sidebar/card surfaces; avoid nested card grids on marketing sections.
 
 ## Components
 
-- **Primary button** (`.landing-btn-primary`): yellow fill, black text, yellow ring, focus yellow outline.
-- **Secondary button** (`.landing-btn-secondary`): raised surface, yellow border/text.
-- **Surface card** (`.landing-surface-card`): 1rem radius, surface fill, `landing-border`.
+- **Primary button** (`.landing-btn-primary`): accent fill, accent-foreground text, accent ring and focus outline.
+- **Secondary button** (`.landing-btn-secondary`): transparent, accent border and text.
+- **Chapter** (`Chapter`, `ChapterHead`, `BlockHead` in `components/landing/ui.tsx`): lowercase mono label with the chapter number, h2, at most one lead; blocks inside a chapter are spaced by `block`. Component classes live in `@layer components` so utilities can override them.
+- **Panel** (`.landing-panel`) and **surface card** (`.landing-surface-card`, unfilled, for blog embeds).
+- **Tag** (`Tag`): four tones, used the same way everywhere — `solid` (accepted), `accent` (supported, live check, in progress), `outline` (planned, gated, deploy-only), `dashed` (proposed, not implemented, unsupported). No green or red outside code panels.
 - **Nav wordmark**: theme-aware tsunami mark + open/tide split (`--brand-accent`).
-- **Chapter navigation**: the landing's chapters (`components/landing/chapters.ts`) appear as a row of links under the hero and as a floating dock (`ChapterNav`) once the hero scrolls away — current chapter filled, a thin progress line, hidden while the workflow studio holds the viewport, one pill with a menu below `lg`. Blocks that belong to one chapter but need not be read in a row use `SectionTabs` (hash-addressable, e.g. `#platforms`).
+- **Chapter navigation**: a floating dock (`ChapterNav`) once the hero scrolls away — every chapter at `xl` with the current one filled and a thin progress line, one pill with a menu below `xl`. Blocks keep their old anchors (`#pipeline`, `#platforms`, `#doors`).
+- **Workflow studio**: plays its six-step scenario in a fixed frame and idles off screen; it never pins or resizes with scroll.
 - **Docs root switcher**: Fumadocs popover; Usage default; accent focus ring.
 - **MDX**: Callout, Cards, Steps, Tabs, TypeTable, Mermaid (Fumadocs UI + remark plugins).
 

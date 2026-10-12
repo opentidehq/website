@@ -123,7 +123,7 @@ export function OpentideLicensePill({
   className?: string;
   height?: number;
 }) {
-  const width = Math.round((height * 71.91) / 23.5);
+  const width = Math.round((height * 73.41) / 23.5);
   return (
     <Image
       src="/brand/svg/license-pill-normal.svg"

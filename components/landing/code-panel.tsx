@@ -20,11 +20,11 @@ export function CodePanel({
     <figure
       className={`m-0 flex min-w-0 flex-col overflow-hidden rounded-2xl bg-[var(--landing-code-bg)] text-[var(--landing-code-ink)] ring-1 ring-[var(--landing-border)] ${className ?? ''}`}
     >
-      <figcaption className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-2.5 font-mono text-[11px] text-[var(--landing-code-dim)]">
+      <figcaption className="flex items-center justify-between gap-3 border-b border-white/10 px-5 py-2.5 font-mono text-[11px] text-[var(--landing-code-dim)]">
         <span>{caption}</span>
         {aside && <span>{aside}</span>}
       </figcaption>
-      <pre className="landing-code-scroll m-0 flex-1 overflow-x-auto px-4 py-4 font-mono text-[12.5px] leading-relaxed">
+      <pre className="landing-code-scroll m-0 flex-1 overflow-x-auto px-5 py-5 font-mono text-[13px] leading-relaxed">
         <code>{children}</code>
       </pre>
     </figure>

@@ -43,7 +43,7 @@ export function LandingNav({ children }: { children: ReactNode }) {
                     href={link.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="rounded-md p-2 text-[var(--landing-subtle)] transition hover:bg-[var(--landing-hover)] hover:text-[var(--landing-accent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--landing-accent)]"
+                    className="hidden rounded-md p-2 text-[var(--landing-subtle)] transition hover:bg-[var(--landing-hover)] hover:text-[var(--landing-accent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--landing-accent)] sm:inline-flex"
                     aria-label={link.label}
                   >
                     {link.icon}
@@ -79,17 +79,15 @@ export function LandingNav({ children }: { children: ReactNode }) {
             <div>
               <OpentideWordmark height={36} />
               <p className="mt-4 max-w-sm text-sm leading-relaxed text-[var(--landing-muted)]">
-                Spec-driven development for detection engineering: an ontology, a taxonomy and an
-                engine you pin. Forever free.
+                Spec-driven development for detection engineering: an ontology, a taxonomy and the
+                tools that hold every detection to them. Forever free.
               </p>
               <div className="mt-4">
                 <OpentideLicensePill />
               </div>
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-[var(--landing-muted)]">
-                Product
-              </p>
+              <p className="font-mono text-xs text-[var(--landing-subtle)]">product</p>
               <ul className="mt-4 space-y-2 text-sm text-[var(--landing-subtle)]">
                 <li>
                   <Link href="/docs/usage/" className="transition hover:text-[var(--landing-accent)]">
@@ -111,7 +109,7 @@ export function LandingNav({ children }: { children: ReactNode }) {
                     href="/docs/usage/concepts/platforms/"
                     className="transition hover:text-[var(--landing-accent)]"
                   >
-                    Platform matrix
+                    Integrations
                   </Link>
                 </li>
                 <li>
@@ -122,9 +120,7 @@ export function LandingNav({ children }: { children: ReactNode }) {
               </ul>
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-[var(--landing-muted)]">
-                Ecosystem
-              </p>
+              <p className="font-mono text-xs text-[var(--landing-subtle)]">ecosystem</p>
               <ul className="mt-4 space-y-2 text-sm text-[var(--landing-subtle)]">
                 {ecosystemLinks.map((repo) => (
                   <li key={repo.name}>

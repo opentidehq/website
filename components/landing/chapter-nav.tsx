@@ -27,9 +27,9 @@ export function useChapterJump() {
 }
 
 /**
- * Floating chapter dock. Hidden while the hero (and its in-page contents) is on screen and
- * while the workflow studio holds the viewport; otherwise it tracks the current chapter and
- * how far down the page the reader is. Below `lg` it collapses to one pill with a menu.
+ * Floating chapter dock. Hidden while the hero is on screen; otherwise it tracks the current
+ * chapter and how far down the page the reader is. Below `xl` it collapses to one pill with a
+ * menu.
  */
 export function ChapterNav() {
   const jump = useChapterJump();
@@ -54,20 +54,15 @@ export function ChapterNav() {
       setActive(current);
 
       const hero = document.getElementById('top');
-      const pastHero = hero ? hero.getBoundingClientRect().bottom < vh * 0.25 : window.scrollY > vh;
-      // The studio writes `--stage-open` (0 → 1) inline while it takes the viewport.
-      const stage = document.querySelector<HTMLElement>('.landing-studio');
-      const stageOpen = stage ? Number(stage.style.getPropertyValue('--stage-open')) || 0 : 0;
-      setVisible(pastHero && stageOpen < 0.5);
+      setVisible(hero ? hero.getBoundingClientRect().bottom < vh * 0.25 : window.scrollY > vh);
 
       const max = document.documentElement.scrollHeight - vh;
       if (progressRef.current) {
         progressRef.current.style.transform = `scaleX(${max > 0 ? Math.min(1, window.scrollY / max) : 0})`;
       }
     };
-    // Two frames: the studio updates its stage in its own scroll frame, so read after it.
     const onScroll = () => {
-      if (!frame) frame = requestAnimationFrame(() => (frame = requestAnimationFrame(update)));
+      if (!frame) frame = requestAnimationFrame(update);
     };
     update();
     window.addEventListener('scroll', onScroll, { passive: true });
@@ -110,7 +105,7 @@ export function ChapterNav() {
     >
       <div className="relative overflow-hidden rounded-full border border-[var(--landing-border)] bg-[color-mix(in_srgb,var(--landing-bg)_88%,transparent)] shadow-[0_12px_40px_-16px_rgb(0_0_0/0.35)] backdrop-blur-xl">
         {/* Wide screens: every chapter, the current one filled. */}
-        <ol className="m-0 hidden list-none items-center gap-0.5 p-1.5 lg:flex">
+        <ol className="m-0 hidden list-none items-center gap-0.5 p-1.5 xl:flex">
           {CHAPTERS.map((c) => {
             const on = c.id === active;
             return (
@@ -136,7 +131,7 @@ export function ChapterNav() {
         {/* Narrow screens: the current chapter, opening the full list. */}
         <button
           type="button"
-          className="flex items-center gap-3 px-4 py-2.5 text-sm lg:hidden"
+          className="flex items-center gap-3 px-4 py-2.5 text-sm xl:hidden"
           aria-expanded={open}
           aria-controls="landing-dock-menu"
           onClick={() => setOpen((v) => !v)}
@@ -160,7 +155,7 @@ export function ChapterNav() {
       {open && (
         <ol
           id="landing-dock-menu"
-          className="absolute bottom-full left-1/2 mb-2 w-[min(20rem,calc(100vw-2rem))] -translate-x-1/2 list-none overflow-hidden rounded-2xl border border-[var(--landing-border)] bg-[var(--landing-bg)] p-1.5 shadow-[0_16px_48px_-16px_rgb(0_0_0/0.4)] lg:hidden"
+          className="absolute bottom-full left-1/2 mb-2 w-[min(20rem,calc(100vw-2rem))] -translate-x-1/2 list-none overflow-hidden rounded-2xl border border-[var(--landing-border)] bg-[var(--landing-bg)] p-1.5 shadow-[0_16px_48px_-16px_rgb(0_0_0/0.4)] xl:hidden"
         >
           {CHAPTERS.map((c) => {
             const on = c.id === active;
@@ -184,29 +179,6 @@ export function ChapterNav() {
           })}
         </ol>
       )}
-    </nav>
-  );
-}
-
-/** The chapters as a row of links under the hero, so the page's shape is visible up front. */
-export function HeroContents() {
-  const jump = useChapterJump();
-  return (
-    <nav aria-label="On this page">
-      <ol className="m-0 flex list-none flex-wrap gap-2 p-0">
-        {CHAPTERS.map((c) => (
-          <li key={c.id}>
-            <a
-              href={`#${c.id}`}
-              onClick={(e) => jump(e, c.id)}
-              className="inline-flex items-center gap-2 rounded-full border border-[var(--landing-border)] px-3.5 py-1.5 text-sm text-[var(--landing-muted)] transition hover:border-[var(--landing-accent)] hover:text-[var(--landing-ink)]"
-            >
-              <span className="font-mono text-[11px] text-[var(--landing-accent)]">{c.n}</span>
-              {c.label}
-            </a>
-          </li>
-        ))}
-      </ol>
     </nav>
   );
 }

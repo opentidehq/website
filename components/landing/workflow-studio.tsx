@@ -35,7 +35,7 @@ import {
 } from '@/lib/landing/demo-registry';
 import { TIMING } from '@/lib/landing/studio-timing';
 import { usePrefersReducedMotion } from '@/lib/hooks/use-prefers-reduced-motion';
-import { useScrollStage } from '@/lib/hooks/use-scroll-stage';
+import { useOnScreen } from '@/lib/hooks/use-on-screen';
 
 const STEPS = ['prompt', 'threat', 'objective', 'rule', 'inline', 'ci'] as const;
 
@@ -484,14 +484,14 @@ function ScenarioChrome({
       <div className="flex items-center gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex items-baseline gap-2">
-            <span className="font-mono text-[11px] tabular-nums text-[var(--landing-accent)]">
+            <span className="font-mono text-xs tabular-nums text-[var(--landing-accent)]">
               {String(stepIdx + 1).padStart(2, '0')}
               <span className="text-[var(--landing-dim)]">/{String(STEPS.length).padStart(2, '0')}</span>
             </span>
             <p className="truncate text-sm font-semibold tracking-tight text-[var(--landing-ink)]">
               {stepLabel[step]}
             </p>
-            <span className="hidden font-mono text-[10px] text-[var(--landing-dim)] sm:inline">
+            <span className="hidden font-mono text-xs text-[var(--landing-dim)] sm:inline">
               · {label}
             </span>
           </div>
@@ -499,7 +499,7 @@ function ScenarioChrome({
         <button
           type="button"
           onClick={onTogglePause}
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-[color-mix(in_srgb,var(--landing-ink)_6%,transparent)] px-3 py-1.5 font-mono text-[10px] font-medium text-[var(--landing-ink)] transition hover:bg-[color-mix(in_srgb,var(--landing-ink)_10%,transparent)]"
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-[color-mix(in_srgb,var(--landing-ink)_6%,transparent)] px-3 py-1.5 font-mono text-[11px] font-medium text-[var(--landing-ink)] transition hover:bg-[color-mix(in_srgb,var(--landing-ink)_10%,transparent)]"
           aria-pressed={paused}
         >
           {paused ? (
@@ -534,7 +534,7 @@ function ScenarioChrome({
               className="group min-w-0 cursor-pointer text-left"
             >
               <span
-                className={`mb-1.5 block truncate font-mono text-[9px] tracking-wide transition-colors ${
+                className={`mb-1.5 block truncate font-mono text-[11px] transition-colors ${
                   active
                     ? 'text-[var(--landing-accent)]'
                     : done
@@ -624,7 +624,7 @@ function InlineEditWidget({
 
 export function WorkflowStudio() {
   const reduced = usePrefersReducedMotion();
-  const { trackRef, stageRef, onScreen } = useScrollStage({ growTo: 0.2, enabled: !reduced });
+  const { ref: stageRef, onScreen } = useOnScreen<HTMLDivElement>();
 
   const [cursor, setCursor] = useState({ idx: 0, jumped: false });
   const [phase, setPhase] = useState<Phase>(reduced ? 'dwell' : 'work');
@@ -887,181 +887,179 @@ export function WorkflowStudio() {
   const readProgress = phase === 'work' ? clamp01((phasePart - 0.18) / 0.62) : 1;
 
   return (
-    <div ref={trackRef} className="landing-studio-track">
-      <div ref={stageRef} className="landing-studio">
-        <ScenarioChrome
-          stepIdx={stepIdx}
-          phasePart={phasePart}
-          phase={phase}
-          label={phaseLabel}
-          paused={paused}
-          onTogglePause={() => setPaused((p) => !p)}
-          onSelectStep={(i) => setCursor({ idx: i, jumped: true })}
-        />
+    <div ref={stageRef} className="landing-studio">
+      <ScenarioChrome
+        stepIdx={stepIdx}
+        phasePart={phasePart}
+        phase={phase}
+        label={phaseLabel}
+        paused={paused}
+        onTogglePause={() => setPaused((p) => !p)}
+        onSelectStep={(i) => setCursor({ idx: i, jumped: true })}
+      />
 
-        <div className="landing-studio-frame overflow-hidden border border-[var(--landing-border)] bg-[var(--landing-surface)] shadow-[0_20px_60px_-28px_var(--landing-btn-shadow)]">
-          <div className="flex h-10 shrink-0 items-center gap-2 border-b border-[var(--landing-border-subtle)] bg-[var(--landing-surface-raised)] px-3">
-            <span className="size-2.5 rounded-full bg-[#ff5f57]" aria-hidden />
-            <span className="size-2.5 rounded-full bg-[#febc2e]" aria-hidden />
-            <span className="size-2.5 rounded-full bg-[#28c840]" aria-hidden />
-            <span className="ml-2 truncate font-mono text-[11px] text-[var(--landing-subtle)]">
-              {isReviewTab
-                ? `${DEMO_REPO} · ${REVIEW_MR.id}`
-                : isBrowserTab
-                  ? `${ADVISORY.host} · ${ADVISORY.code}`
-                  : activePath
-                    ? `${DEMO_REPO} / ${activePath}`
-                    : DEMO_REPO}
+      <div className="overflow-hidden rounded-2xl border border-[var(--landing-border)] bg-[var(--landing-surface)] shadow-[0_20px_60px_-28px_var(--landing-btn-shadow)]">
+        <div className="flex h-10 shrink-0 items-center gap-2 border-b border-[var(--landing-border-subtle)] bg-[var(--landing-surface-raised)] px-3">
+          <span className="size-2.5 rounded-full bg-[#ff5f57]" aria-hidden />
+          <span className="size-2.5 rounded-full bg-[#febc2e]" aria-hidden />
+          <span className="size-2.5 rounded-full bg-[#28c840]" aria-hidden />
+          <span className="ml-2 truncate font-mono text-[11px] text-[var(--landing-subtle)]">
+            {isReviewTab
+              ? `${DEMO_REPO} · ${REVIEW_MR.id}`
+              : isBrowserTab
+                ? `${ADVISORY.host} · ${ADVISORY.code}`
+                : activePath
+                  ? `${DEMO_REPO} / ${activePath}`
+                  : DEMO_REPO}
+          </span>
+          {stepIdx >= STEPS.indexOf('threat') && (
+            <span className="hidden shrink-0 items-center gap-1 rounded-full bg-[color-mix(in_srgb,var(--landing-ink)_7%,transparent)] px-2 py-0.5 font-mono text-[9px] text-[var(--landing-muted)] md:inline-flex">
+              <GitBranch className="size-2.5" aria-hidden />
+              {DEMO_BRANCH}
             </span>
-            {stepIdx >= STEPS.indexOf('threat') && (
-              <span className="hidden shrink-0 items-center gap-1 rounded-full bg-[color-mix(in_srgb,var(--landing-ink)_7%,transparent)] px-2 py-0.5 font-mono text-[9px] text-[var(--landing-muted)] md:inline-flex">
-                <GitBranch className="size-2.5" aria-hidden />
-                {DEMO_BRANCH}
-              </span>
-            )}
-            <span className="ml-auto shrink-0 font-mono text-[9px] text-[var(--landing-dim)]">
-              {paused ? 'Paused' : `${phaseLabel}…`}
-            </span>
+          )}
+          <span className="ml-auto shrink-0 font-mono text-[9px] text-[var(--landing-dim)]">
+            {paused ? 'Paused' : `${phaseLabel}…`}
+          </span>
+        </div>
+
+        <div className="landing-studio-body grid grid-cols-1 grid-rows-[minmax(0,1.15fr)_minmax(0,1fr)] lg:grid-cols-[40px_200px_minmax(0,1fr)_minmax(250px,0.42fr)] lg:grid-rows-1">
+          <div className="hidden flex-col items-center gap-3 border-r border-[var(--landing-border-subtle)] bg-[var(--landing-surface-raised)] py-3 lg:flex">
+            <Files className="size-4 text-[var(--landing-accent)]" aria-hidden />
+            <FileText className="size-4 text-[var(--landing-dim)]" aria-hidden />
+            <Bot className="size-4 text-[var(--landing-accent)]" aria-hidden />
+            <Terminal className="size-4 text-[var(--landing-subtle)]" aria-hidden />
           </div>
 
-          <div className="landing-studio-body grid grid-cols-1 lg:grid-cols-[40px_200px_minmax(0,1fr)_minmax(250px,0.42fr)]">
-            <div className="hidden flex-col items-center gap-3 border-r border-[var(--landing-border-subtle)] bg-[var(--landing-surface-raised)] py-3 lg:flex">
-              <Files className="size-4 text-[var(--landing-accent)]" aria-hidden />
-              <FileText className="size-4 text-[var(--landing-dim)]" aria-hidden />
-              <Bot className="size-4 text-[var(--landing-accent)]" aria-hidden />
-              <Terminal className="size-4 text-[var(--landing-subtle)]" aria-hidden />
-            </div>
+          <div className="pointer-events-none hidden min-h-0 overflow-hidden border-r border-[var(--landing-border-subtle)] bg-[var(--landing-surface)] lg:block">
+            <StudioExplorer
+              paths={DEMO_PATHS}
+              open={activePath ?? ''}
+              selected={focus.select}
+              expanded={expandedDirs}
+            />
+          </div>
 
-            <div className="pointer-events-none hidden min-h-0 overflow-hidden border-r border-[var(--landing-border-subtle)] bg-[var(--landing-surface)] lg:block">
-              <StudioExplorer
-                paths={DEMO_PATHS}
-                open={activePath ?? ''}
-                selected={focus.select}
-                expanded={expandedDirs}
-              />
-            </div>
-
-            <div className="flex min-h-0 min-w-0 flex-col overflow-hidden border-r border-[var(--landing-border-subtle)] bg-[var(--landing-bg)]">
-              <div
-                className="landing-code-scroll flex h-9 shrink-0 items-center gap-0.5 overflow-x-auto bg-[var(--landing-surface)] px-1.5"
-                role="tablist"
-                aria-label="Open editors"
-              >
-                {openTabs.map((tab) => {
-                  const active = tab === activeTab;
-                  const review = tab === REVIEW_TAB;
-                  const browser = tab === BROWSER_TAB;
-                  const Icon = review ? GitPullRequest : browser ? Globe : FileCode2;
-                  return (
-                    <button
-                      key={tab}
-                      type="button"
-                      role="tab"
-                      aria-selected={active}
-                      onClick={() => setTabOverride(tab)}
-                      className={`inline-flex shrink-0 items-center gap-1.5 border-b-2 px-2 py-1.5 font-mono text-[10px] transition-colors ${
-                        active
-                          ? 'border-[var(--landing-accent)] text-[var(--landing-ink)]'
-                          : 'border-transparent text-[var(--landing-dim)] hover:text-[var(--landing-muted)]'
-                      }`}
-                    >
-                      <Icon
-                        className={`size-3 ${active ? 'text-[var(--landing-accent)]' : ''}`}
-                        aria-hidden
-                      />
-                      {review
-                        ? `${REVIEW_MR.id} review`
-                        : browser
-                          ? ADVISORY.tab
-                          : tab.split('/').pop()}
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="min-h-0 flex-1 overflow-hidden">
-                {focus.review && (
-                  <div className={isReviewTab ? 'h-full' : 'hidden'}>
-                    <StudioReviewTab
-                      key={`${step}-review`}
-                      mr={REVIEW_MR}
-                      jobs={REVIEW_JOBS}
-                      files={reviewFiles}
-                      armed={runArmed}
-                      paused={halted}
-                      instant={reduced || phase === 'dwell'}
-                      onProgress={phase === 'run' ? onRunProgress : undefined}
-                      onComplete={phase === 'run' ? onRunComplete : undefined}
+          <div className="flex min-h-0 min-w-0 flex-col overflow-hidden border-r border-[var(--landing-border-subtle)] bg-[var(--landing-bg)]">
+            <div
+              className="landing-code-scroll flex h-9 shrink-0 items-center gap-0.5 overflow-x-auto bg-[var(--landing-surface)] px-1.5"
+              role="tablist"
+              aria-label="Open editors"
+            >
+              {openTabs.map((tab) => {
+                const active = tab === activeTab;
+                const review = tab === REVIEW_TAB;
+                const browser = tab === BROWSER_TAB;
+                const Icon = review ? GitPullRequest : browser ? Globe : FileCode2;
+                return (
+                  <button
+                    key={tab}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    onClick={() => setTabOverride(tab)}
+                    className={`inline-flex shrink-0 items-center gap-1.5 border-b-2 px-2 py-1.5 font-mono text-[10px] transition-colors ${
+                      active
+                        ? 'border-[var(--landing-accent)] text-[var(--landing-ink)]'
+                        : 'border-transparent text-[var(--landing-dim)] hover:text-[var(--landing-muted)]'
+                    }`}
+                  >
+                    <Icon
+                      className={`size-3 ${active ? 'text-[var(--landing-accent)]' : ''}`}
+                      aria-hidden
                     />
-                  </div>
-                )}
-                {isBrowserTab ? (
-                  <StudioBrowserTab
-                    key={`${step}-browser`}
-                    page={ADVISORY}
-                    read={drivenTab ? readProgress : 0}
-                    marked={drivenTab ? shownEvents >= ADVISORY_QUOTED_AT : true}
-                    instant={reduced || cursor.jumped || !drivenTab}
-                  />
-                ) : activePath ? (
-                  <StudioEditor
-                    path={activePath}
-                    contents={editorText}
-                    showCursor={!halted && typing && drivenTab}
-                    highlight={highlight}
-                    widget={
-                      inlineActive ? (
-                        <InlineEditWidget
-                          key={`${step}-widget`}
-                          ask={INLINE_EDIT.ask}
-                          typed={phase === 'work' ? askTyped : INLINE_EDIT.ask.length}
-                          state={inlineState}
-                        />
-                      ) : undefined
-                    }
-                    widgetLine={inlineActive ? highlight?.to : undefined}
-                    follow={
-                      inlineActive
-                        ? INLINE_SPAN.base.from
-                        : drivenTab && focus.type
-                          ? 'bottom'
-                          : 'top'
-                    }
-                  />
-                ) : null}
-              </div>
+                    {review
+                      ? `${REVIEW_MR.id} review`
+                      : browser
+                        ? ADVISORY.tab
+                        : tab.split('/').pop()}
+                  </button>
+                );
+              })}
+            </div>
 
-              {!focus.review &&
-                (script.cmd ? (
-                  <StudioTerminal
-                    key={`${step}-term`}
-                    cmd={script.cmd}
-                    out={script.out}
+            <div className="min-h-0 flex-1 overflow-hidden">
+              {focus.review && (
+                <div className={isReviewTab ? 'h-full' : 'hidden'}>
+                  <StudioReviewTab
+                    key={`${step}-review`}
+                    mr={REVIEW_MR}
+                    jobs={REVIEW_JOBS}
+                    files={reviewFiles}
                     armed={runArmed}
                     paused={halted}
                     instant={reduced || phase === 'dwell'}
                     onProgress={phase === 'run' ? onRunProgress : undefined}
                     onComplete={phase === 'run' ? onRunComplete : undefined}
                   />
-                ) : (
-                  <div className="flex h-10 shrink-0 items-center border-t border-[var(--landing-border-subtle)] bg-[var(--landing-surface-deep)] px-3">
-                    <span className="font-mono text-[10px] text-[var(--landing-dim)]">
-                      <span className="text-[var(--landing-accent)]">$</span> reading repository
-                      configuration…
-                    </span>
-                  </div>
-                ))}
+                </div>
+              )}
+              {isBrowserTab ? (
+                <StudioBrowserTab
+                  key={`${step}-browser`}
+                  page={ADVISORY}
+                  read={drivenTab ? readProgress : 0}
+                  marked={drivenTab ? shownEvents >= ADVISORY_QUOTED_AT : true}
+                  instant={reduced || cursor.jumped || !drivenTab}
+                />
+              ) : activePath ? (
+                <StudioEditor
+                  path={activePath}
+                  contents={editorText}
+                  showCursor={!halted && typing && drivenTab}
+                  highlight={highlight}
+                  widget={
+                    inlineActive ? (
+                      <InlineEditWidget
+                        key={`${step}-widget`}
+                        ask={INLINE_EDIT.ask}
+                        typed={phase === 'work' ? askTyped : INLINE_EDIT.ask.length}
+                        state={inlineState}
+                      />
+                    ) : undefined
+                  }
+                  widgetLine={inlineActive ? highlight?.to : undefined}
+                  follow={
+                    inlineActive
+                      ? INLINE_SPAN.base.from
+                      : drivenTab && focus.type
+                        ? 'bottom'
+                        : 'top'
+                  }
+                />
+              ) : null}
             </div>
 
-            <div className="flex min-h-0 flex-col overflow-hidden border-t border-[var(--landing-border-subtle)] max-lg:min-h-[220px] lg:border-t-0">
-              <AgentTracePanel
-                key={`${step}-trace`}
-                label={stepLabel[step]}
-                events={script.events}
-                visibleCount={shownEvents}
-                animate={!reduced && phase === 'work'}
-              />
-            </div>
+            {!focus.review &&
+              (script.cmd ? (
+                <StudioTerminal
+                  key={`${step}-term`}
+                  cmd={script.cmd}
+                  out={script.out}
+                  armed={runArmed}
+                  paused={halted}
+                  instant={reduced || phase === 'dwell'}
+                  onProgress={phase === 'run' ? onRunProgress : undefined}
+                  onComplete={phase === 'run' ? onRunComplete : undefined}
+                />
+              ) : (
+                <div className="flex h-10 shrink-0 items-center border-t border-[var(--landing-border-subtle)] bg-[var(--landing-surface-deep)] px-3">
+                  <span className="font-mono text-[10px] text-[var(--landing-dim)]">
+                    <span className="text-[var(--landing-accent)]">$</span> reading repository
+                    configuration…
+                  </span>
+                </div>
+              ))}
+          </div>
+
+          <div className="flex min-h-0 flex-col overflow-hidden border-t border-[var(--landing-border-subtle)] lg:border-t-0">
+            <AgentTracePanel
+              key={`${step}-trace`}
+              label={stepLabel[step]}
+              events={script.events}
+              visibleCount={shownEvents}
+              animate={!reduced && phase === 'work'}
+            />
           </div>
         </div>
       </div>

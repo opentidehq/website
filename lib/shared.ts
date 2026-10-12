@@ -1,6 +1,6 @@
 export const appName = 'opentide';
 export const appDescription =
-  'Spec-driven development for detection engineering: an ontology and a taxonomy, an engine you pin, and threat-aligned detections that ship fast.';
+  'Spec-driven development for detection engineering: an ontology and a taxonomy that keep every detection threat-aligned, maintainable and fast to ship.';
 export const docsRoute = '/docs';
 export const docsImageRoute = '/og/docs';
 export const blogImageRoute = '/og/blog';
@@ -40,10 +40,10 @@ export type EcosystemItem = {
 export const ecosystemLinks: EcosystemItem[] = [
   {
     name: 'opentide',
-    description: 'The engine: CLI, Python SDK and MCP server in one package on PyPI.',
+    description: 'The CLI, Python SDK and MCP server, in one package on PyPI.',
     href: 'https://github.com/OpenTideHQ/opentide',
     status: 'live',
-    tag: 'Engine',
+    tag: 'Toolchain',
   },
   {
     name: 'specifications',
