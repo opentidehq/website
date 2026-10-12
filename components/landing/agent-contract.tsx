@@ -1,32 +1,6 @@
-const NEEDS = [
-  {
-    need: 'A contract it can read',
-    before: 'JSON Schemas generated in-tree; no separate spec',
-    now: 'Normative specs, generated JSON Schema, 36 versioned vocabularies',
-  },
-  {
-    need: 'Feedback it can act on',
-    before: 'Scripts and logs to interpret',
-    now: '--json results, exit codes, file:line findings',
-  },
-  {
-    need: 'Tools it can call',
-    before: 'None: shell out to scripts',
-    now: 'MCP: search, chaining, coverage, validation, dry-run deploy',
-  },
-  {
-    need: 'Knowledge it can load',
-    before: 'Skills and an AGENTS.md in a separate repo, copied in by hand',
-    now: 'The same skills and an agent entry point (AGENTS.md or CLAUDE.md), installed by opentide setup skills',
-  },
-  {
-    need: 'Gates it cannot skip',
-    before: 'CI glue rewritten per instance',
-    now: 'setup ci: strict validate and lint, live query checks, staging first',
-  },
-] as const;
+import { AGENT_NEEDS as NEEDS } from '@/lib/landing/agent-needs';
 
-/** What an agent needs from a detection engine, then and now. */
+/** What an agent needs from detection tooling, then and now. */
 export function AgentNeeds() {
   return (
     <div>

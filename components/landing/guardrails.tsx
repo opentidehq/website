@@ -1,6 +1,6 @@
 import { Check, Lock } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { BlockHead, Tag, block, type TagTone } from '@/components/landing/ui';
+import { BlockHead } from '@/components/landing/ui';
 
 const code = (text: string) => <code className="font-mono text-[0.85em] text-[var(--landing-ink)]">{text}</code>;
 
@@ -18,15 +18,6 @@ const HUMANS: ReactNode[] = [
   <>Credentials and deployment plans in {code('.opentide/configurations/')}</>,
   'Trusting a query check that did not run against the tenant',
   'Regenerating or hand-editing UUIDs',
-];
-
-const TOOLS: { tools: string; note?: string; status: string; tone: TagTone }[] = [
-  { tools: 'search · get_chaining · coverage', note: 'read the graph', status: 'supported', tone: 'accent' },
-  { tools: 'validate_rule · validation_report', note: 'the report CI gates on', status: 'supported', tone: 'accent' },
-  { tools: 'deploy_rule', note: 'returns action: dry-run', status: 'dry-run by default', tone: 'outline' },
-  { tools: 'validate_query', note: 'then checks the tenant', status: 'only with live: true', tone: 'outline' },
-  { tools: 'run_query', note: 'stub: true · rows: null', status: 'not implemented', tone: 'dashed' },
-  { tools: 'crowdstrike · harfanglab', note: 'query checks', status: 'supported: false', tone: 'dashed' },
 ];
 
 function Side({
@@ -66,7 +57,7 @@ function Side({
   );
 }
 
-/** Where the line sits between agents and people, and what the MCP tools actually return. */
+/** Where the line sits between agents and people. */
 export function Guardrails() {
   return (
     <div>
@@ -92,29 +83,10 @@ export function Guardrails() {
         <Side caption="people" title="Keep a human in the loop" items={HUMANS} icon="human" className="pt-12 md:pl-14" />
       </div>
 
-      <div className={block}>
-        <BlockHead title="Agents build on what the gates return." />
-        <ul
-          data-reveal-group
-          className="landing-panel m-0 mt-8 grid list-none grid-cols-1 gap-px overflow-hidden bg-[var(--landing-border)] p-0 sm:grid-cols-2 lg:grid-cols-3"
-        >
-          {TOOLS.map((row) => (
-            <li key={row.tools} className="flex flex-col gap-4 bg-[var(--landing-panel)] p-6">
-              <div className="flex-1">
-                <p className="font-mono text-[13px] text-[var(--landing-ink)]">{row.tools}</p>
-                {row.note && <p className="mt-1 font-mono text-xs text-[var(--landing-subtle)]">{row.note}</p>}
-              </div>
-              <Tag tone={row.tone} className="self-start">
-                {row.status}
-              </Tag>
-            </li>
-          ))}
-        </ul>
-        <p className="mt-6 text-base font-semibold text-[var(--landing-ink)]">
-          Strict gates keep agent output{' '}
-          <span className="text-[var(--landing-accent)]">threat-aligned and shippable.</span>
-        </p>
-      </div>
+      <p className="mt-6 text-base font-semibold text-[var(--landing-ink)]">
+        Strict gates keep agent output{' '}
+        <span className="text-[var(--landing-accent)]">threat-aligned and shippable.</span>
+      </p>
     </div>
   );
 }

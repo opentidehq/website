@@ -1,7 +1,7 @@
 'use client';
 
 import { Caption } from '@/components/landing/ui';
-import { useInView } from '@/lib/hooks/use-in-view';
+import { useOnScreen } from '@/lib/hooks/use-on-screen';
 import { usePrefersReducedMotion } from '@/lib/hooks/use-prefers-reduced-motion';
 
 type Meter = {
@@ -46,7 +46,7 @@ function Artefact({ art }: { art: Art }) {
       <p className={`${mono} text-[var(--landing-ink)]`}>
         <span className="text-[var(--landing-subtle)]">$</span> opentide validate --strict
         <br />
-        <span className="text-emerald-600 dark:text-emerald-400">OK</span> Validation passed
+        <span className="font-semibold text-[var(--landing-accent)]">OK</span> Validation passed
         <br />
         <span className="text-[var(--landing-subtle)]">$</span>{' '}
         <span className="landing-caret inline-block h-[1em] w-[0.5em] translate-y-[0.15em] bg-[var(--landing-ink)]" />
@@ -131,7 +131,7 @@ function MeterCard({ meter, shown, reduced }: { meter: Meter; shown: boolean; re
 /** Why it matters: the query got cheap, the alignment did not. What stays scarce is the spec. */
 export function WhyItMatters() {
   const reduced = usePrefersReducedMotion();
-  const { ref, inView } = useInView<HTMLDivElement>();
+  const { ref, seen: inView } = useOnScreen<HTMLDivElement>({ rootMargin: '0px 0px -15% 0px' });
 
   return (
     <div className="mt-12 md:mt-16">

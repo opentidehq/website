@@ -6,10 +6,23 @@ import { useEffect } from 'react';
  * Scroll reveals for the landing. Elements opt in with `data-reveal`; the children of a
  * `data-reveal-group` reveal one after another. Everything renders visible until this runs,
  * so nothing is hidden without JavaScript, and nothing moves for reduced motion.
+ *
+ * It also marks each chapter `data-live` while it is on screen, so endless CSS animations
+ * (flows, carets, the ribbon) pause wherever the reader is not.
  */
 export function RevealOnScroll() {
   useEffect(() => {
+    // Reduced motion: nothing hides and nothing loops, so there is nothing to do.
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const root = document.documentElement;
+    const live = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) entry.target.toggleAttribute('data-live', entry.isIntersecting);
+      },
+      { rootMargin: '10% 0px' },
+    );
+    for (const section of document.querySelectorAll('.landing section')) live.observe(section);
 
     for (const group of document.querySelectorAll('[data-reveal-group]')) {
       Array.from(group.children).forEach((child, i) => {
@@ -24,7 +37,6 @@ export function RevealOnScroll() {
     for (const el of targets) {
       if (el.getBoundingClientRect().top < fold) el.setAttribute('data-shown', '');
     }
-    const root = document.documentElement;
     root.classList.add('landing-reveal');
 
     const observer = new IntersectionObserver(
@@ -41,6 +53,7 @@ export function RevealOnScroll() {
 
     return () => {
       observer.disconnect();
+      live.disconnect();
       root.classList.remove('landing-reveal');
     };
   }, []);

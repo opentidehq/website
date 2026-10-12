@@ -12,7 +12,7 @@ export function CodePanel({
   className,
 }: {
   caption: string;
-  aside?: string;
+  aside?: ReactNode;
   children: ReactNode;
   className?: string;
 }) {
@@ -22,7 +22,7 @@ export function CodePanel({
     >
       <figcaption className="flex items-center justify-between gap-3 border-b border-white/10 px-5 py-2.5 font-mono text-[11px] text-[var(--landing-code-dim)]">
         <span>{caption}</span>
-        {aside && <span>{aside}</span>}
+        {aside && <span className="flex items-center gap-3">{aside}</span>}
       </figcaption>
       <pre className="landing-code-scroll m-0 flex-1 overflow-x-auto px-5 py-5 font-mono text-[13px] leading-relaxed">
         <code>{children}</code>

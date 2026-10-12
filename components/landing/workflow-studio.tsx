@@ -47,6 +47,7 @@ const BROWSER_TAB = 'advisory' as const;
 type TabId = DemoPath | typeof REVIEW_TAB | typeof BROWSER_TAB;
 
 const THREAT_FILE = 'objects/threats/gateway-exploitation-cve-2026-0300.yaml' satisfies DemoPath;
+const CHAINED_THREAT_FILE = 'objects/threats/credential-dumping-from-lsass.yaml' satisfies DemoPath;
 const OBJECTIVE_FILE = 'objects/objectives/credential-access-via-lsass.yaml' satisfies DemoPath;
 const SENTINEL_TOML = '.opentide/configurations/platforms/sentinel.toml' satisfies DemoPath;
 const SPLUNK_TOML = '.opentide/configurations/platforms/splunk.toml' satisfies DemoPath;
@@ -152,6 +153,12 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
         output: 'no threat covers T1190 yet',
       },
       {
+        kind: 'mcp',
+        tool: 'search',
+        input: 'technique="T1003.001", type="threat"',
+        output: 'Credential dumping from LSASS · threat …020',
+      },
+      {
         kind: 'skill',
         skill: 'detection-engineering',
         action: 'Plan the threat → objective → rule chain from the advisory',
@@ -169,7 +176,7 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
     events: [
       {
         kind: 'reasoning',
-        text: 'Frame it as edge-gateway exploitation: Significant incident severity, Infrastructure Compromise leverage, Likely viability, surface Firewalls::Palo Alto Networks, mitre_attack T1190 + T1133.',
+        text: 'Frame it as edge-gateway exploitation: Significant incident severity, Infrastructure Compromise leverage, Likely viability, surface Firewalls::Palo Alto Networks, mitre_attack T1190 + T1133. Chain it to the existing LSASS threat …020 with sequence::preceeds: root on the gateway comes before credential dumping inside.',
       },
       {
         kind: 'skill',
@@ -190,7 +197,7 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
       },
       {
         kind: 'response',
-        text: 'Threat vector is in and valid: CVE-2026-0300 on Palo Alto firewalls, severity Significant incident. The objective can now reference uuid …010.',
+        text: 'Threat vector is in and valid: CVE-2026-0300 on Palo Alto firewalls, severity Significant incident, chained ahead of credential dumping. The objective can now reference uuid …010.',
       },
     ],
     cmd: `opentide validate --file ${THREAT_FILE}`,
@@ -871,8 +878,9 @@ export function WorkflowStudio() {
 
   const reviewFiles = useMemo(
     () =>
-      // The pull request adds the object chain; the platform configs were already there.
-      DEMO_PATHS.filter((path) => path.startsWith('objects/')).map((path) => ({
+      // The pull request adds the object chain; the platform configs and the LSASS threat it
+      // chains to were already there.
+      DEMO_PATHS.filter((path) => path.startsWith('objects/') && path !== CHAINED_THREAT_FILE).map((path) => ({
         path,
         added: (path === RULE_PATH ? INLINE_EDIT.tuned : DEMO_FILES[path])
           .trimEnd()

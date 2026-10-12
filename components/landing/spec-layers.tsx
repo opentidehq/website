@@ -99,20 +99,9 @@ function LayerCard({ layer }: { layer: Layer }) {
   );
 }
 
-/** The closing line under the layers; the landing sets it beside the stack instead. */
-export function SourceOfTruth({ className }: { className?: string }) {
-  return (
-    <p className={`max-w-3xl text-lg leading-relaxed text-[var(--landing-muted)] text-pretty ${className ?? ''}`}>
-      The spec does not ship detections. The package does not hold your YAML.{' '}
-      <span className="font-semibold text-[var(--landing-ink)]">Your repo stays the source of truth.</span>
-    </p>
-  );
-}
-
 /** The spec, the package you pin, and your repo: three layers joined by what flows between them. */
-export function SpecLayers({ note = true }: { note?: boolean }) {
-  // A container, not the viewport, decides the card layout: the stack sits beside a heading
-  // on the landing and in a narrow column in blog posts.
+export function SpecLayers() {
+  // A container, not the viewport, decides the card layout: blog columns vary in width.
   return (
     <div className="@container">
       {LAYERS.map((layer, i) => (
@@ -126,7 +115,10 @@ export function SpecLayers({ note = true }: { note?: boolean }) {
           )}
         </div>
       ))}
-      {note && <SourceOfTruth className="mt-8" />}
+      <p className="mt-8 max-w-3xl text-lg leading-relaxed text-[var(--landing-muted)] text-pretty">
+        The spec does not ship detections. The package does not hold your YAML.{' '}
+        <span className="font-semibold text-[var(--landing-ink)]">Your repo stays the source of truth.</span>
+      </p>
     </div>
   );
 }

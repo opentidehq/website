@@ -11,10 +11,9 @@ colors:
   landing-bg: "#000000"
   landing-band: "#0a0a0b"
   landing-panel: "#0e0e10"
-  landing-surface-deep: "#050505"
-  landing-surface: "#0a0a0a"
-  landing-surface-raised: "#111111"
-  landing-surface-hover: "#141414"
+  landing-surface-deep: "#000000"
+  landing-surface: "#000000"
+  landing-surface-raised: "#000000"
   landing-ink: "#fafafa"
   landing-muted: "#c4c4cc"
   landing-subtle: "#9a9aa3"
@@ -79,13 +78,13 @@ The landing is seven chapters (`components/landing/chapters.ts`), each one idea:
 
 Each chapter carries one illustration built from real artefacts, never a stock icon grid:
 
-- **Ontology map** (`ontology-map.tsx`): threat, objective, its signals and rule in `objects/`, and the environment from `visibility.toml` and `platforms/*.toml` they land in: assets on a surface, log sources, detectors, integrations. Edges are labelled with the field that makes the link; solid edges are UUID references that `opentide validate` resolves, dashed ones are names or vocabulary values. A guided tour walks the nodes; the detail panel shows the YAML or TOML with the linking lines marked. Below `sm` the graph becomes two labelled groups of nodes.
-- **Coverage figure**: an ATT&CK heatmap beside the opentide graph, with a threat that no objective covers flagged as a gap.
+- **Ontology map** (`ontology-map.tsx`, data in `lib/landing/ontology.ts`): threat, objective, its signals and rule in `objects/`, threats chained to threats (a loop on the threat), and the environment from `visibility.toml` and `platforms/*.toml` they land in: assets on a surface, log sources, detectors, integrations. Edges are labelled with the field that makes the link; solid edges are UUID references that `opentide validate` resolves, dashed ones are names or vocabulary values. A guided tour walks the nodes; the detail panel shows an excerpt of the real demo file with the linking lines marked. Below `sm` the graph becomes two labelled groups of nodes.
+- **Coverage figure**: an ATT&CK heatmap beside an attack path: chained threats, each on one of your assets through its surface, each step covered by an objective and its rules or flagged as a gap. A replay walks the path; four questions under it light up the part of the graph that answers them.
 - **Integration fan**: one rule's `configurations` keys wired to each integration.
 - **CLI · SDK · MCP showcase**: typed commands with output captured from the released opentide against the demo repository (a broken reference, a vocabulary error, the `--json` report, a dry-run plan); the promise each run demonstrates lights up beside it.
 - **Pipeline, north star, get started**: the pipeline runs like CI, a pulse rides the north-star track, and the repository tree grows as the setup commands play.
 
-Every demo object the page shows is validated by `pnpm verify:demos` against the released engine.
+The studio's demo objects pass `opentide validate --strict`, `lint --strict` and a dry-run deploy in `pnpm verify:demos`, against the released package. The ontology map's excerpts and the showcase's transcripts are checked against those same files by `pnpm test` (`lib/landing/*.test.ts`), as is the taxonomy ribbon against the synced vocabulary catalog. The coverage figure's attack path is illustrative.
 
 ### Motion
 
@@ -119,14 +118,14 @@ Docs: `--color-fd-primary` / `--brand-accent` map to blue in light mode and yell
 
 - **Sans**: Inter for all UI and marketing headings (no separate display font).
 - **Mono**: JetBrains Mono for CLI snippets, MCP tool calls, the workflow studio, and prose code blocks.
-- **Hero**: `clamp(2.5rem, 5.6vw, 4.5rem)`, weight 700, tracking `-0.045em`, centred.
-- **Chapter heads** (h2): `clamp(2rem, 4vw, 3rem)`, weight 700, tracking `-0.035em`, `text-wrap: balance`. **Block heads** (h3): 1.5–1.75rem. Nothing else is a heading.
-- **Mono**: 12px for labels and captions, 13px in code panels, 11px for tags only.
+- **Hero**: `clamp(2.4rem, 5.4vw, 4.4rem)`, weight 700, tracking `-0.045em`, centred, under a release badge.
+- **Chapter heads** (h2): `clamp(2rem, 4vw, 3rem)`, weight 700, tracking `-0.035em`, `text-wrap: balance`. **Block heads** (h3): 1.5–1.75rem. Smaller h3s only title cells in a grid (pipeline stages) and the ontology map's detail panel.
+- **Mono**: 12px for labels and captions, 12.5–13px in code panels, 11px for tags and diagram labels.
 - **Body**: 1rem–1.25rem, max ~65ch in prose sections, `text-wrap: pretty` on long copy.
 
 ## Elevation
 
-Landing uses flat tonal layering: chapters alternate page and `landing-band`, content that needs a frame sits in one panel style (`.landing-panel`: 1rem radius, `landing-border`, `landing-panel` fill), and grids of cells share one panel with 1px dividers rather than becoming separate cards. The only drop shadow is under the workflow studio. Code panels are deep-tide navy (`--landing-code-*`) in both themes, as content. Docs rely on Fumadocs sidebar/card surfaces; avoid nested card grids on marketing sections.
+Landing uses flat tonal layering: chapters alternate page and `landing-band`, content that needs a frame sits in one panel style (`.landing-panel`: 1rem radius, `landing-border`, `landing-panel` fill), and grids of cells share one panel with 1px dividers rather than becoming separate cards. Drop shadows are kept for what floats above the page: the workflow studio, the two terminals, the active map node and the chapter dock. Code panels are deep-tide navy (`--landing-code-*`) in both themes, as content. Docs rely on Fumadocs sidebar/card surfaces; avoid nested card grids on marketing sections.
 
 ## Components
 
@@ -134,7 +133,7 @@ Landing uses flat tonal layering: chapters alternate page and `landing-band`, co
 - **Secondary button** (`.landing-btn-secondary`): transparent, accent border and text.
 - **Chapter** (`Chapter`, `ChapterHead`, `BlockHead` in `components/landing/ui.tsx`): lowercase mono label with the chapter number, h2, at most one lead; blocks inside a chapter are spaced by `block`. Component classes live in `@layer components` so utilities can override them.
 - **Panel** (`.landing-panel`) and **surface card** (`.landing-surface-card`, unfilled, for blog embeds).
-- **Tag** (`Tag`): four tones, used the same way everywhere — `solid` (accepted), `accent` (supported, live check, in progress), `outline` (planned, gated, deploy-only), `dashed` (proposed, not implemented, unsupported). No green or red outside code panels.
+- **Tag** (`Tag`): four tones, used the same way everywhere — `solid` (accepted), `accent` (supported, live check, in progress), `outline` (planned, gated, deploy-only), `dashed` (proposed, not implemented, unsupported). No green or red outside code panels and the workflow studio.
 - **Nav wordmark**: theme-aware tsunami mark + open/tide split (`--brand-accent`).
 - **Chapter navigation**: a floating dock (`ChapterNav`) once the hero scrolls away — every chapter at `xl` with the current one filled and a thin progress line, one pill with a menu below `xl`. Blocks keep their old anchors (`#pipeline`, `#platforms`, `#doors`).
 - **Workflow studio**: plays its six-step scenario in a fixed frame and idles off screen; it never pins or resizes with scroll.

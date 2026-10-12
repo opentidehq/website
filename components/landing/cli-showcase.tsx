@@ -1,250 +1,10 @@
 'use client';
 
 import { Pause, Play } from 'lucide-react';
-import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
-import { UUID } from '@/lib/landing/demo-registry';
+import { memo, useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
+import { DOORS, type Line } from '@/lib/landing/showcase';
 import { useOnScreen } from '@/lib/hooks/use-on-screen';
 import { usePrefersReducedMotion } from '@/lib/hooks/use-prefers-reduced-motion';
-
-type Line = { kind: 'in' | 'out' | 'note'; text: string; mark?: boolean };
-type Scenario = { id: string; label: string; lines: Line[]; /** Promises this run shows. */ lights: number[] };
-type Door = {
-  id: string;
-  name: string;
-  audience: string;
-  prompt: string;
-  promises: { title: string; body: string }[];
-  scenarios: Scenario[];
-};
-
-const RULE = UUID.ruleLsass;
-const OBJECTIVE = UUID.objectiveCredential;
-const THREAT = UUID.threatGateway;
-
-const i = (text: string): Line => ({ kind: 'in', text });
-const o = (text: string, mark?: boolean): Line => ({ kind: 'out', text, mark });
-const n = (text: string): Line => ({ kind: 'note', text });
-
-/**
- * Runs captured from opentide 0.12.1 against the demo repository this page shows: the same
- * threat, objective and rule. Absolute paths are cut to the repository, the Rich panel border
- * is dropped and its lines re-wrapped, and long payloads are cut to `…`.
- */
-const DOORS: Door[] = [
-  {
-    id: 'cli',
-    name: 'CLI',
-    audience: 'For humans and CI pipelines.',
-    prompt: '$ ',
-    promises: [
-      { title: 'Every link resolves', body: 'A rule names a real objective, an objective names real threats, or validation fails.' },
-      { title: 'Every value is in the taxonomy', body: 'Vocabulary fields take versioned values only: severity::1.0, surface::1.0, att&ck::1.1.' },
-      { title: 'One JSON document on stdout', body: '--json returns ok and a status, and every issue with its code, file, line and field.' },
-      { title: 'Exit codes gate CI', body: '0 success · 1 error · 2 usage. No parsing needed.' },
-    ],
-    scenarios: [
-      {
-        id: 'validate',
-        label: 'validate',
-        lights: [0, 1, 3],
-        lines: [i('opentide validate --strict'), o('OK Validation passed'), i('echo $?'), o('0')],
-      },
-      {
-        id: 'link',
-        label: 'a broken link',
-        lights: [0, 3],
-        lines: [
-          n('# the rule names an objective that does not exist'),
-          i('opentide validate --strict'),
-          o('Validation issues'),
-          o('## objects/rules/lsass-memory-access.yaml'),
-          o('  [error] objects/rules/lsass-memory-access.yaml:23: detection_model:', true),
-          o("          Unknown objective or signal reference '00000000-0000-4000-8002-000000000002'", true),
-          o('  [error] objects/rules/lsass-memory-access.yaml:23: detection_model:'),
-          o("          Value '00000000-0000-4000-8002-000000000002' is not a valid 'objective' vocabulary entry"),
-          o('FATAL: Validation failed'),
-          i('echo $?'),
-          o('1'),
-        ],
-      },
-      {
-        id: 'json',
-        label: 'the --json report',
-        lights: [2, 0],
-        lines: [
-          i('opentide --json validate --file lsass-memory-access.yaml'),
-          o('{'),
-          o('  "checks": { … },'),
-          o('  "report": {'),
-          o('    "ok": false,'),
-          o('    "issues": [{'),
-          o('      "code": "invalid_ref",', true),
-          o('      "severity": "error",'),
-          o(`      "object_uuid": "${RULE}",`),
-          o('      "object_type": "rule",'),
-          o('      "file_path": "…/objects/rules/lsass-memory-access.yaml",', true),
-          o('      "yaml_line": 22,', true),
-          o('      "field_path": ["detection_model"],', true),
-          o(`      "message": "Unknown objective or signal reference '00000000-0000-4000-8002-000000000002'",`),
-          o('      "suggestion": null, "context": {}'),
-          o('    }, { "code": "vocab_unknown", … }],'),
-          o('    "warnings": [], "stats": { "objects_checked": 1, … }'),
-          o('  },'),
-          o('  "workspace": "…/detection-repo",'),
-          o('  "ok": false,'),
-          o('  "status": "failed",'),
-          o('  "message": "Validation failed"'),
-          o('}'),
-        ],
-      },
-      {
-        id: 'taxonomy',
-        label: 'a taxonomy check',
-        lights: [1, 3],
-        lines: [
-          n('# severity takes a severity::1.0 value'),
-          i('opentide validate --file gateway-exploitation-cve-2026-0300.yaml'),
-          o('Validation issues'),
-          o('## objects/threats/gateway-exploitation-cve-2026-0300.yaml'),
-          o('  [error] objects/threats/gateway-exploitation-cve-2026-0300.yaml:22: threat.severity:', true),
-          o("          Value 'Critical' is not a valid 'severity::1.0' vocabulary entry", true),
-          o('FATAL: Validation failed'),
-        ],
-      },
-      {
-        id: 'deploy',
-        label: 'deploy plan',
-        lights: [2],
-        lines: [
-          i('opentide --json deploy --platform sentinel --dry-run --plan STAGING'),
-          o('{'),
-          o('  "deployed": ["sentinel"],'),
-          o('  "dry_run": true,'),
-          o(`  "plan": { "sentinel": ["${RULE}"] },`, true),
-          o('  "payloads": { "sentinel": [{ "uuid": …, "name": …, "api_request": … }] },'),
-          o('  "ok": true,'),
-          o('  "status": "completed",'),
-          o('  "message": "Deployment completed"'),
-          o('}'),
-        ],
-      },
-    ],
-  },
-  {
-    id: 'sdk',
-    name: 'SDK',
-    audience: 'For Python tools and tests.',
-    prompt: '>>> ',
-    promises: [
-      { title: 'Typed models', body: 'DetectionRule, DetectionObjective and ThreatVector, the models the JSON Schema is generated from.' },
-      { title: 'A lazy registry', body: 'initialise() loads the index; objects parse on first access.' },
-      { title: 'The whole graph', body: 'detection_model, threats and signals are attributes you follow.' },
-      { title: 'Small, plain results', body: 'deploy() returns a DeploymentResult: platform, uuids, dry_run and a message.' },
-    ],
-    scenarios: [
-      {
-        id: 'chain',
-        label: 'walk the chain',
-        lights: [1, 2],
-        lines: [
-          i('from opentide import OpenTide'),
-          i('OpenTide.initialise()'),
-          i(`rule = OpenTide.Rules["${RULE}"]`),
-          i('objective = OpenTide.Objectives[rule.detection_model]'),
-          i('threat = OpenTide.Threats[objective.objective.threats[0]]'),
-          i('print(rule.name, "→", objective.name, "→", threat.name)'),
-          o('LSASS memory access → Credential access via LSASS → Gateway exploitation (CVE-2026-0300)', true),
-        ],
-      },
-      {
-        id: 'signal',
-        label: 'read a signal',
-        lights: [0, 2],
-        lines: [
-          i('signal = objective.objective.signals[0]'),
-          i('signal.name, signal.data.logsources'),
-          o("('LSASS process access', ['Endpoint process events'])", true),
-        ],
-      },
-      {
-        id: 'deploy',
-        label: 'dry-run deploy',
-        lights: [3],
-        lines: [
-          i('rule.deploy("sentinel", dry_run=True)'),
-          o(`DeploymentResult(platform='sentinel', uuids=['${RULE}'],`),
-          o("                 dry_run=True, message='dry-run')", true),
-        ],
-      },
-    ],
-  },
-  {
-    id: 'mcp',
-    name: 'MCP',
-    audience: 'For AI agents in the editor.',
-    prompt: '› ',
-    promises: [
-      { title: 'Search the graph', body: 'search, get_chaining and coverage read the same index as the CLI.' },
-      { title: 'The report CI gates on', body: 'validation_report returns the issues validate --strict fails on.' },
-      { title: 'Dry-run by default', body: 'deploy_rule simulates unless you pass dry_run=false.' },
-      { title: 'Live only on request', body: 'validate_query touches a tenant only with live: true.' },
-    ],
-    scenarios: [
-      {
-        id: 'search',
-        label: 'search',
-        lights: [0],
-        lines: [
-          i('search(query="lsass", type="rule")'),
-          o(`→ [{ "uuid": "${RULE}", "type": "rule",`),
-          o('     "title": "LSASS memory access", "status": "STAGING" }]', true),
-        ],
-      },
-      {
-        id: 'chaining',
-        label: 'get_chaining',
-        lights: [0],
-        lines: [
-          i(`get_chaining(uuid="${RULE}")`),
-          o(`→ { "uuid": "${RULE}", "found": true, "type": "rule",`),
-          o('    "graph": { … }, "chaining_index": { … },'),
-          o(`    "lineage": { "threats": ["${THREAT}"],`, true),
-          o(`                 "objectives": ["${OBJECTIVE}"],`, true),
-          o(`                 "rules": ["${RULE}"] } }`),
-        ],
-      },
-      {
-        id: 'report',
-        label: 'validation_report',
-        lights: [1],
-        lines: [
-          i(`validation_report(uuid="${RULE}")`),
-          o('→ { "ok": true, "issues": [], "warnings": [], "stats": { "objects_checked": 1, … } }', true),
-        ],
-      },
-      {
-        id: 'deploy',
-        label: 'deploy_rule',
-        lights: [2],
-        lines: [
-          i(`deploy_rule(uuid="${RULE}", platform="sentinel")`),
-          o(`→ { "action": "dry-run", "tenant": null, "rule_id": "${RULE}",`, true),
-          o('    "status": "STAGING", "dry_run": true, "platform": "sentinel", "message": "dry-run" }'),
-        ],
-      },
-      {
-        id: 'query',
-        label: 'validate_query',
-        lights: [3],
-        lines: [
-          i('validate_query(query="", platform="sentinel")'),
-          o('→ { "valid": null, "supported": true, "status": "failed",'),
-          o('    "message": "Query validation checks the tenant. Pass live: true.", "query_preview": "" }', true),
-        ],
-      },
-    ],
-  },
-];
 
 const TYPE_MS = 22;
 const RUN_MS = 300;
@@ -324,6 +84,35 @@ function tokens(text: string) {
   return out;
 }
 
+/** One printed line. Finished lines keep the same props, so only the line being typed re-renders. */
+const Row = memo(function Row({
+  line,
+  prompt,
+  typed,
+}: {
+  line: Line;
+  prompt: string;
+  /** Characters typed so far, while this is the line being typed. */
+  typed?: number;
+}) {
+  const partial = typed !== undefined;
+  const shown = partial ? { ...line, text: line.text.slice(0, typed) } : line;
+  return (
+    <span className={`block whitespace-pre px-5 ${line.mark && !partial ? 'bg-[#ffcc00]/[0.1]' : ''}`}>
+      <Highlight line={shown} prompt={prompt} />
+      {partial && <Caret />}
+    </span>
+  );
+});
+
+function Caret({ dim }: { dim?: boolean }) {
+  return (
+    <span
+      className={`landing-caret ml-px inline-block h-[1.1em] w-[0.55em] translate-y-[0.2em] bg-[var(--landing-code-ink)] ${dim ? 'opacity-70' : ''}`}
+    />
+  );
+}
+
 /**
  * The three ways in, played as short runs: a command is typed, its reply streams back, and
  * the promise it demonstrates lights up beside it. Autoplay walks every run of every door;
@@ -331,14 +120,21 @@ function tokens(text: string) {
  */
 export function CliShowcase() {
   const reduced = usePrefersReducedMotion();
-  const { ref, onScreen } = useOnScreen<HTMLDivElement>();
+  const { ref, onScreen, seen } = useOnScreen<HTMLDivElement>();
   const base = useId();
   const tabs = useRef<(HTMLButtonElement | null)[]>([]);
   const screen = useRef<HTMLPreElement>(null);
   const [door, setDoor] = useState(0);
   const [run, setRun] = useState(0);
-  const [pos, setPos] = useState({ line: 0, char: 0 });
+  // The first render, and so the static HTML, is the whole first run. It replays from the top
+  // once the panel comes into view (before the reveal shows it).
+  const [pos, setPos] = useState({ line: Infinity, char: 0 });
   const [auto, setAuto] = useState(true);
+  const [started, setStarted] = useState(false);
+  if (seen && !started && !reduced) {
+    setStarted(true);
+    setPos({ line: 0, char: 0 });
+  }
 
   const d = DOORS[door];
   const scenario = d.scenarios[run];
@@ -392,11 +188,13 @@ export function CliShowcase() {
     tabs.current[next]?.focus();
   };
 
-  // Like a terminal: the newest line stays in view. Scrolls the panel only, never the page.
+  // Like a terminal: the newest line stays in view. Scrolls the panel only, never the page, and
+  // only when a line is added or the run changes, not on every typed character.
+  const printed = Math.min(pos.line, lines.length);
   useEffect(() => {
     const el = screen.current;
-    if (el) el.scrollTop = finished && reduced ? 0 : el.scrollHeight;
-  }, [pos, door, run, finished, reduced]);
+    if (el) el.scrollTop = reduced || !started ? 0 : el.scrollHeight;
+  }, [printed, door, run, reduced, started]);
 
   const lit = finished ? scenario.lights : [];
 
@@ -435,7 +233,6 @@ export function CliShowcase() {
             <button
               type="button"
               onClick={() => setAuto((v) => !v)}
-              aria-pressed={!auto}
               className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-mono text-[11px] text-[var(--landing-code-dim)] transition hover:bg-white/10 hover:text-[var(--landing-code-ink)]"
             >
               {auto ? <Pause className="size-3 fill-current" aria-hidden /> : <Play className="size-3 fill-current" aria-hidden />}
@@ -458,10 +255,11 @@ export function CliShowcase() {
                 }`}
               >
                 {item.label}
-                {on && auto && !reduced && finished && (
+                {on && auto && typing && finished && (
                   <span
+                    key={`${door}-${run}`}
                     aria-hidden
-                    className="landing-progress absolute inset-x-0 bottom-0 block h-px bg-[var(--landing-code-str)]"
+                    className="landing-progress absolute inset-x-0 bottom-0 block h-px origin-left bg-[var(--landing-code-str)]"
                     style={{ animationDuration: `${HOLD_MS}ms` }}
                   />
                 )}
@@ -476,28 +274,19 @@ export function CliShowcase() {
           role="tabpanel"
           aria-labelledby={`${base}-tab-${d.id}`}
           tabIndex={0}
-          className="landing-code-scroll m-0 h-[26rem] overflow-auto py-4 font-mono text-[12.5px] leading-[1.75] focus-visible:outline-none sm:text-[13px]"
+          className="landing-code-scroll m-0 h-[26rem] overflow-auto py-4 font-mono text-[12.5px] leading-[1.75] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--landing-code-key)] sm:text-[13px]"
         >
           <code>
             {lines.map((line, k) => {
               if (!finished && k > pos.line) return null;
               const partial = !finished && k === pos.line;
               if (partial && line.kind !== 'in') return null;
-              const shown = partial ? { ...line, text: line.text.slice(0, pos.char) } : line;
-              return (
-                <span
-                  key={`${d.id}-${scenario.id}-${k}`}
-                  className={`block whitespace-pre px-5 ${line.mark && !partial ? 'bg-[#ffcc00]/[0.1]' : ''}`}
-                >
-                  <Highlight line={shown} prompt={d.prompt} />
-                  {partial && <span className="landing-caret ml-px inline-block h-[1.1em] w-[0.55em] translate-y-[0.2em] bg-[var(--landing-code-ink)]" />}
-                </span>
-              );
+              return <Row key={`${d.id}-${scenario.id}-${k}`} line={line} prompt={d.prompt} typed={partial ? pos.char : undefined} />;
             })}
-            {finished && !reduced && (
+            {finished && typing && (
               <span className="block px-5">
                 <span className="select-none text-[var(--landing-code-dim)]">{d.prompt}</span>
-                <span className="landing-caret inline-block h-[1.1em] w-[0.55em] translate-y-[0.2em] bg-[var(--landing-code-ink)] opacity-70" />
+                <Caret dim />
               </span>
             )}
           </code>

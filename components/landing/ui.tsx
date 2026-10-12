@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { CHAPTERS, type ChapterId } from '@/components/landing/chapters';
 
 /**
  * The landing's whole vocabulary: a chapter, its heading, a block heading inside it, and a
@@ -14,83 +15,42 @@ export function Accent({ children }: { children: ReactNode }) {
 }
 
 /**
- * One chapter of the landing. Chapters alternate between the page and a tinted band, so
- * where one ends and the next begins reads at a glance.
+ * One chapter of the landing, anchored by its id in CHAPTERS. Chapters alternate between the
+ * page and a tinted band, so where one ends and the next begins reads at a glance.
  */
-export function Chapter({
-  id,
-  band,
-  className,
-  children,
-}: {
-  id?: string;
-  band?: boolean;
-  className?: string;
-  children: ReactNode;
-}) {
+export function Chapter({ id, band, children }: { id: ChapterId; band?: boolean; children: ReactNode }) {
   return (
-    <section id={id} className={`landing-chapter ${band ? 'landing-band' : ''} ${className ?? ''}`}>
+    <section id={id} className={`landing-chapter ${band ? 'landing-band' : ''}`}>
       <div className={wrap}>{children}</div>
     </section>
   );
 }
 
 /**
- * Chapter label: accent number, a short rule, lowercase mono. It replaces uppercase tracked
- * eyebrows.
+ * A chapter's head: its number from CHAPTERS, so the dock and the heading cannot disagree, a
+ * lowercase mono label in place of an uppercase eyebrow, the title and one lead.
  */
-export function ChapterLabel({
-  n,
-  children,
-  className,
-}: {
-  n?: string;
-  children: ReactNode;
-  className?: string;
-}) {
-  return (
-    <p className={`flex items-center gap-3 font-mono text-sm ${className ?? ''}`}>
-      {n && <span className="font-semibold text-[var(--landing-accent)]">{n}</span>}
-      {n && <span aria-hidden className="h-px w-6 bg-[var(--landing-border)]" />}
-      <span className="text-[var(--landing-subtle)]">{children}</span>
-    </p>
-  );
-}
-
 export function ChapterHead({
-  n,
+  chapter,
   label,
   title,
   lead,
-  center,
-  className,
 }: {
-  n?: string;
-  label?: string;
+  chapter: ChapterId;
+  label: string;
   title: ReactNode;
   lead?: ReactNode;
-  center?: boolean;
-  className?: string;
 }) {
+  const n = CHAPTERS.find((c) => c.id === chapter)?.n;
   return (
-    <header data-reveal className={`${center ? 'mx-auto max-w-3xl text-center' : 'max-w-3xl'} ${className ?? ''}`}>
-      {label && (
-        <ChapterLabel n={n} className={center ? 'justify-center' : undefined}>
-          {label}
-        </ChapterLabel>
-      )}
-      <h2
-        className={`text-[clamp(2rem,4vw,3rem)] font-bold leading-[1.06] tracking-[-0.035em] text-balance ${label ? 'mt-5' : ''}`}
-      >
-        {title}
-      </h2>
-      {lead && (
-        <p
-          className={`mt-5 max-w-2xl text-lg leading-relaxed text-[var(--landing-muted)] text-pretty ${center ? 'mx-auto' : ''}`}
-        >
-          {lead}
-        </p>
-      )}
+    <header data-reveal className="max-w-3xl">
+      <p className="flex items-center gap-3 font-mono text-sm">
+        <span className="font-semibold text-[var(--landing-accent)]">{n}</span>
+        <span aria-hidden className="h-px w-6 bg-[var(--landing-border)]" />
+        <span className="text-[var(--landing-subtle)]">{label}</span>
+      </p>
+      <h2 className="mt-5 text-[clamp(2rem,4vw,3rem)] font-bold leading-[1.06] tracking-[-0.035em] text-balance">{title}</h2>
+      {lead && <p className="mt-5 max-w-2xl text-lg leading-relaxed text-[var(--landing-muted)] text-pretty">{lead}</p>}
     </header>
   );
 }

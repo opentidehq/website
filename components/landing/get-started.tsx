@@ -3,8 +3,8 @@
 import Link from 'next/link';
 import { ArrowRight, Check, RotateCcw } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { tok } from '@/components/landing/code-panel';
-import { useInView } from '@/lib/hooks/use-in-view';
+import { CodePanel, tok } from '@/components/landing/code-panel';
+import { useOnScreen } from '@/lib/hooks/use-on-screen';
 import { usePrefersReducedMotion } from '@/lib/hooks/use-prefers-reduced-motion';
 
 /**
@@ -52,19 +52,26 @@ const TREE: [string, string][] = [
 const TYPE_MS = 18;
 const RUN_MS = 520;
 
-/** From an empty folder to a validated detection repo, played once as it scrolls in. */
+/**
+ * From an empty folder to a validated detection repo. The first render, and so the static HTML,
+ * is the finished session; it replays once as it approaches the viewport.
+ */
 export function GetStarted() {
   const reduced = usePrefersReducedMotion();
-  const { ref, inView } = useInView<HTMLDivElement>();
+  const { ref, onScreen, seen } = useOnScreen<HTMLDivElement>({ rootMargin: '25% 0px' });
   // `step` commands are finished; `chars` of the next one are typed.
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState<number>(STEPS.length);
   const [chars, setChars] = useState(0);
-  const [run, setRun] = useState(0);
+  const [started, setStarted] = useState(false);
+  if (seen && !started && !reduced) {
+    setStarted(true);
+    setStep(0);
+  }
 
   const done = reduced || step >= STEPS.length;
 
   useEffect(() => {
-    if (reduced || !inView || step >= STEPS.length) return;
+    if (reduced || !onScreen || step >= STEPS.length) return;
     const cmd = STEPS[step].cmd;
     if (chars < cmd.length) {
       const stride = Math.max(1, Math.ceil(cmd.length / 34));
@@ -76,25 +83,25 @@ export function GetStarted() {
       setChars(0);
     }, RUN_MS);
     return () => window.clearTimeout(id);
-  }, [reduced, inView, step, chars, run]);
+  }, [reduced, onScreen, step, chars]);
 
   const finished = done ? STEPS.length : step;
   const grown = new Set<number>(STEPS.slice(0, finished).flatMap((s) => [...s.adds]));
 
   return (
     <div ref={ref} className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-10">
-      <figure className="m-0 flex min-w-0 flex-col overflow-hidden rounded-2xl bg-[var(--landing-code-bg)] text-[var(--landing-code-ink)] shadow-[0_24px_60px_-30px_var(--landing-btn-shadow)] ring-1 ring-[var(--landing-border)]">
-        <figcaption className="flex items-center justify-between gap-3 border-b border-white/10 px-5 py-2.5 font-mono text-[11px] text-[var(--landing-code-dim)]">
-          <span>a new detection repo</span>
-          <span className="flex items-center gap-3">
+      <CodePanel
+        caption="a new detection repo"
+        className="shadow-[0_24px_60px_-30px_var(--landing-btn-shadow)]"
+        aside={
+          <>
             python 3.10–3.14
-            {done && !reduced && (
+            {done && started && (
               <button
                 type="button"
                 onClick={() => {
                   setStep(0);
                   setChars(0);
-                  setRun((r) => r + 1);
                 }}
                 className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 transition hover:bg-white/10 hover:text-[var(--landing-code-ink)]"
               >
@@ -102,35 +109,34 @@ export function GetStarted() {
                 replay
               </button>
             )}
-          </span>
-        </figcaption>
-        <pre className="landing-code-scroll m-0 min-h-[24rem] flex-1 overflow-x-auto px-5 py-5 font-mono text-[13px] leading-relaxed">
-          <code>
-            {STEPS.map((s, i) => {
-              if (!done && i > step) return null;
-              const current = !done && i === step;
-              return (
-                <span key={s.cmd} className="block">
-                  {i > 0 && '\n'}
-                  {tok.dim(`# ${s.note}`)}
-                  {'\n'}
-                  {tok.dim('$ ')}
-                  {current ? s.cmd.slice(0, chars) : s.cmd}
-                  {current && (
-                    <span className="landing-caret ml-px inline-block h-[1.1em] w-[0.55em] translate-y-[0.2em] bg-[var(--landing-code-ink)]" />
-                  )}
-                  {!current && s.ok && (
-                    <>
-                      {'\n'}
-                      {tok.ok('OK')} {s.ok}
-                    </>
-                  )}
-                </span>
-              );
-            })}
-          </code>
-        </pre>
-      </figure>
+          </>
+        }
+      >
+        <span className="block min-h-[22rem]">
+          {STEPS.map((s, i) => {
+            if (!done && i > step) return null;
+            const current = !done && i === step;
+            return (
+              <span key={s.cmd} className="block">
+                {i > 0 && '\n'}
+                {tok.dim(`# ${s.note}`)}
+                {'\n'}
+                {tok.dim('$ ')}
+                {current ? s.cmd.slice(0, chars) : s.cmd}
+                {current && (
+                  <span className="landing-caret ml-px inline-block h-[1.1em] w-[0.55em] translate-y-[0.2em] bg-[var(--landing-code-ink)]" />
+                )}
+                {!current && s.ok && (
+                  <>
+                    {'\n'}
+                    {tok.ok('OK')} {s.ok}
+                  </>
+                )}
+              </span>
+            );
+          })}
+        </span>
+      </CodePanel>
 
       <div className="flex min-w-0 flex-col">
         <div className="landing-panel p-6">
@@ -151,7 +157,7 @@ export function GetStarted() {
               return (
                 <li
                   key={path}
-                  className={`flex flex-wrap gap-x-3 transition-[opacity,transform] duration-500 ${
+                  className={`flex flex-wrap gap-x-3 transition-[opacity,translate] duration-500 ${
                     on ? 'translate-x-0 opacity-100' : '-translate-x-1 opacity-15'
                   }`}
                 >

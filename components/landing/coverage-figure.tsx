@@ -1,23 +1,85 @@
 'use client';
 
-import { Check, Minus } from 'lucide-react';
+import { ArrowDown, Radio } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { Tag } from '@/components/landing/ui';
-import { useInView } from '@/lib/hooks/use-in-view';
+import { useOnScreen } from '@/lib/hooks/use-on-screen';
 import { usePrefersReducedMotion } from '@/lib/hooks/use-prefers-reduced-motion';
 
-const ROWS = [
-  ['Granularity', 'technique', 'atomic threat vector'],
-  ['Context', 'generic', 'surface and terrain'],
-  ['Impact', 'implicit', 'severity · impact · leverage · viability'],
-  ['Chaining', 'none', 'threat → threat attack paths'],
-  ['Intel link', 'manual', 'actors, sightings, references'],
-  ['Detection', 'separate', 'objective → signals → rules'],
-] as const;
+/**
+ * One attack path, as the graph holds it: four threats chained in sequence, each landing on
+ * one of your assets through its surface, and each covered by an objective and its rules, or
+ * not. Illustrative content; the shape is the ontology's.
+ */
+type Step = {
+  asset: string;
+  surface: string;
+  criticality: string;
+  threat: string;
+  ref: string;
+  objective: string | null;
+  rules: string[];
+};
+
+const PATH: Step[] = [
+  {
+    asset: 'Edge firewalls',
+    surface: 'Firewalls::Palo Alto Networks',
+    criticality: 'High',
+    threat: 'Gateway exploitation',
+    ref: 'T1190 · CVE-2026-0300',
+    objective: 'Portal exploitation on PAN-OS',
+    rules: ['Threat log · SPL'],
+  },
+  {
+    asset: 'Corporate workstations',
+    surface: 'Windows::Desktop::11',
+    criticality: 'Medium',
+    threat: 'Credential dumping from LSASS',
+    ref: 'T1003.001',
+    objective: 'Credential access via LSASS',
+    rules: ['LSASS · KQL', 'LSASS · SPL'],
+  },
+  {
+    asset: 'Windows servers',
+    surface: 'Windows::Server::2022',
+    criticality: 'High',
+    threat: 'Lateral movement over SMB',
+    ref: 'T1021.002',
+    objective: null,
+    rules: [],
+  },
+  {
+    asset: 'File servers',
+    surface: 'Windows::Server::2022',
+    criticality: 'Severe',
+    threat: 'Ransomware deployment',
+    ref: 'T1486',
+    objective: 'Mass file encryption',
+    rules: ['Encryption burst · KQL'],
+  },
+];
+
+const COVERED = PATH.filter((s) => s.objective).length;
+
+type Focus = 'assets' | 'path' | 'detection' | 'gap';
+
+const QUESTIONS: { key: Focus; question: string; answer: string }[] = [
+  { key: 'assets', question: 'Does it hit what we run?', answer: 'Each threat’s surface meets your assets, ranked by criticality.' },
+  { key: 'path', question: 'How does the attack unfold?', answer: 'Threats chain into an attack path, one step after another.' },
+  { key: 'detection', question: 'What fires at each step?', answer: 'An objective and its signals, implemented by rules on your integrations.' },
+  { key: 'gap', question: 'Where does detection break?', answer: 'Lateral movement on High-criticality servers: nothing covers it.' },
+];
+
+const BEAT_MS = 1300;
+const HOLD_MS = 2600;
+
+/* Heatmap */
 
 const COLS = 14;
-const ROWS_N = 9;
+const ROWS = 9;
 
-/** A stable, uneven fill: about 85% of cells lit, in four strengths. */
+/** A stable, uneven fill: about 85% of cells lit, in three strengths. */
 function heat(i: number) {
   const h = Math.sin(i * 12.9898 + 4.1414) * 43758.5453;
   const r = h - Math.floor(h);
@@ -29,23 +91,15 @@ const STRENGTH = ['', 'opacity-25', 'opacity-55', 'opacity-90'];
 
 function Heatmap({ shown }: { shown: boolean }) {
   return (
-    <div
-      aria-hidden
-      className="grid gap-[3px]"
-      style={{ gridTemplateColumns: `repeat(${COLS}, minmax(0, 1fr))` }}
-    >
-      {Array.from({ length: COLS * ROWS_N }, (_, i) => {
+    <div aria-hidden className="grid gap-[3px]" style={{ gridTemplateColumns: `repeat(${COLS}, minmax(0, 1fr))` }}>
+      {Array.from({ length: COLS * ROWS }, (_, i) => {
         const level = heat(i);
-        const col = i % COLS;
         return (
-          <span
-            key={i}
-            className="relative aspect-square rounded-[3px] bg-[color-mix(in_srgb,var(--landing-ink)_6%,transparent)]"
-          >
+          <span key={i} className="relative aspect-square rounded-[3px] bg-[color-mix(in_srgb,var(--landing-ink)_6%,transparent)]">
             {level > 0 && (
               <span
                 className={`absolute inset-0 rounded-[3px] bg-[var(--landing-accent)] transition-opacity duration-500 ${shown ? STRENGTH[level] : 'opacity-0'}`}
-                style={{ transitionDelay: `${col * 45 + (i % 3) * 30}ms` }}
+                style={{ transitionDelay: `${(i % COLS) * 45 + (i % 3) * 30}ms` }}
               />
             )}
           </span>
@@ -55,185 +109,276 @@ function Heatmap({ shown }: { shown: boolean }) {
   );
 }
 
-type GNode = { id: string; label: string; x: number; y: number; gap?: boolean };
+/* Attack path */
 
-const THREATS: GNode[] = [
-  { id: 't1', label: 'Gateway exploitation', x: 8, y: 14 },
-  { id: 't2', label: 'Device-code phishing', x: 8, y: 66 },
-  { id: 't3', label: 'Inbox rule abuse', x: 8, y: 118 },
-  { id: 't4', label: 'npm supply chain', x: 8, y: 170, gap: true },
-];
-const OBJECTIVES: GNode[] = [
-  { id: 'o1', label: 'Credential access', x: 148, y: 14 },
-  { id: 'o2', label: 'OAuth token theft', x: 148, y: 66 },
-  { id: 'o3', label: 'Mailbox persistence', x: 148, y: 118 },
-];
-const RULES: GNode[] = [
-  { id: 'r1', label: 'LSASS · KQL', x: 288, y: 0 },
-  { id: 'r2', label: 'LSASS · SPL', x: 288, y: 36 },
-  { id: 'r3', label: 'Device code · KQL', x: 288, y: 82 },
-  { id: 'r4', label: 'Forwarding · KQL', x: 288, y: 128 },
-];
-const W = 124;
-const H = 26;
-const LINKS: [GNode, GNode][] = [
-  [THREATS[0], OBJECTIVES[0]],
-  [THREATS[1], OBJECTIVES[1]],
-  [THREATS[2], OBJECTIVES[2]],
-  [OBJECTIVES[0], RULES[0]],
-  [OBJECTIVES[0], RULES[1]],
-  [OBJECTIVES[1], RULES[2]],
-  [OBJECTIVES[2], RULES[3]],
-];
+const node = 'rounded-xl border bg-[var(--landing-panel)] px-3 py-2.5 transition-[border-color,box-shadow,opacity] duration-300';
 
-function curve(a: GNode, b: GNode, w: number) {
-  const x1 = a.x + w;
-  const y1 = a.y + H / 2;
-  const x2 = b.x;
-  const y2 = b.y + H / 2;
-  const mx = (x1 + x2) / 2;
-  return `M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`;
-}
-
-function Box({ node, w, kind }: { node: GNode; w: number; kind: 'threat' | 'objective' | 'rule' }) {
+function Link({ on, gap, dim }: { on: boolean; gap?: boolean; dim: boolean }) {
   return (
-    <g>
-      {node.gap && (
-        <rect
-          x={node.x - 4}
-          y={node.y - 4}
-          width={w + 8}
-          height={H + 8}
-          rx={10}
-          fill="none"
-          stroke="var(--landing-accent)"
-          strokeDasharray="3 3"
-          className="landing-ring"
-          style={{ transformOrigin: 'center', transformBox: 'fill-box' }}
-        />
-      )}
-      <rect
-        x={node.x}
-        y={node.y}
-        width={w}
-        height={H}
-        rx={7}
-        fill={kind === 'rule' ? 'color-mix(in srgb, var(--landing-accent) 10%, var(--landing-panel))' : 'var(--landing-panel)'}
-        stroke={node.gap ? 'var(--landing-accent)' : 'color-mix(in srgb, var(--landing-ink) 20%, transparent)'}
-        strokeDasharray={node.gap ? '4 3' : undefined}
-      />
-      <text
-        x={node.x + 9}
-        y={node.y + H / 2 + 3.5}
-        fontSize={10.5}
-        className={node.gap ? 'fill-[var(--landing-accent)] font-semibold' : 'fill-[var(--landing-ink)]'}
-      >
-        {node.label}
-      </text>
-    </g>
+    <span
+      aria-hidden
+      className={`block self-center transition-opacity duration-300 ${dim ? 'opacity-25' : ''} ${
+        gap
+          ? 'border-t border-dashed border-[color-mix(in_srgb,var(--landing-ink)_30%,transparent)]'
+          : `h-px ${on ? 'bg-[var(--landing-accent)]' : 'bg-[color-mix(in_srgb,var(--landing-ink)_22%,transparent)]'}`
+      }`}
+    />
   );
 }
 
-function Graph({ shown, reduced }: { shown: boolean; reduced: boolean }) {
+function AttackPath({ at, focus }: { at: number; focus: Focus | null }) {
+  const dim = (...parts: Focus[]) => focus !== null && !parts.includes(focus);
+
   return (
-    <svg viewBox="0 0 420 200" className="h-auto w-full overflow-visible" role="img" aria-label="Threats covered by objectives and implemented by rules, with one threat that no objective covers">
-      {['threats', 'objectives', 'rules'].map((label, i) => (
-        <text key={label} x={[8, 148, 288][i]} y={-8} fontSize={9.5} className="fill-[var(--landing-subtle)] font-mono">
+    <div className="grid grid-cols-[minmax(0,0.95fr)_1rem_minmax(0,1.15fr)_1rem_minmax(0,1fr)_1rem_minmax(0,0.85fr)] gap-y-7">
+      {['your assets', 'attack path', 'objectives', 'rules'].map((label, k) => (
+        <p key={label} className={`-mb-4 font-mono text-[11px] text-[var(--landing-subtle)] ${k > 0 ? 'col-span-2 pl-4' : ''}`}>
           {label}
-        </text>
+        </p>
       ))}
-      {LINKS.map(([a, b], i) => {
-        const d = curve(a, b, W);
+
+      {PATH.map((step, i) => {
+        const reached = i <= at;
+        const current = i === at;
+        const covered = step.objective !== null;
+        // Asking about the gap fades every step that is covered.
+        const row = focus === 'gap' && covered ? 'opacity-25' : '';
         return (
-          <g key={`${a.id}-${b.id}`}>
-            <path
-              d={d}
-              pathLength={1}
-              fill="none"
-              stroke="color-mix(in srgb, var(--landing-accent) 45%, transparent)"
-              strokeWidth={1.5}
-              className="landing-draw"
-              data-drawn={shown || reduced ? '' : undefined}
-              style={{ transitionDelay: `${200 + i * 110}ms` }}
-            />
-            {shown && !reduced && <path d={d} fill="none" stroke="var(--landing-accent)" strokeWidth={1.75} className="landing-flow" />}
-          </g>
+          <div key={step.threat} className="contents">
+            <div
+              className={`${node} ${row || (dim('assets') ? 'opacity-25' : '')} ${
+                focus === 'assets' ? 'border-[var(--landing-accent)]' : 'border-[var(--landing-border)]'
+              }`}
+            >
+              <p className="text-[13px] font-semibold leading-snug text-[var(--landing-ink)]">{step.asset}</p>
+              <p className="mt-0.5 font-mono text-[10.5px] leading-snug text-[var(--landing-subtle)] [overflow-wrap:anywhere]">
+                {step.surface}
+              </p>
+              <p className="mt-1 font-mono text-[10.5px] text-[var(--landing-muted)]">criticality {step.criticality}</p>
+            </div>
+
+            <Link on={reached} dim={Boolean(row) || dim('assets', 'path')} />
+
+            <div
+              className={`relative ${node} ${row || (dim('path', 'gap') ? 'opacity-25' : '')} ${
+                current || focus === 'path'
+                  ? 'border-[var(--landing-accent)] shadow-[0_8px_24px_-14px_var(--landing-btn-shadow)]'
+                  : reached
+                    ? 'border-[color-mix(in_srgb,var(--landing-accent)_45%,transparent)]'
+                    : 'border-[var(--landing-border)]'
+              }`}
+            >
+              <p className="font-mono text-[10.5px] text-[var(--landing-subtle)]">
+                {String(i + 1).padStart(2, '0')} · {step.ref}
+              </p>
+              <p className="mt-0.5 text-[13px] font-semibold leading-snug text-[var(--landing-ink)]">{step.threat}</p>
+              {/* The chain: this threat precedes the next one. */}
+              {i < PATH.length - 1 && (
+                <span aria-hidden className="absolute left-1/2 top-full flex h-7 -translate-x-1/2 flex-col items-center">
+                  <span className="relative block w-px flex-1 bg-[color-mix(in_srgb,var(--landing-ink)_22%,transparent)]">
+                    <span
+                      className={`absolute inset-0 origin-top bg-[var(--landing-accent)] transition-transform duration-500 ${
+                        i < at ? 'scale-y-100' : 'scale-y-0'
+                      }`}
+                    />
+                  </span>
+                  <ArrowDown
+                    className={`-mt-1.5 size-3 transition-colors ${
+                      i < at ? 'text-[var(--landing-accent)]' : 'text-[color-mix(in_srgb,var(--landing-ink)_35%,transparent)]'
+                    }`}
+                  />
+                </span>
+              )}
+            </div>
+
+            <Link on={reached && covered} gap={!covered} dim={Boolean(row) || dim('detection', 'gap')} />
+
+            {covered ? (
+              <div
+                className={`${node} ${row || (dim('detection') ? 'opacity-25' : '')} ${
+                  reached ? 'border-[color-mix(in_srgb,var(--landing-accent)_45%,transparent)]' : 'border-[var(--landing-border)]'
+                }`}
+              >
+                <p className="font-mono text-[10.5px] text-[var(--landing-subtle)]">objective</p>
+                <p className="mt-0.5 text-[13px] font-semibold leading-snug text-[var(--landing-ink)]">{step.objective}</p>
+              </div>
+            ) : (
+              <div
+                className={`relative flex flex-col justify-center rounded-xl border border-dashed px-3 py-2.5 transition-[border-color,opacity] duration-300 ${
+                  dim('detection', 'gap') ? 'opacity-25' : ''
+                } ${reached || focus === 'gap' ? 'border-[var(--landing-accent)]' : 'border-[color-mix(in_srgb,var(--landing-ink)_30%,transparent)]'}`}
+              >
+                {reached && (
+                  <span
+                    aria-hidden
+                    className="landing-ring pointer-events-none absolute -inset-1.5 rounded-[0.9rem] border border-dashed border-[var(--landing-accent)]"
+                  />
+                )}
+                <p className={`font-mono text-[10.5px] ${reached ? 'text-[var(--landing-accent)]' : 'text-[var(--landing-subtle)]'}`}>gap</p>
+                <p
+                  className={`mt-0.5 text-[13px] font-semibold leading-snug ${
+                    reached ? 'text-[var(--landing-accent)]' : 'text-[var(--landing-muted)]'
+                  }`}
+                >
+                  No objective covers it
+                </p>
+              </div>
+            )}
+
+            <Link on={reached && covered} gap={!covered} dim={Boolean(row) || dim('detection', 'gap')} />
+
+            <div className={`flex flex-col justify-center gap-1.5 transition-opacity duration-300 ${row || (dim('detection', 'gap') ? 'opacity-25' : '')}`}>
+              {covered ? (
+                step.rules.map((rule) => (
+                  <span
+                    key={rule}
+                    className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[12.5px] font-medium transition-colors duration-300 ${
+                      reached
+                        ? 'border-transparent bg-[var(--landing-accent)] text-[var(--brand-accent-foreground)]'
+                        : 'border-[var(--landing-border)] bg-[var(--landing-panel)] text-[var(--landing-ink)]'
+                    }`}
+                  >
+                    <Radio className={`size-3 shrink-0 ${reached && current ? 'animate-pulse' : ''}`} aria-hidden />
+                    {rule}
+                  </span>
+                ))
+              ) : (
+                <span className={`font-mono text-[11px] ${reached ? 'text-[var(--landing-accent)]' : 'text-[var(--landing-subtle)]'}`}>
+                  undetected
+                </span>
+              )}
+            </div>
+          </div>
         );
       })}
-      {THREATS.map((n) => (
-        <Box key={n.id} node={n} w={W} kind="threat" />
-      ))}
-      {OBJECTIVES.map((n) => (
-        <Box key={n.id} node={n} w={W} kind="objective" />
-      ))}
-      {RULES.map((n) => (
-        <Box key={n.id} node={n} w={W} kind="rule" />
-      ))}
-      <text x={148} y={186} fontSize={10} className="fill-[var(--landing-accent)] font-mono">
-        ← a gap: no objective covers it
-      </text>
-    </svg>
+    </div>
   );
 }
 
-function Rows({ side }: { side: 'heatmap' | 'graph' }) {
-  const graph = side === 'graph';
+/** Narrow screens: the same path as a list, each step with its asset and what covers it. */
+function AttackPathList({ at }: { at: number }) {
   return (
-    <dl className="m-0 mt-6 divide-y divide-[var(--landing-border)] border-t border-[var(--landing-border)] text-sm">
-      {ROWS.map(([dimension, heatmap, graphValue]) => (
-        <div key={dimension} className="grid grid-cols-[6.5rem_minmax(0,1fr)] items-baseline gap-3 py-2.5">
-          <dt className="font-mono text-xs text-[var(--landing-subtle)]">{dimension.toLowerCase()}</dt>
-          <dd className={`m-0 flex items-baseline gap-2 ${graph ? 'font-medium text-[var(--landing-ink)]' : 'text-[var(--landing-subtle)]'}`}>
-            {graph ? (
-              <Check className="size-3.5 shrink-0 translate-y-0.5 text-[var(--landing-accent)]" aria-hidden />
-            ) : (
-              <Minus className="size-3.5 shrink-0 translate-y-0.5 opacity-60" aria-hidden />
-            )}
-            {graph ? graphValue : heatmap}
-          </dd>
-        </div>
-      ))}
-    </dl>
+    <ol className="m-0 list-none space-y-3 p-0">
+      {PATH.map((step, i) => {
+        const reached = i <= at;
+        const covered = step.objective !== null;
+        return (
+          <li
+            key={step.threat}
+            className={`rounded-xl border p-3.5 transition-colors duration-300 ${
+              !covered && reached
+                ? 'border-dashed border-[var(--landing-accent)]'
+                : reached
+                  ? 'border-[color-mix(in_srgb,var(--landing-accent)_45%,transparent)]'
+                  : 'border-[var(--landing-border)]'
+            }`}
+          >
+            <p className="font-mono text-[10.5px] text-[var(--landing-subtle)]">
+              {String(i + 1).padStart(2, '0')} · {step.asset} · {step.criticality}
+            </p>
+            <p className="mt-1 text-sm font-semibold text-[var(--landing-ink)]">{step.threat}</p>
+            <p className={`mt-1 text-[13px] ${covered ? 'text-[var(--landing-muted)]' : 'font-semibold text-[var(--landing-accent)]'}`}>
+              {covered ? `${step.objective} → ${step.rules.join(', ')}` : 'Gap: no objective covers it'}
+            </p>
+          </li>
+        );
+      })}
+    </ol>
   );
 }
 
-/** Heatmap versus graph: the same coverage, and only one of them can say which threat is missing. */
+/**
+ * Heatmap versus graph. The heatmap scores techniques; the graph follows an attack path across
+ * your assets and shows which steps fire a rule. A replay walks the path; the questions below
+ * light up the part of the graph that answers them.
+ */
 export function CoverageFigure() {
   const reduced = usePrefersReducedMotion();
-  const { ref, inView } = useInView<HTMLDivElement>();
+  const { ref, onScreen, seen } = useOnScreen<HTMLDivElement>();
+  // The step the replay has reached; PATH.length means the whole path is shown, which is also
+  // the static render, so the page reads the same without JavaScript.
+  const [at, setAt] = useState(PATH.length);
+  const [focus, setFocus] = useState<Focus | null>(null);
+
+  const playing = onScreen && !reduced && focus === null;
+
+  useEffect(() => {
+    if (!playing) return;
+    const id = window.setTimeout(() => setAt((n) => (n >= PATH.length ? 0 : n + 1)), at >= PATH.length ? HOLD_MS : BEAT_MS);
+    return () => window.clearTimeout(id);
+  }, [playing, at]);
+
+  const shownAt = focus !== null || reduced ? PATH.length : at;
 
   return (
-    <div ref={ref} className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-      <figure className="landing-panel m-0 flex flex-col p-6 md:p-8">
-        <figcaption className="flex items-baseline justify-between gap-4">
-          <span>
-            <span className="block font-mono text-xs text-[var(--landing-subtle)]">att&amp;ck heatmap</span>
-            <span className="mt-1 block text-sm font-semibold text-[var(--landing-ink)]">A score per technique</span>
-          </span>
-          <span className="text-right">
-            <span className="block text-3xl font-bold tracking-[-0.03em] text-[var(--landing-muted)]">85%</span>
-            <span className="font-mono text-[11px] text-[var(--landing-subtle)]">of techniques have a rule</span>
-          </span>
-        </figcaption>
-        <div className="mt-5">
-          <Heatmap shown={inView || reduced} />
-        </div>
-        <Rows side="heatmap" />
-      </figure>
+    <div ref={ref}>
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,4fr)_minmax(0,8fr)]">
+        <figure className="landing-panel m-0 flex flex-col p-6 md:p-8">
+          <figcaption className="flex items-start justify-between gap-4">
+            <span>
+              <span className="block font-mono text-xs text-[var(--landing-subtle)]">att&amp;ck heatmap</span>
+              <span className="mt-1 block text-sm font-semibold text-[var(--landing-ink)]">A score per technique</span>
+            </span>
+            <span className="text-right">
+              <span className="block text-3xl font-bold tracking-[-0.03em] text-[var(--landing-muted)]">85%</span>
+              <span className="font-mono text-[11px] text-[var(--landing-subtle)]">of techniques have a rule</span>
+            </span>
+          </figcaption>
+          <div className="mx-auto mt-6 w-full max-w-md xl:max-w-none">
+            <Heatmap shown={seen || reduced} />
+          </div>
+          <p className="mt-auto pt-6 text-sm leading-relaxed text-[var(--landing-muted)] text-pretty">
+            A colour per technique. It cannot say which threats reach your assets, or where an attack path goes
+            unseen.
+          </p>
+        </figure>
 
-      <figure className="landing-panel m-0 flex flex-col p-6 ring-1 ring-[color-mix(in_srgb,var(--landing-accent)_35%,transparent)] md:p-8">
-        <figcaption className="flex items-baseline justify-between gap-4">
-          <span>
-            <span className="block font-mono text-xs text-[var(--landing-accent)]">opentide graph</span>
-            <span className="mt-1 block text-sm font-semibold text-[var(--landing-ink)]">A path per threat</span>
-          </span>
-          <Tag tone="accent">3 of 4 threats covered</Tag>
-        </figcaption>
-        <div className="mt-8 flex flex-1 items-center">
-          <Graph shown={inView} reduced={reduced} />
-        </div>
-        <Rows side="graph" />
-      </figure>
+        <figure className="landing-panel m-0 flex flex-col p-6 ring-1 ring-[color-mix(in_srgb,var(--landing-accent)_35%,transparent)] md:p-8">
+          <figcaption className="flex flex-wrap items-start justify-between gap-3">
+            <span>
+              <span className="block font-mono text-xs text-[var(--landing-accent)]">opentide graph</span>
+              <span className="mt-1 block text-sm font-semibold text-[var(--landing-ink)]">An attack path across your assets</span>
+            </span>
+            <Tag tone="accent">
+              {COVERED} of {PATH.length} steps detected
+            </Tag>
+          </figcaption>
+          <div className="mt-6 hidden sm:block">
+            <AttackPath at={shownAt} focus={focus} />
+          </div>
+          <div className="mt-6 sm:hidden">
+            <AttackPathList at={shownAt} />
+          </div>
+        </figure>
+      </div>
+
+      <ul className="m-0 mt-4 grid list-none grid-cols-1 gap-px overflow-hidden rounded-2xl border border-[var(--landing-border)] bg-[var(--landing-border)] p-0 sm:grid-cols-2 xl:grid-cols-4">
+        {QUESTIONS.map((q, k) => {
+          const on = focus === q.key;
+          return (
+            <li key={q.key} className="bg-[var(--landing-panel)]">
+              <button
+                type="button"
+                onPointerEnter={() => setFocus(q.key)}
+                onPointerLeave={() => setFocus(null)}
+                onFocus={() => setFocus(q.key)}
+                onBlur={() => setFocus(null)}
+                className={`flex h-full w-full flex-col items-start p-5 text-left transition-colors duration-300 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--landing-accent)] ${
+                  on ? 'bg-[color-mix(in_srgb,var(--landing-accent)_6%,var(--landing-panel))]' : ''
+                }`}
+              >
+                <span className={`font-mono text-xs ${on ? 'text-[var(--landing-accent)]' : 'text-[var(--landing-subtle)]'}`}>
+                  {String(k + 1).padStart(2, '0')}
+                </span>
+                <span className={`mt-2 text-base font-semibold tracking-[-0.01em] ${on ? 'text-[var(--landing-accent)]' : 'text-[var(--landing-ink)]'}`}>
+                  {q.question}
+                </span>
+                <span className="mt-1 text-sm leading-relaxed text-[var(--landing-muted)]">{q.answer}</span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 }

@@ -3,9 +3,10 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
-import { useCallback, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { BlockHead, Tag } from '@/components/landing/ui';
-import { useInView } from '@/lib/hooks/use-in-view';
+import { useMeasure } from '@/lib/hooks/use-measure';
+import { useOnScreen } from '@/lib/hooks/use-on-screen';
 import { usePrefersReducedMotion } from '@/lib/hooks/use-prefers-reduced-motion';
 
 type Integration = {
@@ -51,13 +52,12 @@ type Wire = { d: string; x1: number; y1: number; dashed?: boolean };
  */
 export function IntegrationFan() {
   const reduced = usePrefersReducedMotion();
-  const { ref: viewRef, inView } = useInView<HTMLDivElement>();
+  const { ref: viewRef, seen: inView } = useOnScreen<HTMLDivElement>();
   const stageRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLElement>(null);
   const keyRefs = useRef<(HTMLSpanElement | null)[]>([]);
   const tileRefs = useRef<(HTMLElement | null)[]>([]);
   const [wires, setWires] = useState<Wire[]>([]);
-  const [size, setSize] = useState({ w: 0, h: 0 });
 
   const measure = useCallback(() => {
     const stage = stageRef.current;
@@ -81,18 +81,9 @@ export function IntegrationFan() {
       next.push({ d: `M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`, x1, y1, dashed: i === INTEGRATIONS.length });
     });
     setWires(next);
-    setSize({ w: box.width, h: box.height });
   }, []);
 
-  // A ResizeObserver reports once as soon as it observes, so it also takes the first measure.
-  useLayoutEffect(() => {
-    const stage = stageRef.current;
-    if (!stage) return;
-    const ro = new ResizeObserver(measure);
-    ro.observe(stage);
-    document.fonts?.ready.then(measure, () => undefined);
-    return () => ro.disconnect();
-  }, [measure]);
+  useMeasure(stageRef, measure);
 
   return (
     <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,4fr)_minmax(0,8fr)] lg:gap-14">
@@ -159,14 +150,12 @@ export function IntegrationFan() {
           <svg
             aria-hidden
             className="pointer-events-none absolute inset-0 hidden h-full w-full overflow-visible md:block"
-            width={size.w}
-            height={size.h}
           >
             {wires.map((wire, i) => (
               <g key={i}>
                 <path
                   d={wire.d}
-                  pathLength={1}
+                  pathLength={wire.dashed ? undefined : 1}
                   fill="none"
                   stroke={wire.dashed ? 'color-mix(in srgb, var(--landing-ink) 25%, transparent)' : 'color-mix(in srgb, var(--landing-accent) 38%, transparent)'}
                   strokeWidth={1.5}
@@ -203,7 +192,7 @@ export function IntegrationFan() {
                 ref={(el) => {
                   tileRefs.current[i] = el;
                 }}
-                className="landing-panel flex items-center gap-3 px-3.5 py-2.5 transition-[transform,border-color] duration-300 hover:-translate-y-0.5 hover:border-[color-mix(in_srgb,var(--landing-accent)_45%,transparent)]"
+                className="landing-panel flex items-center gap-3 px-3.5 py-2.5 transition-[translate,border-color] duration-300 hover:-translate-y-0.5 hover:border-[color-mix(in_srgb,var(--landing-accent)_45%,transparent)]"
               >
                 <Logo src={p.src} kind={p.kind} />
                 <div className="min-w-0 flex-1">

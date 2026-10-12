@@ -2,30 +2,12 @@
 
 import Link from 'next/link';
 import { ArrowRight, Check, Copy } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
 import { INSTALL_CMD } from '@/lib/pypi';
+import { useCopy } from '@/lib/hooks/use-copy';
 
 /** The install command with a copy button, and the way in. */
 export function HeroInstall() {
-  const [copied, setCopied] = useState(false);
-  const timer = useRef<number | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (timer.current !== null) window.clearTimeout(timer.current);
-    };
-  }, []);
-
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(INSTALL_CMD);
-    } catch {
-      return;
-    }
-    setCopied(true);
-    if (timer.current !== null) window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => setCopied(false), 2000);
-  }
+  const { copied, copy } = useCopy(INSTALL_CMD);
 
   return (
     <div className="mt-10 flex w-full flex-col items-center">

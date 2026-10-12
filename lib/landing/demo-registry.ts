@@ -6,6 +6,7 @@ export const DEMO_BRANCH = 'feat/lsass-credential-access';
 
 export const UUID = {
   threatGateway: '00000000-0000-4000-8001-000000000010',
+  threatLsass: '00000000-0000-4000-8001-000000000020',
   objectiveCredential: '00000000-0000-4000-8002-000000000001',
   ruleLsass: '00000000-0000-4000-8003-000000000001',
   signalLsass: '00000000-0000-4000-8099-000000000001',
@@ -179,6 +180,7 @@ export const ADVISORY: AdvisoryPage = {
 };
 
 export const DEMO_PATHS = [
+  'objects/threats/credential-dumping-from-lsass.yaml',
   'objects/threats/gateway-exploitation-cve-2026-0300.yaml',
   'objects/objectives/credential-access-via-lsass.yaml',
   'objects/rules/lsass-memory-access.yaml',
@@ -243,6 +245,40 @@ const SENTINEL_QUERY_TUNED = `      let BenignAccessors = dynamic(["csrss.exe", 
       | where InitiatingProcessCommandLine !has "inventory-scan"`;
 
 export const DEMO_FILES: Record<DemoPath, string> = {
+  // Already in the repository before the scenario: the gateway threat chains to it.
+  'objects/threats/credential-dumping-from-lsass.yaml': `name: Credential dumping from LSASS
+criticality: High
+
+metadata:
+  uuid: ${UUID.threatLsass}
+  schema: threat::1.0
+  version: 1.0.0
+  created: "2026-03-02"
+  modified: "2026-03-02"
+  tlp: clear
+  author: detection-team
+  organisation:
+    uuid: 00000000-0000-4000-8000-000000000099
+    name: Example Corp
+
+threat:
+  description: |
+    Adversaries with a foothold on a Windows host read LSASS process
+    memory to recover credentials and reuse them across the estate.
+  severity: Significant incident
+  impact:
+    - Identity Theft
+  leverage:
+    - Information Disclosure
+  viability: Likely
+  terrain: Managed Windows workstations where a local administrator can open LSASS
+  surface:
+    - Windows::Desktop::11
+  mitre_attack:
+    - T1003.001
+  killchain:
+    - Credential Access
+`,
   'objects/threats/gateway-exploitation-cve-2026-0300.yaml': `name: Gateway exploitation (CVE-2026-0300)
 criticality: High
 
@@ -278,6 +314,12 @@ threat:
     - T1133
   killchain:
     - Exploitation
+  chaining:
+    - relation: sequence::preceeds
+      vector: ${UUID.threatLsass}
+      description: |
+        Root on the gateway is the foothold for credential dumping
+        on the internal estate.
   cve:
     - CVE-2026-0300
 

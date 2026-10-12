@@ -54,8 +54,8 @@ const SEPARATION_ITERS = 3;
 const CURSOR_RADIUS = 0.25;
 const CURSOR_FORCE = 66;
 const GRID_RES = 52;
-/** Upper bound on particles, which is what a frame costs. */
-const MAX_PARTICLES = 10000;
+/** Upper bound on particles, which bounds what the simulation costs per step. */
+const MAX_PARTICLES = 7000;
 const AUTO_WAVE = true;
 
 const BLUE = { r: 0, g: 20, b: 137 };
@@ -89,7 +89,8 @@ export function TideAsciiScene({ className, fill = FILL_HEIGHT }: { className?: 
     // on that change, so a theme switch recolours the water without restarting it.
     const isDark = () => document.documentElement.classList.contains('dark');
 
-    const inkColor = () => {
+    // Resolved once and on theme changes, not every frame: getComputedStyle is not free.
+    const readInk = () => {
       const dark = isDark();
       const styles = getComputedStyle(canvas.closest('.landing') ?? document.documentElement);
       let ink = dark ? YELLOW : BLUE;
@@ -103,14 +104,15 @@ export function TideAsciiScene({ className, fill = FILL_HEIGHT }: { className?: 
       }
       return ink;
     };
+    let ink = readInk();
 
     const build = () => {
       tankH = 1;
       tankW = Math.max(0.55, w / Math.max(1, h));
       // Particles pack at 0.6 × 0.52 of a cell, so filling the tank takes about
-      // tankW · fill · res² / 0.312 of them. A wide horizon holds far more water than
-      // the tank these constants were tuned on: coarsen the grid just enough that the fill
-      // stays under the cap and a frame costs what it always did.
+      // tankW · fill · res² / 0.312 of them. A wide horizon holds far more water than the tank
+      // these constants were tuned on: coarsen the grid just enough that the fill stays under
+      // the cap. Drawing still scales with the canvas, which the idle frame rate offsets.
       const res = Math.max(24, Math.min(GRID_RES, Math.floor(Math.sqrt((MAX_PARTICLES * 0.312) / (tankW * fill)))));
       const spacing = tankH / res;
       const particleRadius = 0.3 * spacing;
@@ -148,7 +150,6 @@ export function TideAsciiScene({ className, fill = FILL_HEIGHT }: { className?: 
 
     const draw = () => {
       if (!fluid || w < 1 || h < 1) return;
-      const ink = inkColor();
       ctx.clearRect(0, 0, w, h);
 
       const cols = Math.max(8, Math.ceil(w / CELL_W));
@@ -196,7 +197,7 @@ export function TideAsciiScene({ className, fill = FILL_HEIGHT }: { className?: 
     const resize = () => {
       const parent = canvas.parentElement;
       if (!parent) return;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
       const nw = parent.clientWidth;
       const nh = parent.clientHeight;
       if (nw < 1 || nh < 1) return;
@@ -224,6 +225,10 @@ export function TideAsciiScene({ className, fill = FILL_HEIGHT }: { className?: 
 
     const onPointer = (e: PointerEvent) => {
       if (reduced) return;
+      if (e.clientY < canvas.getBoundingClientRect().top) {
+        onLeave();
+        return;
+      }
       const p = pointerToTank(e.clientX, e.clientY);
       const now = performance.now();
       const dt = Math.max(0.008, (now - lastMove) / 1000);
@@ -243,10 +248,21 @@ export function TideAsciiScene({ className, fill = FILL_HEIGHT }: { className?: 
       mouse.vy = 0;
     };
 
-    const loop = () => {
+    let lastFrame = 0;
+    const loop = (now: number) => {
       raf = 0;
       if (!fluid || reduced) return;
-      const dt = Math.min(1 / 30, (1 / 60) * SPEED);
+      // A resting pointer stops stirring: after a moment the ambient wave takes over again.
+      if (mouse.active && now - lastMove > 1400) onLeave();
+      // Idle, the ambient wave runs at about 30 fps with steps twice as long: the same speed for
+      // half the work. A pointer in the water gets every frame.
+      const every = mouse.active ? 0 : 1000 / 30 - 2;
+      if (now - lastFrame < every) {
+        raf = requestAnimationFrame(loop);
+        return;
+      }
+      lastFrame = now;
+      const dt = Math.min(1 / 30, (1 / 60) * SPEED * (mouse.active ? 1 : 2));
       t += dt;
 
       let ox = mouse.x;
@@ -319,7 +335,10 @@ export function TideAsciiScene({ className, fill = FILL_HEIGHT }: { className?: 
     }
     const ro = new ResizeObserver(resize);
     ro.observe(canvas.parentElement ?? canvas);
-    const mo = new MutationObserver(() => draw());
+    const mo = new MutationObserver(() => {
+      ink = readInk();
+      draw();
+    });
     mo.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
     const io = new IntersectionObserver(([entry]) => {
       onScreen = entry?.isIntersecting ?? true;

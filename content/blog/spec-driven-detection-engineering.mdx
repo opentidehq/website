@@ -8,9 +8,9 @@ tags:
   - detection-engineering
 ---
 
-opentide is spec-driven development for detection engineering. An ontology and a taxonomy say what a detection is. An engine you pin checks every change against them, on a laptop and in CI. Your detection repository stays the source of truth.
+opentide is spec-driven development for detection engineering. An ontology and a taxonomy say what a detection is. opentide, the package you pin, checks every change against them, on a laptop and in CI. Your detection repository stays the source of truth.
 
-We re-released the engine as a CLI on 9 September. This post explains why, and where it goes next.
+We re-released opentide as a CLI on 9 September. This post explains why, and where it goes next.
 
 ## Agents made the query cheap
 
@@ -41,13 +41,13 @@ References point back by UUID: a rule's `detection_model` names its objective, a
 
 The **taxonomy** is 36 versioned vocabularies: severity, impact, leverage, viability, surface, kill chain, signal entities, ATT&CK and more. A threat cannot say `severity: High` when the scale runs from `Localised incident` to `National cyber emergency`. `opentide validate --strict` stops it and names the file and line.
 
-The spec lives in [specifications](https://github.com/OpenTideHQ/specifications) under CC-BY-4.0, and every significant change goes through an RFC. The engine implements it. Its JSON Schema is generated from the same Pydantic models as the code, so the two cannot drift.
+The spec lives in [specifications](https://github.com/OpenTideHQ/specifications) under CC-BY-4.0, and every significant change goes through an RFC. opentide implements it. Its JSON Schema is generated from the same Pydantic models as the code, so the two cannot drift.
 
 That is also why coverage stops being a heatmap. "We cover 85% of ATT&CK" cannot say for which threat, with which signal, or on which platform. A graph of threats, objectives, signals and rules can, and a threat that no objective covers shows up as a gap.
 
 ## Why a CLI
 
-The engine is not new. As CoreTide, it ran in production for more than two years before it was open-sourced in February 2025. It lived inside each detection repository as a git submodule. That shape worked for one team. It did not work for many, and it could not serve agents.
+opentide is not new. As CoreTide, it ran in production for more than two years before it was open-sourced in February 2025. It lived inside each detection repository as a git submodule. That shape worked for one team. It did not work for many, and it could not serve agents.
 
 Our own issue trackers made the case:
 

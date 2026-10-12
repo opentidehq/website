@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import {
   Check,
   GitPullRequest,
@@ -29,6 +30,20 @@ const STOPS: Stop[] = [
   { title: 'Human review', lines: ['a reviewer', 'approves the merge'], icon: Lock, actor: 'human' },
   { title: 'PRODUCTION', lines: ['on merge', '--plan PRODUCTION'], icon: ShieldCheck, actor: 'env' },
 ];
+
+/** Where stop `i` sits on the wide track, as a percentage of its width. */
+const centre = (i: number) => `${(((2 * i + 1) / (2 * STOPS.length)) * 100).toFixed(2)}%`;
+
+const STAGING = STOPS.findIndex((s) => s.title === 'STAGING');
+const REVIEW = STOPS.findIndex((s) => s.actor === 'human');
+
+/** The pulse's waypoints: the first stop, STAGING, the human review, and the last stop. */
+const TRACK = {
+  '--voyage-from': centre(0),
+  '--voyage-wait': centre(STAGING),
+  '--voyage-merge': centre(REVIEW),
+  '--voyage-to': centre(STOPS.length - 1),
+} as CSSProperties;
 
 /** SEGMENTS[i] joins STOPS[i] → STOPS[i + 1]. Dotted runs are time spent waiting on a person. */
 const SEGMENTS: Segment[] = ['agent', 'agent', 'agent', 'agent', 'human', 'agent'];
@@ -124,21 +139,21 @@ export function NorthStar() {
       </div>
 
       {/* Wide containers: one horizontal track, with the sub-hour stretch bracketed above it. */}
-      <div className="relative mt-16 hidden @5xl:block">
+      <div className="relative mt-16 hidden @5xl:block" style={TRACK}>
         <div
           aria-hidden
           className="absolute -top-9 h-4 border-x-2 border-t-2 border-[color-mix(in_srgb,var(--landing-accent)_45%,transparent)]"
-          style={{ left: '7.14%', right: '35.71%' }}
+          style={{ left: centre(0), right: `calc(100% - ${centre(STAGING)})` }}
         >
           <span className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap bg-[var(--landing-bg)] px-3 font-mono text-xs font-semibold text-[var(--landing-accent)]">
             under an hour
           </span>
         </div>
-        <span
-          aria-hidden
-          className="landing-voyage pointer-events-none absolute top-6 z-20 motion-reduce:hidden -ml-2 -mt-2 size-4 rounded-full bg-[var(--landing-accent)] shadow-[0_0_0_6px_color-mix(in_srgb,var(--landing-accent)_22%,transparent),0_0_24px_4px_color-mix(in_srgb,var(--landing-accent)_45%,transparent)] md:top-7"
-        />
-        <ol className="grid list-none grid-cols-7 p-0">
+        {/* The pulse rides a track-wide layer, so translateX percentages are track percentages. */}
+        <span aria-hidden className="landing-voyage pointer-events-none absolute inset-x-0 top-6 z-20 motion-reduce:hidden md:top-7">
+          <span className="-ml-2 -mt-2 block size-4 rounded-full bg-[var(--landing-accent)] shadow-[0_0_0_6px_color-mix(in_srgb,var(--landing-accent)_22%,transparent),0_0_24px_4px_color-mix(in_srgb,var(--landing-accent)_45%,transparent)]" />
+        </span>
+        <ol className="grid list-none p-0" style={{ gridTemplateColumns: `repeat(${STOPS.length}, minmax(0, 1fr))` }}>
           {STOPS.map((stop, i) => (
             <li key={stop.title} className="flex flex-col items-center text-center">
               <div className="flex w-full items-center">

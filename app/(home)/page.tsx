@@ -30,6 +30,12 @@ import { SPEC_DRIVEN_POST_HREF } from '@/lib/blog';
 
 const title = 'opentide · spec-driven development for detection engineering';
 
+/**
+ * Share of the tide canvas the water fills. The canvas is `--tide / TIDE_FILL` tall, so the
+ * waterline sits `--tide` above the foot of the hero, under the copy's bottom padding.
+ */
+const TIDE_FILL = 0.45;
+
 export const metadata: Metadata = {
   title: { absolute: title },
   description: appDescription,
@@ -63,12 +69,15 @@ export default async function HomePage() {
         className="landing-hero relative isolate overflow-hidden"
         style={{ '--tide': 'clamp(180px, 27vh, 300px)' } as CSSProperties}
       >
-        <div aria-hidden className="landing-tide absolute inset-x-0 bottom-0 -z-20 h-[calc(var(--tide)*2.2)]">
-          <TideAsciiScene className="h-full w-full" fill={0.45} />
-        </div>
-        <div aria-hidden className="landing-hero-clear pointer-events-none absolute inset-0 -z-10" />
         <div
-          className={`${wrap} flex flex-col items-center pb-[calc(var(--tide)+4rem)] pt-20 text-center md:pb-[calc(var(--tide)+2rem)] md:pt-32 lg:pt-36`}
+          aria-hidden
+          className="landing-tide absolute inset-x-0 bottom-0 -z-20"
+          style={{ height: `calc(var(--tide) / ${TIDE_FILL})` }}
+        >
+          <TideAsciiScene className="h-full w-full" fill={TIDE_FILL} />
+        </div>
+        <div
+          className={`landing-hero-copy ${wrap} flex flex-col items-center pb-[calc(var(--tide)+4rem)] pt-20 text-center md:pb-[calc(var(--tide)+2rem)] md:pt-32 lg:pt-36`}
         >
           <HeroBadge initialVersion={pypiVersion} />
           <h1 className="mt-8 max-w-5xl text-[clamp(2.4rem,5.4vw,4.4rem)] font-bold leading-[1.03] tracking-[-0.045em] text-balance">
@@ -84,9 +93,12 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* Fixed to the viewport; early in the DOM so keyboard users reach the chapters first. */}
+      <ChapterNav />
+
       <Chapter id="why" band>
         <ChapterHead
-          n="01"
+          chapter="why"
           label="why it matters"
           title="Agents made the query cheap. Not threat-aligned."
           lead="Intelligence outruns detection engineering, and agents now write a KQL or SPL query in seconds. What did not get any cheaper is knowing that the query is valid, maps to a real threat and is deployed where it should be."
@@ -96,10 +108,10 @@ export default async function HomePage() {
 
       <Chapter id="what">
         <ChapterHead
-          n="02"
+          chapter="what"
           label="what opentide is"
           title="Three objects. Three questions. One graph."
-          lead="A threat says what you defend against, an objective what to detect, a rule how and where. They link to each other by UUID, and to the assets, log sources and detectors of your environment by name and vocabulary."
+          lead="A threat says what you defend against, an objective what to detect, a rule how and where. They link to each other by UUID, threats chain into attack paths, and all of it meets the assets, log sources and detectors of your environment by name and vocabulary."
         />
         <div data-reveal className="mt-12 md:mt-16">
           <OntologyMap />
@@ -111,7 +123,7 @@ export default async function HomePage() {
         <div className={block}>
           <BlockHead
             title="Coverage is a graph, not a heatmap."
-            lead="“We cover 85% of ATT&CK” cannot say which threat, which signal, or which integration. The graph can: every rule traces to an objective and a threat, and a threat that nothing covers shows up as a gap, not as a pale square."
+            lead="“We cover 85% of ATT&CK” cannot say which threats hit what you run, or where an attack path goes unseen. The graph can: threats meet your assets on their surface, chain into attack paths, and every step traces to the objective and rules that detect it, or shows up as a gap."
           />
           <div data-reveal className="mt-10">
             <CoverageFigure />
@@ -121,7 +133,7 @@ export default async function HomePage() {
 
       <Chapter id="how" band>
         <ChapterHead
-          n="03"
+          chapter="how"
           label="how it runs"
           title="From YAML to every integration."
           lead="One pipeline: author, generate, validate, deploy, document. The commands you run on a laptop are the commands CI runs."
@@ -136,7 +148,7 @@ export default async function HomePage() {
 
       <Chapter id="why-a-cli">
         <ChapterHead
-          n="04"
+          chapter="why-a-cli"
           label="built for agents"
           title="An agent is only as good as the spec it is held to."
           lead="People and agents need the same things from detection tooling. Agents need them stricter: a contract to read, feedback to act on, tools to call, knowledge to load, and gates they cannot skip."
@@ -164,7 +176,7 @@ export default async function HomePage() {
 
       <Chapter id="agents" band>
         <ChapterHead
-          n="05"
+          chapter="agents"
           label="agentic detection engineering"
           title="Agents draft. opentide checks. Humans decide what reaches production."
           lead="Prompt in, objects out: skills draft the chain, opentide validates it, and the pull request meets the same gates as any human change."
@@ -179,7 +191,7 @@ export default async function HomePage() {
 
       <Chapter id="next">
         <ChapterHead
-          n="06"
+          chapter="next"
           label="what comes next"
           title={
             <>
@@ -204,7 +216,7 @@ export default async function HomePage() {
 
       <Chapter id="start" band>
         <ChapterHead
-          n="07"
+          chapter="start"
           label="get started"
           title="Start in five commands."
           lead="From an empty folder to a validated detection repo, with your agent wired in."
@@ -250,7 +262,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <ChapterNav />
       <RevealOnScroll />
     </div>
   );
