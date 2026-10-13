@@ -3,7 +3,7 @@ import { ArrowRight } from 'lucide-react';
 import type { CSSProperties } from 'react';
 import type { Metadata } from 'next';
 import { TideSea } from '@/components/landing/tide-sea';
-import { TiltBadge } from '@/components/landing/tilt-badge';
+import { ClosingSeal } from '@/components/landing/closing-seal';
 import { HeroBadge } from '@/components/landing/hero-badge';
 import { HeroInstall } from '@/components/landing/hero-install';
 import { PypiProjectLink } from '@/components/landing/pypi-release-link';
@@ -229,15 +229,7 @@ export default async function HomePage() {
 
       <section className="landing-chapter">
         <div data-reveal className="mx-auto max-w-3xl px-4 text-center">
-          {/* The tide starts here: rings run out from the badge, like the hero's detections. */}
-          <div className="relative flex justify-center">
-            <span aria-hidden className="landing-ripples pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-              <span />
-              <span />
-              <span />
-            </span>
-            <TiltBadge size="clamp(132px, 16vw, 188px)" />
-          </div>
+          <ClosingSeal />
           <h2 className="mt-4 text-[clamp(2rem,4vw,3rem)] font-bold leading-[1.06] tracking-[-0.035em] text-balance">
             Agents write the queries. <Accent>The spec keeps them aligned.</Accent>
           </h2>
