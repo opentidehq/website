@@ -14,7 +14,7 @@
     "start": "serve out",
     "lint": "eslint .",
     "types:check": "fumadocs-mdx && next typegen && tsc --noEmit",
-    "test": "node --test --experimental-strip-types --test-reporter spec scripts/lib/*.test.mjs lib/docs-github-url.test.ts lib/releases.test.ts lib/landing/*.test.ts",
+    "test": "node --test --experimental-strip-types --test-reporter spec scripts/lib/*.test.mjs lib/docs-github-url.test.ts lib/releases.test.ts lib/landing/*.test.ts components/landing/sea/*.test.ts",
     "postinstall": "fumadocs-mdx"
   },
   "dependencies": {
