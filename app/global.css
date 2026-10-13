@@ -216,7 +216,7 @@ html > body[data-scroll-locked] {
   /* The hero's sea: its query ink, and the light of a detection firing. */
   --landing-sea-ink: #001489;
   --landing-sea-glow: #f0a800;
-  --landing-sea-strength: 0.9;
+  --landing-sea-strength: 1.35;
 
   font-family: var(--font-sans), system-ui, sans-serif;
   background-color: var(--landing-bg);
@@ -247,7 +247,7 @@ html > body[data-scroll-locked] {
   --brand-mark-ink: #000000;
   --landing-sea-ink: #9db1ef;
   --landing-sea-glow: #ffcc00;
-  --landing-sea-strength: 1.25;
+  --landing-sea-strength: 1.3;
 }
 
 /* The base layer rings every outline at 50% gray, too faint to find on white or black.
@@ -312,10 +312,11 @@ html > body[data-scroll-locked] {
     background: linear-gradient(to bottom, var(--landing-bg) 58%, var(--landing-band));
   }
 
-  /* The sea runs edge to edge and dissolves into the band of the next chapter at its foot. */
+  /* The sea runs edge to edge: it rises out of the haze behind the headline (its horizon sits
+     about a third of the way down) and dissolves into the band of the next chapter at its foot. */
   .landing-sea {
-    -webkit-mask-image: linear-gradient(to bottom, #000 84%, transparent);
-    mask-image: linear-gradient(to bottom, #000 84%, transparent);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 30%, #000 52%, #000 74%, transparent);
+    mask-image: linear-gradient(to bottom, transparent 30%, #000 52%, #000 74%, transparent);
   }
 
   /* It fades in with its first frame, once the shaders are ready. */
@@ -693,8 +694,9 @@ a.landing-footer-chip:focus-visible {
     inset: 3rem 0 var(--tide) 0;
     background: radial-gradient(
       closest-side,
-      var(--landing-bg) 62%,
-      color-mix(in srgb, var(--landing-bg) 70%, transparent) 82%,
+      var(--landing-bg) 48%,
+      color-mix(in srgb, var(--landing-bg) 72%, transparent) 70%,
+      color-mix(in srgb, var(--landing-bg) 30%, transparent) 86%,
       transparent
     );
   }

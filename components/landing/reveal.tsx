@@ -49,9 +49,30 @@ export function RevealOnScroll() {
       },
       { rootMargin: '0px 0px -8% 0px' },
     );
-    for (const el of targets) if (!el.hasAttribute('data-shown')) observer.observe(el);
+    const pending = targets.filter((el) => !el.hasAttribute('data-shown'));
+    for (const el of pending) observer.observe(el);
+
+    // A fast scroll while the page is busy can carry content past the reveal line between two
+    // observer checks, and it would stay hidden. Each scroll frame, reveal whatever the reader
+    // has passed, in document order: cheap, because only the next pending element is measured.
+    let frame = 0;
+    const sweep = () => {
+      frame = 0;
+      const line = window.innerHeight * 0.92;
+      while (pending.length && (pending[0].hasAttribute('data-shown') || pending[0].getBoundingClientRect().top < line)) {
+        const el = pending.shift() as Element;
+        el.setAttribute('data-shown', '');
+        observer.unobserve(el);
+      }
+    };
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(sweep);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
 
     return () => {
+      window.removeEventListener('scroll', onScroll);
+      cancelAnimationFrame(frame);
       observer.disconnect();
       live.disconnect();
       root.classList.remove('landing-reveal');

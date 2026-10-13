@@ -22,6 +22,7 @@ uniform vec4 uRipples[${RIPPLES}];
 uniform vec4 uPings[${PINGS}];
 uniform vec3 uLamp;     // where the pointer is over the water, and how present it is
 uniform float uInkAlpha;
+uniform float uAspect;
 
 out vec2 vCell;
 out float vAlpha;
@@ -31,14 +32,19 @@ const float NEAR = ${SEA.nearDepth.toFixed(3)};
 const float FAR = ${SEA.farDepth.toFixed(3)};
 
 // Swells roll toward the reader: depth grows away from the camera, so +t moves crests nearer.
+// Long groundswell, then shorter chop across it.
 float swell(vec2 p, float t) {
   float h = 0.0;
-  h += 0.060 * sin(dot(p, vec2(0.15, 0.99)) * 1.10 + t * 0.95);
-  h += 0.034 * sin(dot(p, vec2(-0.50, 0.87)) * 1.90 + t * 1.30 + 1.7);
-  h += 0.018 * sin(dot(p, vec2(0.80, 0.60)) * 3.10 + t * 1.75 + 0.4);
-  h += 0.009 * sin(dot(p, vec2(-0.25, 0.97)) * 5.20 + t * 2.30 + 2.2);
+  h += 0.095 * sin(dot(p, vec2(0.10, 0.99)) * 0.62 + t * 0.70);
+  h += 0.072 * sin(dot(p, vec2(-0.40, 0.92)) * 1.15 + t * 1.00 + 1.7);
+  h += 0.038 * sin(dot(p, vec2(0.30, 0.95)) * 2.30 + t * 1.40 + 0.4);
+  h += 0.012 * sin(dot(p, vec2(-0.20, 0.98)) * 4.60 + t * 2.05 + 2.2);
   return h;
 }
+
+// Light from behind the reader, high up: faces turned toward the camera catch it, the backs of
+// the swells fall into shade. That shading is what makes the water read as a surface.
+const vec3 LIGHT = vec3(0.18, 0.82, -0.55);
 
 void main() {
   float ext = aRow.z;
@@ -46,7 +52,16 @@ void main() {
   float depth = aRow.y;
   vec2 p = vec2(x, depth);
   float h = swell(p, uTime);
-  float crest = smoothstep(-0.03, 0.085, h);
+  // The surface normal from the slope of the swell, in (x, up, depth).
+  const float E = 0.08;
+  float sx = (swell(p + vec2(E, 0.0), uTime) - swell(p - vec2(E, 0.0), uTime)) / (2.0 * E);
+  float sz = (swell(p + vec2(0.0, E), uTime) - swell(p - vec2(0.0, E), uTime)) / (2.0 * E);
+  vec3 normal = normalize(vec3(-sx, 1.0, -sz));
+  float facing = smoothstep(0.55, 0.98, dot(normal, normalize(LIGHT)));
+  float glint = pow(max(dot(reflect(-normalize(LIGHT), normal), normalize(vec3(0.0, 0.35, -1.0))), 0.0), 18.0);
+  float crest = smoothstep(-0.05, 0.16, h);
+  // The reader rides the swell: the whole sea rises and falls a touch under the camera.
+  h -= 0.035 * sin(uTime * 0.31);
 
   // Pointer ripples: a ring that runs out and fades. Rings widen with depth so they still read
   // where the glyphs are sparse.
@@ -59,7 +74,7 @@ void main() {
     float front = age * (0.85 + 0.1 * r.y);
     float ring = exp(-pow((d - front) * 2.6 / (1.0 + 0.1 * r.y), 2.0));
     float env = r.w * exp(-age * 1.05);
-    h += env * ring * 0.05 * cos((d - front) * 7.0);
+    h += env * ring * 0.03 * cos((d - front) * 7.0);
     glow += env * ring * 1.1;
   }
 
@@ -77,7 +92,7 @@ void main() {
     float ring = exp(-pow((d - front) / width, 2.0)) + 0.2 * behind * exp(-behind * 3.0);
     float env = r.w * exp(-age * 0.62);
     float core = exp(-pow(d / (0.1 + 0.02 * r.y), 2.0)) * exp(-age * 2.4);
-    h += env * ring * 0.04 + core * 0.05;
+    h += env * ring * 0.018 + core * 0.022;
     ping += env * ring * 1.25 + core * 1.3;
   }
 
@@ -86,6 +101,12 @@ void main() {
   h += lamp * 0.03;
 
   vec4 clip = uViewProj * vec4(x, h, -depth, 1.0);
+  // And rolls with it, a third of a degree either way: the horizon tilts about the centre of
+  // the view, in proportional units so it does not shear.
+  float roll = 0.006 * sin(uTime * 0.23);
+  vec2 q = vec2(clip.x * uAspect, clip.y);
+  q = vec2(q.x * cos(roll) - q.y * sin(roll), q.x * sin(roll) + q.y * cos(roll));
+  clip.xy = vec2(q.x / uAspect, q.y);
   gl_Position = clip;
   float lit = clamp(glow + ping, 0.0, 1.0);
   gl_PointSize = min(uMaxPoint, aGlyph.y * (1.0 + 0.24 * lit + 0.14 * lamp) * uPointScale / clip.w);
@@ -96,10 +117,13 @@ void main() {
   // 0 on the nearest row, 1 at the horizon: haze swallows the far water, and the nearest
   // rows come in softly at the bottom edge.
   float s = log(depth / NEAR) / log(FAR / NEAR);
-  float haze = 1.0 - smoothstep(0.3, 0.9, s);
-  float shore = smoothstep(0.0, 0.05, s);
-  float shimmer = 0.86 + 0.14 * sin(uTime * 1.7 + aGlyph.z * 6.2832);
-  float ink = uInkAlpha * (0.13 + 0.42 * crest) * shimmer + lamp * 0.45;
+  // Haze thins the water steadily all the way to the horizon, rather than cutting it off.
+  float haze = pow(1.0 - s, 1.35);
+  float shore = smoothstep(0.0, 0.04, s);
+  float shimmer = 0.88 + 0.12 * sin(uTime * 1.7 + aGlyph.z * 6.2832);
+  // Troughs fall dark and lit faces carry the light, in bands that follow the swells away.
+  float shade = 0.35 * crest + 0.65 * facing;
+  float ink = uInkAlpha * (0.08 + 0.75 * pow(shade, 1.5) + 0.4 * glint) * shimmer + lamp * 0.45;
   vGlow = lit;
   vAlpha = haze * shore * max(ink, lit);
 }`;
@@ -123,7 +147,7 @@ void main() {
   outColor = vec4(mix(uInk, uGlow, smoothstep(0.04, 0.32, vGlow)) * a, a);
 }`;
 
-const UNIFORMS = ['uViewProj', 'uTime', 'uPointScale', 'uMaxPoint', 'uCols', 'uRipples', 'uPings', 'uLamp', 'uInkAlpha', 'uAtlas', 'uGrid', 'uInk', 'uGlow'];
+const UNIFORMS = ['uViewProj', 'uTime', 'uPointScale', 'uMaxPoint', 'uCols', 'uRipples', 'uPings', 'uLamp', 'uInkAlpha', 'uAspect', 'uAtlas', 'uGrid', 'uInk', 'uGlow'];
 
 /**
  * Draws the sea into a canvas with WebGL2. Owns the GL objects; the caller owns time, the
@@ -147,13 +171,15 @@ export class SeaRenderer {
   private readonly ripples = new Float32Array(RIPPLES * 4);
   private readonly pings = new Float32Array(PINGS * 4);
   private nextRipple = 0;
+  /** Share of the full grid to build: the CPU draws less of it. */
+  private detail = 1;
   private nextPing = 0;
   private readonly loc: Record<string, WebGLUniformLocation | null> = {};
   private readonly maxPoint: number;
   /** Set once the program has linked, or failed to. */
   private linked: boolean | undefined;
   private readonly parallel: { COMPLETION_STATUS_KHR: number } | null;
-  /** Drawn on the CPU (SwiftShader, llvmpipe): the caller should ask for fewer, cheaper frames. */
+  /** Drawn on the CPU (SwiftShader, llvmpipe): the caller should keep the sea still. */
   readonly software: boolean;
 
   private constructor(
@@ -172,6 +198,7 @@ export class SeaRenderer {
     const info = gl.getExtension('WEBGL_debug_renderer_info');
     const renderer = info ? String(gl.getParameter(info.UNMASKED_RENDERER_WEBGL)) : '';
     this.software = /swiftshader|llvmpipe|software|basic render/i.test(renderer);
+    if (this.software) this.detail = 0.55;
   }
 
   static create(canvas: HTMLCanvasElement, text: string): SeaRenderer | null {
@@ -280,7 +307,7 @@ export class SeaRenderer {
     // Rows reach 12% past the edge of the view, so a small change of shape needs no new grid.
     if (Math.abs(this.aspect - this.gridAspect) > 0.04) {
       this.gridAspect = this.aspect;
-      const grid = buildGrid(this.text, this.glyphs, this.aspect);
+      const grid = buildGrid(this.text, this.glyphs, this.aspect, this.detail);
       gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
       gl.bufferData(gl.ARRAY_BUFFER, grid, gl.STATIC_DRAW);
       this.count = grid.length / STRIDE;
@@ -319,6 +346,7 @@ export class SeaRenderer {
     gl.uniform4fv(loc.uPings, this.pings);
     gl.uniform3fv(loc.uLamp, this.lamp);
     gl.uniform1f(loc.uInkAlpha, this.inkAlpha);
+    gl.uniform1f(loc.uAspect, this.aspect);
     gl.uniform3fv(loc.uInk, this.ink);
     gl.uniform3fv(loc.uGlow, this.glow);
     gl.activeTexture(gl.TEXTURE0);

@@ -116,9 +116,10 @@ export function SiteHeader({ pathname }: { pathname: string }) {
     >
       <div className="landing-pill pointer-events-auto relative w-full" data-scrolled={scrolled || open ? '' : undefined}>
         {/* Brand, links and actions in three columns, so the links sit in the middle. */}
-        <div className="grid h-12 grid-cols-[1fr_auto_1fr] items-center gap-1 pl-2 pr-1.5">
-          <Link href="/" aria-label="opentide home" className="landing-pill-focus justify-self-start rounded-full">
-            <OpentideWordmark height={28} />
+        {/* Nested pills: 8px all round, so the wordmark, icons and button (36px) sit concentric. */}
+        <div className="grid h-[52px] grid-cols-[1fr_auto_1fr] items-center gap-1 px-2">
+          <Link href="/" aria-label="opentide home" className="landing-pill-focus flex items-center justify-self-start rounded-full">
+            <OpentideWordmark height={36} />
           </Link>
 
           <nav aria-label="Site" className="relative hidden items-center md:flex" onMouseLeave={() => setMark((m) => ({ ...m, on: false }))}>
