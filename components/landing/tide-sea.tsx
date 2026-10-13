@@ -154,7 +154,12 @@ export function TideSea({ className }: { className?: string }) {
       () => undefined,
     );
 
-    const onVisibility = () => (document.hidden ? stop() : start());
+    // Pick up where the water was, rather than jumping by the time spent away.
+    const resume = () => {
+      epoch = performance.now() - (time - STILL) * 1000;
+      start();
+    };
+    const onVisibility = () => (document.hidden ? stop() : resume());
     const onLost = (e: Event) => {
       e.preventDefault();
       stop();
@@ -173,11 +178,8 @@ export function TideSea({ className }: { className?: string }) {
     });
     const io = new IntersectionObserver(([entry]) => {
       onScreen = entry?.isIntersecting ?? true;
-      if (onScreen) {
-        // Resume where the water was, rather than jumping by the time spent away.
-        epoch = performance.now() - (time - STILL) * 1000;
-        start();
-      } else stop();
+      if (onScreen) resume();
+      else stop();
     });
 
     ro.observe(canvas.parentElement ?? canvas);

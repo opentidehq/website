@@ -63,7 +63,7 @@ export default async function HomePage() {
         className="landing-hero relative isolate overflow-hidden"
         style={{ '--tide': 'clamp(210px, 30vh, 340px)' } as CSSProperties}
       >
-        <div aria-hidden className="landing-sea absolute inset-0 -z-20">
+        <div aria-hidden className="landing-sea absolute inset-0 -z-20 print:hidden">
           <TideSea />
         </div>
         <div

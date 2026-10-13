@@ -260,8 +260,8 @@ html > body[data-scroll-locked] {
   }
 }
 
-/* Keep headings clear of the 3.5rem sticky header when scrolled to. Scoped to
-   the landing chrome — docs headings carry their own scroll-m-* offsets. */
+/* Keep headings clear of the floating header (its pill ends about 3.9rem down) when scrolled
+   to. Scoped to the landing chrome — docs headings carry their own scroll-m-* offsets. */
 .landing :is(h1, h2, h3, h4) {
   scroll-margin-top: 4.5rem;
 }
@@ -295,7 +295,8 @@ html > body[data-scroll-locked] {
     background-color: transparent;
   }
 
-  /* Chapter anchors land with the label just under the 3.5rem sticky header. */
+  /* Chapter anchors land with the label just under the floating header: the chapter's own
+     padding keeps the label clear of the pill. */
   .landing section[id] {
     scroll-margin-top: 0;
   }

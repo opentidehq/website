@@ -160,7 +160,8 @@ export function SiteFooter({ version }: { version?: string | null }) {
 
       <div className="border-t border-[var(--landing-border)]">
         <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-4 px-4 py-5 text-xs text-[var(--landing-subtle)] md:px-6">
-          <p className="m-0">
+          {/* The year is the build's; a reader past New Year should not trip hydration. */}
+          <p className="m-0" suppressHydrationWarning>
             © {new Date().getFullYear()} opentide · opentide under EUPL-1.2, the specification under CC-BY-4.0
           </p>
           <div className="flex items-center gap-1">

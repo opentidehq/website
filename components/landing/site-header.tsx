@@ -103,10 +103,13 @@ export function SiteHeader({ pathname }: { pathname: string }) {
   return (
     <header
       ref={headerRef}
-      className={`pointer-events-none fixed inset-x-0 top-0 z-50 flex justify-center px-3 pt-3 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${
+      className={`pointer-events-none fixed inset-x-0 top-0 z-50 flex justify-center px-3 pt-3 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none print:hidden ${
         hidden ? '-translate-y-[130%]' : ''
       }`}
-      onFocus={() => setFocused(true)}
+      // Keyboard focus keeps the header in view; a mouse click on the theme toggle should not pin it.
+      onFocus={(e) => {
+        if ((e.target as HTMLElement).matches(':focus-visible')) setFocused(true);
+      }}
       onBlur={(e) => {
         if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setFocused(false);
       }}

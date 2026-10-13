@@ -103,7 +103,7 @@ export function ChapterNav() {
     <nav
       ref={navRef}
       aria-label="Page chapters"
-      className={`landing-dock fixed inset-x-0 bottom-4 z-40 flex justify-center px-4 md:bottom-6 ${
+      className={`landing-dock fixed inset-x-0 bottom-4 z-40 flex justify-center px-4 md:bottom-6 print:hidden ${
         visible ? 'landing-dock-visible' : ''
       }`}
     >

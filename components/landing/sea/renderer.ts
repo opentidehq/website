@@ -1,4 +1,4 @@
-import { CAMERA, SEA, STRIDE, buildGrid, glyphSet, multiply, perspective, view, type Glyphs } from './geometry';
+import { CAMERA, SEA, STRIDE, buildGrid, glyphSet, multiply, perspective, view, type Glyphs, type Mat4 } from './geometry';
 
 export type Rgb = [number, number, number];
 
@@ -71,10 +71,10 @@ void main() {
     if (r.w <= 0.0 || age < 0.0 || age > 5.0) continue;
     float d = distance(p, r.xy);
     float front = age * (0.62 + 0.09 * r.y);
-    float width = 0.26 + 0.05 * r.y;
+    float width = 0.2 + 0.04 * r.y;
     // A leading edge that trails off inward, so the ring reads as travelling outward.
     float behind = clamp((front - d) / (width * 3.0), 0.0, 1.0);
-    float ring = exp(-pow((d - front) / width, 2.0)) + 0.35 * behind * exp(-behind * 3.0);
+    float ring = exp(-pow((d - front) / width, 2.0)) + 0.2 * behind * exp(-behind * 3.0);
     float env = r.w * exp(-age * 0.62);
     float core = exp(-pow(d / (0.1 + 0.02 * r.y), 2.0)) * exp(-age * 2.4);
     h += env * ring * 0.04 + core * 0.05;
@@ -118,8 +118,9 @@ out vec4 outColor;
 void main() {
   float a = texture(uAtlas, (vCell + gl_PointCoord) / uGrid).a * vAlpha;
   if (a < 0.004) discard;
-  // Premultiplied, over whatever page sits behind the canvas.
-  outColor = vec4(mix(uInk, uGlow, vGlow) * a, a);
+  // The colour turns early and alpha carries the fade: blue to amber through the midtones would
+  // pass through brown. Premultiplied, over whatever page sits behind the canvas.
+  outColor = vec4(mix(uInk, uGlow, smoothstep(0.04, 0.32, vGlow)) * a, a);
 }`;
 
 function compile(gl: WebGL2RenderingContext, type: number, source: string) {
@@ -141,7 +142,11 @@ function compile(gl: WebGL2RenderingContext, type: number, source: string) {
  */
 export class SeaRenderer {
   private readonly glyphs: Glyphs;
-  private aspect = 0;
+  /** The view's exact shape, for the camera and the pointer. */
+  private aspect = 1;
+  /** The shape the grid was last built for: rebuilt only when the view changes shape enough. */
+  private gridAspect = 0;
+  private viewProj: Mat4 = new Float32Array(16);
   private count = 0;
   private width = 1;
   private height = 1;
@@ -253,10 +258,12 @@ export class SeaRenderer {
     this.height = Math.max(1, Math.round(height * dpr));
     gl.canvas.width = this.width;
     gl.canvas.height = this.height;
-    const aspect = width / Math.max(1, height);
-    if (Math.abs(aspect - this.aspect) > 0.04) {
-      this.aspect = aspect;
-      const grid = buildGrid(this.text, this.glyphs, aspect);
+    this.aspect = width / Math.max(1, height);
+    this.viewProj = multiply(perspective(CAMERA.fov, this.aspect, 0.1, 200), view(CAMERA.height, CAMERA.pitch));
+    // Rows reach 12% past the edge of the view, so a small change of shape needs no new grid.
+    if (Math.abs(this.aspect - this.gridAspect) > 0.04) {
+      this.gridAspect = this.aspect;
+      const grid = buildGrid(this.text, this.glyphs, this.aspect);
       gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
       gl.bufferData(gl.ARRAY_BUFFER, grid, gl.STATIC_DRAW);
       this.count = grid.length / STRIDE;
@@ -287,8 +294,7 @@ export class SeaRenderer {
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
     gl.disable(gl.DEPTH_TEST);
-    const projection = perspective(CAMERA.fov, this.aspect, 0.1, 200);
-    gl.uniformMatrix4fv(loc.uViewProj, false, multiply(projection, view(CAMERA.height, CAMERA.pitch)));
+    gl.uniformMatrix4fv(loc.uViewProj, false, this.viewProj);
     gl.uniform1f(loc.uTime, time);
     gl.uniform1f(loc.uPointScale, this.height / 2 / Math.tan((CAMERA.fov * Math.PI) / 360));
     gl.uniform1f(loc.uMaxPoint, this.maxPoint);
