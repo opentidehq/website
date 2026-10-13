@@ -564,17 +564,141 @@ html > body[data-scroll-locked] {
   }
 }
 
-/* Rings running out from the closing badge. */
+/*
+ * The close: the seal pressed onto the name. The name is the logotype's own letters at the
+ * width of the page, and the seal overlaps the foot of their x-height, so every letter still
+ * reads. Rings run out from the seal, and a brighter copy of the name, masked to the rings,
+ * lights the letters as each ring passes through them.
+ */
+@property --landing-ring-1 {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
+
+@property --landing-ring-2 {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
+
+@property --landing-ring-3 {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
+
+@property --landing-glow-1 {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
+
+@property --landing-glow-2 {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
+
+@property --landing-glow-3 {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
+
+.landing-seal {
+  --seal: clamp(148px, 22vw, 272px);
+  --name-w: min(calc(100vw - 3rem), 74rem);
+  /* The letters' box is 247.08 × 59.91. */
+  --name-h: calc(var(--name-w) * 0.24247);
+  /* The seal's centre, in the name's own box. */
+  --seal-at: 50% calc(58.85% + var(--seal) / 2);
+  /* The hero's ink for the name, and the accent for the rings that light it. */
+  --seal-ink: var(--landing-sea-ink);
+  --seal-light: var(--landing-accent);
+  --seal-fill: 0.08;
+  --seal-line: 0.18;
+}
+
+.dark .landing-seal {
+  --seal-fill: 0.12;
+  --seal-line: 0.28;
+}
+
+.landing-seal-name {
+  position: relative;
+  display: block;
+  width: var(--name-w);
+  height: var(--name-h);
+  /* Wider than the column it sits in, and centred on it. */
+  margin-inline: calc((100% - var(--name-w)) / 2);
+}
+
+.landing-seal-name > svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.landing-seal-name path {
+  stroke-width: 1px;
+  vector-effect: non-scaling-stroke;
+}
+
+/* Strongest around the seal, as if the seal lit the name, and fading toward either end. */
+.landing-seal-name-rest {
+  fill: var(--seal-ink);
+  fill-opacity: var(--seal-fill);
+  stroke: var(--seal-ink);
+  stroke-opacity: var(--seal-line);
+  -webkit-mask-image: radial-gradient(circle at var(--seal-at), #000 calc(var(--seal) * 0.75), rgb(0 0 0 / 0.4) calc(var(--seal) * 2.4));
+  mask-image: radial-gradient(circle at var(--seal-at), #000 calc(var(--seal) * 0.75), rgb(0 0 0 / 0.4) calc(var(--seal) * 2.4));
+}
+
+.landing-seal-name-lit {
+  --r: calc(var(--seal) / 2);
+  --rings:
+    radial-gradient(circle at var(--seal-at), transparent calc(var(--r) * var(--landing-ring-1) - 4rem), rgb(0 0 0 / var(--landing-glow-1)) calc(var(--r) * var(--landing-ring-1)), transparent calc(var(--r) * var(--landing-ring-1) + 2px)),
+    radial-gradient(circle at var(--seal-at), transparent calc(var(--r) * var(--landing-ring-2) - 4rem), rgb(0 0 0 / var(--landing-glow-2)) calc(var(--r) * var(--landing-ring-2)), transparent calc(var(--r) * var(--landing-ring-2) + 2px)),
+    radial-gradient(circle at var(--seal-at), transparent calc(var(--r) * var(--landing-ring-3) - 4rem), rgb(0 0 0 / var(--landing-glow-3)) calc(var(--r) * var(--landing-ring-3)), transparent calc(var(--r) * var(--landing-ring-3) + 2px));
+  fill: var(--seal-light);
+  fill-opacity: 0.26;
+  stroke: var(--seal-light);
+  stroke-opacity: 0.7;
+  -webkit-mask-image: var(--rings);
+  mask-image: var(--rings);
+  animation:
+    landing-ring-1 4.8s cubic-bezier(0.2, 0.6, 0.35, 1) infinite,
+    landing-ring-2 4.8s cubic-bezier(0.2, 0.6, 0.35, 1) 1.6s infinite,
+    landing-ring-3 4.8s cubic-bezier(0.2, 0.6, 0.35, 1) 3.2s infinite;
+}
+
+/* The seal's top edge lands a third of the way up the x-height, which ends 21.1% above the
+   bottom of the letters' box and spans 57.2% of it. The tilt card pads the seal by 1.25rem. */
+.landing-seal-mark {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  margin-top: calc(var(--name-h) * -0.4115 - 1.25rem);
+}
+
 .landing-ripples {
-  width: clamp(132px, 16vw, 188px);
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--seal);
   aspect-ratio: 1;
+  translate: -50% -50%;
+  pointer-events: none;
 }
 
 .landing-ripples > span {
   position: absolute;
   inset: 0;
   border-radius: 9999px;
-  border: 1px solid color-mix(in srgb, var(--landing-accent) 40%, transparent);
+  border: 1px solid color-mix(in srgb, var(--seal-light) 40%, transparent);
   opacity: 0;
   animation: landing-ripple 4.8s cubic-bezier(0.2, 0.6, 0.35, 1) infinite;
 }
@@ -599,8 +723,45 @@ html > body[data-scroll-locked] {
   }
 }
 
+@keyframes landing-ring-1 {
+  from {
+    --landing-ring-1: 0.92;
+    --landing-glow-1: 1;
+  }
+
+  to {
+    --landing-ring-1: 2.7;
+    --landing-glow-1: 0;
+  }
+}
+
+@keyframes landing-ring-2 {
+  from {
+    --landing-ring-2: 0.92;
+    --landing-glow-2: 1;
+  }
+
+  to {
+    --landing-ring-2: 2.7;
+    --landing-glow-2: 0;
+  }
+}
+
+@keyframes landing-ring-3 {
+  from {
+    --landing-ring-3: 0.92;
+    --landing-glow-3: 1;
+  }
+
+  to {
+    --landing-ring-3: 2.7;
+    --landing-glow-3: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .landing-ripples {
+  .landing-ripples,
+  .landing-seal-name-lit {
     display: none;
   }
 }
@@ -688,7 +849,7 @@ a.landing-footer-chip:focus-visible {
 }
 
 /* Endless animations run only while their chapter is on screen (RevealOnScroll marks it). */
-.landing-reveal .landing section:not([data-live]) :is(.landing-flow, .landing-marquee, .landing-voyage, .landing-ring, .landing-spin, .landing-caret, .landing-ping, .landing-ripples > span) {
+.landing-reveal .landing section:not([data-live]) :is(.landing-flow, .landing-marquee, .landing-voyage, .landing-ring, .landing-spin, .landing-caret, .landing-ping, .landing-ripples > span, .landing-seal-name-lit) {
   animation-play-state: paused;
 }
 
