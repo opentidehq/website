@@ -10,19 +10,20 @@
 export const CAMERA = {
   /** Vertical field of view, in degrees. */
   fov: 38,
-  height: 1.25,
+  /** Low over the water, so the swells loom and the near rows read large. */
+  height: 0.9,
   /** Pitch below the horizon, in degrees: puts the horizon about a third of the way down. */
   pitch: 5.5,
 } as const;
 
 export const SEA = {
   /** The nearest row sits just below the bottom edge, the farthest in the haze. */
-  nearDepth: 2.5,
-  farDepth: 56,
-  rows: 66,
+  nearDepth: 1.9,
+  farDepth: 60,
+  rows: 112,
   /** World height of a glyph sprite on the nearest row; farther rows grow slower than depth. */
-  glyph: 0.056,
-  growth: 0.42,
+  glyph: 0.05,
+  growth: 0.36,
   /** Monospace advance as a share of the sprite: glyphs are 0.6em wide in a 0.72em-tall cell. */
   advance: 0.43,
 } as const;
@@ -99,11 +100,13 @@ export const STRIDE = 7;
  * contiguous run of the text, so near rows read as lines of query; it is wide enough to cover
  * the view at its depth, and drifts sideways at its own pace, wrapping out of sight.
  */
-export function buildGrid(text: string, glyphs: Glyphs, aspect: number): Float32Array {
+export function buildGrid(text: string, glyphs: Glyphs, aspect: number, detail = 1): Float32Array {
   const out: number[] = [];
   const len = text.length;
-  for (let j = 0; j < SEA.rows; j++) {
-    const s = j / (SEA.rows - 1);
+  // Fewer rows where the sea is drawn on the CPU.
+  const rows = Math.max(24, Math.round(SEA.rows * detail));
+  for (let j = 0; j < rows; j++) {
+    const s = j / (rows - 1);
     const depth = SEA.farDepth * Math.pow(SEA.nearDepth / SEA.farDepth, s);
     const size = SEA.glyph * Math.pow(depth / SEA.nearDepth, SEA.growth);
     const advance = SEA.advance * size;

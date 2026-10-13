@@ -55,6 +55,9 @@ export function TideSea({ className }: { className?: string }) {
     let sea: SeaRenderer | null = null;
     // The program links in the background; nothing draws or moves until it has.
     let ready = false;
+    // Whether the water moves: not with reduced motion, and not where WebGL runs on the CPU,
+    // where an animated sea would cost the page its smoothness. Both keep one still frame.
+    let moving = !reduced;
     let pending = 0;
     let raf = 0;
     let onScreen = true;
@@ -87,6 +90,7 @@ export function TideSea({ className }: { className?: string }) {
     const begin = () => {
       if (!sea) return;
       ready = true;
+      if (sea.software) moving = false;
       sea.setFont(family);
       colors();
       size();
@@ -116,9 +120,8 @@ export function TideSea({ className }: { className?: string }) {
     const loop = (now: number) => {
       raf = 0;
       if (!sea) return;
-      // The sea moves slowly: 60 frames a second is plenty on a 120 Hz screen, and a sea drawn
-      // on the CPU gets 24.
-      if (now - lastFrame < 1000 / (sea.software ? 24 : 60) - 2) {
+      // The sea moves slowly: 60 frames a second is plenty on a 120 Hz screen.
+      if (now - lastFrame < 1000 / 60 - 2) {
         raf = requestAnimationFrame(loop);
         return;
       }
@@ -138,7 +141,7 @@ export function TideSea({ className }: { className?: string }) {
       raf = requestAnimationFrame(loop);
     };
     const start = () => {
-      if (reduced || raf || !onScreen || document.hidden || !sea || !ready) return;
+      if (!moving || raf || !onScreen || document.hidden || !sea || !ready) return;
       raf = requestAnimationFrame(loop);
     };
     const stop = () => {
@@ -147,7 +150,7 @@ export function TideSea({ className }: { className?: string }) {
     };
 
     const onPointer = (e: PointerEvent) => {
-      if (!sea) return;
+      if (!sea || !moving) return;
       const rect = canvas.getBoundingClientRect();
       const nx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
       const ny = 1 - ((e.clientY - rect.top) / rect.height) * 2;
