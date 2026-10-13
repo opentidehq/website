@@ -6,22 +6,38 @@ import { halfWidthAt, pointOnWater, SEA } from '@/components/landing/sea/geometr
 import { SeaRenderer, type Rgb } from '@/components/landing/sea/renderer';
 
 /**
- * The water is detection content, not an ASCII ramp: the Sentinel KQL, Splunk SPL and object
- * fields this site is about. Each row of the sea is a run of it, so the near rows read as query.
+ * The water is detection content, not an ASCII ramp: one detection idea in every language
+ * opentide deploys to, between the object fields that tie them together. Each row of the sea is
+ * a run of it, so the near rows read as query, and neighbouring rows rarely share a language.
  */
 const SOURCE = [
-  'SigninLogs | where AuthenticationProtocol == "deviceCode" | where ResultType == 0',
-  '| where AppDisplayName !in ("Microsoft Office", "Microsoft Teams")',
-  '| summarize attempts = count() by UserPrincipalName, IPAddress, AppDisplayName',
-  'detection_model: 00000000-0000-4000-8002-000000000001',
+  // Microsoft Sentinel and Defender for Endpoint: KQL
   'DeviceProcessEvents | where FileName =~ "lsass.exe" | project Timestamp, DeviceName',
-  'OfficeActivity | where Operation == "New-InboxRule"',
-  '`sysmon` EventCode=10 TargetImage="*\\lsass.exe" | stats count by host, SourceImage',
-  'index=o365 sourcetype=o365:management:activity Operation=New-InboxRule',
+  // Splunk Enterprise Security: SPL
+  '`sysmon` EventCode=10 TargetImage="*\\lsass.exe" | stats count by host, SourceImage, GrantedAccess',
+  // the opentide object behind every rule
+  'detection_model: 00000000-0000-4000-8002-000000000001  status: STAGING',
+  // SentinelOne: S1QL
+  'EventType = "Open Remote Process Handle" AND TgtProcName = "lsass.exe" AND SrcProcName != "MsMpEng.exe"',
+  // HarfangLab: Sigma
+  "detection: selection: TargetImage|endswith: '\\lsass.exe' GrantedAccess: '0x1010' condition: selection",
+  // Carbon Black Cloud: Lucene
+  'process_name:lsass.exe AND crossproc_type:process_open AND -parent_name:svchost.exe',
   'chaining: - relation: sequence::preceeds  surface: OS::Windows::Desktop::11',
-  'status: STAGING  severity: Significant incident  mitre_attack: T1003.001, T1190',
+  // CrowdStrike Falcon: event search
+  '#event_simpleName=ProcessRollup2 ImageFileName=/lsass\\.exe/i | groupBy([aid, ComputerName])',
+  // Microsoft Sentinel: KQL
+  'SigninLogs | where AuthenticationProtocol == "deviceCode" | summarize count() by UserPrincipalName',
+  // HarfangLab: YARA
+  'rule lsass_minidump { strings: $a = "MiniDumpWriteDump" ascii condition: uint16(0) == 0x5A4D and $a }',
+  // Splunk: SPL
+  'index=o365 sourcetype=o365:management:activity Operation=New-InboxRule | stats values(Parameters) by UserId',
+  'severity: Significant incident  mitre_attack: T1003.001, T1190  impact: Identity Theft',
   'opentide validate --strict && opentide deploy --plan STAGING --dry-run',
-].join('   ');
+]
+  // Rows wrap around the text, so the last statement needs the same gap before the first.
+  .map((statement) => `${statement}   `)
+  .join('');
 
 /** Detections fire below the copy, where the water is near enough to read. */
 const PING_DEPTH = { near: 3.4, far: 9 };

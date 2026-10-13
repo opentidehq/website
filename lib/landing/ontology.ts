@@ -19,6 +19,8 @@ export type NodeId =
 /** One demo object as its node shows it: its name, and the values that identify it. */
 export type NodeRecord = {
   name: string;
+  /** A short value shown beside the name, such as an asset's criticality. */
+  tag?: string;
   facts: string[];
   /** The demo file that holds it, when it is not the node's file. */
   file?: string;
@@ -64,12 +66,12 @@ export type Edge = {
 };
 
 /** The map is drawn on a fixed canvas and scaled to fit, so the layout holds at any width. */
-export const CANVAS = { w: 900, h: 960 } as const;
+export const CANVAS = { w: 900, h: 800 } as const;
 
 /** Where each zone's band sits on the canvas, top and bottom, in px. */
 export const ZONES = {
-  catalogue: { top: 0, bottom: 520, caption: 'objects/' },
-  environment: { top: 548, bottom: 960, caption: '.opentide/configurations/' },
+  catalogue: { top: 0, bottom: 440, caption: 'objects/' },
+  environment: { top: 462, bottom: 800, caption: '.opentide/configurations/' },
 } as const;
 
 const VISIBILITY = '.opentide/configurations/visibility.toml';
@@ -106,7 +108,7 @@ export const NODES: Record<NodeId, OntologyNode> = {
         via: 'sequence::preceeds',
       },
     ],
-    at: [122, 206],
+    at: [122, 172],
   },
   objective: {
     zone: 'catalogue',
@@ -129,7 +131,7 @@ export const NODES: Record<NodeId, OntologyNode> = {
       '>    - name: LSASS process access',
     ],
     records: [{ name: 'Credential access via LSASS', facts: ['High', 'Threat', 'Combined'] }],
-    at: [450, 206],
+    at: [450, 172],
   },
   signals: {
     zone: 'catalogue',
@@ -151,7 +153,7 @@ export const NODES: Record<NodeId, OntologyNode> = {
       '>        - name: Defender for Endpoint',
     ],
     records: [{ name: 'LSASS process access', facts: ['High', 'Behavioural'] }],
-    at: [450, 418],
+    at: [450, 352],
     nested: true,
   },
   rule: {
@@ -175,7 +177,7 @@ export const NODES: Record<NodeId, OntologyNode> = {
       '      `sysmon` EventCode=10 TargetImage="*\\\\lsass.exe"',
     ],
     records: [{ name: 'LSASS memory access', facts: ['STAGING', 'sentinel', 'splunk'] }],
-    at: [790, 206],
+    at: [790, 172],
   },
   detectors: {
     zone: 'environment',
@@ -191,7 +193,7 @@ export const NODES: Record<NodeId, OntologyNode> = {
       '>assets = ["Corporate workstations"]',
     ],
     records: [{ name: 'Defender for Endpoint', facts: ['Corporate workstations'] }],
-    at: [272, 618],
+    at: [272, 520],
   },
   assets: {
     zone: 'environment',
@@ -211,10 +213,10 @@ export const NODES: Record<NodeId, OntologyNode> = {
       '>surface = ["OS::Windows::Desktop::11"]',
     ],
     records: [
-      { name: 'Edge firewalls', facts: ['High', 'Infrastructure::Firewalls::Palo Alto Networks'] },
-      { name: 'Corporate workstations', facts: ['Medium', 'OS::Windows::Desktop::11'] },
+      { name: 'Edge firewalls', tag: 'High', facts: ['Infrastructure::Firewalls::Palo Alto Networks'] },
+      { name: 'Corporate workstations', tag: 'Medium', facts: ['OS::Windows::Desktop::11'] },
     ],
-    at: [122, 836],
+    at: [122, 702],
   },
   logsources: {
     zone: 'environment',
@@ -234,7 +236,7 @@ export const NODES: Record<NodeId, OntologyNode> = {
       { name: 'Endpoint process events', facts: ['sentinel'] },
       { name: 'Firewall traffic', facts: ['splunk'] },
     ],
-    at: [450, 836],
+    at: [450, 702],
   },
   integrations: {
     zone: 'environment',
@@ -256,7 +258,7 @@ export const NODES: Record<NodeId, OntologyNode> = {
       { name: 'Microsoft Sentinel', facts: ['sentinel'] },
       { name: 'Splunk Enterprise Security', facts: ['splunk'], file: '.opentide/configurations/platforms/splunk.toml' },
     ],
-    at: [790, 836],
+    at: [790, 702],
   },
 };
 

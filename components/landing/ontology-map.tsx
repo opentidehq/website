@@ -37,8 +37,9 @@ const IDS = Object.keys(NODES) as NodeId[];
 /** Below this the map stops shrinking and scrolls sideways instead. */
 const MIN_SCALE = 0.8;
 const NODE_W = 200;
-/** The threat card carries the chain, two threats with their technique and severity each. */
-const WIDTH: Partial<Record<NodeId, number>> = { threat: 224 };
+/** Wider cards: the threat carries the chain, two threats with their technique and severity
+ * each; the assets carry a criticality beside each name. */
+const WIDTH: Partial<Record<NodeId, number>> = { threat: 224, assets: 224 };
 
 const ICONS: Record<NodeId, LucideIcon> = {
   threat: Swords,
@@ -150,7 +151,7 @@ function Excerpt({ node }: { node: OntologyNode }) {
         <span className="truncate">{node.file}</span>
         <span className="shrink-0">excerpt</span>
       </figcaption>
-      <pre className="landing-code-scroll m-0 max-h-[15rem] overflow-auto py-3 font-mono text-[12.5px] leading-relaxed">
+      <pre className="landing-code-scroll m-0 max-h-[22rem] overflow-auto py-2.5 font-mono text-[12.5px] leading-relaxed">
         <code>
           {node.excerpt.map((raw, i) => {
             const mark = raw.startsWith('>');
@@ -179,7 +180,10 @@ function Records({ records }: { records: NodeRecord[] }) {
               {record.via}
             </span>
           )}
-          <span className="block text-[12px] font-medium leading-4 text-[var(--landing-ink)]">{record.name}</span>
+          <span className="flex items-baseline justify-between gap-2">
+            <span className="text-[12px] font-medium leading-4 text-[var(--landing-ink)]">{record.name}</span>
+            {record.tag && <span className="shrink-0 font-mono text-[10px] text-[var(--landing-subtle)]">{record.tag}</span>}
+          </span>
           <span className="mt-1 flex flex-wrap gap-1">
             {record.facts.map((fact) => (
               <span
@@ -215,6 +219,7 @@ export function OntologyMap() {
   const [scrollable, setScrollable] = useState(false);
   const [active, setActive] = useState<NodeId>('threat');
   const [auto, setAuto] = useState(true);
+  const [view, setView] = useState<View>('links');
   // Pointer over the map, or keyboard focus inside it: the tour waits for the reader.
   const [engaged, setEngaged] = useState(false);
 
@@ -325,7 +330,11 @@ export function OntologyMap() {
                 style={{ top: ZONES.environment.top, height: ZONES.environment.bottom - ZONES.environment.top }}
               />
               <p className="absolute right-3 top-2 font-mono text-[11px] text-[var(--landing-subtle)]">{ZONES.catalogue.caption}</p>
-              <p className="absolute bottom-2 right-3 font-mono text-[11px] text-[var(--landing-subtle)]">
+              {/* Both zone captions sit in their zone's top-right corner; this one masks the edge behind it. */}
+              <p
+                className="absolute right-3 rounded bg-[var(--landing-panel)] px-1 font-mono text-[11px] text-[var(--landing-subtle)]"
+                style={{ top: ZONES.environment.top + 8 }}
+              >
                 {ZONES.environment.caption}
               </p>
 
@@ -497,7 +506,7 @@ export function OntologyMap() {
               inert={id !== active}
               className={`[grid-area:1/1] ${id === active ? (reduced ? '' : 'landing-fade-slide') : 'invisible'}`}
             >
-              <Detail id={id} onPick={pick} />
+              <Detail id={id} onPick={pick} view={view} onView={setView} />
             </div>
           ))}
         </div>
@@ -506,15 +515,34 @@ export function OntologyMap() {
   );
 }
 
-/** What a node is for, every link it holds or receives, and the file it lives in. */
-function Detail({ id, onPick }: { id: NodeId; onPick: (id: NodeId) => void }) {
+type View = 'links' | 'file';
+
+/**
+ * What a node is for, then either every link it holds or receives, or the file it lives in:
+ * one at a time, so the panel stays as tall as the map. The choice holds through the tour.
+ */
+function Detail({ id, onPick, view, onView }: { id: NodeId; onPick: (id: NodeId) => void; view: View; onView: (view: View) => void }) {
   const node = NODES[id];
   const Icon = ICONS[id];
   const links = [...EDGES.filter((e) => e.from === id), ...EDGES.filter((e) => e.to === id && e.from !== id)];
+  const tab = (value: View, label: string) => (
+    <button
+      type="button"
+      aria-pressed={view === value}
+      onClick={() => onView(value)}
+      className={`rounded-full px-3 py-1 transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--landing-accent)] ${
+        view === value
+          ? 'bg-[var(--landing-accent)] text-[var(--brand-accent-foreground)]'
+          : 'text-[var(--landing-muted)] hover:text-[var(--landing-ink)]'
+      }`}
+    >
+      {label}
+    </button>
+  );
   return (
     <>
-      <div className="mt-5 flex items-center gap-3.5">
-        <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-[var(--landing-accent)] text-[var(--brand-accent-foreground)]">
+      <div className="mt-4 flex items-center gap-3.5">
+        <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[var(--landing-accent)] text-[var(--brand-accent-foreground)]">
           <Icon className="size-5" aria-hidden />
         </span>
         <div className="min-w-0">
@@ -522,18 +550,23 @@ function Detail({ id, onPick }: { id: NodeId; onPick: (id: NodeId) => void }) {
           <p className="text-base text-[var(--landing-muted)]">{node.question}</p>
         </div>
       </div>
-      <p className="mt-4 text-sm leading-relaxed text-[var(--landing-muted)] text-pretty">{node.body}</p>
+      <p className="mt-3 text-sm leading-relaxed text-[var(--landing-muted)] text-pretty">{node.body}</p>
 
-      <p className="mt-6 font-mono text-[11px] text-[var(--landing-subtle)]">links</p>
-      <ul className="mt-2 list-none space-y-2 p-0">
-        {links.map((edge) => (
-          <LinkCard key={`${edge.from}-${edge.to}-${edge.field}`} edge={edge} here={id} onPick={onPick} />
-        ))}
-      </ul>
-
-      <div className="mt-6">
-        <Excerpt node={node} />
+      <div className="mt-5 inline-flex self-start rounded-full border border-[var(--landing-border)] p-0.5 font-mono text-[11px]">
+        {tab('links', `links · ${links.length}`)}
+        {tab('file', 'file')}
       </div>
+      {view === 'links' ? (
+        <ul className="mt-3 list-none space-y-2 p-0">
+          {links.map((edge) => (
+            <LinkCard key={`${edge.from}-${edge.to}-${edge.field}`} edge={edge} here={id} onPick={onPick} />
+          ))}
+        </ul>
+      ) : (
+        <div className="mt-3">
+          <Excerpt node={node} />
+        </div>
+      )}
     </>
   );
 }
@@ -569,8 +602,8 @@ function LinkCard({ edge, here, onPick }: { edge: Edge; here: NodeId; onPick: (i
           {KIND[edge.kind]}
         </span>
       </span>
-      <span className="mt-2 block text-sm leading-snug text-[var(--landing-muted)]">{out ? edge.says : edge.back}</span>
-      <span className="mt-2 block rounded-lg bg-[var(--landing-band)] px-2.5 py-1.5 font-mono text-[11.5px] leading-relaxed text-[var(--landing-ink)]">
+      <span className="mt-1.5 block text-[13px] leading-snug text-[var(--landing-muted)]">{out ? edge.says : edge.back}</span>
+      <span className="mt-1.5 block rounded-lg bg-[var(--landing-band)] px-2.5 py-1 font-mono text-[11.5px] leading-relaxed text-[var(--landing-ink)]">
         {edge.value.map((line) => (
           <span key={line} className="block [overflow-wrap:anywhere]">
             {line}
@@ -585,7 +618,7 @@ function LinkCard({ edge, here, onPick }: { edge: Edge; here: NodeId; onPick: (i
       </span>
     </>
   );
-  const frame = 'block w-full rounded-xl border border-[var(--landing-border)] bg-[var(--landing-panel)] p-3 text-left';
+  const frame = 'block w-full rounded-xl border border-[var(--landing-border)] bg-[var(--landing-panel)] px-3 py-2.5 text-left';
   return (
     <li>
       {other === here ? (

@@ -28,7 +28,7 @@ for (const [id, node] of Object.entries(NODES)) {
       const source = sources[file];
       assert.ok(source, `no demo file at ${file}`);
       assert.ok(named(record.name) && source.includes(record.name), `"${record.name}" is not an object in ${file}`);
-      for (const fact of record.facts) assert.ok(source.includes(fact), `"${fact}" is not in ${file}`);
+      for (const fact of [...record.facts, ...(record.tag ? [record.tag] : [])]) assert.ok(source.includes(fact), `"${fact}" is not in ${file}`);
       if (record.via) assert.ok(sources[node.file].includes(`relation: ${record.via}`), `no ${record.via} chaining in ${node.file}`);
     }
   });
