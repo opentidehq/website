@@ -123,22 +123,12 @@ void main() {
   outColor = vec4(mix(uInk, uGlow, smoothstep(0.04, 0.32, vGlow)) * a, a);
 }`;
 
-function compile(gl: WebGL2RenderingContext, type: number, source: string) {
-  const shader = gl.createShader(type);
-  if (!shader) return null;
-  gl.shaderSource(shader, source);
-  gl.compileShader(shader);
-  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-    console.warn('sea shader:', gl.getShaderInfoLog(shader));
-    gl.deleteShader(shader);
-    return null;
-  }
-  return shader;
-}
+const UNIFORMS = ['uViewProj', 'uTime', 'uPointScale', 'uMaxPoint', 'uCols', 'uRipples', 'uPings', 'uLamp', 'uInkAlpha', 'uAtlas', 'uGrid', 'uInk', 'uGlow'];
 
 /**
  * Draws the sea into a canvas with WebGL2. Owns the GL objects; the caller owns time, the
- * pointer and the page's colours. `create` returns null where WebGL2 is not available.
+ * pointer and the page's colours. `create` returns null where WebGL2 is not available; the
+ * program then links in the background, and nothing draws until `ready()` says it has.
  */
 export class SeaRenderer {
   private readonly glyphs: Glyphs;
@@ -160,21 +150,23 @@ export class SeaRenderer {
   private nextPing = 0;
   private readonly loc: Record<string, WebGLUniformLocation | null> = {};
   private readonly maxPoint: number;
+  /** Set once the program has linked, or failed to. */
+  private linked: boolean | undefined;
+  private readonly parallel: { COMPLETION_STATUS_KHR: number } | null;
   /** Drawn on the CPU (SwiftShader, llvmpipe): the caller should ask for fewer, cheaper frames. */
   readonly software: boolean;
 
   private constructor(
     private readonly gl: WebGL2RenderingContext,
     private readonly program: WebGLProgram,
+    private readonly shaders: WebGLShader[],
     private readonly vao: WebGLVertexArrayObject,
     private readonly buffer: WebGLBuffer,
     private readonly atlas: WebGLTexture,
     private readonly text: string,
   ) {
     this.glyphs = glyphSet(text);
-    for (const name of ['uViewProj', 'uTime', 'uPointScale', 'uMaxPoint', 'uCols', 'uRipples', 'uPings', 'uLamp', 'uInkAlpha', 'uAtlas', 'uGrid', 'uInk', 'uGlow']) {
-      this.loc[name] = gl.getUniformLocation(program, name);
-    }
+    this.parallel = gl.getExtension('KHR_parallel_shader_compile');
     const range = gl.getParameter(gl.ALIASED_POINT_SIZE_RANGE) as Float32Array | null;
     this.maxPoint = range ? range[1] : 64;
     const info = gl.getExtension('WEBGL_debug_renderer_info');
@@ -185,19 +177,22 @@ export class SeaRenderer {
   static create(canvas: HTMLCanvasElement, text: string): SeaRenderer | null {
     const gl = canvas.getContext('webgl2', { alpha: true, antialias: false, premultipliedAlpha: true, powerPreference: 'low-power' });
     if (!gl) return null;
-    const vs = compile(gl, gl.VERTEX_SHADER, VERT);
-    const fs = compile(gl, gl.FRAGMENT_SHADER, FRAG);
-    if (!vs || !fs) return null;
+    // Compile and link without asking how it went: the answer would make the page wait for the
+    // driver. `ready()` asks once the browser says the work is done.
     const program = gl.createProgram();
-    gl.attachShader(program, vs);
-    gl.attachShader(program, fs);
-    gl.linkProgram(program);
-    gl.deleteShader(vs);
-    gl.deleteShader(fs);
-    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-      console.warn('sea program:', gl.getProgramInfoLog(program));
-      return null;
+    const shaders: WebGLShader[] = [];
+    for (const [type, source] of [
+      [gl.VERTEX_SHADER, VERT],
+      [gl.FRAGMENT_SHADER, FRAG],
+    ] as const) {
+      const shader = gl.createShader(type);
+      if (!shader) return null;
+      gl.shaderSource(shader, source);
+      gl.compileShader(shader);
+      gl.attachShader(program, shader);
+      shaders.push(shader);
     }
+    gl.linkProgram(program);
     const vao = gl.createVertexArray();
     const buffer = gl.createBuffer();
     const atlas = gl.createTexture();
@@ -208,12 +203,34 @@ export class SeaRenderer {
     gl.enableVertexAttribArray(1);
     gl.vertexAttribPointer(1, 3, gl.FLOAT, false, STRIDE * 4, 16);
     gl.bindVertexArray(null);
-    return new SeaRenderer(gl, program, vao, buffer, atlas, text);
+    return new SeaRenderer(gl, program, shaders, vao, buffer, atlas, text);
   }
 
-  /** Draws every glyph white into a texture once, in the page's mono face. */
+  /**
+   * Whether the sea can draw: true once the program has linked, false while the browser is
+   * still compiling it in the background, null if it failed.
+   */
+  ready(): boolean | null {
+    if (this.linked !== undefined) return this.linked || null;
+    const { gl, program } = this;
+    if (this.parallel && !gl.getProgramParameter(program, this.parallel.COMPLETION_STATUS_KHR)) return false;
+    this.linked = Boolean(gl.getProgramParameter(program, gl.LINK_STATUS));
+    if (!this.linked) {
+      console.warn('sea program:', gl.getProgramInfoLog(program), ...this.shaders.map((sh) => gl.getShaderInfoLog(sh)));
+      return null;
+    }
+    for (const shader of this.shaders) {
+      gl.detachShader(program, shader);
+      gl.deleteShader(shader);
+    }
+    for (const name of UNIFORMS) this.loc[name] = gl.getUniformLocation(program, name);
+    return true;
+  }
+
+  /** Draws every glyph white into a texture once, in the page's mono face. Call once ready. */
   setFont(family: string) {
     const { gl, glyphs } = this;
+    if (!this.linked) return;
     const rows = Math.ceil(glyphs.chars.length / COLS);
     const canvas = document.createElement('canvas');
     canvas.width = COLS * CELL;
@@ -289,7 +306,7 @@ export class SeaRenderer {
     gl.viewport(0, 0, this.width, this.height);
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT);
-    if (!this.count) return;
+    if (!this.linked || !this.count) return;
     gl.useProgram(this.program);
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
@@ -314,6 +331,7 @@ export class SeaRenderer {
 
   dispose() {
     const { gl } = this;
+    if (this.linked === undefined) for (const shader of this.shaders) gl.deleteShader(shader);
     gl.deleteBuffer(this.buffer);
     gl.deleteVertexArray(this.vao);
     gl.deleteTexture(this.atlas);

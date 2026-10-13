@@ -53,6 +53,9 @@ export function TideSea({ className }: { className?: string }) {
     const family = `${mono || '"JetBrains Mono"'}, ui-monospace, Menlo, monospace`;
 
     let sea: SeaRenderer | null = null;
+    // The program links in the background; nothing draws or moves until it has.
+    let ready = false;
+    let pending = 0;
     let raf = 0;
     let onScreen = true;
     let epoch = performance.now();
@@ -77,16 +80,36 @@ export function TideSea({ className }: { className?: string }) {
       const dpr = sea.software ? 1 : Math.min(window.devicePixelRatio || 1, 2);
       sea.resize(parent.clientWidth, parent.clientHeight, dpr);
     };
-    const paint = () => sea?.render(time);
+    const paint = () => {
+      if (ready) sea?.render(time);
+    };
 
-    const setup = () => {
-      sea = SeaRenderer.create(canvas, SOURCE);
-      if (!sea) return false;
+    const begin = () => {
+      if (!sea) return;
+      ready = true;
       sea.setFont(family);
       colors();
       size();
       paint();
-      return true;
+      // The first frame fades in rather than popping over the copy.
+      canvas.setAttribute('data-ready', '');
+      start();
+    };
+    // Ask each frame whether the program has linked; asking the driver to wait would freeze
+    // the page for as long as the shaders take to compile.
+    const awaitLink = () => {
+      pending = 0;
+      if (!sea) return;
+      const state = sea.ready();
+      if (state === null) {
+        sea.dispose();
+        sea = null;
+      } else if (state) begin();
+      else pending = requestAnimationFrame(awaitLink);
+    };
+    const setup = () => {
+      sea = SeaRenderer.create(canvas, SOURCE);
+      if (sea) awaitLink();
     };
 
     let lastFrame = 0;
@@ -115,7 +138,7 @@ export function TideSea({ className }: { className?: string }) {
       raf = requestAnimationFrame(loop);
     };
     const start = () => {
-      if (reduced || raf || !onScreen || document.hidden || !sea) return;
+      if (reduced || raf || !onScreen || document.hidden || !sea || !ready) return;
       raf = requestAnimationFrame(loop);
     };
     const stop = () => {
@@ -144,10 +167,10 @@ export function TideSea({ className }: { className?: string }) {
       lamp.seen = -Infinity;
     };
 
-    if (!setup()) return;
     // The mono face may still be loading: redraw the atlas once it is in.
     document.fonts?.load(`500 44px ${family}`).then(
       () => {
+        if (!ready) return;
         sea?.setFont(family);
         paint();
       },
@@ -163,11 +186,11 @@ export function TideSea({ className }: { className?: string }) {
     const onLost = (e: Event) => {
       e.preventDefault();
       stop();
+      cancelAnimationFrame(pending);
+      ready = false;
       sea = null;
     };
-    const onRestored = () => {
-      if (setup()) start();
-    };
+    const onRestored = () => setup();
     const ro = new ResizeObserver(() => {
       size();
       paint();
@@ -193,11 +216,15 @@ export function TideSea({ className }: { className?: string }) {
       host.addEventListener('pointerdown', onPointer);
       host.addEventListener('pointerleave', onLeave);
       nextPing = STILL + 1.2;
-      start();
     }
+    // Wait for the page to settle: hydration and first input come before the water.
+    const idle = window.requestIdleCallback ? window.requestIdleCallback(setup, { timeout: 1500 }) : window.setTimeout(setup, 300);
 
     return () => {
       stop();
+      if (window.cancelIdleCallback) window.cancelIdleCallback(idle);
+      else window.clearTimeout(idle);
+      cancelAnimationFrame(pending);
       ro.disconnect();
       mo.disconnect();
       io.disconnect();

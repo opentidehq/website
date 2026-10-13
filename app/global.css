@@ -318,6 +318,22 @@ html > body[data-scroll-locked] {
     mask-image: linear-gradient(to bottom, #000 84%, transparent);
   }
 
+  /* It fades in with its first frame, once the shaders are ready. */
+  .landing-sea canvas {
+    opacity: 0;
+    transition: opacity 1.2s ease-out;
+  }
+
+  .landing-sea canvas[data-ready] {
+    opacity: 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .landing-sea canvas {
+      transition: none;
+    }
+  }
+
   /* The floating header: a glass pill that tightens and lifts once the page scrolls. */
   .landing-pill {
     max-width: 1120px;
