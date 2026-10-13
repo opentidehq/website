@@ -31,6 +31,12 @@ out float vGlow;
 const float NEAR = ${SEA.nearDepth.toFixed(3)};
 const float FAR = ${SEA.farDepth.toFixed(3)};
 
+// x², defined for any sign: GLSL leaves pow() undefined for a negative base, and GPUs that
+// compute it as exp2(y * log2(x)) return NaN there.
+float sq(float x) {
+  return x * x;
+}
+
 // Swells roll toward the reader: depth grows away from the camera, so +t moves crests nearer.
 // Long groundswell, then shorter chop across it.
 float swell(vec2 p, float t) {
@@ -72,7 +78,7 @@ void main() {
     if (r.w <= 0.0 || age < 0.0 || age > 4.0) continue;
     float d = distance(p, r.xy);
     float front = age * (0.85 + 0.1 * r.y);
-    float ring = exp(-pow((d - front) * 2.6 / (1.0 + 0.1 * r.y), 2.0));
+    float ring = exp(-sq((d - front) * 2.6 / (1.0 + 0.1 * r.y)));
     float env = r.w * exp(-age * 1.05);
     h += env * ring * 0.03 * cos((d - front) * 7.0);
     glow += env * ring * 1.1;
@@ -89,15 +95,15 @@ void main() {
     float width = 0.2 + 0.04 * r.y;
     // A leading edge that trails off inward, so the ring reads as travelling outward.
     float behind = clamp((front - d) / (width * 3.0), 0.0, 1.0);
-    float ring = exp(-pow((d - front) / width, 2.0)) + 0.2 * behind * exp(-behind * 3.0);
+    float ring = exp(-sq((d - front) / width)) + 0.2 * behind * exp(-behind * 3.0);
     float env = r.w * exp(-age * 0.62);
-    float core = exp(-pow(d / (0.1 + 0.02 * r.y), 2.0)) * exp(-age * 2.4);
+    float core = exp(-sq(d / (0.1 + 0.02 * r.y))) * exp(-age * 2.4);
     h += env * ring * 0.018 + core * 0.022;
     ping += env * ring * 1.25 + core * 1.3;
   }
 
   // The pointer is a lantern over the water: what it passes over lifts and comes into focus.
-  float lamp = uLamp.z * exp(-pow(distance(p, uLamp.xy) / (0.5 + 0.06 * depth), 2.0));
+  float lamp = uLamp.z * exp(-sq(distance(p, uLamp.xy) / (0.5 + 0.06 * depth)));
   h += lamp * 0.03;
 
   vec4 clip = uViewProj * vec4(x, h, -depth, 1.0);
@@ -116,7 +122,9 @@ void main() {
 
   // 0 on the nearest row, 1 at the horizon: haze swallows the far water, and the nearest
   // rows come in softly at the bottom edge.
-  float s = log(depth / NEAR) / log(FAR / NEAR);
+  // Clamped: rounding can carry the farthest row a hair past 1, and pow() of a negative number
+  // is undefined: on some GPUs it drew the horizon as a bright line.
+  float s = clamp(log(depth / NEAR) / log(FAR / NEAR), 0.0, 1.0);
   // Haze thins the water steadily all the way to the horizon, rather than cutting it off.
   float haze = pow(1.0 - s, 1.35);
   float shore = smoothstep(0.0, 0.04, s);
@@ -125,7 +133,7 @@ void main() {
   float shade = 0.35 * crest + 0.65 * facing;
   float ink = uInkAlpha * (0.08 + 0.75 * pow(shade, 1.5) + 0.4 * glint) * shimmer + lamp * 0.45;
   vGlow = lit;
-  vAlpha = haze * shore * max(ink, lit);
+  vAlpha = clamp(haze * shore * max(ink, lit), 0.0, 1.0);
 }`;
 
 const FRAG = `#version 300 es

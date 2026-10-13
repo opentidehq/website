@@ -16,3 +16,17 @@ test('taxonomy ribbon: lists exactly the vocabularies in the synced catalog', ()
   assert.deepEqual([...VOCABULARIES].sort(), fields.sort());
   for (const name of LIT_VOCABULARIES) assert.ok((VOCABULARIES as readonly string[]).includes(name), name);
 });
+
+test('taxonomy ribbon: every vocabulary has values to pop, and the demo uses real ones', async () => {
+  const { VOCABULARY_VALUES } = await import('./vocabulary-values.ts');
+  // Responder teams are each organisation's own: the spec ships that vocabulary empty.
+  const empty = new Set(['responders']);
+  for (const name of VOCABULARIES) {
+    const count = VOCABULARY_VALUES[name]?.length ?? 0;
+    assert.ok(empty.has(name) ? count === 0 : count >= 3, `${name}: ${count} values`);
+  }
+  // Values the demo objects use, as the shipped vocabularies spell them.
+  assert.ok(VOCABULARY_VALUES['chaining_relations'].includes('sequence::preceeds'));
+  assert.ok(VOCABULARY_VALUES['severity'].includes('Significant incident'));
+  assert.ok(VOCABULARY_VALUES['criticality'].includes('High'));
+});
