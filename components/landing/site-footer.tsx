@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { ArrowUp, ArrowUpRight } from 'lucide-react';
-import { useEffect, useRef } from 'react';
 import { OpentideWordmark } from '@/components/brand/opentide-mark';
 import { usePrefersReducedMotion } from '@/lib/hooks/use-prefers-reduced-motion';
 import { GITHUB_ORG, ecosystemLinks } from '@/lib/shared';
@@ -42,56 +41,6 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
   },
 ];
 
-/** One wave period, repeated across twice the width so sliding it by one width loops. */
-function wave(level: number, amplitude: number, period: number) {
-  let d = `M0 ${level}`;
-  for (let x = 0; x < 2000; x += period) {
-    d += ` q${period / 4} ${-amplitude} ${period / 2} 0 t${period / 2} 0`;
-  }
-  return `${d} V260 H0 Z`;
-}
-
-// Both periods divide the 1000-unit slide, so neither swell jumps when its loop restarts.
-const FRONT = wave(150, 9, 250);
-const BACK = wave(140, 7, 200);
-
-/**
- * The project's name across the whole footer, filled with water: two swells slide through the
- * letters, and the water rises when the pointer is over the footer. The swells only move while
- * the footer is on screen, and not at all with reduced motion.
- */
-function TideWordmark() {
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const io = new IntersectionObserver(([entry]) => el.toggleAttribute('data-live', entry?.isIntersecting ?? false));
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
-
-  return (
-    <div ref={ref} aria-hidden className="landing-footmark pointer-events-none select-none">
-      <svg viewBox="0 0 1000 250" className="block h-auto w-full overflow-visible">
-        <defs>
-          <clipPath id="landing-footmark-letters">
-            <text x="500" y="200" textAnchor="middle" textLength="992" lengthAdjust="spacingAndGlyphs" className="landing-footmark-type">
-              opentide
-            </text>
-          </clipPath>
-        </defs>
-        <g clipPath="url(#landing-footmark-letters)">
-          <rect width="1000" height="250" className="landing-footmark-fill" />
-          <g className="landing-footmark-water">
-            <path d={BACK} className="landing-footmark-wave landing-footmark-back" />
-            <path d={FRONT} className="landing-footmark-wave landing-footmark-front" />
-          </g>
-        </g>
-      </svg>
-    </div>
-  );
-}
-
 function FooterAnchor({ link }: { link: FooterLink }) {
   const className =
     'group inline-flex items-center gap-1 text-sm text-[var(--landing-muted)] transition hover:text-[var(--landing-ink)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--landing-accent)]';
@@ -110,12 +59,12 @@ function FooterAnchor({ link }: { link: FooterLink }) {
   );
 }
 
-/** The site's footer: what opentide is, where everything lives, and the name, full width. */
+/** The site's footer: what opentide is, the latest release, and where everything lives. */
 export function SiteFooter({ version }: { version?: string | null }) {
   const reduced = usePrefersReducedMotion();
   return (
     <footer className="landing-footer relative isolate overflow-hidden border-t border-[var(--landing-border)]">
-      <div className="mx-auto max-w-[1400px] px-4 pt-16 md:px-6 md:pt-20">
+      <div className="mx-auto max-w-[1400px] px-4 py-14 md:px-6 md:py-16">
         <div className="grid gap-12 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
           <div className="max-w-md">
             <OpentideWordmark height={34} />
@@ -152,10 +101,6 @@ export function SiteFooter({ version }: { version?: string | null }) {
             ))}
           </nav>
         </div>
-      </div>
-
-      <div className="mx-auto mt-8 max-w-[1400px] px-4 md:mt-10 md:px-6">
-        <TideWordmark />
       </div>
 
       <div className="border-t border-[var(--landing-border)]">
