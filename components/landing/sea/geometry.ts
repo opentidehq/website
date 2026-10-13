@@ -20,9 +20,9 @@ export const SEA = {
   /** The nearest row sits just below the bottom edge, the farthest in the haze. */
   nearDepth: 1.9,
   farDepth: 60,
-  rows: 112,
+  rows: 150,
   /** World height of a glyph sprite on the nearest row; farther rows grow slower than depth. */
-  glyph: 0.05,
+  glyph: 0.034,
   growth: 0.36,
   /** Monospace advance as a share of the sprite: glyphs are 0.6em wide in a 0.72em-tall cell. */
   advance: 0.43,
@@ -101,10 +101,14 @@ export const STRIDE = 7;
  * the view at its depth, and drifts sideways at its own pace, wrapping out of sight.
  */
 export function buildGrid(text: string, glyphs: Glyphs, aspect: number, detail = 1): Float32Array {
-  const out: number[] = [];
   const len = text.length;
   // Fewer rows where the sea is drawn on the CPU.
   const rows = Math.max(24, Math.round(SEA.rows * detail));
+  // Each character's cell in the atlas, or -1 for what is not drawn (spaces).
+  const cells = Int16Array.from(text, (ch) => glyphs.index.get(ch) ?? -1);
+  // Lay the rows out first and count their glyphs, so the grid fills one typed array.
+  const layout: { depth: number; size: number; advance: number; count: number; ext: number; seed: number; speed: number; start: number }[] = [];
+  let total = 0;
   for (let j = 0; j < rows; j++) {
     const s = j / (rows - 1);
     const depth = SEA.farDepth * Math.pow(SEA.nearDepth / SEA.farDepth, s);
@@ -112,19 +116,28 @@ export function buildGrid(text: string, glyphs: Glyphs, aspect: number, detail =
     const advance = SEA.advance * size;
     const half = (halfWidthAt(depth, aspect) + size) * 1.12;
     const count = Math.ceil((2 * half) / advance);
-    const ext = (count * advance) / 2;
     // A per-row pace between 0.5 and 1.3 glyphs a second, and a start that staggers the text.
     const seed = fract(Math.sin(j * 12.9898) * 43758.5453);
-    const speed = advance * (0.5 + 0.8 * seed);
     const start = (j * 97 + Math.floor(seed * len)) % len;
-    for (let k = 0; k < count; k++) {
-      const ch = text[(start + k) % len];
-      const glyph = glyphs.index.get(ch);
-      if (glyph === undefined) continue;
-      out.push(-ext + (k + 0.5) * advance, depth, ext, speed, glyph, size, fract(seed * 7.13 + k * 0.618));
+    layout.push({ depth, size, advance, count, ext: (count * advance) / 2, seed, speed: advance * (0.5 + 0.8 * seed), start });
+    for (let k = 0; k < count; k++) if (cells[(start + k) % len] >= 0) total++;
+  }
+  const out = new Float32Array(total * STRIDE);
+  let o = 0;
+  for (const row of layout) {
+    for (let k = 0; k < row.count; k++) {
+      const glyph = cells[(row.start + k) % len];
+      if (glyph < 0) continue;
+      out[o++] = -row.ext + (k + 0.5) * row.advance;
+      out[o++] = row.depth;
+      out[o++] = row.ext;
+      out[o++] = row.speed;
+      out[o++] = glyph;
+      out[o++] = row.size;
+      out[o++] = fract(row.seed * 7.13 + k * 0.618);
     }
   }
-  return new Float32Array(out);
+  return out;
 }
 
 function fract(n: number) {
