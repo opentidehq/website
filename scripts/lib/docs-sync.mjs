@@ -11,6 +11,7 @@ import { dirname, join, relative, resolve } from 'node:path';
 import { posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ensureRfcDiscovery, syncRfcSection, withRfcNav } from './rfc-sync.mjs';
+import { VOCAB_DIR, deriveVocabularies } from './vocab-derive.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 export const ROOT = resolve(__dirname, '..', '..');
@@ -740,6 +741,14 @@ export function syncContent({
 
   const opentideSha = gitHeadForPath(opentideDocs).sha;
   const specificationsSha = gitHeadForPath(specificationsRoot).sha;
+
+  // The taxonomy is derived, not transcribed: regenerate it from the specification's own
+  // vocabulary TOMLs on every sync, so a vocabulary added or retired upstream reaches the
+  // landing page without a human editing a list.
+  const vocabIndex = deriveVocabularies({ specificationsRoot, root, sha: specificationsSha });
+  for (const warning of vocabIndex.warnings) console.warn(`sync-content: vocabularies: ${warning}`);
+  console.log(`sync-content: derived ${vocabIndex.count} vocabularies from ${specificationsRoot}/${VOCAB_DIR}`);
+
   writeSyncStamp(outDir, {
     format: 'mdx',
     opentide: opentideSha,
@@ -750,6 +759,7 @@ export function syncContent({
   return {
     skipped: false,
     pageCount,
+    vocabularyCount: vocabIndex.count,
     opentideDocs,
     specificationsRoot,
     stamp: readSyncStamp(outDir),

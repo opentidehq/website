@@ -1,2 +1,6 @@
 *
 !.gitignore
+# Derived from the specifications submodule by `pnpm sync:content`, but committed: `ci.yml` and
+# `deploy.yml` build with SKIP_SYNC=1 and no submodules checked out, so the artifact has to be in
+# the tree the same way `content/docs/` is. The sync job regenerates and commits it.
+!vocabularies.ts

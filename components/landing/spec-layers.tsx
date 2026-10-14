@@ -1,4 +1,5 @@
 import { ArrowDown } from 'lucide-react';
+import { VOCABULARIES } from '@/lib/landing/vocabularies';
 
 type Layer = {
   kicker: string;
@@ -17,7 +18,7 @@ const LAYERS: Layer[] = [
     meta: 'normative · CC-BY-4.0',
     lines: [
       { label: 'ontology', value: 'threat::1.0 · objective::1.0 · rule::1.1' },
-      { label: 'taxonomy', value: '36 versioned vocabularies · fixtures · RFCs' },
+      { label: 'taxonomy', value: `${VOCABULARIES.length} versioned vocabularies · fixtures · RFCs` },
     ],
     repo: 'OpenTideHQ/specifications',
     href: 'https://github.com/OpenTideHQ/specifications',
