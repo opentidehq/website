@@ -16,10 +16,16 @@ import { GENERATED_VOCABULARIES } from '../generated/vocabularies.ts';
 
 /**
  * Vocabularies whose authored value is a stable identifier that means nothing to a reader, and
- * whose human-readable `name` the ribbon shows instead. Purely presentational: an entry naming a
- * vocabulary the specification no longer ships is simply never consulted.
+ * whose human-readable `name` the ribbon shows instead.
+ *
+ * `actors` is the clearest case: its authored values are correctly `att&ck::G1028` and
+ * `misp::4b79d1f6-8333-44b6-ac32-d1ea7e47e77f`, so showing them raw fills the ribbon with UUIDs.
+ * The generated artifact keeps the true authored value either way — this is display only.
+ *
+ * Purely presentational: an entry naming a vocabulary the specification no longer ships is
+ * simply never consulted.
  */
-const PREFER_LABEL: ReadonlySet<string> = new Set(['att&ck.groups']);
+const PREFER_LABEL: ReadonlySet<string> = new Set(['actors', 'att&ck.groups']);
 
 export const VOCABULARY_VALUES: Record<string, readonly string[]> = Object.fromEntries(
   GENERATED_VOCABULARIES.map((vocabulary) => [

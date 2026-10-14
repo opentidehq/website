@@ -35,7 +35,9 @@ export const SAMPLE_COUNT = 6;
  * sample is representative of the whole range rather than its alphabetical head.
  */
 export function pickSamples(values, count = SAMPLE_COUNT) {
+  if (count <= 0) return [];
   if (values.length <= count) return [...values];
+  if (count === 1) return [values[0]];
   const last = values.length - 1;
   return Array.from({ length: count }, (_, i) => values[Math.round((i * last) / (count - 1))]);
 }
@@ -87,6 +89,7 @@ export function stagesForEntry(entry) {
 export function authoredValues(doc, entries, valueKey, stageIds = stageIdsFor(doc)) {
   const staged = stageIds.length > 0;
   const values = [];
+  const unstagedKeys = [];
   for (const entry of entries) {
     if (!entry || typeof entry !== 'object') continue;
     // A key retired in place by `removed` is no longer part of the contract.
@@ -96,12 +99,15 @@ export function authoredValues(doc, entries, valueKey, stageIds = stageIdsFor(do
     const label = typeof entry.name === 'string' && entry.name ? entry.name : raw;
     const stages = staged ? stagesForEntry(entry) : [];
     if (stages.length === 0) {
+      // In a staged vocabulary every key must carry a stage, so a bare value here is a defect
+      // upstream. Emit it anyway rather than failing the build, but report it.
+      if (staged) unstagedKeys.push(raw);
       values.push({ value: raw, label });
       continue;
     }
     for (const stage of stages) values.push({ value: `${stage}::${raw}`, label });
   }
-  return values;
+  return { values, unstagedKeys };
 }
 
 /** Parse one `<field>.vocab.toml` into the shape the artifact stores. */
@@ -119,7 +125,13 @@ export function readVocabularyFile(path) {
   const entries = Array.isArray(doc.keys) ? doc.keys : [];
   const valueKey = valueKeyFor(doc);
   const stageIds = stageIdsFor(doc);
-  const values = authoredValues(doc, entries, valueKey, stageIds);
+  const { values, unstagedKeys } = authoredValues(doc, entries, valueKey, stageIds);
+  if (unstagedKeys.length > 0) {
+    warnings.push(
+      `${fileName}: ${unstagedKeys.length} key(s) carry no tide.vocab.stages in a staged vocabulary, ` +
+        `so their authored values are unscoped and unreachable (first: ${unstagedKeys[0]})`,
+    );
+  }
 
   return {
     vocabulary: {

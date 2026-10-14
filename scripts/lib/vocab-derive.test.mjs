@@ -36,12 +36,22 @@ test('pickSamples: takes everything when the vocabulary is short', () => {
   assert.deepEqual(pickSamples(['a', 'b', 'c'], 6), ['a', 'b', 'c']);
 });
 
+test('pickSamples: degenerate counts never yield holes', () => {
+  assert.deepEqual(pickSamples(['a', 'b', 'c'], 1), ['a']);
+  assert.deepEqual(pickSamples(['a', 'b', 'c'], 0), []);
+  assert.deepEqual(pickSamples([], 6), []);
+});
+
 test('pickSamples: spreads through a long vocabulary, keeping first and last', () => {
   const values = Array.from({ length: 100 }, (_, i) => `v${i}`);
   const picked = pickSamples(values, 6);
   assert.equal(picked.length, 6);
   assert.equal(picked[0], 'v0');
   assert.equal(picked.at(-1), 'v99');
+  assert.ok(
+    picked.every((v) => v !== undefined),
+    'no holes in the sample',
+  );
   // Strictly increasing: a spread sample, not six neighbours.
   const indices = picked.map((v) => Number(v.slice(1)));
   for (let i = 1; i < indices.length; i += 1) assert.ok(indices[i] > indices[i - 1]);
@@ -72,20 +82,39 @@ test('stageIdsFor: stage TABLES scope a vocabulary, a plain string list does not
 
 test('authoredValues: an unstaged vocabulary keeps bare values', () => {
   const doc = { stages: ['Defense Evasion'] };
-  const values = authoredValues(doc, [{ id: 'T1548', name: 'Abuse Elevation' }], 'id');
+  const { values } = authoredValues(doc, [{ id: 'T1548', name: 'Abuse Elevation' }], 'id');
   assert.deepEqual(values, [{ value: 'T1548', label: 'Abuse Elevation' }]);
 });
 
 test('authoredValues: a staged vocabulary prefixes <stage>::<key>', () => {
   const doc = { stages: [{ id: 'sequence' }] };
-  const values = authoredValues(doc, [{ name: 'preceeds', 'tide.vocab.stages': 'sequence' }], 'name');
+  const { values } = authoredValues(doc, [{ name: 'preceeds', 'tide.vocab.stages': 'sequence' }], 'name');
   assert.deepEqual(values, [{ value: 'sequence::preceeds', label: 'preceeds' }]);
 });
 
 test('authoredValues: a multi-stage key yields one authored value per stage', () => {
   const doc = { stages: [{ id: 'Host' }, { id: 'Cloud' }] };
-  const values = authoredValues(doc, [{ name: 'Account', 'tide.vocab.stages': ['Host', 'Cloud'] }], 'name');
-  assert.deepEqual(values.map((v) => v.value), ['Host::Account', 'Cloud::Account']);
+  const { values } = authoredValues(
+    doc,
+    [{ name: 'Account', 'tide.vocab.stages': ['Host', 'Cloud'] }],
+    'name',
+  );
+  assert.deepEqual(
+    values.map((v) => v.value),
+    ['Host::Account', 'Cloud::Account'],
+  );
+});
+
+test('authoredValues: a staged key with no stage is reported, not swallowed', () => {
+  const doc = { stages: [{ id: 'Host' }] };
+  const { values, unstagedKeys } = authoredValues(doc, [{ name: 'Orphan' }], 'name');
+  // Still emitted, because a spec defect must not fail the build...
+  assert.deepEqual(
+    values.map((v) => v.value),
+    ['Orphan'],
+  );
+  // ...but surfaced, because the unscoped value is unreachable per RFC 0005.
+  assert.deepEqual(unstagedKeys, ['Orphan']);
 });
 
 test('authoredValues: a key removed in place leaves the contract', () => {
@@ -93,8 +122,30 @@ test('authoredValues: a key removed in place leaves the contract', () => {
     { name: 'live', version: '1.0' },
     { name: 'retired', version: '1.0', removed: '2.0' },
   ];
-  const values = authoredValues({}, entries, 'name');
-  assert.deepEqual(values.map((v) => v.value), ['live']);
+  const { values } = authoredValues({}, entries, 'name');
+  assert.deepEqual(
+    values.map((v) => v.value),
+    ['live'],
+  );
+});
+
+test('readVocabularyFile: warns when a staged vocabulary has an unscoped key', () => {
+  const root = specTree({
+    'staged.vocab.toml': [
+      'name = "Staged"',
+      'field = "staged"',
+      'key = "name"',
+      '[[stages]]',
+      'id = "Host"',
+      '[[keys]]',
+      'version = "1.0"',
+      'name = "Orphan"',
+      '',
+    ].join('\n'),
+  });
+  const { warnings } = readVocabularyFile(join(root, VOCAB_DIR, 'staged.vocab.toml'));
+  assert.equal(warnings.length, 1);
+  assert.match(warnings[0], /carry no tide\.vocab\.stages/);
 });
 
 test('readVocabularyFile: warns when the declared field disagrees with the filename', () => {
