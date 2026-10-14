@@ -365,8 +365,8 @@ objective:
       severity: High
       methodology: Behavioural
       entities:
-        - Hostname
-        - Process
+        - Host::Hostname
+        - Host::Process
       data:
         availability: Complete
         requirements: EDR process and handle telemetry
