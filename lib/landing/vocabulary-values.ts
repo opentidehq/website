@@ -1,169 +1,37 @@
 /**
- * A few values from each vocabulary, for the taxonomy ribbon: the first six, or six spread
- * evenly through a long one. Taken from the vocabularies opentide 0.13.0 ships
- * (opentide/data/vocabulary/*.vocab.toml), in the form a detection author writes them; the
- * actor vocabularies, keyed by identifier, show their names.
+ * Sample values for the taxonomy ribbon, in the form a detection author writes them.
+ *
+ * Every value here is **derived** from `OpenTideHQ/specifications` via
+ * `lib/generated/vocabularies.ts`; none is transcribed. That matters beyond removing a
+ * maintenance chore, because the hand-written list this replaced had silently drifted from the
+ * specification: it showed `Account` and `Accept` for `signal.entities` and `malapi`, and a bare
+ * `[Mobile] APT-C-23` for `actors`, where the specification's own rule for a staged vocabulary
+ * (RFC 0005, and `specs/objects/threat-1.0.md`, which calls the unscoped form invalid) makes the
+ * authored values `Host::Account`, `Internet::Accept` and `att&ck::G1028`.
+ *
+ * The generator picks a representative handful per vocabulary — the first few, or spread evenly
+ * through a long one — so `surface` shows real hierarchy rather than six alphabetical neighbours.
  */
-export const VOCABULARY_VALUES: Record<string, readonly string[]> = {
-  'actors': ['[Mobile] APT-C-23', 'TA530', 'GOLD RIVERVIEW', 'Denim Tsunami', 'DieNet', 'BlackLock'],
-  'alert_severity': ['Informational', 'Low', 'Medium', 'High', 'Critical'],
-  'att&ck': ['T1548', 'T1025', 'T1202', 'T1053', 'T1471', 'T0887'],
-  'att&ck.groups': ['APT-C-23', 'BlackTech', 'Ferocious Kitten', 'Mofang', 'Sowbug', 'menuPass'],
-  'chaining_relations': [
-    'sequence::preceeds',
-    'sequence::succeeds',
-    'atomicity::implemented',
-    'support::enabled',
-    'support::enabling',
-    'support::synergize',
-  ],
-  'collection': [
-    'Azure Active Directory Audit Logs',
-    'Sysmon Logs',
-    'Amazon CloudWatch',
-    'Sysdig Benchmark Events',
-    'Hashicorp secret management (SAM) audit logs',
-    'AWS SecurityHub Findings',
-  ],
-  'criticality': ['Baseline - Negligible', 'Baseline - Minor', 'Low', 'High', 'Severe', 'Emergency'],
-  'datasources': [
-    'Active Directory',
-    'Domain Name',
-    'Image Creation',
-    'Network Share Access',
-    'Service Modification',
-    'Windows Registry Key Modification',
-  ],
-  'detection.composition': ['Independent', 'Combined', 'Threshold', 'Entity', 'Sequence', 'Risk'],
-  'detection.methodology': [
-    'Artifacts',
-    'Event Search',
-    'Behavioural',
-    'Anomaly',
-    'Heuristic',
-    'Frequency Analysis',
-  ],
-  'detection.types': ['Threat', 'Compliance', 'Utility', 'Supportive'],
-  'efforts': ['Regular', 'Supplemented', 'Extended', 'Not Recoverable'],
-  'feasibility': ['Available', 'Minor Work', 'Possible', 'Complex', 'Needs Investment', 'Impossible'],
-  'impact': [
-    'Nuisance',
-    'Reputational Damages',
-    'Lose Capabilities',
-    'Business disruption',
-    'Competitive disadvantage',
-    'Physical Damage',
-  ],
-  'killchain': [
-    'Reconnaissance',
-    'Social Engineering',
-    'Command & Control',
-    'Privilege Escalation',
-    'Collection',
-    'Objectives',
-  ],
-  'level': ['Faun', 'Cerberus', 'Medusa', 'Hydra', 'Titan', 'Leviathan'],
-  'leverage': [
-    'Spoofing',
-    'Information Disclosure',
-    'New Accounts',
-    'Fraudulent transaction',
-    'Modify data',
-    'Safety Bypass',
-  ],
-  'malapi': [
-    'Accept',
-    'FindNextUrlCacheEntryA',
-    'InternetOpenUrlA',
-    'NtWaitForMultipleObjects',
-    'SendMessageTimeoutA',
-    'timeSetEvent',
-  ],
-  'maturity': ['None or Unknown', 'Host & Network Artifacts', 'Tools', 'Techniques', 'Tactics', 'Goals'],
-  'mitigations': [
-    'Account Use Policies',
-    'Multi-factor Authentication',
-    'Vulnerability Scanning',
-    'Industrial : Boot Integrity',
-    'Industrial : Operating System Configuration',
-    'Industrial : Watchdog Timers',
-  ],
-  'objectives': [
-    'Disruption',
-    'Confidential Information Theft',
-    'Financial Gain',
-    'Incapacitation',
-    'Ideology',
-    'Dominance',
-  ],
-  'pap': ['white', 'green', 'amber', 'red'],
-  'resources': ['Unknown', 'Solo', 'Group', 'Tiger Team', 'Structured Organization', 'Government-sponsored'],
-  'rsit': [
-    'Spam',
-    'Sniffing',
-    'Application Compromise',
-    'Unauthorised Access to Information',
-    'Phishing',
-    'Test',
-  ],
-  'scheduling': ['Real-time', '30m', '4h', '9h', '48h', '720h'],
-  'sectors': [
-    'Opportunitistic',
-    'Construction',
-    'Emergency Services',
-    'Infrastructure',
-    'Non-Profit Organization',
-    'Professional Services',
-  ],
-  'severity': [
-    'Localised incident',
-    'Moderate incident',
-    'Substantial incident',
-    'Significant incident',
-    'Highly significant incident',
-    'National cyber emergency',
-  ],
-  'signal.entities': ['Account', 'Command Line', 'Resource', 'Port', 'DNS Query', 'Permissions'],
-  'sophistication': ['None', 'Minimal', 'Intermediate', 'Expert', 'Innovator', 'Strategic'],
-  'stakeholders': [
-    'CIO',
-    'Local information security officer',
-    'External incident response teams',
-    'System owner',
-    'Public affairs',
-    'Law Enforcement',
-  ],
-  'surface': [
-    'OS::Windows',
-    'Application::Development::Artefact Registries',
-    'Cloud::Azure::Management',
-    'Security::SIEM::Microsoft Sentinel',
-    'Protocol::Routing',
-    'Protocol::Routing::IS-IS',
-  ],
-  'tier': [
-    'Ideological Activists',
-    'Commercial Competitor',
-    'Organized Cyber Criminals',
-    'Nation State',
-    'Sensationalists',
-    'Cyber Terrorists',
-  ],
-  'tlp': ['clear', 'green', 'amber', 'amber+strict', 'red'],
-  'viability': [
-    'Environment dependent',
-    'Almost no chance',
-    'Unlikely',
-    'Roughly even chance',
-    'Very Likely',
-    'Almost certain',
-  ],
-  'violation': [
-    'Illegal content streaming or usage of disallowed web service',
-    'Vulnerable system or service',
-    'Unauthorized process launched',
-    'Resource abuse',
-    'Unauthorized use of high-privileged account',
-    'Uncompliant remote access to internal resources',
-  ],
-};
+import { GENERATED_VOCABULARIES } from '../generated/vocabularies.ts';
+
+/**
+ * Vocabularies whose authored value is a stable identifier that means nothing to a reader, and
+ * whose human-readable `name` the ribbon shows instead.
+ *
+ * `actors` is the clearest case: its authored values are correctly `att&ck::G1028` and
+ * `misp::4b79d1f6-8333-44b6-ac32-d1ea7e47e77f`, so showing them raw fills the ribbon with UUIDs.
+ * The generated artifact keeps the true authored value either way — this is display only.
+ *
+ * Purely presentational: an entry naming a vocabulary the specification no longer ships is
+ * simply never consulted.
+ */
+const PREFER_LABEL: ReadonlySet<string> = new Set(['actors', 'att&ck.groups']);
+
+export const VOCABULARY_VALUES: Record<string, readonly string[]> = Object.fromEntries(
+  GENERATED_VOCABULARIES.map((vocabulary) => [
+    vocabulary.field,
+    vocabulary.samples.map((sample) =>
+      PREFER_LABEL.has(vocabulary.field) ? sample.label : sample.value,
+    ),
+  ]),
+);

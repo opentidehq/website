@@ -1,3 +1,5 @@
+import { VOCABULARIES } from '@/lib/landing/vocabularies';
+
 export const appName = 'opentide';
 export const appDescription =
   'Spec-driven development for detection engineering: an ontology and a taxonomy that keep every detection threat-aligned, maintainable and fast to ship.';
@@ -50,7 +52,7 @@ export const ecosystemLinks: EcosystemItem[] = [
   },
   {
     name: 'specifications',
-    description: 'The contract: normative object specs, 36 versioned vocabularies and RFCs.',
+    description: `The contract: normative object specs, ${VOCABULARIES.length} versioned vocabularies and RFCs.`,
     href: 'https://github.com/OpenTideHQ/specifications',
     status: 'live',
     tag: 'Contract',

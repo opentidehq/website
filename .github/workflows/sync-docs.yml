@@ -126,7 +126,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add vendor/opentide vendor/specifications content/docs
+          git add vendor/opentide vendor/specifications content/docs lib/generated/vocabularies.ts
           if git diff --cached --quiet; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
             echo "Documentation already up to date."
