@@ -19,8 +19,12 @@ test('taxonomy ribbon: lists exactly the vocabularies in the synced catalog', ()
 
 test('taxonomy ribbon: every vocabulary has values to pop, and the demo uses real ones', async () => {
   const { VOCABULARY_VALUES } = await import('./vocabulary-values.ts');
-  // Responder teams are each organisation's own: the spec ships that vocabulary empty.
-  const empty = new Set(['responders']);
+  // responders was retired (specifications#38): it shipped with keys = [] while the
+  // rule schema pinned a field to it, so no instance could validate a value. It is
+  // now a deployment.toml configuration enum. Every vocabulary the spec still ships
+  // carries values, so nothing is exempt from the >= 3 floor — keep this set empty
+  // rather than allow-listing the next empty vocabulary instead of fixing it.
+  const empty = new Set<string>();
   for (const name of VOCABULARIES) {
     const count = VOCABULARY_VALUES[name]?.length ?? 0;
     assert.ok(empty.has(name) ? count === 0 : count >= 3, `${name}: ${count} values`);
