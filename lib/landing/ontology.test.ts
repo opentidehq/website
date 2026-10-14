@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { DEMO_FILES, VISIBILITY_PATH, VISIBILITY_TOML } from './demo-registry.ts';
+import { DEMO_FILES, OBJECT_BLURBS, VISIBILITY_PATH, VISIBILITY_TOML } from './demo-registry.ts';
 import { CANVAS, EDGES, NODES, TOUR } from './ontology.ts';
 
 const sources: Record<string, string> = { ...DEMO_FILES, [VISIBILITY_PATH]: VISIBILITY_TOML };
@@ -55,5 +55,44 @@ test('ontology map: every node sits on the canvas', () => {
   for (const [id, node] of Object.entries(NODES)) {
     const [x, y] = node.at;
     assert.ok(x > 0 && x < CANVAS.w && y > 0 && y < CANVAS.h, `${id} at ${x},${y}`);
+  }
+});
+
+/**
+ * A node's schema tag (`threat::1.0`) is the one specification fact this module states in its
+ * own words rather than copying from the demo file. `ontology.ts` is deliberately import-free so
+ * the map does not pull the demo registry into the landing's first load, so the check lives here
+ * instead of being a derivation.
+ *
+ * This is safe to assert, unlike the vocabulary tripwire this repo removed in #43: demo content
+ * is hand-written in this repository and is never touched by the hourly submodule sync, so a
+ * failure here is a local edit telling its author to update a label two lines away — it can
+ * never freeze the automated deploy the way an upstream vocabulary change once did.
+ */
+test('ontology map: every schema tag matches the schema its demo file declares', () => {
+  const schemaTags = Object.entries(NODES).filter(([, node]) => node.tag.includes('::'));
+  assert.ok(schemaTags.length > 0, 'no schema-tagged nodes found');
+  for (const [id, node] of schemaTags) {
+    const source = sources[node.file];
+    assert.ok(source, `no demo file at ${node.file}`);
+    const declared = source.match(/^\s*schema:\s*(\S+)/m)?.[1];
+    assert.equal(declared, node.tag, `${id}: tag says ${node.tag}, ${node.file} declares ${declared}`);
+  }
+});
+
+/** The demo cards label each object with its schema; it must agree with the object itself. */
+test('object blurbs: every schema label matches the demo object it describes', () => {
+  const bySchema = new Map<string, string>();
+  for (const [path, source] of Object.entries(sources)) {
+    const declared = source.match(/^\s*schema:\s*(\S+)/m)?.[1];
+    if (declared) bySchema.set(declared, path);
+  }
+  const labelled = Object.entries(OBJECT_BLURBS).filter(([, blurb]) => blurb.schema?.includes('::'));
+  assert.ok(labelled.length > 0, 'no schema-labelled object blurbs found');
+  for (const [id, blurb] of labelled) {
+    assert.ok(
+      bySchema.has(blurb.schema as string),
+      `${id}: labelled ${blurb.schema}, which no demo object declares (demos declare ${[...bySchema.keys()].join(', ')})`,
+    );
   }
 });
