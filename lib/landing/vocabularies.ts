@@ -28,7 +28,6 @@ export const VOCABULARIES = [
   'objectives',
   'stakeholders',
   'sectors',
-  'responders',
   'resources',
   'efforts',
   'feasibility',

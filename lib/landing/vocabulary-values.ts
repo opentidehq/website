@@ -98,7 +98,6 @@ export const VOCABULARY_VALUES: Record<string, readonly string[]> = {
   ],
   'pap': ['white', 'green', 'amber', 'red'],
   'resources': ['Unknown', 'Solo', 'Group', 'Tiger Team', 'Structured Organization', 'Government-sponsored'],
-  'responders': [],
   'rsit': [
     'Spam',
     'Sniffing',
