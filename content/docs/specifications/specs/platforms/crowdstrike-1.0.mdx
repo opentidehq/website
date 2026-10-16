@@ -1,12 +1,16 @@
 ---
 title: "CrowdStrike Falcon (`platform::crowdstrike::1.0`)"
-description: "`configurations.crowdstrike` is a CrowdStrike Falcon correlation rule. The detection text is the correlation filter. There is no query validator: `opentide validate query --platform crowdstrike` reports unsupported. CrowdStrike assigns the rule id; opentide stores it in `rule_id_bundle`."
+description: "`configurations.crowdstrike` is a CrowdStrike Falcon correlation rule. The detection text is the correlation filter. There is no query validator: `opentide validate query --platform crowdstrike` reports unsupported. CrowdStrike assigns the remote rule id; opentide stores it per tenant in [deployment state](../deploymen"
 spec: platform-crowdstrike
-version: "1.0"
+version: "1.1"
 schema_id: platform::crowdstrike::1.0
 status: normative
 supersedes: null
 ---
+
+## Summary
+
+`configurations.crowdstrike` is a CrowdStrike Falcon correlation rule. The detection text is the correlation filter. There is no query validator: `opentide validate query --platform crowdstrike` reports unsupported. CrowdStrike assigns the remote rule id; opentide stores it per tenant in [deployment state](/docs/specifications/specs/deployment-state/).
 
 Shared fields are defined in [platforms](/docs/specifications/specs/platforms/#shared-platform-block). `contributors` on this block are joined into the update comment. When the list is empty, deploy uses `metadata.author`.
 
@@ -18,6 +22,7 @@ Shared fields are defined in [platforms](/docs/specifications/specs/platforms/#s
 - Deploy MUST reject `outcome` unless, after lowercasing, it is `detection` or `incident`.
 - Deploy MUST reject `trigger` unless, after lowercasing, it is `verbose` or `summary`.
 - Deploy MUST reject `severity` unless it is `Informational`, `Low`, `Medium`, `High`, or `Critical`.
+- The block MUST NOT contain `rule_id_bundle`, `rule_id`, or `rule_id::<tenant>`. Each fails `external_id_in_rule` ([External rule ids](/docs/specifications/specs/platforms/#external-rule-ids)).
 - `schedule.start` and `schedule.end` MAY be omitted. When set, they SHOULD be UTC timestamps `YYYY-MM-DDTHH:MM:SSZ`. An unquoted YAML timestamp MUST be rewritten to that form before it is sent.
 
 ## Definition
@@ -29,7 +34,6 @@ Shared fields are defined in [platforms](/docs/specifications/specs/platforms/#s
 | `details` | [CrowdstrikeDetails](#details-crowdstrikedetails) | yes | — | Correlation outcome, trigger mode, and alert metadata. |
 | `schedule` | [CrowdstrikeSchedule](#schedule-crowdstrikeschedule) | yes | — | How often the correlation search runs and how far it looks back. |
 | `query` | string | yes | — | Correlation filter. Multiline. Sent as the rule `filter`. |
-| `rule_id_bundle` | map[string, string] | optional | null | Falcon rule id per tenant name. See [External rule ids](/docs/specifications/specs/platforms/#external-rule-ids). |
 
 ### `details` (CrowdstrikeDetails)
 
@@ -66,13 +70,20 @@ Severity is sent as an integer:
 
 The customer id is the tenant `customer_id` with the segment after the first hyphen removed, lowercased.
 
-`DELETION` deletes the rule when `rule_id_bundle` has an entry for the tenant. A create or update writes the Falcon status from the block strategy. The current deployer sends `active` when the strategy is `DISABLEMENT` and `inactive` for every other strategy, which is the reverse of [deployment.md](/docs/specifications/specs/deployment/). Static validation does not apply that mapping. Aligning the deployer with the shared strategy is an implementation fix; it does not change this block's fields.
+| Block status strategy | CrowdStrike result |
+|-----------------------|--------------------|
+| `DISABLEMENT` | Update the bound remote rule with Falcon status `inactive`; without a binding, report `external_id_missing` and make no HTTP call. |
+| `DELETION` | Delete the bound remote rule and remove the binding after successful deletion; without a binding, report `external_id_missing`. |
+| any other | Falcon status `active`. Update when a binding exists; otherwise create and durably record the returned id. |
+
+The binding is the tenant's entry under `crowdstrike` in `.opentide/states/deployment/<uuid>.json`, the create-response id verbatim. A create is refused when the shard directory is gitignored or the run cannot persist state. The decision order and codes are in [deployment-state.md](/docs/specifications/specs/deployment-state/#deploy-decisions).
 
 The rule comment records the contributors and that opentide performed the update.
 
 ## Relationships
 
 - [platforms](/docs/specifications/specs/platforms/) — shared fields, no query validation, external ids
+- [deployment-state.md](/docs/specifications/specs/deployment-state/) — where the Falcon rule id is stored
 - [rule-1.0.md](/docs/specifications/specs/objects/rule-1.0/) — parent object
 - [validation.md](/docs/specifications/specs/validation/) — `supported: false` for query validation
 
@@ -114,3 +125,4 @@ Fixture: [fixtures/platforms/crowdstrike.yaml](https://github.com/OpenTideHQ/spe
 | Version | Date | Notes |
 |---------|------|-------|
 | 1.0 | 2026-09-30 | Initial field contract from the CrowdStrike configuration model and deployer. |
+| 1.1 | 2026-10-16 | `rule_id_bundle` and the `rule_id::<tenant>` alias are removed and fail `external_id_in_rule`. Deploy reads and writes the Falcon rule id in [deployment state](/docs/specifications/specs/deployment-state/). `DISABLEMENT` updates the bound rule as `inactive` and every other deployed strategy sends `active`, matching [deployment.md](/docs/specifications/specs/deployment/); the note recording the reversed mapping is removed. `DISABLEMENT` and `DELETION` without a binding report `external_id_missing` ([RFC 0010](/docs/specifications/rfcs/0010-deployment-external-ids/)). Schema id unchanged. |
