@@ -87,35 +87,85 @@ export function rfcDescription(paragraph) {
 }
 
 /**
- * MDX treats `{`, `<Tag`, and HTML comments in prose as JavaScript / JSX.
- * RFC sources are markdown, so drop comments and escape the rest outside
- * fenced and inline code.
+ * MDX treats `{...}`, `<Tag>`, HTML comments, and column-1 `import` / `export`
+ * statements as JavaScript. RFC sources are markdown, so neutralize those
+ * outside CommonMark code spans and fences.
+ *
+ * Fences are recognized only when the opening marker is at the start of a
+ * line (0–3 spaces). A backtick run later in a paragraph is not a fence, and
+ * treating it as one would leave the following expression live.
  */
 export function escapeMdxProse(markdown) {
-  const fence = /```[^\n]*\n[\s\S]*?\n```/g;
-  let out = '';
-  let last = 0;
-  for (const match of markdown.matchAll(fence)) {
-    const index = match.index ?? 0;
-    out += escapeProseSegment(markdown.slice(last, index));
-    out += match[0];
-    last = index + match[0].length;
+  const lines = markdown.replace(/^\uFEFF/, '').replaceAll('\r\n', '\n').replaceAll('\r', '\n').split('\n');
+  const parts = [];
+  let fence = null;
+  let prose = [];
+
+  const flushProse = () => {
+    if (prose.length === 0) return;
+    parts.push(escapeProseBlock(prose.join('\n')));
+    prose = [];
+  };
+
+  for (const line of lines) {
+    if (fence) {
+      parts.push(line);
+      if (closingFence(line, fence)) fence = null;
+      continue;
+    }
+    const opened = openingFence(line);
+    if (opened) {
+      flushProse();
+      fence = opened;
+      parts.push(line);
+      continue;
+    }
+    prose.push(line);
   }
-  out += escapeProseSegment(markdown.slice(last));
-  return out;
+  flushProse();
+  return parts.join('\n');
 }
 
-function escapeProseSegment(segment) {
-  return segment
-    .split(/(`[^`\n]+`)/g)
-    .map((part, index) => {
-      if (index % 2 === 1) return part;
-      return part
-        .replace(/<!--[\s\S]*?-->/g, '')
-        .replace(/[{}]/g, (ch) => `\\${ch}`)
-        .replace(/<(?!https?:\/\/)(?=[A-Za-z/!?])/g, '&lt;');
-    })
-    .join('');
+function openingFence(line) {
+  const match = /^( {0,3})(`{3,}|~{3,})(.*)$/.exec(line);
+  if (!match) return null;
+  const marker = match[2];
+  const info = match[3];
+  // A backtick fence's info string cannot contain a backtick. That line is
+  // prose, and the characters after it must still be escaped.
+  if (marker.startsWith('`') && info.includes('`')) return null;
+  return { char: marker[0], length: marker.length };
+}
+
+function closingFence(line, open) {
+  const match = /^( {0,3})(`{3,}|~{3,})[ \t]*$/.exec(line);
+  if (!match) return false;
+  const marker = match[2];
+  return marker[0] === open.char && marker.length >= open.length;
+}
+
+function escapeProseBlock(block) {
+  const masks = [];
+  const masked = block.replace(/`[^`\n]+`/g, (span) => {
+    const token = `\u0000${masks.length}\u0000`;
+    masks.push(span);
+    return token;
+  });
+  const escaped = neutralizeEsm(
+    masked
+      .replace(/<!--[\s\S]*?-->/g, '')
+      .replace(/[{}]/g, (ch) => `\\${ch}`)
+      .replace(/<(?!https?:\/\/)(?=[A-Za-z/!?])/g, '&lt;'),
+  );
+  return escaped.replace(/\u0000(\d+)\u0000/g, (_, index) => masks[Number(index)] ?? '');
+}
+
+/** micromark only accepts `import ` / `export ` at column 1. */
+function neutralizeEsm(text) {
+  return text
+    .split('\n')
+    .map((line) => (/^(import|export) /.test(line) ? `\u200b${line}` : line))
+    .join('\n');
 }
 
 export function parseRichText(value) {
