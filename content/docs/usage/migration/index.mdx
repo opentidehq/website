@@ -23,7 +23,7 @@ python Orchestration/validate.py
 ### After (pip package)
 
 ```toml
-dependencies = ["opentide==0.14.2"]
+dependencies = ["opentide==0.15.0"]
 ```
 
 ```python
@@ -46,7 +46,7 @@ Use `--platform`, not legacy `--system`.
 ### 1. Install
 
 ```bash
-pip install 'opentide==0.14.2'
+pip install 'opentide==0.15.0'
 ```
 
 Enable platforms in the repo (not at pip install time):
@@ -55,7 +55,7 @@ Enable platforms in the repo (not at pip install time):
 opentide setup platforms --sentinel --splunk --yes
 ```
 
-Optional MCP server setup: `opentide setup mcp --cursor --yes` (after `pip install 'opentide==0.14.2'`).
+Optional MCP server setup: `opentide setup mcp --cursor --yes` (after `pip install 'opentide==0.15.0'`).
 
 ### 2. Remove submodule
 
@@ -94,14 +94,14 @@ v0.x: legacy imports warn via `DeprecationWarning`. **v1.0 removes shims.**
 | (repository onboarding) | `opentide setup` |
 | (CI pipeline files) | `opentide setup ci github` |
 
-Query validation: **five platforms only** (no CrowdStrike/HarfangLab).
+Query validation: **six platforms only** (no CrowdStrike/HarfangLab).
 
 ### 6. Update CI
 
 Remove `submodules: recursive`. Add:
 
 ```yaml
-- run: pip install 'opentide==0.14.2'
+- run: pip install 'opentide==0.15.0'
 - run: opentide validate --strict
   env:
     OPENTIDE_REPO_ROOT: ${{ github.workspace }}
@@ -152,7 +152,7 @@ Every workspace that has deployed to one of those three platforms:
 3. Commit the edited rules and every new file under `.opentide/states/deployment/` in one commit, before the next deploy.
 4. If CI deploys, make it commit `.opentide/states/deployment/` after a deploy that creates rules, together with any promoted rule files.
 
-Keys on every other platform (Sentinel, Splunk, HarfangLab, Carbon Black Cloud) were never read; the migration removes them without storing them and prints each one as `external_id_unused` with its platform, tenant, value and file. Those warnings do not fail the command. Workspaces that only deploy to Sentinel or Splunk have no shard to write.
+Keys on every other platform (Sentinel, Splunk, HarfangLab, Carbon Black Cloud, Elastic) were never read; the migration removes them without storing them and prints each one as `external_id_unused` with its platform, tenant, value and file. Those warnings do not fail the command. Workspaces that only deploy to Sentinel or Splunk have no shard to write.
 
 `ExternalIdHelper` is removed from `opentide.deployment`. Use `opentide.states.deployment` (`DeploymentState`, `record_external_id`, `forget_external_id`) instead.
 
@@ -180,7 +180,7 @@ Replacing a CoreTide **git submodule**, Orchestration scripts, and Python import
 
 ## Verification checklist
 
-- [ ] `pip install 'opentide==0.14.2'` succeeds
+- [ ] `pip install 'opentide==0.15.0'` succeeds
 - [ ] `OPENTIDE_REPO_ROOT` set
 - [ ] `opentide validate --strict` passes
 - [ ] `opentide deploy migrate-state` exits `0`, and `.opentide/states/deployment/` is committed and not gitignored
