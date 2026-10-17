@@ -87,22 +87,66 @@ export function rfcDescription(paragraph) {
 }
 
 /**
- * MDX treats `{`, `<Tag`, and HTML comments in prose as JavaScript / JSX.
- * RFC sources are markdown, so drop comments and escape the rest outside
- * fenced and inline code.
+ * MDX treats `{`, `<Tag`, column-1 `import`/`export`, and HTML comments in
+ * prose as JavaScript / JSX. RFC sources are markdown, so drop comments and
+ * escape the rest outside CommonMark fences and inline code.
+ *
+ * Only a line that starts with 0–3 spaces and a run of backticks or tildes
+ * opens a fence. A backtick run in the middle of a paragraph does not, and
+ * the following lines stay prose. `import`/`export` are ESM only when the
+ * keyword is the first character on the line and a space follows; prefix
+ * those lines so micromark keeps them as prose.
  */
+const OPENING_FENCE = /^( {0,3})(`{3,}|~{3,})(.*)$/;
+const CLOSING_FENCE = /^( {0,3})(`+|~+)[ \t]*$/;
+
+function lineWithoutReturn(line) {
+  return line.endsWith('\r') ? line.slice(0, -1) : line;
+}
+
+function openingFence(line) {
+  const match = OPENING_FENCE.exec(lineWithoutReturn(line));
+  if (!match) return null;
+  const marker = match[2];
+  const info = match[3];
+  if (marker.startsWith('`') && info.includes('`')) return null;
+  return { char: marker[0], length: marker.length };
+}
+
+function closingFence(line, open) {
+  const match = CLOSING_FENCE.exec(lineWithoutReturn(line));
+  if (!match) return false;
+  const marker = match[2];
+  return marker[0] === open.char && marker.length >= open.length;
+}
+
 export function escapeMdxProse(markdown) {
-  const fence = /```[^\n]*\n[\s\S]*?\n```/g;
-  let out = '';
-  let last = 0;
-  for (const match of markdown.matchAll(fence)) {
-    const index = match.index ?? 0;
-    out += escapeProseSegment(markdown.slice(last, index));
-    out += match[0];
-    last = index + match[0].length;
+  const lines = markdown.split('\n');
+  const chunks = [];
+  let prose = [];
+
+  const flushProse = () => {
+    if (prose.length === 0) return;
+    chunks.push(escapeProseSegment(prose.join('\n')));
+    prose = [];
+  };
+
+  for (let index = 0; index < lines.length; index += 1) {
+    const open = openingFence(lines[index]);
+    if (!open) {
+      prose.push(lines[index]);
+      continue;
+    }
+    flushProse();
+    const block = [lines[index]];
+    for (index += 1; index < lines.length; index += 1) {
+      block.push(lines[index]);
+      if (closingFence(lines[index], open)) break;
+    }
+    chunks.push(block.join('\n'));
   }
-  out += escapeProseSegment(markdown.slice(last));
-  return out;
+  flushProse();
+  return chunks.join('\n');
 }
 
 function escapeProseSegment(segment) {
@@ -110,12 +154,17 @@ function escapeProseSegment(segment) {
     .split(/(`[^`\n]+`)/g)
     .map((part, index) => {
       if (index % 2 === 1) return part;
-      return part
+      const escaped = part
         .replace(/<!--[\s\S]*?-->/g, '')
         .replace(/[{}]/g, (ch) => `\\${ch}`)
         .replace(/<(?!https?:\/\/)(?=[A-Za-z/!?])/g, '&lt;');
+      return neutralizeModuleStatements(escaped);
     })
     .join('');
+}
+
+function neutralizeModuleStatements(part) {
+  return part.replace(/^(import|export) /gm, ' $1 ');
 }
 
 export function parseRichText(value) {
