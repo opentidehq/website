@@ -8,6 +8,7 @@ import {
   buildRfcFolderMeta,
   ensureRfcDiscovery,
   escapeMdxProse,
+  safeProseHref,
   mergeRfcCatalog,
   parseReadmeIndex,
   parseRfcFile,
@@ -183,6 +184,45 @@ test('rfcDescription stops before an unmatched bracket', () => {
     description,
     'Add a first-class sharing subsystem to opentide: pluggable connectors, one workspace file sharing.toml in which every destination is a block under its integration…',
   );
+});
+
+test('safeProseHref keeps web links and drops off-site schemes', () => {
+  assert.equal(safeProseHref('https://example.com/a'), 'https://example.com/a');
+  assert.equal(safeProseHref('mailto:docs@example.com'), 'mailto:docs@example.com');
+  assert.equal(safeProseHref('/docs/usage/'), '/docs/usage/');
+  assert.equal(safeProseHref('#top'), '#top');
+  assert.equal(safeProseHref('./other.md'), './other.md');
+  assert.equal(safeProseHref('//evil.example/phish'), '#');
+  assert.equal(safeProseHref('/\\evil.example'), '#');
+  assert.equal(safeProseHref('javascript:alert(1)'), '#');
+  assert.equal(safeProseHref('data:text/html,hi'), '#');
+});
+
+test('escapeMdxProse neutralizes unsafe link targets in RFC prose', () => {
+  const source = [
+    'See [docs](https://example.com/a) and [phish](//evil.example/x).',
+    'Click [xss](javascript:alert(1)) and [data](<data:text/html,hi>).',
+    'Keep [page](/docs/usage/) and [rel](./other.md).',
+    '',
+    '[evil]: javascript:alert(2)',
+    '',
+    '```md',
+    '[keep](javascript:alert(3))',
+    '```',
+    '',
+    'Inline `[keep](javascript:alert(4))` stays.',
+  ].join('\n');
+  const escaped = escapeMdxProse(source);
+  assert.equal(escaped.includes('](https://example.com/a)'), true);
+  assert.equal(escaped.includes('](//evil.example/x)'), false);
+  assert.equal(escaped.includes('](/docs/usage/)'), true);
+  assert.equal(escaped.includes('](./other.md)'), true);
+  assert.equal(escaped.includes('javascript:alert(1)'), false);
+  assert.equal(escaped.includes('data:text/html,hi'), false);
+  assert.equal(escaped.includes('[evil]: javascript:alert(2)'), false);
+  assert.equal(escaped.includes('[evil]: #'), true);
+  assert.equal(escaped.includes('[keep](javascript:alert(3))'), true);
+  assert.equal(escaped.includes('`[keep](javascript:alert(4))`'), true);
 });
 
 test('escapeMdxProse leaves inline code and fences untouched', () => {

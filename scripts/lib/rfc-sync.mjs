@@ -149,12 +149,48 @@ export function escapeMdxProse(markdown) {
   return chunks.join('\n');
 }
 
+/**
+ * Markdown link targets in RFC prose are published as MDX anchors. Banner
+ * fields go through rewriteHref; the body does not. Keep web, mail, fragment,
+ * and same-site paths. Everything else becomes an in-page fragment.
+ */
+export function safeProseHref(href) {
+  const trimmed = String(href ?? '').trim();
+  if (!trimmed || /[\s\\]/.test(trimmed)) return '#';
+  if (trimmed.startsWith('#')) return trimmed;
+  if (trimmed.startsWith('/') && !trimmed.startsWith('//')) return trimmed;
+  if (/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(trimmed)) {
+    try {
+      const url = new URL(trimmed);
+      if (url.protocol === 'https:' || url.protocol === 'http:' || url.protocol === 'mailto:') {
+        return trimmed;
+      }
+    } catch {
+      return '#';
+    }
+    return '#';
+  }
+  if (trimmed.startsWith('//')) return '#';
+  return trimmed;
+}
+
+function sanitizeProseHrefs(segment) {
+  return segment
+    .replace(/^(\[[^\]]+\]:\s+)(\S+)/gm, (full, prefix, dest) => {
+      const angle = /^<([^>]+)>$/.exec(dest);
+      if (angle) return `${prefix}<${safeProseHref(angle[1])}>`;
+      return `${prefix}${safeProseHref(dest)}`;
+    })
+    .replace(/\]\(\s*<([^>\s]+)>/g, (full, dest) => `](<${safeProseHref(dest)}>`)
+    .replace(/\]\(\s*([^)\s]+)/g, (full, dest) => `](${safeProseHref(dest)}`);
+}
+
 function escapeProseSegment(segment) {
   return segment
     .split(/(`[^`\n]+`)/g)
     .map((part, index) => {
       if (index % 2 === 1) return part;
-      const escaped = part
+      const escaped = sanitizeProseHrefs(part)
         .replace(/<!--[\s\S]*?-->/g, '')
         .replace(/[{}]/g, (ch) => `\\${ch}`)
         .replace(/<(?!https?:\/\/)(?=[A-Za-z/!?])/g, '&lt;');
