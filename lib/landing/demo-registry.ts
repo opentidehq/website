@@ -603,8 +603,8 @@ export type ReviewJob = {
 };
 
 /**
- * Jobs mirror the workflow `opentide setup ci github` writes into a detection repo, with the
- * platform SDK extras the live checks need added to the install step:
+ * Jobs mirror the workflow `opentide setup ci github` writes into a detection repo. The install
+ * step is the generated `pip install opentide==<version>`: every platform SDK ships with it.
  * Validate → Generate → Deploy Staging on the pull request; production deploys on merge.
  * Log lines are what a default (non-debug) run prints: Rich section rules and the `OK …`
  * result line. INFO events only appear with `--debug` or `--json`, so they are left out.
@@ -614,7 +614,7 @@ export const REVIEW_JOBS: ReviewJob[] = [
     id: 'validate',
     name: 'Validate',
     trigger: 'on: pull_request',
-    meta: 'ubuntu-latest · python 3.12 · pinned opentide[sentinel,splunk]',
+    meta: 'ubuntu-latest · python 3.12 · pinned opentide',
     duration: '48s',
     lines: [
       '::group::Validate objects',
