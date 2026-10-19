@@ -12,7 +12,7 @@ import { usePrefersReducedMotion } from '@/lib/hooks/use-prefers-reduced-motion'
  * folder, and the tree entries each one leaves behind.
  */
 const STEPS = [
-  { note: 'opentide, with the MCP server extra', cmd: "pip install 'opentide[mcp]'", ok: null, adds: [] },
+  { note: 'opentide: CLI, MCP server and every platform SDK', cmd: 'pip install opentide', ok: null, adds: [] },
   {
     note: 'a detection repo: Sentinel, GitHub CI',
     cmd: 'opentide setup --yes --platform sentinel --ci github',
