@@ -10,6 +10,7 @@ import { cpSync, existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, rm
 import { dirname, join, relative, resolve } from 'node:path';
 import { posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { assertSafePublishedMdx } from './mdx-safety.mjs';
 import { ensureRfcDiscovery, syncRfcSection, withRfcNav } from './rfc-sync.mjs';
 import { VOCAB_DIR, deriveVocabularies } from './vocab-derive.mjs';
 
@@ -364,7 +365,9 @@ export function postProcessMarkdown(content, publishedRelPath = '') {
   const stripped = stripRedundantSummary(stripLeadingH1(content));
   const linked = rewritePublishedLinks(stripped);
   const withSiteLinks = publishedRelPath ? rewriteSiteLinks(linked, publishedRelPath) : linked;
-  return rewriteReleasePageLinks(rewriteBrandName(withSiteLinks));
+  const processed = rewriteReleasePageLinks(rewriteBrandName(withSiteLinks));
+  assertSafePublishedMdx(processed, publishedRelPath || 'MDX');
+  return processed;
 }
 
 export function h1InBody(body) {
