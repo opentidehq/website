@@ -1,7 +1,7 @@
 /**
  * GENERATED FILE — DO NOT EDIT.
  *
- * Derived from OpenTideHQ/specifications/vocabularies by
+ * Derived from opentidehq/specifications/vocabularies by
  * `scripts/lib/vocab-derive.mjs`, which runs as part of `pnpm sync:content`.
  * Edit the vocabularies in the specification, then re-run the sync.
  */
@@ -31,7 +31,7 @@ export type GeneratedVocabulary = {
 
 /** The specification commit this was derived from. */
 export const VOCABULARY_SOURCE = {
-  repo: "OpenTideHQ/specifications",
+  repo: "opentidehq/specifications",
   directory: "vocabularies",
   sha: "c6fb368de4c9fd87637b1021f8958d3cf9af6836",
 } as const;

@@ -43,7 +43,7 @@ async function main() {
       signal: controller.signal,
       headers: {
         Accept: 'application/json',
-        'User-Agent': 'opentide.org (https://github.com/OpenTideHQ/website)',
+        'User-Agent': 'opentide.org (https://github.com/opentidehq/website)',
       },
       cache: 'no-store',
     });

@@ -3,7 +3,7 @@
  *
  * Membership is **derived**, never written down here: `GENERATED_VOCABULARIES` comes from
  * `lib/generated/vocabularies.ts`, which `pnpm sync:content` regenerates from
- * `OpenTideHQ/specifications`. A vocabulary added or retired upstream therefore reaches this
+ * `opentidehq/specifications`. A vocabulary added or retired upstream therefore reaches this
  * page by itself.
  *
  * `RIBBON_ORDER` below is the one genuinely editorial thing left: the left-to-right order the

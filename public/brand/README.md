@@ -1,6 +1,6 @@
 # opentide brand assets
 
-Synced from [OpenTideHQ/.github](https://github.com/OpenTideHQ/.github) `assets/`.
+Synced from [opentidehq/.github](https://github.com/opentidehq/.github) `assets/`.
 
 Pantone Reflex Blue `#001489` · EU Yellow `#FFCC00` · Inter SemiBold · Material Tsunami icon.
 

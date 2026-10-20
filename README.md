@@ -10,9 +10,9 @@ Built with [Next.js](https://nextjs.org/) and [Fumadocs](https://fumadocs.dev/),
 |---------|--------|------|
 | Landing page | This repo | `/` |
 | Documentation | Synced at build time | `/docs` |
-| Specifications | [specifications](https://github.com/OpenTideHQ/specifications) repo | `/docs/specifications` |
+| Specifications | [specifications](https://github.com/opentidehq/specifications) repo | `/docs/specifications` |
 | RFCs | specifications `rfcs/` | `/docs/specifications/rfcs` |
-| Usage, CLI, MCP, SDK | [opentide](https://github.com/OpenTideHQ/opentide) `docs/` | `/docs/{usage,cli,mcp,sdk}` |
+| Usage, CLI, MCP, SDK | [opentide](https://github.com/opentidehq/opentide) `docs/` | `/docs/{usage,cli,mcp,sdk}` |
 | Blog | This repo `content/blog/` | `/blog/` |
 
 Documentation prose is synced from the opentide and specifications repos via `pnpm sync:content` and **committed** under `content/docs/` as `.mdx` so Fumadocs can compile JSX and private-repo CI can build without cross-repository access. `content/docs/.sync-stamp.json` records the vendor SHAs; `pnpm check:docs` fails if those gitlinks moved without a refresh. A GitHub Actions workflow (`sync-docs.yml`) does this on a schedule and on `repository_dispatch`, then deploys — you do not need to run sync by hand after a package release.
@@ -93,9 +93,9 @@ Open a pull request. Posts appear at `/blog/<filename-without-extension>/`.
 ### Prerequisites
 
 1. **opentide** submodule tracks the `development` branch (Fumadocs-formatted docs under `docs/`).
-2. **specifications** content must exist in the [specifications](https://github.com/OpenTideHQ/specifications) repository — until published, local builds fall back to `../specifications` when the vendor submodule is empty.
+2. **specifications** content must exist in the [specifications](https://github.com/opentidehq/specifications) repository — until published, local builds fall back to `../specifications` when the vendor submodule is empty.
 
-Pushes to `main` deploy to **GitHub Pages** via `.github/workflows/deploy.yml`. Custom domain is `opentide.org` (`public/CNAME`, `siteUrl` in `lib/shared.ts`, and the Pages custom-domain field). Apex DNS is four GitHub A records plus AAAA; `www` CNAMEs to `OpenTideHQ.github.io`. Do not attach `blog.opentide.org` to this Pages site — forward it to `/blog/` at the registrar.
+Pushes to `main` deploy to **GitHub Pages** via `.github/workflows/deploy.yml`. Custom domain is `opentide.org` (`public/CNAME`, `siteUrl` in `lib/shared.ts`, and the Pages custom-domain field). Apex DNS is four GitHub A records plus AAAA; `www` CNAMEs to `opentidehq.github.io`. Do not attach `blog.opentide.org` to this Pages site — forward it to `/blog/` at the registrar.
 
 ### Package releases
 
@@ -111,21 +111,21 @@ Docs, changelog pages, specs, and RFCs **do** need a rebuild. `.github/workflows
 
 A new or updated RFC in the specifications repository shows up on the site on the next hourly run. An opentide release dispatch refreshes both pins immediately. Nothing in this repository has to be edited by hand.
 
-To notify the site immediately after a PyPI publish (optional, from `OpenTideHQ/opentide`):
+To notify the site immediately after a PyPI publish (optional, from `opentidehq/opentide`):
 
 ```bash
-gh api repos/OpenTideHQ/website/dispatches -f event_type=opentide-released
+gh api repos/opentidehq/website/dispatches -f event_type=opentide-released
 ```
 
 That call needs a token with `repo` scope on this repository. If it is not wired, the hourly schedule still picks the change up.
 
 ## Related repositories
 
-- **[opentide](https://github.com/OpenTideHQ/opentide)** — DetectionOps engine (PyPI)
-- **[specifications](https://github.com/OpenTideHQ/specifications)** — Normative specs
-- **[library](https://github.com/OpenTideHQ/library)** — Public detection objects
-- **[explorer](https://github.com/OpenTideHQ/explorer)** — Browse published objects
-- **[skills](https://github.com/OpenTideHQ/skills)** — Agent skills for detection engineering
+- **[opentide](https://github.com/opentidehq/opentide)** — DetectionOps engine (PyPI)
+- **[specifications](https://github.com/opentidehq/specifications)** — Normative specs
+- **[library](https://github.com/opentidehq/library)** — Public detection objects
+- **[explorer](https://github.com/opentidehq/explorer)** — Browse published objects
+- **[skills](https://github.com/opentidehq/skills)** — Agent skills for detection engineering
 
 ## License
 

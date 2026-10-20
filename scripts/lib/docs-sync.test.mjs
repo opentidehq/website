@@ -208,7 +208,7 @@ Request for Comments (RFCs) document significant specification changes before th
 | RFC | Title | Status |
 |-----|-------|--------|
 | [0003](0003-per-key-vocabulary-versioning.md) | Per-key vocabulary versioning | proposed |
-| [0004](https://github.com/OpenTideHQ/specifications/issues/8) | Sysdig Falco deployer | reserved |
+| [0004](https://github.com/opentidehq/specifications/issues/8) | Sysdig Falco deployer | reserved |
 
 ## Numbering
 
@@ -290,7 +290,7 @@ test('stripRedundantSummary drops a duplicated lead paragraph', () => {
 
 test('rewritePublishedLinks sends fixture paths to GitHub', () => {
   const out = rewritePublishedLinks('See [x](../fixtures/example.json).');
-  assert.equal(out.includes('https://github.com/OpenTideHQ/specifications/blob/main/fixtures/example.json'), true);
+  assert.equal(out.includes('https://github.com/opentidehq/specifications/blob/main/fixtures/example.json'), true);
 });
 
 test('rewritePublishedLinks leaves RFC links relative and sends schema paths to GitHub', () => {
@@ -318,7 +318,7 @@ test('rewritePublishedLinks does not send published specs/vocabularies pages to 
   assert.equal(repoRoot.includes('../vocabularies/'), false);
 });
 
-test('rewriteBrandName lowercases the product name but keeps OpenTideHQ', () => {
+test('rewriteBrandName lowercases the product name but keeps the org suffix and registry identifier', () => {
   const camel = 'Open' + 'Tide';
   const out = rewriteBrandName(`Use ${camel} with ${camel}HQ and \`from opentide import ${camel}\`.`);
   assert.equal(out.includes('Use opentide with'), true);
@@ -504,9 +504,9 @@ test('syncContent emits mdx, stamps SHAs, and rewrites Card hrefs', () => {
   const rfcIndex = readFileSync(join(outDir, 'specifications', 'rfcs', 'index.mdx'), 'utf8');
   assert.equal(rfcIndex.includes('<RfcIndex'), true);
   assert.equal(rfcIndex.includes('| RFC |'), false);
-  assert.equal(rfcIndex.includes('https://github.com/OpenTideHQ/specifications/issues/8'), true);
+  assert.equal(rfcIndex.includes('https://github.com/opentidehq/specifications/issues/8'), true);
   assert.equal(
-    rfcIndex.includes('https://github.com/OpenTideHQ/specifications/blob/main/.github/ISSUE_TEMPLATE/spec-change.yml'),
+    rfcIndex.includes('https://github.com/opentidehq/specifications/blob/main/.github/ISSUE_TEMPLATE/spec-change.yml'),
     true,
   );
   assert.equal(rfcIndex.includes('](/docs/specifications/rfcs/0000-template/)'), true);

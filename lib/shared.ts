@@ -13,10 +13,10 @@ export const docsContentRoute = '/llms.mdx/docs';
 export const siteUrl = 'https://opentide.org';
 
 /** The organisation: every repository of the project, not just this site's. */
-export const GITHUB_ORG = 'https://github.com/OpenTideHQ';
+export const GITHUB_ORG = 'https://github.com/opentidehq';
 
 export const gitConfig = {
-  user: 'OpenTideHQ',
+  user: 'opentidehq',
   repo: 'website',
   branch: 'main',
 };
@@ -46,42 +46,42 @@ export const ecosystemLinks: EcosystemItem[] = [
   {
     name: 'opentide',
     description: 'The CLI, Python SDK and MCP server, in one package on PyPI.',
-    href: 'https://github.com/OpenTideHQ/opentide',
+    href: 'https://github.com/opentidehq/opentide',
     status: 'live',
     tag: 'Toolchain',
   },
   {
     name: 'specifications',
     description: `The contract: normative object specs, ${VOCABULARIES.length} versioned vocabularies and RFCs.`,
-    href: 'https://github.com/OpenTideHQ/specifications',
+    href: 'https://github.com/opentidehq/specifications',
     status: 'live',
     tag: 'Contract',
   },
   {
     name: 'library',
     description: 'Shared content: published threats, objectives and rules at TLP:CLEAR.',
-    href: 'https://github.com/OpenTideHQ/library',
+    href: 'https://github.com/opentidehq/library',
     status: 'live',
     tag: 'Content',
   },
   {
     name: 'explorer',
     description: 'The interface: browse threats, objectives, signals, rules and their chains.',
-    href: 'https://github.com/OpenTideHQ/explorer',
+    href: 'https://github.com/opentidehq/explorer',
     status: 'live',
     tag: 'Interface',
   },
   {
     name: 'skills',
     description: 'The agent brain: 27 skills for Claude Code, Cursor, Codex, Copilot and Kiro.',
-    href: 'https://github.com/OpenTideHQ/skills',
+    href: 'https://github.com/opentidehq/skills',
     status: 'live',
     tag: 'Agents',
   },
   {
     name: 'language-server',
     description: 'Rust and tree-sitter language server for KQL, SPL and Tide YAML. In progress.',
-    href: 'https://github.com/OpenTideHQ/language-server',
+    href: 'https://github.com/opentidehq/language-server',
     status: 'soon',
     tag: 'Editor',
   },

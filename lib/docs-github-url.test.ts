@@ -11,28 +11,28 @@ test('toSourceMarkdownPath maps published mdx back to upstream md', () => {
 test('getGithubUrl points opentide docs at the development docs tree', () => {
   assert.equal(
     getGithubUrl(['usage', 'installation'], 'usage/installation.mdx'),
-    'https://github.com/OpenTideHQ/opentide/blob/development/docs/usage/installation.md',
+    'https://github.com/opentidehq/opentide/blob/development/docs/usage/installation.md',
   );
 });
 
 test('getGithubUrl points specification object pages at specs/*.md', () => {
   assert.equal(
     getGithubUrl(['specifications', 'specs', 'objects', 'rule-1.0'], 'specifications/specs/objects/rule-1.0.mdx'),
-    'https://github.com/OpenTideHQ/specifications/blob/main/specs/objects/rule-1.0.md',
+    'https://github.com/opentidehq/specifications/blob/main/specs/objects/rule-1.0.md',
   );
 });
 
 test('getGithubUrl maps the specifications index to README.md', () => {
   assert.equal(
     getGithubUrl(['specifications'], 'specifications/index.mdx'),
-    'https://github.com/OpenTideHQ/specifications/blob/main/README.md',
+    'https://github.com/opentidehq/specifications/blob/main/README.md',
   );
 });
 
 test('getGithubUrl maps the RFC index to rfcs/README.md', () => {
   assert.equal(
     getGithubUrl(['specifications', 'rfcs'], 'specifications/rfcs/index.mdx'),
-    'https://github.com/OpenTideHQ/specifications/blob/main/rfcs/README.md',
+    'https://github.com/opentidehq/specifications/blob/main/rfcs/README.md',
   );
 });
 
@@ -42,13 +42,13 @@ test('getGithubUrl points RFC pages at rfcs/*.md', () => {
       ['specifications', 'rfcs', '0005-sharing-system'],
       'specifications/rfcs/0005-sharing-system.mdx',
     ),
-    'https://github.com/OpenTideHQ/specifications/blob/main/rfcs/0005-sharing-system.md',
+    'https://github.com/opentidehq/specifications/blob/main/rfcs/0005-sharing-system.md',
   );
 });
 
 test('getGithubUrl maps specification root files without doubling the extension', () => {
   assert.equal(
     getGithubUrl(['specifications', 'SPECS'], 'specifications/SPECS.mdx'),
-    'https://github.com/OpenTideHQ/specifications/blob/main/SPECS.md',
+    'https://github.com/opentidehq/specifications/blob/main/SPECS.md',
   );
 });

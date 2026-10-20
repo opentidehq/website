@@ -1,7 +1,7 @@
 /**
  * Derives the taxonomy from the specification itself.
  *
- * `OpenTideHQ/specifications` owns the vocabularies: one `<field>.vocab.toml` per vocabulary
+ * `opentidehq/specifications` owns the vocabularies: one `<field>.vocab.toml` per vocabulary
  * under `vocabularies/` at the repo root. This module parses that directory and writes
  * `lib/generated/vocabularies.json`, which the landing page reads. Nothing about the taxonomy
  * is written down twice.
@@ -79,7 +79,7 @@ export function stagesForEntry(entry) {
  * The authored values for one vocabulary — what a detection author actually writes.
  *
  * A vocabulary that declares `[[stages]]` tables is a *staged* vocabulary, and
- * [RFC 0005](https://github.com/OpenTideHQ/specifications/blob/main/rfcs/0005-scoped-signal-entities.md)
+ * [RFC 0005](https://github.com/opentidehq/specifications/blob/main/rfcs/0005-scoped-signal-entities.md)
  * ("one prefixing rule for every staged vocabulary") makes its authored values `<stage>::<key>`.
  * The prefix is load-bearing: it tells two stages' identically-named keys apart, so a key in
  * several stages yields one authored value per stage — which is why `signal.entities` resolves
@@ -177,7 +177,7 @@ export function buildVocabularyIndex(specificationsRoot, { sha = '' } = {}) {
     }
   }
   return {
-    source: { repo: 'OpenTideHQ/specifications', directory: VOCAB_DIR, sha },
+    source: { repo: 'opentidehq/specifications', directory: VOCAB_DIR, sha },
     count: vocabularies.length,
     warnings,
     vocabularies,
