@@ -54,10 +54,10 @@ python Orchestration/validate.py
 <Tab value="After">
 
 ```python
-from opentide import OpenTide
+from opentide import Opentide
 
-OpenTide.initialise()
-rule = OpenTide.Rules[uuid]
+Opentide.initialise()
+rule = Opentide.Rules[uuid]
 rule.deploy("sentinel")
 ```
 
@@ -75,7 +75,7 @@ opentide deploy --platform sentinel --dry-run
 
 You install a package, not a submodule SHA. `pip install opentide`, then lock it like any other dependency.
 
-CLI, SDK, and MCP are the same package — `opentide validate`, `from opentide import OpenTide`, `opentide-mcp`. Not three implementations, and not a pile of `Orchestration/` scripts.
+CLI, SDK, and MCP are the same package — `opentide validate`, `from opentide import Opentide`, `opentide-mcp`. Not three implementations, and not a pile of `Orchestration/` scripts.
 
 <Callout type="info" title="Updated 12 October 2026">
 Since 0.12.0 the MCP server starts with `opentide mcp start`, and the `opentide-mcp` command is gone. Re-run `opentide setup mcp` to rewrite your editor configuration. Since 0.1.2, `opentide migrate objects` moves a CoreTide `Configurations/` and `Objects/` layout into the new tree. The [releases page](/releases/) has the details.
@@ -132,7 +132,7 @@ We are not adding platforms in this stretch. We will fix deployer bugs, docs, se
 The package works. For four weeks we are not adding platforms. We will fix what you hit: validation that is too loud or too quiet, a deployer that misbehaves on a tenant you actually have, a setup wizard that writes the wrong MCP path, a migration step the guide forgot.
 
 <Callout type="warn">
-If something is wrong, file it on [OpenTideHQ/opentide](https://github.com/OpenTideHQ/opentide/issues). That is the package now. The archived tree will not grow new fixes.
+If something is wrong, file it on [opentidehq/opentide](https://github.com/opentidehq/opentide/issues). That is the package now. The archived tree will not grow new fixes.
 </Callout>
 
 The old implementation ran in production for years before it was open-sourced. 0.1.0 is that same work, installable, and explicit about which platforms can check a query. Then we take four weeks of bug reports.

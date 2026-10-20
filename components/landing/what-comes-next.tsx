@@ -144,7 +144,7 @@ export function Roadmap() {
             </div>
             <ul className="mt-5 list-none space-y-1 p-0">
               {dir.items.map((item) => {
-                const href = item.href ?? (item.issue ? `https://github.com/OpenTideHQ/opentide/issues/${item.issue}` : undefined);
+                const href = item.href ?? (item.issue ? `https://github.com/opentidehq/opentide/issues/${item.issue}` : undefined);
                 const external = !item.href;
                 const body = (
                   <>

@@ -135,7 +135,7 @@ export function ThenNow() {
               </span>{' '}
               opentide validate --strict
             </li>
-            <li className="text-[var(--landing-muted)]">from opentide import OpenTide</li>
+            <li className="text-[var(--landing-muted)]">from opentide import Opentide</li>
           </ul>
         )}
       </div>

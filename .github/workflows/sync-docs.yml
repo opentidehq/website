@@ -5,8 +5,8 @@
 # when docs/changelog/specs change, the site updates and deploys with
 # no human in the loop.
 #
-# Instant trigger from OpenTideHQ/opentide after a PyPI publish (optional):
-#   gh api repos/OpenTideHQ/website/dispatches -f event_type=opentide-released
+# Instant trigger from opentidehq/opentide after a PyPI publish (optional):
+#   gh api repos/opentidehq/website/dispatches -f event_type=opentide-released
 #   (needs a PAT or GitHub App token with repo scope on this repository)
 name: Sync docs and deploy
 
@@ -88,14 +88,14 @@ jobs:
 
           echo "GIT_SSH_COMMAND=ssh -F ${KEY_DIR}/config -o IdentitiesOnly=yes" >> "$GITHUB_ENV"
 
-          git config submodule.vendor/opentide.url git@github.com-opentide:OpenTideHQ/opentide.git
-          git config submodule.vendor/specifications.url git@github.com-specifications:OpenTideHQ/specifications.git
+          git config submodule.vendor/opentide.url git@github.com-opentide:opentidehq/opentide.git
+          git config submodule.vendor/specifications.url git@github.com-specifications:opentidehq/specifications.git
 
       - name: Update submodules to latest
         run: |
           set -euo pipefail
-          git config submodule.vendor/opentide.url git@github.com-opentide:OpenTideHQ/opentide.git
-          git config submodule.vendor/specifications.url git@github.com-specifications:OpenTideHQ/specifications.git
+          git config submodule.vendor/opentide.url git@github.com-opentide:opentidehq/opentide.git
+          git config submodule.vendor/specifications.url git@github.com-specifications:opentidehq/specifications.git
           git submodule update --init --remote --merge vendor/opentide vendor/specifications
 
       - name: Remove submodule SSH keys

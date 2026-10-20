@@ -8,7 +8,7 @@
 import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
-export const SPECS_GITHUB = 'https://github.com/OpenTideHQ/specifications/blob/main';
+export const SPECS_GITHUB = 'https://github.com/opentidehq/specifications/blob/main';
 export const RFC_TEMPLATE_FILENAME = '0000-template.md';
 
 /** Browse order: open proposals first, then accepted work, then closed states. */

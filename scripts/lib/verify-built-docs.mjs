@@ -79,7 +79,7 @@ export function verifyBuiltDocs(outDir) {
   const formatPath = join(outDir, 'docs/specifications/specs/vocabularies/format/index.html');
   if (existsSync(formatPath)) {
     const format = readHtml(outDir, 'docs/specifications/specs/vocabularies/format/index.html');
-    if (format.includes('https://github.com/OpenTideHQ/specifications/blob/main/rfcs/')) {
+    if (format.includes('https://github.com/opentidehq/specifications/blob/main/rfcs/')) {
       throw new Error('/docs/specifications/specs/vocabularies/format still links RFCs to GitHub');
     }
     if (format.includes('/docs/specifications/rfcs/')) {

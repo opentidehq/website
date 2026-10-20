@@ -123,7 +123,7 @@ Proposals live here.
 | RFC | Title | Status |
 |-----|-------|--------|
 | [0003](0003-per-key-vocabulary-versioning.md) | Per-key vocabulary versioning | proposed |
-| [0004](https://github.com/OpenTideHQ/specifications/issues/8) | Sysdig Falco deployer | reserved |
+| [0004](https://github.com/opentidehq/specifications/issues/8) | Sysdig Falco deployer | reserved |
 
 ## Numbering
 
@@ -141,7 +141,7 @@ Use four digits.
   assert.equal(entries[1].number, '0004');
   assert.equal(entries[1].status, 'reserved');
   assert.equal(entries[1].external, true);
-  assert.equal(entries[1].href, 'https://github.com/OpenTideHQ/specifications/issues/8');
+  assert.equal(entries[1].href, 'https://github.com/opentidehq/specifications/issues/8');
   assert.equal(entries[1].slug, null);
 
   const index = renderRfcIndex(readme, entries);

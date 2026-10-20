@@ -20,8 +20,8 @@ const LAYERS: Layer[] = [
       { label: 'ontology', value: 'threat::1.0 · objective::1.0 · rule::1.1' },
       { label: 'taxonomy', value: `${VOCABULARIES.length} versioned vocabularies · fixtures · RFCs` },
     ],
-    repo: 'OpenTideHQ/specifications',
-    href: 'https://github.com/OpenTideHQ/specifications',
+    repo: 'opentidehq/specifications',
+    href: 'https://github.com/opentidehq/specifications',
   },
   {
     kicker: 'the package you pin',
@@ -31,8 +31,8 @@ const LAYERS: Layer[] = [
       { label: 'one package', value: 'CLI, Python SDK, MCP server and every integration' },
       { label: 'one model', value: 'Types and JSON Schema come from the same models, so they cannot drift' },
     ],
-    repo: 'OpenTideHQ/opentide',
-    href: 'https://github.com/OpenTideHQ/opentide',
+    repo: 'opentidehq/opentide',
+    href: 'https://github.com/opentidehq/opentide',
     pinned: true,
   },
   {

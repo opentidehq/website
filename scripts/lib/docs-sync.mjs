@@ -20,8 +20,8 @@ export const STAMP_NAME = '.sync-stamp.json';
 
 export const OPENTIDE_SECTIONS = ['usage', 'cli', 'mcp', 'sdk'];
 
-export const SPECS_BLOB = 'https://github.com/OpenTideHQ/specifications/blob/main';
-const OPENTIDE_BLOB = 'https://github.com/OpenTideHQ/opentide/blob/development/docs';
+export const SPECS_BLOB = 'https://github.com/opentidehq/specifications/blob/main';
+const OPENTIDE_BLOB = 'https://github.com/opentidehq/opentide/blob/development/docs';
 
 /** Repo-root trees that are never published under content/docs.
  *  `rfcs/` is published at /docs/specifications/rfcs/.
@@ -268,14 +268,14 @@ export function rewritePublishedLinks(content) {
   }
   return out
     .replace(
-      /https:\/\/github\.com\/(?:OpenTide|opentide)\/opentide/g,
-      'https://github.com/OpenTideHQ/opentide',
+      /https:\/\/github\.com\/opentide\/opentide/gi,
+      'https://github.com/opentidehq/opentide',
     )
     .replace(/\]\((?:\.\.?\/)*internal\//g, `](${OPENTIDE_BLOB}/internal/`)
-    .replace(/\]\(\.agents\//g, '](https://github.com/OpenTideHQ/opentide/blob/development/.agents/')
+    .replace(/\]\(\.agents\//g, '](https://github.com/opentidehq/opentide/blob/development/.agents/')
     .replace(
       /\]\((?:\.\.\/)*\.github\//g,
-      '](https://github.com/OpenTideHQ/specifications/blob/main/.github/',
+      '](https://github.com/opentidehq/specifications/blob/main/.github/',
     );
 }
 
@@ -560,7 +560,7 @@ Normative specifications define the contract between opentide implementations, d
 - [Objective](./specs/objects/objective-1.0.md) — \`objective::1.0\`
 - [Rule](./specs/objects/rule-1.0.md) — \`rule::1.0\` (exemplar spec)
 
-Implementation lives in the [opentide](https://github.com/OpenTideHQ/opentide) Python package. JSON Schema is generated from Pydantic models — specs are the source of truth.
+Implementation lives in the [opentide](https://github.com/opentidehq/opentide) Python package. JSON Schema is generated from Pydantic models — specs are the source of truth.
 `;
 }
 

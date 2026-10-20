@@ -96,7 +96,7 @@ Highlights are fills, never a bar on the left edge. Content reveals as it scroll
 
 Say opentide, the CLI, the SDK or the MCP server, never "the engine". Integrations are integrations: do not lead with how many there are. The landing does not tell the re-release story; the blog does.
 
-Logo and logotype assets live in `public/brand/` (synced from OpenTideHQ/.github): Material Tsunami circle mark + **opentide** wordmark.
+Logo and logotype assets live in `public/brand/` (synced from opentidehq/.github): Material Tsunami circle mark + **opentide** wordmark.
 
 ## Colors
 

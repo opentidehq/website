@@ -6,7 +6,7 @@ type MarkProps = {
 };
 
 /**
- * Circle icon from OpenTideHQ/.github assets.
+ * Circle icon from opentidehq/.github assets.
  * Light → icon-normal (blue). Dark → icon-dark (yellow).
  */
 export function OpentideMark({ className, size = 28 }: MarkProps) {
@@ -35,7 +35,7 @@ export function OpentideMark({ className, size = 28 }: MarkProps) {
 }
 
 /**
- * Official pill logotype from OpenTideHQ/.github.
+ * Official pill logotype from opentidehq/.github.
  * Light → logo-normal (Reflex Blue pill). Dark → logo-dark (EU Yellow pill).
  */
 export function OpentideWordmark({
@@ -74,7 +74,7 @@ export function OpentideWordmark({
 }
 
 /**
- * Circular ring seal from OpenTideHQ/.github assets.
+ * Circular ring seal from opentidehq/.github assets.
  * Light → badge-normal (blue). Dark → badge-dark (yellow), matching the icon/logo mapping.
  * Ring text is a `<textPath>` over a subsetted Inter face embedded in the SVG.
  */
@@ -115,7 +115,7 @@ export function OpentideBadge({
   );
 }
 
-/** Official EUPL license pill from OpenTideHQ/.github (outlined; works on light and dark). */
+/** Official EUPL license pill from opentidehq/.github (outlined; works on light and dark). */
 export function OpentideLicensePill({
   className,
   height = 22,

@@ -1,7 +1,7 @@
 /**
  * Sample values for the taxonomy ribbon, in the form a detection author writes them.
  *
- * Every value here is **derived** from `OpenTideHQ/specifications` via
+ * Every value here is **derived** from `opentidehq/specifications` via
  * `lib/generated/vocabularies.ts`; none is transcribed. That matters beyond removing a
  * maintenance chore, because the hand-written list this replaced had silently drifted from the
  * specification: it showed `Account` and `Accept` for `signal.entities` and `malapi`, and a bare

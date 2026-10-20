@@ -34,8 +34,8 @@ Regenerate CI after you upgrade.
 **Links**
 
 - [PyPI](https://pypi.org/project/opentide/1.2.0/)
-- [GitHub Release](https://github.com/OpenTideHQ/opentide/releases/tag/v1.2.0)
-- [CHANGELOG](https://github.com/OpenTideHQ/opentide/blob/development/CHANGELOG.md)
+- [GitHub Release](https://github.com/opentidehq/opentide/releases/tag/v1.2.0)
+- [CHANGELOG](https://github.com/opentidehq/opentide/blob/development/CHANGELOG.md)
 
 ## 0.1.0 — 9 September 2026
 

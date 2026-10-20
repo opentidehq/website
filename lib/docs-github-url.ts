@@ -13,15 +13,15 @@ export function getGithubUrl(slug: string[] | undefined, pagePath: string): stri
   if (section === 'specifications') {
     const specPath = markdownPath.replace(/^specifications\/?/, '');
     if (specPath === 'rfcs/index.md') {
-      return 'https://github.com/OpenTideHQ/specifications/blob/main/rfcs/README.md';
+      return 'https://github.com/opentidehq/specifications/blob/main/rfcs/README.md';
     }
     if (specPath.startsWith('specs/') || specPath.startsWith('rfcs/')) {
-      return `https://github.com/OpenTideHQ/specifications/blob/main/${specPath}`;
+      return `https://github.com/opentidehq/specifications/blob/main/${specPath}`;
     }
     const rootFile = specPath || 'README.md';
     const fileName = rootFile.endsWith('.md') ? rootFile : `${rootFile}.md`;
-    return `https://github.com/OpenTideHQ/specifications/blob/main/${fileName === 'index.md' ? 'README.md' : fileName}`;
+    return `https://github.com/opentidehq/specifications/blob/main/${fileName === 'index.md' ? 'README.md' : fileName}`;
   }
 
-  return `https://github.com/OpenTideHQ/opentide/blob/development/docs/${markdownPath}`;
+  return `https://github.com/opentidehq/opentide/blob/development/docs/${markdownPath}`;
 }

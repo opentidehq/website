@@ -182,7 +182,7 @@ test('buildVocabularyIndex: records the source commit', () => {
   });
   const index = buildVocabularyIndex(root, { sha: 'deadbeef' });
   assert.equal(index.source.sha, 'deadbeef');
-  assert.equal(index.source.repo, 'OpenTideHQ/specifications');
+  assert.equal(index.source.repo, 'opentidehq/specifications');
 });
 
 test('deriveVocabularies: a removed vocabulary simply disappears from the artifact', () => {

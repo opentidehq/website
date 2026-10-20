@@ -220,7 +220,7 @@ export function IntegrationFan() {
               }}
             >
               <a
-                href="https://github.com/OpenTideHQ/opentide/issues/new"
+                href="https://github.com/opentidehq/opentide/issues/new"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-between gap-3 rounded-2xl border border-dashed border-[color-mix(in_srgb,var(--landing-ink)_22%,transparent)] px-3.5 py-3 text-sm transition hover:border-[var(--landing-accent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--landing-accent)]"

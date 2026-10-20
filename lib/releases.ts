@@ -5,7 +5,7 @@ import { join } from 'node:path';
 export const RELEASE_NOTES_PATH = join(process.cwd(), 'content/docs/usage/releases.mdx');
 
 export const CHANGELOG_URL =
-  'https://github.com/OpenTideHQ/opentide/blob/development/CHANGELOG.md';
+  'https://github.com/opentidehq/opentide/blob/development/CHANGELOG.md';
 
 export type ReleaseKind = 'major' | 'minor' | 'patch' | 'beta';
 
