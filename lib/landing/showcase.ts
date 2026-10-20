@@ -25,7 +25,7 @@ const o = (text: string, mark?: boolean): Line => ({ kind: 'out', text, mark });
 const n = (text: string): Line => ({ kind: 'note', text });
 
 /**
- * Runs captured from opentide 0.12.1, and unchanged in 0.13.0, against the demo repository
+ * Runs captured from opentide 0.12.1, and unchanged through 0.16.0, against the demo repository
  * this page shows: the same threat, objective and rule. Absolute paths are cut to the
  * repository, the Rich panel border is dropped and its lines re-wrapped, and long payloads
  * are cut to `…`.
@@ -38,7 +38,7 @@ export const DOORS: Door[] = [
     prompt: '$ ',
     promises: [
       { title: 'Every link resolves', body: 'A rule names a real objective, an objective names real threats, or validation fails.' },
-      { title: 'Every value is in the taxonomy', body: 'Vocabulary fields take versioned values only: severity::1.0, surface::1.0, att&ck::1.1.' },
+      { title: 'Every value is in the taxonomy', body: 'Vocabulary fields take versioned values only: severity::1.0, surface::1.0, att&ck::1.2.' },
       { title: 'One JSON document on stdout', body: '--json returns ok and a status, and every issue with its code, file, line and field.' },
       { title: 'Exit codes gate CI', body: '0 success · 1 error · 2 usage. No parsing needed.' },
     ],
