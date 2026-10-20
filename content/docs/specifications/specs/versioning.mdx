@@ -74,9 +74,9 @@ Path defaults live in bundled `paths.toml`. Clients MAY override paths via [conf
 
 ## Examples
 
-- A rule on `rule::1.0`: [fixtures/valid/rule-1.0.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/valid/rule-1.0.yaml)
-- A rule on `rule::1.1`: [fixtures/valid/rule-1.1.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/valid/rule-1.1.yaml)
-- An unknown identifier: [fixtures/invalid/rule-unknown-schema.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/invalid/rule-unknown-schema.yaml)
+- A rule on `rule::1.0`: [fixtures/valid/rule-1.0.yaml](https://github.com/opentidehq/specifications/blob/main/fixtures/valid/rule-1.0.yaml)
+- A rule on `rule::1.1`: [fixtures/valid/rule-1.1.yaml](https://github.com/opentidehq/specifications/blob/main/fixtures/valid/rule-1.1.yaml)
+- An unknown identifier: [fixtures/invalid/rule-unknown-schema.yaml](https://github.com/opentidehq/specifications/blob/main/fixtures/invalid/rule-unknown-schema.yaml)
 
 A workspace that holds both valid rules validates each against its own identifier: the `rule::1.1` file may carry `metadata.reviewed`, the `rule::1.0` file may not. It deploys each from the platform block its revision defines (`configurations.<platform>` for both).
 
@@ -84,5 +84,5 @@ A workspace that holds both valid rules validates each against its own identifie
 
 | Version | Date | Notes |
 |---------|------|-------|
-| 1.1 | 2026-10-19 | Every feature follows `metadata.schema`, not only validation. Missing schema is an error. Migration is explicit and does not change `metadata.version` ([specifications#27](https://github.com/OpenTideHQ/specifications/pull/27)). |
+| 1.1 | 2026-10-19 | Every feature follows `metadata.schema`, not only validation. Missing schema is an error. Migration is explicit and does not change `metadata.version` ([specifications#27](https://github.com/opentidehq/specifications/pull/27)). |
 | 1.0 | 2026-06-25 | Initial spec bootstrapped from opentide `SCHEMA_REVISION.md` |

@@ -14,7 +14,7 @@ supersedes: null
 
 This first revision keeps the block small: where to connect, what to select, and how high TLP may go. Distribution width, sharing groups, file export, and Event title decoration are not configurable in 1.0.
 
-The pinned template is [schemas/misp/opentide.definition.json](https://github.com/OpenTideHQ/specifications/blob/main/schemas/misp/opentide.definition.json), copied from `MISP/misp-objects` `objects/opentide/definition.json`. Refresh direction is **upstream MISP → this repository**, the reverse of vocabulary sync. A refresh that changes the pinned relation set is a revision of this spec.
+The pinned template is [schemas/misp/opentide.definition.json](https://github.com/opentidehq/specifications/blob/main/schemas/misp/opentide.definition.json), copied from `MISP/misp-objects` `objects/opentide/definition.json`. Refresh direction is **upstream MISP → this repository**, the reverse of vocabulary sync. A refresh that changes the pinned relation set is a revision of this spec.
 
 ## Requirements
 
@@ -339,8 +339,8 @@ These are preflight (exit `1`) for this connector, before the exit rules in [sha
 
 - [sharing.md](/docs/specifications/specs/sharing/) — `sharing.toml`, CLI, exit statuses, share state
 - [metadata.md](/docs/specifications/specs/metadata/) — `metadata.tlp`, optional `metadata.pap`, `metadata.organisation.uuid`
-- [vocabularies/tlp.vocab.toml](https://github.com/OpenTideHQ/specifications/blob/main/vocabularies/tlp.vocab.toml), [vocabularies/pap.vocab.toml](https://github.com/OpenTideHQ/specifications/blob/main/vocabularies/pap.vocab.toml) — tag strings
-- [schemas/misp/opentide.definition.json](https://github.com/OpenTideHQ/specifications/blob/main/schemas/misp/opentide.definition.json) — pinned template version 5
+- [vocabularies/tlp.vocab.toml](https://github.com/opentidehq/specifications/blob/main/vocabularies/tlp.vocab.toml), [vocabularies/pap.vocab.toml](https://github.com/opentidehq/specifications/blob/main/vocabularies/pap.vocab.toml) — tag strings
+- [schemas/misp/opentide.definition.json](https://github.com/opentidehq/specifications/blob/main/schemas/misp/opentide.definition.json) — pinned template version 5
 
 ## Defaults & overrides
 
@@ -348,9 +348,9 @@ A block needs `name`, `url`, `api_key`, and `max_tlp`. It ships disabled, select
 
 ## Examples
 
-- Two instances: [fixtures/sharing/valid/sharing.toml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/sharing/valid/sharing.toml)
-- Golden Events for the committed object fixtures: [rule](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/sharing/valid/rule-event.json), [objective](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/sharing/valid/objective-event.json), [threat](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/sharing/valid/threat-event.json)
-- Invalid key not configurable in 1.0: [fixtures/sharing/invalid/unknown-distribution.toml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/sharing/invalid/unknown-distribution.toml). Every invalid fixture and its checker code is listed in [validation.md](/docs/specifications/specs/validation/).
+- Two instances: [fixtures/sharing/valid/sharing.toml](https://github.com/opentidehq/specifications/blob/main/fixtures/sharing/valid/sharing.toml)
+- Golden Events for the committed object fixtures: [rule](https://github.com/opentidehq/specifications/blob/main/fixtures/sharing/valid/rule-event.json), [objective](https://github.com/opentidehq/specifications/blob/main/fixtures/sharing/valid/objective-event.json), [threat](https://github.com/opentidehq/specifications/blob/main/fixtures/sharing/valid/threat-event.json)
+- Invalid key not configurable in 1.0: [fixtures/sharing/invalid/unknown-distribution.toml](https://github.com/opentidehq/specifications/blob/main/fixtures/sharing/invalid/unknown-distribution.toml). Every invalid fixture and its checker code is listed in [validation.md](/docs/specifications/specs/validation/).
 
 ## History
 

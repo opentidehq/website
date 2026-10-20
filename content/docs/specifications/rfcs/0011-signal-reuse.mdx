@@ -5,7 +5,7 @@ status: draft
 rfc: "0011"
 ---
 
-<RfcBanner entry={"{\"number\":\"0011\",\"status\":\"draft\",\"note\":null,\"fields\":[{\"label\":\"Author\",\"parts\":[{\"kind\":\"text\",\"text\":\"opentide\"}]},{\"label\":\"Created\",\"parts\":[{\"kind\":\"text\",\"text\":\"2026-09-29\"}]},{\"label\":\"Issue\",\"parts\":[{\"kind\":\"link\",\"text\":\"#22\",\"href\":\"https://github.com/OpenTideHQ/specifications/issues/22\"}]},{\"label\":\"PR\",\"parts\":[{\"kind\":\"link\",\"text\":\"#23\",\"href\":\"https://github.com/OpenTideHQ/specifications/pull/23\"}]}]}"} />
+<RfcBanner entry={"{\"number\":\"0011\",\"status\":\"draft\",\"note\":null,\"fields\":[{\"label\":\"Author\",\"parts\":[{\"kind\":\"text\",\"text\":\"opentide\"}]},{\"label\":\"Created\",\"parts\":[{\"kind\":\"text\",\"text\":\"2026-09-29\"}]},{\"label\":\"Issue\",\"parts\":[{\"kind\":\"link\",\"text\":\"#22\",\"href\":\"https://github.com/opentidehq/specifications/issues/22\"}]},{\"label\":\"PR\",\"parts\":[{\"kind\":\"link\",\"text\":\"#23\",\"href\":\"https://github.com/opentidehq/specifications/pull/23\"}]}]}"} />
 
 ## Summary
 
@@ -76,7 +76,7 @@ Generated artifacts, both kept:
 | JSON Schema | `objective.1.0.schema.json` | `objective.1.1.schema.json` |
 | Template | `objective.1.0.template.yaml` | `objective.1.1.template.yaml` |
 
-The IDE router gains a branch for `objective::1.1`. `metadata.schema` is a `const` on each artifact. [schemas/pins/objective.toml](https://github.com/OpenTideHQ/specifications/blob/main/schemas/pins/objective.toml) gains an `["objective::1.1"]` table with the same vocabulary pins as `["objective::1.0"]`. The binding key is the `signal` model vocabulary, not a pinned `.vocab.toml` contract.
+The IDE router gains a branch for `objective::1.1`. `metadata.schema` is a `const` on each artifact. [schemas/pins/objective.toml](https://github.com/opentidehq/specifications/blob/main/schemas/pins/objective.toml) gains an `["objective::1.1"]` table with the same vocabulary pins as `["objective::1.0"]`. The binding key is the `signal` model vocabulary, not a pinned `.vocab.toml` contract.
 
 Sharing already emits `metadata.schema` verbatim. An `objective::1.1` event tells a receiver the signal list may contain bindings. A receiver that only implements 1.0 fails that object.
 
@@ -147,7 +147,7 @@ Inflight overlay rules are unchanged. A reference to a signal whose definition a
 
 ### TLP
 
-Rank, least restrictive first, matches [`vocabularies/tlp.vocab.toml`](https://github.com/OpenTideHQ/specifications/blob/main/vocabularies/tlp.vocab.toml): `clear` < `green` < `amber` < `amber+strict` < `red`.
+Rank, least restrictive first, matches [`vocabularies/tlp.vocab.toml`](https://github.com/opentidehq/specifications/blob/main/vocabularies/tlp.vocab.toml): `clear` < `green` < `amber` < `amber+strict` < `red`.
 
 A binding is valid when the consumer's `metadata.tlp` is the same rank as the owner's or stricter. A consumer that is less restrictive than the owner is `signal_tlp`. The check uses the two objectives' metadata, not `sharing.toml` `max_tlp`.
 
@@ -371,17 +371,17 @@ Workspace-level cases (opentide tests, not a second copy of the object model in 
 | [specs/validation.md](/docs/specifications/specs/validation/) | Codes above. A binding on `objective::1.0` fails schema. Checker vs `opentide validate` split. |
 | [specs/metaschema-keywords.md](/docs/specifications/specs/metaschema-keywords/) | `signal` model vocabulary. Binding key on the 1.1 metaschema only. Objective vocabulary lists both revisions, with every signal defined under them. |
 | [specs/workspace.md](/docs/specifications/specs/workspace/) | Artifact rows `objective.1.1.schema.json` and `objective.1.1.template.yaml`. |
-| [schemas/pins/objective.toml](https://github.com/OpenTideHQ/specifications/blob/main/schemas/pins/objective.toml) | `["objective::1.1"]` copies the `objective::1.0` pins. |
+| [schemas/pins/objective.toml](https://github.com/opentidehq/specifications/blob/main/schemas/pins/objective.toml) | `["objective::1.1"]` copies the `objective::1.0` pins. |
 | [specs/sharing/misp-1.0.md](/docs/specifications/specs/sharing/misp-1.0/) | Objective relations include owners of bound signals. `schema` is still emitted verbatim, so the value may be `objective::1.1`. |
 | [site/index.md](/docs/specifications/site/) | Schema table and coverage diagram include `objective::1.1`. The overview is descriptive; the object specs stay normative. |
 | `fixtures/` as listed | 1.1 consumer, 1.0 rejection, checker codes in `scripts/object_fixtures.py`. |
-| [SPECS.md](/docs/specifications/SPECS/), [CHANGELOG.md](https://github.com/OpenTideHQ/specifications/blob/main/CHANGELOG.md) | New row: objective 1.1, schema `objective::1.1`. The 1.0 row stays. |
+| [SPECS.md](/docs/specifications/SPECS/), [CHANGELOG.md](https://github.com/opentidehq/specifications/blob/main/CHANGELOG.md) | New row: objective 1.1, schema `objective::1.1`. The 1.0 row stays. |
 
 No change to `vocabularies/`. `objective::1.0` is not deleted and not deprecated.
 
 ### opentide follow-up
 
-File in [OpenTideHQ/opentide](https://github.com/OpenTideHQ/opentide) after this RFC is accepted. Expected touch points, for that issue:
+File in [opentidehq/opentide](https://github.com/opentidehq/opentide) after this RFC is accepted. Expected touch points, for that issue:
 
 - `models/objective.py` — `objective::1.1` model beside `objective::1.0`; migration rewrites only `metadata.schema`
 - `registry/builder.py` and `indexing/inflight.py` — `owner` vs authored `parent`; reject duplicate definition UUIDs
@@ -435,7 +435,7 @@ File in [OpenTideHQ/opentide](https://github.com/OpenTideHQ/opentide) after this
 
 ## References
 
-- Issue [#22](https://github.com/OpenTideHQ/specifications/issues/22)
+- Issue [#22](https://github.com/opentidehq/specifications/issues/22)
 - [specs/objects/objective-1.1.md](/docs/specifications/specs/objects/objective-1.1/), [specs/objects/objective-1.0.md](/docs/specifications/specs/objects/objective-1.0/), [specs/objects/rule-1.0.md](/docs/specifications/specs/objects/rule-1.0/)
 - [specs/validation.md](/docs/specifications/specs/validation/), [specs/metaschema-keywords.md](/docs/specifications/specs/metaschema-keywords/)
 - [specs/sharing/misp-1.0.md](/docs/specifications/specs/sharing/misp-1.0/) relation table

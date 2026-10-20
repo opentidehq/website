@@ -67,7 +67,7 @@ Registered objects list: `threat`, `objective`, `rule`.
 | router | `opentide.schema.json` |
 | inflight shard | `inflight.shard.1.0.schema.json` |
 
-Inflight shard schema source of truth: [schemas/inflight.shard.1.0.schema.json](https://github.com/OpenTideHQ/specifications/blob/main/schemas/inflight.shard.1.0.schema.json). Deployment state shard schema source of truth: [schemas/deployment.state.1.0.schema.json](https://github.com/OpenTideHQ/specifications/blob/main/schemas/deployment.state.1.0.schema.json). Generated copies MAY be emitted to `.opentide/schemas/` by `opentide generate schemas` when supported.
+Inflight shard schema source of truth: [schemas/inflight.shard.1.0.schema.json](https://github.com/opentidehq/specifications/blob/main/schemas/inflight.shard.1.0.schema.json). Deployment state shard schema source of truth: [schemas/deployment.state.1.0.schema.json](https://github.com/opentidehq/specifications/blob/main/schemas/deployment.state.1.0.schema.json). Generated copies MAY be emitted to `.opentide/schemas/` by `opentide generate schemas` when supported.
 
 `visibility.1.0.schema.json` is **not** an object family — there are no `visibility` objects under `objects/`. It is the schema used to validate the client `visibility.toml` [configuration](/docs/specifications/specs/configuration/), emitted here alongside the object schemas. `opentide.schema.json` is the IDE router that dispatches object YAML to the correct object schema by `metadata.schema`.
 
@@ -196,8 +196,8 @@ Object fixtures assume the default layout: rules under `objects/rules/`, etc.
 | Version | Date | Notes |
 |---------|------|-------|
 | 1.4 | 2026-10-19 | `objective::1.1` schema and template artifacts beside `objective::1.0` ([RFC 0011](/docs/specifications/rfcs/0011-signal-reuse/)). |
-| 1.3 | 2026-10-19 | Object instances are the YAML files placed directly in each family directory. A file in a subfolder is not an instance and is neither deployed nor shared ([specifications#16](https://github.com/OpenTideHQ/specifications/pull/16), [opentide#312](https://github.com/OpenTideHQ/opentide/issues/312)). |
-| 1.2 | 2026-10-16 | The production deploy job has no GitHub Actions `concurrency` group ([specifications#43](https://github.com/OpenTideHQ/specifications/issues/43)). |
+| 1.3 | 2026-10-19 | Object instances are the YAML files placed directly in each family directory. A file in a subfolder is not an instance and is neither deployed nor shared ([specifications#16](https://github.com/opentidehq/specifications/pull/16), [opentide#312](https://github.com/opentidehq/opentide/issues/312)). |
+| 1.2 | 2026-10-16 | The production deploy job has no GitHub Actions `concurrency` group ([specifications#43](https://github.com/opentidehq/specifications/issues/43)). |
 | 1.1 | 2026-10-16 | `.opentide/states/deployment/` holds committed deployment-state shards; `.opentide/states/` is never ignored whole and setup ignores `sharing.jsonl` only. The production deploy job serialises, overlays the default branch's state, and writes it back, and staging jobs cannot create on state-backed platforms ([RFC 0010](/docs/specifications/rfcs/0010-deployment-external-ids/)). |
 | 1.0 | 2026-09-28 | Optional CI stage `share` runs `opentide share push --changed` on a push to the default branch. |
 | 1.0 | 2026-09-28 | Sharing uses one client file, `sharing.toml`, and one generated ledger, `.opentide/states/sharing.jsonl`. |

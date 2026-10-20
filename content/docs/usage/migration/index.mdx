@@ -23,14 +23,14 @@ python Orchestration/validate.py
 ### After (pip package)
 
 ```toml
-dependencies = ["opentide==0.16.0"]
+dependencies = ["opentide==0.16.1"]
 ```
 
 ```python
-from opentide import OpenTide
+from opentide import Opentide
 
-OpenTide.initialise()
-rule = OpenTide.Rules[uuid]
+Opentide.initialise()
+rule = Opentide.Rules[uuid]
 rule.deploy("sentinel")
 ```
 
@@ -46,7 +46,7 @@ Use `--platform`, not legacy `--system`.
 ### 1. Install
 
 ```bash
-pip install 'opentide==0.16.0'
+pip install 'opentide==0.16.1'
 ```
 
 Enable platforms in the repo (not at pip install time):
@@ -55,7 +55,7 @@ Enable platforms in the repo (not at pip install time):
 opentide setup platforms --sentinel --splunk --yes
 ```
 
-Optional MCP server setup: `opentide setup mcp --cursor --yes` (after `pip install 'opentide==0.16.0'`).
+Optional MCP server setup: `opentide setup mcp --cursor --yes` (after `pip install 'opentide==0.16.1'`).
 
 ### 2. Remove submodule
 
@@ -76,10 +76,10 @@ rm -rf .git/modules/CoreTide
 
 | Legacy | New |
 |--------|-----|
-| `DataTide` | `OpenTide` |
+| `DataTide` | `Opentide` |
 | `IndexTide` | `IndexManager` |
 | `TideModels.MDR` | `DetectionRule` |
-| `DeployTide` | `OpenTide.Platforms` |
+| `DeployTide` | `Opentide.Platforms` |
 
 v0.x: legacy imports warn via `DeprecationWarning`. **v1.0 removes shims.**
 
@@ -101,7 +101,7 @@ Query validation: **six platforms only** (no CrowdStrike/HarfangLab).
 Remove `submodules: recursive`. Add:
 
 ```yaml
-- run: pip install 'opentide==0.16.0'
+- run: pip install 'opentide==0.16.1'
 - run: opentide validate --strict
   env:
     OPENTIDE_REPO_ROOT: ${{ github.workspace }}
@@ -180,7 +180,7 @@ Replacing a CoreTide **git submodule**, Orchestration scripts, and Python import
 
 ## Verification checklist
 
-- [ ] `pip install 'opentide==0.16.0'` succeeds
+- [ ] `pip install 'opentide==0.16.1'` succeeds
 - [ ] `OPENTIDE_REPO_ROOT` set
 - [ ] `opentide validate --strict` passes
 - [ ] `opentide deploy migrate-state` exits `0`, and `.opentide/states/deployment/` is committed and not gitignored
@@ -189,7 +189,7 @@ Replacing a CoreTide **git submodule**, Orchestration scripts, and Python import
 
 ## Related
 
-- [Behaviour inventory (internal)](https://github.com/OpenTideHQ/opentide/blob/development/docs/internal/behaviour-inventory.md) — legacy vs new behaviour mapping
+- [Behaviour inventory (internal)](https://github.com/opentidehq/opentide/blob/development/docs/internal/behaviour-inventory.md) — legacy vs new behaviour mapping
 - [Repository setup](/docs/usage/repository-setup/)
 - [CoreTide migration prompt](/docs/usage/migration/prompt/)
 - [CLI migrate](/docs/cli/migrate/)

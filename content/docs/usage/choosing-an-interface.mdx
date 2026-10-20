@@ -9,7 +9,7 @@ opentide exposes the **same engine** three ways. They share the object model, va
 flowchart TD
   engine["opentide engine<br/>objects · validate · generate · deploy · document"]
   cli["CLI · opentide"] --> engine
-  sdk["SDK · from opentide import OpenTide"] --> engine
+  sdk["SDK · from opentide import Opentide"] --> engine
   mcp["MCP · opentide mcp start"] --> engine
 ```
 
@@ -44,9 +44,9 @@ opentide validate --uuid 00000000-0000-4000-8003-000000000001 --strict
 <Tab value="SDK">
 
 ```python
-from opentide import OpenTide
-OpenTide.initialise()
-result = OpenTide.Rules["00000000-0000-4000-8003-000000000001"].validate()
+from opentide import Opentide
+Opentide.initialise()
+result = Opentide.Rules["00000000-0000-4000-8003-000000000001"].validate()
 print(result.ok, result.errors)
 ```
 

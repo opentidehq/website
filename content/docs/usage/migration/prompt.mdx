@@ -25,9 +25,9 @@ Steps:
    - Set OPENTIDE_REPO_ROOT to the detection content root in CI and local dev.
 
 2. Replace imports
-   - Engines.modules.tide.DataTide / IndexTide → from opentide import OpenTide; OpenTide.initialise()
+   - Engines.modules.tide.DataTide / IndexTide → from opentide import Opentide; Opentide.initialise()
    - TideModels / MDR types → opentide.models (DetectionRule, etc.)
-   - DeployTide → OpenTide.Platforms or opentide deploy CLI
+   - DeployTide → Opentide.Platforms or opentide deploy CLI
    - Remove: import sys, git; sys.path.append(...)
 
 3. Replace Orchestration scripts
@@ -45,7 +45,7 @@ Steps:
 5. CI/CD
    - Remove submodules: recursive checkout.
    - Regenerate pipeline: opentide setup ci github (or gitlab/azure).
-   - Typical job order: pip install 'opentide==0.16.0' → opentide validate → validate query --live per enabled platform → opentide generate → opentide generate docs --output docs → deploy stages.
+   - Typical job order: pip install 'opentide==0.16.1' → opentide validate → validate query --live per enabled platform → opentide generate → opentide generate docs --output docs → deploy stages.
    - Do not reference opentide mutate or top-level opentide document/export/extract (use generate docs/exports/extract). Use `opentide migrate objects` only for directory layout.
 
 6. Agents and IDE
@@ -54,7 +54,7 @@ Steps:
    - Remove references to vendored detection-ops skill packs.
 
 7. Verification checklist
-   - pip install 'opentide==0.16.0' succeeds
+   - pip install 'opentide==0.16.1' succeeds
    - opentide validate --strict passes
    - opentide generate completes
    - CI YAML contains no CoreTide checkout or python Orchestration/*.py

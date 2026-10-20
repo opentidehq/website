@@ -142,11 +142,11 @@ Completion of `reuse` uses the `signal` model vocabulary ([metaschema-keywords.m
 
 No object-level configuration overrides. See [configuration.md](/docs/specifications/specs/configuration/).
 
-Vocabulary pins for this schema match `objective::1.0`. See [schemas/pins/objective.toml](https://github.com/OpenTideHQ/specifications/blob/main/schemas/pins/objective.toml).
+Vocabulary pins for this schema match `objective::1.0`. See [schemas/pins/objective.toml](https://github.com/opentidehq/specifications/blob/main/schemas/pins/objective.toml).
 
 ## Examples
 
-A definition-only `objective::1.1` document is the `objective::1.0` shape with the schema id changed. See [fixtures/valid/objective-1.1.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/valid/objective-1.1.yaml).
+A definition-only `objective::1.1` document is the `objective::1.0` shape with the schema id changed. See [fixtures/valid/objective-1.1.yaml](https://github.com/opentidehq/specifications/blob/main/fixtures/valid/objective-1.1.yaml).
 
 A binding, after the owner is in the repository. The owner may stay on `objective::1.0`. Completion inserts the signal UUID. The label beside it is `Credential Access Objective::Suspicious logon signal`.
 
@@ -184,15 +184,15 @@ objective:
 
 A rule with `detection_model` pointing at this objective covers it directly, and covers the owner of `…8099…0001` indirectly with reason `owns`. A rule whose `detection_model` is that owner covers this objective indirectly with reason `shares`, via that signal only.
 
-- Valid binding: [fixtures/cross-object/objective-reuses-signal.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/cross-object/objective-reuses-signal.yaml)
-- Valid definition-only 1.1: [fixtures/valid/objective-1.1.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/valid/objective-1.1.yaml)
-- Invalid (`reuse` plus `name`): [fixtures/invalid/objective-signal-entry-mixed.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/invalid/objective-signal-entry-mixed.yaml)
-- Invalid (`reuse` is not a UUIDv4): [fixtures/invalid/objective-signal-bad-uuid.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/invalid/objective-signal-bad-uuid.yaml)
-- Invalid (binding on 1.0): [fixtures/invalid/objective-1.0-signal-binding.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/invalid/objective-1.0-signal-binding.yaml)
+- Valid binding: [fixtures/cross-object/objective-reuses-signal.yaml](https://github.com/opentidehq/specifications/blob/main/fixtures/cross-object/objective-reuses-signal.yaml)
+- Valid definition-only 1.1: [fixtures/valid/objective-1.1.yaml](https://github.com/opentidehq/specifications/blob/main/fixtures/valid/objective-1.1.yaml)
+- Invalid (`reuse` plus `name`): [fixtures/invalid/objective-signal-entry-mixed.yaml](https://github.com/opentidehq/specifications/blob/main/fixtures/invalid/objective-signal-entry-mixed.yaml)
+- Invalid (`reuse` is not a UUIDv4): [fixtures/invalid/objective-signal-bad-uuid.yaml](https://github.com/opentidehq/specifications/blob/main/fixtures/invalid/objective-signal-bad-uuid.yaml)
+- Invalid (binding on 1.0): [fixtures/invalid/objective-1.0-signal-binding.yaml](https://github.com/opentidehq/specifications/blob/main/fixtures/invalid/objective-1.0-signal-binding.yaml)
 
 ## History
 
 | Version | Date | Notes |
 |---------|------|-------|
-| 1.1 | 2026-10-19 | Draft. `mitre_attack` is pinned to `att&ck::1.2` (ATT&CK 20.0), as in `objective::1.0` ([opentide#568](https://github.com/OpenTideHQ/opentide/issues/568)). |
+| 1.1 | 2026-10-19 | Draft. `mitre_attack` is pinned to `att&ck::1.2` (ATT&CK 20.0), as in `objective::1.0` ([opentide#568](https://github.com/opentidehq/opentide/issues/568)). |
 | 1.1 | 2026-10-19 | Draft. Signal binding `reuse` ([RFC 0011](/docs/specifications/rfcs/0011-signal-reuse/)). Field tables copy `objective::1.0` as of 2026-10-19 (`mitre_attack`, `alert_severity::1.0`, stage-scoped `entities`, `visibility.toml` log sources, integer `effort` with no pin). `objective::1.0` remains normative for definitions only. |

@@ -51,9 +51,9 @@ opentide --json info --platform sentinel
 MCP resource: `opentide://platforms`
 
 ```python
-from opentide import OpenTide
-OpenTide.initialise()
-for name, plat in OpenTide.Platforms.items():
+from opentide import Opentide
+Opentide.initialise()
+for name, plat in Opentide.Platforms.items():
     print(name, plat.enabled, plat.can_deploy, plat.can_validate)
 ```
 
@@ -100,4 +100,4 @@ Validate, generate, and dry-run deploy work with `pip install opentide` alone. *
 
 ## SDK access
 
-Deploy and validate programmatically via `OpenTide.Platforms` — see [SDK platforms](/docs/sdk/platforms/).
+Deploy and validate programmatically via `Opentide.Platforms` — see [SDK platforms](/docs/sdk/platforms/).

@@ -12,12 +12,12 @@ This renders **human wiki pages** from loaded objects. It is distinct from schem
 ## Render single objects
 
 ```python
-from opentide import OpenTide
+from opentide import Opentide
 from opentide.documentation import render_rule, render_objective, render_threat
 from opentide.documentation.types import DocumentFlavor
 
-OpenTide.initialise()
-rule = OpenTide.Rules[uuid]
+Opentide.initialise()
+rule = Opentide.Rules[uuid]
 
 md = render_rule(rule)
 md_github = render_rule(rule, flavor=DocumentFlavor.github)

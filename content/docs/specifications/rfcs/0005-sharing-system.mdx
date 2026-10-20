@@ -5,9 +5,9 @@ status: accepted
 rfc: "0005"
 ---
 
-<RfcBanner entry={"{\"number\":\"0005\",\"status\":\"accepted\",\"note\":null,\"fields\":[{\"label\":\"Author\",\"parts\":[{\"kind\":\"text\",\"text\":\"Amine Besson\"}]},{\"label\":\"Created\",\"parts\":[{\"kind\":\"text\",\"text\":\"2026-09-15\"}]},{\"label\":\"Revised\",\"parts\":[{\"kind\":\"text\",\"text\":\"2026-09-28 — [[misp]] integration blocks in one sharing.toml; minimal MISP key set; pinned opentide template version 5 (see \"},{\"kind\":\"link\",\"text\":\"Revision history\",\"href\":\"#revision-history\"},{\"kind\":\"text\",\"text\":\")\"}]},{\"label\":\"Accepted\",\"parts\":[{\"kind\":\"text\",\"text\":\"2026-09-28 — normative text in \"},{\"kind\":\"link\",\"text\":\"specs/sharing.md\",\"href\":\"/docs/specifications/specs/sharing/\"},{\"kind\":\"text\",\"text\":\" and \"},{\"kind\":\"link\",\"text\":\"specs/sharing/misp-1.0.md\",\"href\":\"/docs/specifications/specs/sharing/misp-1.0/\"}]},{\"label\":\"Issue\",\"parts\":[{\"kind\":\"link\",\"text\":\"#10\",\"href\":\"https://github.com/OpenTideHQ/specifications/issues/10\"}]},{\"label\":\"PR\",\"parts\":[{\"kind\":\"link\",\"text\":\"#9\",\"href\":\"https://github.com/OpenTideHQ/specifications/pull/9\"},{\"kind\":\"text\",\"text\":\"; acceptance and normative specs in \"},{\"kind\":\"link\",\"text\":\"#19\",\"href\":\"https://github.com/OpenTideHQ/specifications/pull/19\"}]}]}"} />
+<RfcBanner entry={"{\"number\":\"0005\",\"status\":\"accepted\",\"note\":null,\"fields\":[{\"label\":\"Author\",\"parts\":[{\"kind\":\"text\",\"text\":\"Amine Besson\"}]},{\"label\":\"Created\",\"parts\":[{\"kind\":\"text\",\"text\":\"2026-09-15\"}]},{\"label\":\"Revised\",\"parts\":[{\"kind\":\"text\",\"text\":\"2026-09-28 — [[misp]] integration blocks in one sharing.toml; minimal MISP key set; pinned opentide template version 5 (see \"},{\"kind\":\"link\",\"text\":\"Revision history\",\"href\":\"#revision-history\"},{\"kind\":\"text\",\"text\":\")\"}]},{\"label\":\"Accepted\",\"parts\":[{\"kind\":\"text\",\"text\":\"2026-09-28 — normative text in \"},{\"kind\":\"link\",\"text\":\"specs/sharing.md\",\"href\":\"/docs/specifications/specs/sharing/\"},{\"kind\":\"text\",\"text\":\" and \"},{\"kind\":\"link\",\"text\":\"specs/sharing/misp-1.0.md\",\"href\":\"/docs/specifications/specs/sharing/misp-1.0/\"}]},{\"label\":\"Issue\",\"parts\":[{\"kind\":\"link\",\"text\":\"#10\",\"href\":\"https://github.com/opentidehq/specifications/issues/10\"}]},{\"label\":\"PR\",\"parts\":[{\"kind\":\"link\",\"text\":\"#9\",\"href\":\"https://github.com/opentidehq/specifications/pull/9\"},{\"kind\":\"text\",\"text\":\"; acceptance and normative specs in \"},{\"kind\":\"link\",\"text\":\"#19\",\"href\":\"https://github.com/opentidehq/specifications/pull/19\"}]}]}"} />
 
-> Numbering note: [issue #8](https://github.com/OpenTideHQ/specifications/issues/8) reserved **RFC 0004** for the Sysdig Falco deployer. That RFC file is not in this repository yet. This proposal takes **0005** to avoid colliding with that reservation.
+> Numbering note: [issue #8](https://github.com/opentidehq/specifications/issues/8) reserved **RFC 0004** for the Sysdig Falco deployer. That RFC file is not in this repository yet. This proposal takes **0005** to avoid colliding with that reservation.
 
 ## Summary
 
@@ -71,7 +71,7 @@ flowchart LR
 
 ### 2. Deliverables after acceptance
 
-The draft revisions of this RFC shipped no spec text, so reviewers could agree on the model before text was written against it. [AGENTS.md](https://github.com/OpenTideHQ/specifications/blob/main/AGENTS.md) permits that sequencing — spec, fixture, `SPECS.md`, and `CHANGELOG.md` updates go in the RFC PR *or* "follow-up after acceptance per maintainer guidance". Acceptance lands every deliverable below in one PR, [#19](https://github.com/OpenTideHQ/specifications/pull/19).
+The draft revisions of this RFC shipped no spec text, so reviewers could agree on the model before text was written against it. [AGENTS.md](https://github.com/opentidehq/specifications/blob/main/AGENTS.md) permits that sequencing — spec, fixture, `SPECS.md`, and `CHANGELOG.md` updates go in the RFC PR *or* "follow-up after acceptance per maintainer guidance". Acceptance lands every deliverable below in one PR, [#19](https://github.com/opentidehq/specifications/pull/19).
 
 | Path | Action | `schema_id` |
 |------|--------|-------------|
@@ -367,7 +367,7 @@ The emitted tag set is closed to three sources: TLP, PAP, and clusters from two 
 
 Emission order, so a golden fixture is byte-comparable across runs: TLP, PAP, `threat-actor` clusters, then `mitre-attack-pattern` clusters; ascending code point order within each group; each distinct tag string at most once.
 
-TLP and PAP tag strings are copied character-for-character from the `misp` field of the matching `[[keys]]` entry in [tlp.vocab.toml](https://github.com/OpenTideHQ/specifications/blob/main/vocabularies/tlp.vocab.toml) and [pap.vocab.toml](https://github.com/OpenTideHQ/specifications/blob/main/vocabularies/pap.vocab.toml). A `metadata.tlp` value that is absent or matches no key fails the object with `unmapped_tlp`; a `metadata.pap` value that matches no key fails it with `unmapped_pap`. An absent `metadata.pap` emits no PAP tag — PAP is emitted only when the object carries it (D-8), and there is no per-block PAP default.
+TLP and PAP tag strings are copied character-for-character from the `misp` field of the matching `[[keys]]` entry in [tlp.vocab.toml](https://github.com/opentidehq/specifications/blob/main/vocabularies/tlp.vocab.toml) and [pap.vocab.toml](https://github.com/opentidehq/specifications/blob/main/vocabularies/pap.vocab.toml). A `metadata.tlp` value that is absent or matches no key fails the object with `unmapped_tlp`; a `metadata.pap` value that matches no key fails it with `unmapped_pap`. An absent `metadata.pap` emits no PAP tag — PAP is emitted only when the object carries it (D-8), and there is no per-block PAP default.
 
 `extra_tags` is not configurable in 1.0 (§7.1), so the closed tag set holds for every block. Communities with local taxonomies are the case for adding bounded constant tags in a later revision (D-5).
 
@@ -471,7 +471,7 @@ A missing required relation on the receiving instance's template fails the objec
 
 Updates are confined to the seven envelope fields, the tag set, and the one `opentide` object. Remote objects or Event-level attributes the connector did not emit are left in place with an informational note, and the remote Event `uuid` and creator organisation are never rewritten.
 
-**Relations point from child to parent.** The template documents `opentide-relation` only as "UUID of other OpenTIDE Objects with a relation to this Object", so direction is a choice this RFC makes:
+**Relations point from child to parent.** The template documents `opentide-relation` only as "UUID of other opentide Objects with a relation to this Object", so direction is a choice this RFC makes:
 
 | Family | Source field | Emitted |
 |--------|--------------|---------|
@@ -710,7 +710,7 @@ Acceptance (2026-09-28) kept the document-transport model above and cut the conf
 
 ### Observations not acted on
 
-[schemas/pins/rule.toml](https://github.com/OpenTideHQ/specifications/blob/main/schemas/pins/rule.toml) pins the rule top-level `severity` field to `severity::1.0`, while [specs/objects/rule-1.0.md](/docs/specifications/specs/objects/rule-1.0/) documents the default `Informational` and the committed valid rule fixture carries `High` — both `alert_severity::1.0` names. That is why the §7.4 threat-level table carries rows for both scales and matches a rule `severity` value against either: the sharing connector accommodates the discrepancy instead of depending on its resolution. This RFC modifies neither the rule spec nor the pin file, and adds or modifies no file under `specs/objects/` or `schemas/pins/`. Resolving the pin is separate work and belongs in its own issue.
+[schemas/pins/rule.toml](https://github.com/opentidehq/specifications/blob/main/schemas/pins/rule.toml) pins the rule top-level `severity` field to `severity::1.0`, while [specs/objects/rule-1.0.md](/docs/specifications/specs/objects/rule-1.0/) documents the default `Informational` and the committed valid rule fixture carries `High` — both `alert_severity::1.0` names. That is why the §7.4 threat-level table carries rows for both scales and matches a rule `severity` value against either: the sharing connector accommodates the discrepancy instead of depending on its resolution. This RFC modifies neither the rule spec nor the pin file, and adds or modifies no file under `specs/objects/` or `schemas/pins/`. Resolving the pin is separate work and belongs in its own issue.
 
 ### Pinned template and refresh direction
 
@@ -722,7 +722,7 @@ flowchart LR
   HERE --> SPEC["specs/sharing/misp-1.0.md<br/>pinned relation set"]
 ```
 
-The refresh direction is **upstream MISP → this repository**, which is the *reverse* of the specifications → opentide vocabulary sync direction in [AGENTS.md](https://github.com/OpenTideHQ/specifications/blob/main/AGENTS.md). A reader who applies the vocabulary rule here will push in the wrong direction, so the follow-up spec must state this explicitly. A refresh that changes the pinned relation set is a revision of `sharing::misp::1.0`, not a silent data update.
+The refresh direction is **upstream MISP → this repository**, which is the *reverse* of the specifications → opentide vocabulary sync direction in [AGENTS.md](https://github.com/opentidehq/specifications/blob/main/AGENTS.md). A reader who applies the vocabulary rule here will push in the wrong direction, so the follow-up spec must state this explicitly. A refresh that changes the pinned relation set is a revision of `sharing::misp::1.0`, not a silent data update.
 
 ## Drawbacks
 
@@ -793,19 +793,19 @@ Dispositions at acceptance, as pinned in [specs/sharing/misp-1.0.md](/docs/speci
 
 ## References
 
-- Spec-change issue: [specifications#10](https://github.com/OpenTideHQ/specifications/issues/10)
-- RFC PR: [specifications#9](https://github.com/OpenTideHQ/specifications/pull/9)
-- Threat field-type corrections consumed by this mapping: [specifications#11](https://github.com/OpenTideHQ/specifications/issues/11), [specifications#12](https://github.com/OpenTideHQ/specifications/issues/12), [specifications#13](https://github.com/OpenTideHQ/specifications/pull/13)
-- opentide implementation issue: [opentide#184](https://github.com/OpenTideHQ/opentide/issues/184)
-- Governance: [GOVERNANCE.md](/docs/specifications/GOVERNANCE/), [RFC 0001](/docs/specifications/rfcs/0001-authority-model/), [AGENTS.md](https://github.com/OpenTideHQ/specifications/blob/main/AGENTS.md)
-- Tracking: public GitHub only (`OpenTideHQ/specifications`, `OpenTideHQ/opentide`). Never Linear.
+- Spec-change issue: [specifications#10](https://github.com/opentidehq/specifications/issues/10)
+- RFC PR: [specifications#9](https://github.com/opentidehq/specifications/pull/9)
+- Threat field-type corrections consumed by this mapping: [specifications#11](https://github.com/opentidehq/specifications/issues/11), [specifications#12](https://github.com/opentidehq/specifications/issues/12), [specifications#13](https://github.com/opentidehq/specifications/pull/13)
+- opentide implementation issue: [opentide#184](https://github.com/opentidehq/opentide/issues/184)
+- Governance: [GOVERNANCE.md](/docs/specifications/GOVERNANCE/), [RFC 0001](/docs/specifications/rfcs/0001-authority-model/), [AGENTS.md](https://github.com/opentidehq/specifications/blob/main/AGENTS.md)
+- Tracking: public GitHub only (`opentidehq/specifications`, `opentidehq/opentide`). Never Linear.
 - Upstream MISP object this connector transports: [MISP/misp-objects `objects/opentide`](https://github.com/MISP/misp-objects/tree/main/objects/opentide)
 - MISP objects repository: [MISP/misp-objects](https://github.com/MISP/misp-objects)
 - MISP REST and client: [MISP API documentation](https://github.com/MISP/MISP/blob/2.5/docs/API_Doc.md), [MISP/PyMISP](https://github.com/MISP/PyMISP)
-- Vocabulary `misp` keys consumed here: [specs/vocabularies/format.md](/docs/specifications/specs/vocabularies/format/) (`[[keys]].misp`), [vocabularies/tlp.vocab.toml](https://github.com/OpenTideHQ/specifications/blob/main/vocabularies/tlp.vocab.toml), [vocabularies/pap.vocab.toml](https://github.com/OpenTideHQ/specifications/blob/main/vocabularies/pap.vocab.toml)
-- Severity scales without `misp` values, hence the §7.4 translation: [vocabularies/criticality.vocab.toml](https://github.com/OpenTideHQ/specifications/blob/main/vocabularies/criticality.vocab.toml), [vocabularies/severity.vocab.toml](https://github.com/OpenTideHQ/specifications/blob/main/vocabularies/severity.vocab.toml), [vocabularies/alert_severity.vocab.toml](https://github.com/OpenTideHQ/specifications/blob/main/vocabularies/alert_severity.vocab.toml)
+- Vocabulary `misp` keys consumed here: [specs/vocabularies/format.md](/docs/specifications/specs/vocabularies/format/) (`[[keys]].misp`), [vocabularies/tlp.vocab.toml](https://github.com/opentidehq/specifications/blob/main/vocabularies/tlp.vocab.toml), [vocabularies/pap.vocab.toml](https://github.com/opentidehq/specifications/blob/main/vocabularies/pap.vocab.toml)
+- Severity scales without `misp` values, hence the §7.4 translation: [vocabularies/criticality.vocab.toml](https://github.com/opentidehq/specifications/blob/main/vocabularies/criticality.vocab.toml), [vocabularies/severity.vocab.toml](https://github.com/opentidehq/specifications/blob/main/vocabularies/severity.vocab.toml), [vocabularies/alert_severity.vocab.toml](https://github.com/opentidehq/specifications/blob/main/vocabularies/alert_severity.vocab.toml)
 - Analogous target matrix: [specs/platforms/index.md](/docs/specifications/specs/platforms/), [specs/deployment.md](/docs/specifications/specs/deployment/)
-- Reserved RFC number: [specifications#8](https://github.com/OpenTideHQ/specifications/issues/8) (Sysdig / RFC 0004)
+- Reserved RFC number: [specifications#8](https://github.com/opentidehq/specifications/issues/8) (Sysdig / RFC 0004)
 - FIRST TLP: https://www.first.org/tlp/
 - PAP taxonomy: https://www.misp-project.org/taxonomies.html#_pap
 

@@ -5,7 +5,7 @@ status: proposed
 rfc: "0003"
 ---
 
-<RfcBanner entry={"{\"number\":\"0003\",\"status\":\"proposed\",\"note\":null,\"fields\":[{\"label\":\"Created\",\"parts\":[{\"kind\":\"text\",\"text\":\"2026-06-26\"}]},{\"label\":\"Supersedes\",\"parts\":[{\"kind\":\"text\",\"text\":\"file-level vocabulary version semantics proposed in \"},{\"kind\":\"link\",\"text\":\"RFC 0002\",\"href\":\"/docs/specifications/rfcs/0002-vocabulary-versioning/\"},{\"kind\":\"text\",\"text\":\" and \"},{\"kind\":\"link\",\"text\":\"PR #2\",\"href\":\"https://github.com/OpenTideHQ/specifications/pull/2\"}]}]}"} />
+<RfcBanner entry={"{\"number\":\"0003\",\"status\":\"proposed\",\"note\":null,\"fields\":[{\"label\":\"Created\",\"parts\":[{\"kind\":\"text\",\"text\":\"2026-06-26\"}]},{\"label\":\"Supersedes\",\"parts\":[{\"kind\":\"text\",\"text\":\"file-level vocabulary version semantics proposed in \"},{\"kind\":\"link\",\"text\":\"RFC 0002\",\"href\":\"/docs/specifications/rfcs/0002-vocabulary-versioning/\"},{\"kind\":\"text\",\"text\":\" and \"},{\"kind\":\"link\",\"text\":\"PR #2\",\"href\":\"https://github.com/opentidehq/specifications/pull/2\"}]}]}"} />
 
 ## Summary
 
@@ -13,7 +13,7 @@ This RFC replaces file-level vocabulary versioning with **per-key lifecycle meta
 
 ## Motivation
 
-[RFC 0002](/docs/specifications/rfcs/0002-vocabulary-versioning/) introduces versioned vocabulary identifiers and schema pins — the right direction — but its § Version source still assumes each vocabulary **file** carries a top-level `version`. [PR #2](https://github.com/OpenTideHQ/specifications/pull/2) implements that file-level approach.
+[RFC 0002](/docs/specifications/rfcs/0002-vocabulary-versioning/) introduces versioned vocabulary identifiers and schema pins — the right direction — but its § Version source still assumes each vocabulary **file** carries a top-level `version`. [PR #2](https://github.com/opentidehq/specifications/pull/2) implements that file-level approach.
 
 File-level versioning cannot answer: *what enum did `threat::1.0` allow for `killchain` when it was authored?* Adding a key to `killchain.vocab.toml` would bump the whole file, yet existing schema revisions must keep their original allowed values.
 
@@ -161,5 +161,5 @@ One-time backfill: `version = "1.0"` on all existing `[[keys]]` entries. All cur
 - [RFC 0002](/docs/specifications/rfcs/0002-vocabulary-versioning/) — identifier format and schema pins (file-level version superseded by this RFC)
 - [specs/vocabularies/format.md](/docs/specifications/specs/vocabularies/format/)
 - [specs/metaschema-keywords.md](/docs/specifications/specs/metaschema-keywords/)
-- [PR #2](https://github.com/OpenTideHQ/specifications/pull/2) — superseded approach
+- [PR #2](https://github.com/opentidehq/specifications/pull/2) — superseded approach
 

@@ -91,53 +91,53 @@ This repository’s CI (`scripts/object_fixtures.py`) is **not** `opentide valid
 
 | Fixture | Checker code |
 |---------|--------------|
-| [fixtures/invalid/threat-impact-as-string.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/invalid/threat-impact-as-string.yaml) | `field_not_list` |
-| [fixtures/invalid/threat-leverage-semicolon.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/invalid/threat-leverage-semicolon.yaml) | `packed_vocab_string` |
-| [fixtures/invalid/threat-impact-semicolon.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/invalid/threat-impact-semicolon.yaml) | `packed_vocab_string` |
-| [fixtures/invalid/threat-leverage-semicolon-list-item.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/invalid/threat-leverage-semicolon-list-item.yaml) | `packed_vocab_string` |
-| [fixtures/invalid/threat-impact-empty.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/invalid/threat-impact-empty.yaml) | `empty_vocab_list` |
-| [fixtures/invalid/threat-leverage-empty.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/invalid/threat-leverage-empty.yaml) | `empty_vocab_list` |
-| [fixtures/invalid/threat-leverage-high.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/invalid/threat-leverage-high.yaml) | `unknown_vocab_value` |
-| [fixtures/invalid/threat-actors-string-list.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/invalid/threat-actors-string-list.yaml) | `actors_not_objects` |
-| [fixtures/invalid/threat-actors-not-list.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/invalid/threat-actors-not-list.yaml) | `actors_not_objects` |
-| [fixtures/invalid/threat-actor-missing-name.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/invalid/threat-actor-missing-name.yaml) | `actor_missing_name` |
-| [fixtures/invalid/threat-actor-unscoped.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/invalid/threat-actor-unscoped.yaml) | `actor_unscoped` |
-| [fixtures/invalid/threat-actor-wrong-stage.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/invalid/threat-actor-wrong-stage.yaml) | `actor_unknown` |
-| [fixtures/invalid/threat-missing-body.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/invalid/threat-missing-body.yaml) | `missing_threat_body` |
-| [fixtures/invalid/rule-bad-uuid.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/invalid/rule-bad-uuid.yaml) | `invalid_uuid` |
-| [fixtures/invalid/rule-unknown-schema.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/invalid/rule-unknown-schema.yaml) | `unknown_schema` |
-| [fixtures/invalid/rule-missing-metadata.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/invalid/rule-missing-metadata.yaml) | `missing_metadata` |
-| [fixtures/invalid/rule-reviewed-bad-date.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/invalid/rule-reviewed-bad-date.yaml) | `invalid_reviewed` |
-| [fixtures/invalid/rule-1.0-reviewed.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/invalid/rule-1.0-reviewed.yaml) | `reviewed_not_in_schema` |
-| [fixtures/invalid/objective-no-signals.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/invalid/objective-no-signals.yaml) | `empty_signals` |
-| [fixtures/invalid/objective-signal-entry-mixed.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/invalid/objective-signal-entry-mixed.yaml) | `signal_entry_mixed` |
-| [fixtures/invalid/objective-signal-bad-uuid.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/invalid/objective-signal-bad-uuid.yaml) | `invalid_uuid` |
-| [fixtures/invalid/objective-1.0-signal-binding.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/invalid/objective-1.0-signal-binding.yaml) | `binding_requires_1_1` |
-| [fixtures/invalid/rule-elastic-esql-index.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/invalid/rule-elastic-esql-index.yaml) | `esql_source` (also `language` and `suppression_shape`) |
-| [fixtures/sharing/invalid/unknown-distribution.toml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/sharing/invalid/unknown-distribution.toml) | `unknown_key` |
-| [fixtures/sharing/invalid/legacy-targets-table.toml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/sharing/invalid/legacy-targets-table.toml) | `unknown_key` |
-| [fixtures/sharing/invalid/duplicate-name.toml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/sharing/invalid/duplicate-name.toml) | `duplicate_name` |
-| [fixtures/sharing/invalid/missing-url.toml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/sharing/invalid/missing-url.toml) | `missing_field` |
-| [fixtures/sharing/invalid/bad-name.toml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/sharing/invalid/bad-name.toml) | `name_invalid` |
-| [fixtures/sharing/invalid/bad-max-tlp.toml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/sharing/invalid/bad-max-tlp.toml) | `max_tlp_unknown` |
-| [fixtures/sharing/invalid/missing-max-tlp.toml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/sharing/invalid/missing-max-tlp.toml) | `missing_field` |
-| [fixtures/sharing/invalid/bad-organisation-uuid.toml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/sharing/invalid/bad-organisation-uuid.toml) | `organisation_uuid_invalid` |
-| [fixtures/sharing/invalid/bad-object-type.toml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/sharing/invalid/bad-object-type.toml) | `object_type_unknown` |
-| [fixtures/deployment/invalid/bad-schema.json](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/deployment/invalid/bad-schema.json) | `deployment_state_shape` |
-| [fixtures/deployment/invalid/uuid-mismatch.json](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/deployment/invalid/uuid-mismatch.json) | `deployment_state_uuid_mismatch` |
-| [fixtures/deployment/invalid/noncanonical-uuid.json](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/deployment/invalid/noncanonical-uuid.json) | `deployment_state_uuid_mismatch` |
-| [fixtures/deployment/invalid/numeric-id.json](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/deployment/invalid/numeric-id.json) | `deployment_state_shape` |
-| [fixtures/deployment/invalid/leading-zero-defender-id.json](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/deployment/invalid/leading-zero-defender-id.json) | `deployment_state_shape` |
-| [fixtures/deployment/invalid/empty-id.json](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/deployment/invalid/empty-id.json) | `deployment_state_shape` |
-| [fixtures/deployment/invalid/whitespace-tenant.json](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/deployment/invalid/whitespace-tenant.json) | `deployment_state_shape` |
-| [fixtures/deployment/invalid/unsupported-platform.json](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/deployment/invalid/unsupported-platform.json) | `deployment_state_platform` |
-| [fixtures/deployment/invalid/rule-with-rule-id.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/deployment/invalid/rule-with-rule-id.yaml) | `external_id_in_rule` |
-| [fixtures/deployment/invalid/rule-with-rule-id-tenant.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/deployment/invalid/rule-with-rule-id-tenant.yaml) | `external_id_in_rule` |
-| [fixtures/deployment/invalid/rule-with-rule-id-bundle.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/deployment/invalid/rule-with-rule-id-bundle.yaml) | `external_id_in_rule` |
+| [fixtures/invalid/threat-impact-as-string.yaml](https://github.com/opentidehq/specifications/blob/main/fixtures/invalid/threat-impact-as-string.yaml) | `field_not_list` |
+| [fixtures/invalid/threat-leverage-semicolon.yaml](https://github.com/opentidehq/specifications/blob/main/fixtures/invalid/threat-leverage-semicolon.yaml) | `packed_vocab_string` |
+| [fixtures/invalid/threat-impact-semicolon.yaml](https://github.com/opentidehq/specifications/blob/main/fixtures/invalid/threat-impact-semicolon.yaml) | `packed_vocab_string` |
+| [fixtures/invalid/threat-leverage-semicolon-list-item.yaml](https://github.com/opentidehq/specifications/blob/main/fixtures/invalid/threat-leverage-semicolon-list-item.yaml) | `packed_vocab_string` |
+| [fixtures/invalid/threat-impact-empty.yaml](https://github.com/opentidehq/specifications/blob/main/fixtures/invalid/threat-impact-empty.yaml) | `empty_vocab_list` |
+| [fixtures/invalid/threat-leverage-empty.yaml](https://github.com/opentidehq/specifications/blob/main/fixtures/invalid/threat-leverage-empty.yaml) | `empty_vocab_list` |
+| [fixtures/invalid/threat-leverage-high.yaml](https://github.com/opentidehq/specifications/blob/main/fixtures/invalid/threat-leverage-high.yaml) | `unknown_vocab_value` |
+| [fixtures/invalid/threat-actors-string-list.yaml](https://github.com/opentidehq/specifications/blob/main/fixtures/invalid/threat-actors-string-list.yaml) | `actors_not_objects` |
+| [fixtures/invalid/threat-actors-not-list.yaml](https://github.com/opentidehq/specifications/blob/main/fixtures/invalid/threat-actors-not-list.yaml) | `actors_not_objects` |
+| [fixtures/invalid/threat-actor-missing-name.yaml](https://github.com/opentidehq/specifications/blob/main/fixtures/invalid/threat-actor-missing-name.yaml) | `actor_missing_name` |
+| [fixtures/invalid/threat-actor-unscoped.yaml](https://github.com/opentidehq/specifications/blob/main/fixtures/invalid/threat-actor-unscoped.yaml) | `actor_unscoped` |
+| [fixtures/invalid/threat-actor-wrong-stage.yaml](https://github.com/opentidehq/specifications/blob/main/fixtures/invalid/threat-actor-wrong-stage.yaml) | `actor_unknown` |
+| [fixtures/invalid/threat-missing-body.yaml](https://github.com/opentidehq/specifications/blob/main/fixtures/invalid/threat-missing-body.yaml) | `missing_threat_body` |
+| [fixtures/invalid/rule-bad-uuid.yaml](https://github.com/opentidehq/specifications/blob/main/fixtures/invalid/rule-bad-uuid.yaml) | `invalid_uuid` |
+| [fixtures/invalid/rule-unknown-schema.yaml](https://github.com/opentidehq/specifications/blob/main/fixtures/invalid/rule-unknown-schema.yaml) | `unknown_schema` |
+| [fixtures/invalid/rule-missing-metadata.yaml](https://github.com/opentidehq/specifications/blob/main/fixtures/invalid/rule-missing-metadata.yaml) | `missing_metadata` |
+| [fixtures/invalid/rule-reviewed-bad-date.yaml](https://github.com/opentidehq/specifications/blob/main/fixtures/invalid/rule-reviewed-bad-date.yaml) | `invalid_reviewed` |
+| [fixtures/invalid/rule-1.0-reviewed.yaml](https://github.com/opentidehq/specifications/blob/main/fixtures/invalid/rule-1.0-reviewed.yaml) | `reviewed_not_in_schema` |
+| [fixtures/invalid/objective-no-signals.yaml](https://github.com/opentidehq/specifications/blob/main/fixtures/invalid/objective-no-signals.yaml) | `empty_signals` |
+| [fixtures/invalid/objective-signal-entry-mixed.yaml](https://github.com/opentidehq/specifications/blob/main/fixtures/invalid/objective-signal-entry-mixed.yaml) | `signal_entry_mixed` |
+| [fixtures/invalid/objective-signal-bad-uuid.yaml](https://github.com/opentidehq/specifications/blob/main/fixtures/invalid/objective-signal-bad-uuid.yaml) | `invalid_uuid` |
+| [fixtures/invalid/objective-1.0-signal-binding.yaml](https://github.com/opentidehq/specifications/blob/main/fixtures/invalid/objective-1.0-signal-binding.yaml) | `binding_requires_1_1` |
+| [fixtures/invalid/rule-elastic-esql-index.yaml](https://github.com/opentidehq/specifications/blob/main/fixtures/invalid/rule-elastic-esql-index.yaml) | `esql_source` (also `language` and `suppression_shape`) |
+| [fixtures/sharing/invalid/unknown-distribution.toml](https://github.com/opentidehq/specifications/blob/main/fixtures/sharing/invalid/unknown-distribution.toml) | `unknown_key` |
+| [fixtures/sharing/invalid/legacy-targets-table.toml](https://github.com/opentidehq/specifications/blob/main/fixtures/sharing/invalid/legacy-targets-table.toml) | `unknown_key` |
+| [fixtures/sharing/invalid/duplicate-name.toml](https://github.com/opentidehq/specifications/blob/main/fixtures/sharing/invalid/duplicate-name.toml) | `duplicate_name` |
+| [fixtures/sharing/invalid/missing-url.toml](https://github.com/opentidehq/specifications/blob/main/fixtures/sharing/invalid/missing-url.toml) | `missing_field` |
+| [fixtures/sharing/invalid/bad-name.toml](https://github.com/opentidehq/specifications/blob/main/fixtures/sharing/invalid/bad-name.toml) | `name_invalid` |
+| [fixtures/sharing/invalid/bad-max-tlp.toml](https://github.com/opentidehq/specifications/blob/main/fixtures/sharing/invalid/bad-max-tlp.toml) | `max_tlp_unknown` |
+| [fixtures/sharing/invalid/missing-max-tlp.toml](https://github.com/opentidehq/specifications/blob/main/fixtures/sharing/invalid/missing-max-tlp.toml) | `missing_field` |
+| [fixtures/sharing/invalid/bad-organisation-uuid.toml](https://github.com/opentidehq/specifications/blob/main/fixtures/sharing/invalid/bad-organisation-uuid.toml) | `organisation_uuid_invalid` |
+| [fixtures/sharing/invalid/bad-object-type.toml](https://github.com/opentidehq/specifications/blob/main/fixtures/sharing/invalid/bad-object-type.toml) | `object_type_unknown` |
+| [fixtures/deployment/invalid/bad-schema.json](https://github.com/opentidehq/specifications/blob/main/fixtures/deployment/invalid/bad-schema.json) | `deployment_state_shape` |
+| [fixtures/deployment/invalid/uuid-mismatch.json](https://github.com/opentidehq/specifications/blob/main/fixtures/deployment/invalid/uuid-mismatch.json) | `deployment_state_uuid_mismatch` |
+| [fixtures/deployment/invalid/noncanonical-uuid.json](https://github.com/opentidehq/specifications/blob/main/fixtures/deployment/invalid/noncanonical-uuid.json) | `deployment_state_uuid_mismatch` |
+| [fixtures/deployment/invalid/numeric-id.json](https://github.com/opentidehq/specifications/blob/main/fixtures/deployment/invalid/numeric-id.json) | `deployment_state_shape` |
+| [fixtures/deployment/invalid/leading-zero-defender-id.json](https://github.com/opentidehq/specifications/blob/main/fixtures/deployment/invalid/leading-zero-defender-id.json) | `deployment_state_shape` |
+| [fixtures/deployment/invalid/empty-id.json](https://github.com/opentidehq/specifications/blob/main/fixtures/deployment/invalid/empty-id.json) | `deployment_state_shape` |
+| [fixtures/deployment/invalid/whitespace-tenant.json](https://github.com/opentidehq/specifications/blob/main/fixtures/deployment/invalid/whitespace-tenant.json) | `deployment_state_shape` |
+| [fixtures/deployment/invalid/unsupported-platform.json](https://github.com/opentidehq/specifications/blob/main/fixtures/deployment/invalid/unsupported-platform.json) | `deployment_state_platform` |
+| [fixtures/deployment/invalid/rule-with-rule-id.yaml](https://github.com/opentidehq/specifications/blob/main/fixtures/deployment/invalid/rule-with-rule-id.yaml) | `external_id_in_rule` |
+| [fixtures/deployment/invalid/rule-with-rule-id-tenant.yaml](https://github.com/opentidehq/specifications/blob/main/fixtures/deployment/invalid/rule-with-rule-id-tenant.yaml) | `external_id_in_rule` |
+| [fixtures/deployment/invalid/rule-with-rule-id-bundle.yaml](https://github.com/opentidehq/specifications/blob/main/fixtures/deployment/invalid/rule-with-rule-id-bundle.yaml) | `external_id_in_rule` |
 
-Deployment fixtures (`scripts/deployment_state_fixtures.py`) are checked against [schemas/deployment.state.1.0.schema.json](https://github.com/OpenTideHQ/specifications/blob/main/schemas/deployment.state.1.0.schema.json) plus the filename rules the schema cannot see. Each invalid shard fixture is checked under the shard filename the checker assigns to it (a uuid that differs from `object_uuid` for `uuid-mismatch.json`, the uppercase spelling for `noncanonical-uuid.json`, the valid name otherwise). The valid shard must be byte-identical to writer output, and no rule fixture in `fixtures/valid/`, `fixtures/platforms/`, or `fixtures/cross-object/` may carry a legacy external-id key.
+Deployment fixtures (`scripts/deployment_state_fixtures.py`) are checked against [schemas/deployment.state.1.0.schema.json](https://github.com/opentidehq/specifications/blob/main/schemas/deployment.state.1.0.schema.json) plus the filename rules the schema cannot see. Each invalid shard fixture is checked under the shard filename the checker assigns to it (a uuid that differs from `object_uuid` for `uuid-mismatch.json`, the uppercase spelling for `noncanonical-uuid.json`, the valid name otherwise). The valid shard must be byte-identical to writer output, and no rule fixture in `fixtures/valid/`, `fixtures/platforms/`, or `fixtures/cross-object/` may carry a legacy external-id key.
 
-Sharing fixtures (`scripts/sharing_fixtures.py`) also prove the merge rule: [override.toml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/sharing/valid/override.toml) merged by `name` onto [sharing.toml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/sharing/valid/sharing.toml) MUST equal [merged.toml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/sharing/valid/merged.toml).
+Sharing fixtures (`scripts/sharing_fixtures.py`) also prove the merge rule: [override.toml](https://github.com/opentidehq/specifications/blob/main/fixtures/sharing/valid/override.toml) merged by `name` onto [sharing.toml](https://github.com/opentidehq/specifications/blob/main/fixtures/sharing/valid/sharing.toml) MUST equal [merged.toml](https://github.com/opentidehq/specifications/blob/main/fixtures/sharing/valid/merged.toml).
 
 On a rule's `configurations.elastic` block the checker applies three of the [Elastic constraint codes](/docs/specifications/specs/platforms/elastic-1.0/#constraints), the ones the invalid Elastic fixture exercises: `language`, `esql_source`, and `suppression_shape`. They are the platform's own codes, so the checker and `opentide validate` report the same name. The other Elastic codes, and every other platform block, are left to opentide.
 
@@ -179,13 +179,13 @@ Validation uses merged configuration for vocabulary and status enums. No separat
 
 | Fixture | Expected result |
 |---------|-----------------|
-| [fixtures/valid/rule-1.0.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/valid/rule-1.0.yaml) | Passes `uuid-format` + `schema` (`opentide validate`) |
-| [fixtures/valid/threat-1.0.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/valid/threat-1.0.yaml) | Passes `threat::1.0` lists (`impact`, `leverage`) and `list[ThreatActor]` |
-| [fixtures/invalid/rule-bad-uuid.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/invalid/rule-bad-uuid.yaml) | Fails `uuid-format` (`opentide validate`); checker code `invalid_uuid` |
-| [fixtures/invalid/rule-unknown-schema.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/invalid/rule-unknown-schema.yaml) | Fails `schema` (`opentide validate`); checker code `unknown_schema` |
-| [fixtures/cross-object/rule-references-objective.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/cross-object/rule-references-objective.yaml) | Passes when sibling objective fixture present |
-| [fixtures/deployment/valid/00000000-0000-4000-8003-000000000010.json](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/deployment/valid/00000000-0000-4000-8003-000000000010.json) | Valid `deployment.state::1.0` shard in writer form |
-| [fixtures/deployment/invalid/rule-with-rule-id-tenant.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/deployment/invalid/rule-with-rule-id-tenant.yaml) | Fails `schema` with `external_id_in_rule` |
+| [fixtures/valid/rule-1.0.yaml](https://github.com/opentidehq/specifications/blob/main/fixtures/valid/rule-1.0.yaml) | Passes `uuid-format` + `schema` (`opentide validate`) |
+| [fixtures/valid/threat-1.0.yaml](https://github.com/opentidehq/specifications/blob/main/fixtures/valid/threat-1.0.yaml) | Passes `threat::1.0` lists (`impact`, `leverage`) and `list[ThreatActor]` |
+| [fixtures/invalid/rule-bad-uuid.yaml](https://github.com/opentidehq/specifications/blob/main/fixtures/invalid/rule-bad-uuid.yaml) | Fails `uuid-format` (`opentide validate`); checker code `invalid_uuid` |
+| [fixtures/invalid/rule-unknown-schema.yaml](https://github.com/opentidehq/specifications/blob/main/fixtures/invalid/rule-unknown-schema.yaml) | Fails `schema` (`opentide validate`); checker code `unknown_schema` |
+| [fixtures/cross-object/rule-references-objective.yaml](https://github.com/opentidehq/specifications/blob/main/fixtures/cross-object/rule-references-objective.yaml) | Passes when sibling objective fixture present |
+| [fixtures/deployment/valid/00000000-0000-4000-8003-000000000010.json](https://github.com/opentidehq/specifications/blob/main/fixtures/deployment/valid/00000000-0000-4000-8003-000000000010.json) | Valid `deployment.state::1.0` shard in writer form |
+| [fixtures/deployment/invalid/rule-with-rule-id-tenant.yaml](https://github.com/opentidehq/specifications/blob/main/fixtures/deployment/invalid/rule-with-rule-id-tenant.yaml) | Fails `schema` with `external_id_in_rule` |
 
 ## History
 
@@ -196,5 +196,5 @@ Validation uses merged configuration for vocabulary and status enums. No separat
 | 1.1 | 2026-10-16 | `external_id_in_rule` replaces the generic unknown-key error for legacy external-id keys; full-workspace validation checks every deployment-state shard, orphans included; every `--file` target must match an object; deployment fixture checker codes ([RFC 0010](/docs/specifications/rfcs/0010-deployment-external-ids/)). |
 | 1.0 | 2026-09-30 | Fixture checker codes `invalid_reviewed` and `reviewed_not_in_schema` ([RFC 0008](/docs/specifications/rfcs/0008-rule-reviewed-date/)). |
 | 1.0 | 2026-09-28 | `sharing-config` checker codes for `[[misp]]` integration blocks. |
-| 1.0 | 2026-09-16 | Document specifications-repo fixture checker codes for `threat::1.0` list/`ThreatActor` encoding ([#11](https://github.com/OpenTideHQ/specifications/issues/11), [#12](https://github.com/OpenTideHQ/specifications/issues/12)). |
+| 1.0 | 2026-09-16 | Document specifications-repo fixture checker codes for `threat::1.0` list/`ThreatActor` encoding ([#11](https://github.com/opentidehq/specifications/issues/11), [#12](https://github.com/opentidehq/specifications/issues/12)). |
 | 1.0 | 2026-06-25 | Initial spec from opentide `validation/session.py` |

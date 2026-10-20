@@ -10,7 +10,7 @@ supersedes: null
 
 ## Requirements
 
-- Every vocabulary file MUST validate against [schemas/vocabulary.schema.json](https://github.com/OpenTideHQ/specifications/blob/main/schemas/vocabulary.schema.json).
+- Every vocabulary file MUST validate against [schemas/vocabulary.schema.json](https://github.com/opentidehq/specifications/blob/main/schemas/vocabulary.schema.json).
 - Every vocabulary file MUST declare `name` and `field` at the top level.
 - Vocabulary files MUST NOT declare a top-level `version` property; versioning is per `[[keys]]` entry (see [RFC 0003](/docs/specifications/rfcs/0003-per-key-vocabulary-versioning/)).
 - Entry keys MUST be declared in `[[keys]]` tables unless using `stages` for scoped vocabularies.
@@ -71,7 +71,7 @@ A vocabulary contract `field::M.m` resolves to all keys where:
 - `version <= M.m` (cumulative minor semantics), and
 - `removed` is absent or `removed > M.m`.
 
-Object schema revisions pin explicit contracts via [schemas/pins/](https://github.com/OpenTideHQ/specifications/blob/main/schemas/pins/) manifests (see [RFC 0003](/docs/specifications/rfcs/0003-per-key-vocabulary-versioning/)).
+Object schema revisions pin explicit contracts via [schemas/pins/](https://github.com/opentidehq/specifications/blob/main/schemas/pins/) manifests (see [RFC 0003](/docs/specifications/rfcs/0003-per-key-vocabulary-versioning/)).
 
 ### Staged vocabularies
 
@@ -125,8 +125,8 @@ The sync script is an opentide build concern; this spec defines the data contrac
 
 ## Examples
 
-- Canonical TLP vocabulary: [vocabularies/tlp.vocab.toml](https://github.com/OpenTideHQ/specifications/blob/main/vocabularies/tlp.vocab.toml)
-- JSON Schema: [schemas/vocabulary.schema.json](https://github.com/OpenTideHQ/specifications/blob/main/schemas/vocabulary.schema.json)
+- Canonical TLP vocabulary: [vocabularies/tlp.vocab.toml](https://github.com/opentidehq/specifications/blob/main/vocabularies/tlp.vocab.toml)
+- JSON Schema: [schemas/vocabulary.schema.json](https://github.com/opentidehq/specifications/blob/main/schemas/vocabulary.schema.json)
 
 ## History
 

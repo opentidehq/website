@@ -87,7 +87,7 @@ A platform key outside this table fails `deployment_state_platform`. A tenant ke
 
 Root keys other than `schema`, `object_uuid`, and `platforms` are allowed. A writer MUST preserve them, so a newer field survives an older CLI.
 
-The JSON Schema [schemas/deployment.state.1.0.schema.json](https://github.com/OpenTideHQ/specifications/blob/main/schemas/deployment.state.1.0.schema.json) is a checker artifact for the file content. It cannot see the filename, so filename equality and the case rule below are checked by the reader, not by the schema.
+The JSON Schema [schemas/deployment.state.1.0.schema.json](https://github.com/opentidehq/specifications/blob/main/schemas/deployment.state.1.0.schema.json) is a checker artifact for the file content. It cannot see the filename, so filename equality and the case rule below are checked by the reader, not by the schema.
 
 ### Canonical form
 
@@ -175,7 +175,7 @@ A migration is complete when the default branch contains, in one commit, every r
 | `.opentide/states/deployment/` | MUST be committed. MUST NOT be gitignored. |
 | `.opentide/states/sharing.jsonl` | SHOULD be gitignored. Regenerable cache. |
 | `.opentide/states/` | MUST NOT be gitignored as a whole. |
-| `.opentide/inflight/` | Unchanged until [specifications#31](https://github.com/OpenTideHQ/specifications/issues/31). |
+| `.opentide/inflight/` | Unchanged until [specifications#31](https://github.com/opentidehq/specifications/issues/31). |
 
 `opentide setup` MUST write `.opentide/states/sharing.jsonl`, not `.opentide/states/`, as the ignore line for a new repository. Setup does not rewrite an existing `.gitignore`; `migrate-state` and the create guard are what stop an old ignore from hiding shards.
 
@@ -290,11 +290,11 @@ configurations:
 
 After migration the `rule_id::Contoso` line is gone, the rest of the file is byte-identical, and the shard holds `"defender_for_endpoint": {"Contoso": "12345"}`.
 
-Fixtures: [fixtures/deployment/valid/](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/deployment/valid/) and [fixtures/deployment/invalid/](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/deployment/invalid/), checked by `scripts/deployment_state_fixtures.py`.
+Fixtures: [fixtures/deployment/valid/](https://github.com/opentidehq/specifications/blob/main/fixtures/deployment/valid/) and [fixtures/deployment/invalid/](https://github.com/opentidehq/specifications/blob/main/fixtures/deployment/invalid/), checked by `scripts/deployment_state_fixtures.py`.
 
 ## History
 
 | Version | Date | Notes |
 |---------|------|-------|
-| 1.1 | 2026-10-16 | CI requirement 1: no GitHub Actions `concurrency` group on the production job, which would cancel a pending diff-scoped deploy ([specifications#43](https://github.com/OpenTideHQ/specifications/issues/43)). |
+| 1.1 | 2026-10-16 | CI requirement 1: no GitHub Actions `concurrency` group on the production job, which would cancel a pending diff-scoped deploy ([specifications#43](https://github.com/opentidehq/specifications/issues/43)). |
 | 1.0 | 2026-10-16 | Initial normative deployment-state contract from accepted [RFC 0010](/docs/specifications/rfcs/0010-deployment-external-ids/). |

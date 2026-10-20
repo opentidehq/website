@@ -222,12 +222,12 @@ scheduling:
   nrt: true
 ```
 
-Fixture: [fixtures/platforms/sentinel.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/platforms/sentinel.yaml). The rule-object fixture [fixtures/valid/rule-1.0.yaml](https://github.com/OpenTideHQ/specifications/blob/main/fixtures/valid/rule-1.0.yaml) carries the same scheduled shape.
+Fixture: [fixtures/platforms/sentinel.yaml](https://github.com/opentidehq/specifications/blob/main/fixtures/platforms/sentinel.yaml). The rule-object fixture [fixtures/valid/rule-1.0.yaml](https://github.com/opentidehq/specifications/blob/main/fixtures/valid/rule-1.0.yaml) carries the same scheduled shape.
 
 ## History
 
 | Version | Date | Notes |
 |---------|------|-------|
 | 1.0 | 2026-09-30 | Initial field contract from the Sentinel configuration model and deployer. |
-| 1.1 | 2026-10-19 | `tactics`: ATT&CK v19 renamed Defense Evasion (TA0005) to Stealth and split out Defense Impairment (TA0112). Both, and the ICS Evasion tactic, deploy as `DefenseEvasion`, the only Sentinel tactic for them. A stage with no Sentinel tactic is dropped ([opentide#568](https://github.com/OpenTideHQ/opentide/issues/568)). Schema id unchanged. |
-| 1.1 | 2026-10-19 | [Durations](#durations): ISO 8601 stays the documented form; shorthand, single-unit or compound (`30m`, `1h10m`, `1d2h`, `2m30s`), with the grammar of [Elastic Security](/docs/specifications/specs/platforms/elastic-1.0/#durations), is accepted and converted to ISO 8601 at deploy ([opentide#564](https://github.com/OpenTideHQ/opentide/pull/564) and the opentide 0.16.0 follow-up, which makes shorthand case-sensitive and adds seconds). Applies to `scheduling.frequency`, `scheduling.lookback`, `alert.suppression`, and `grouping.alert.grouping_lookback`. Schema id unchanged. |
+| 1.1 | 2026-10-19 | `tactics`: ATT&CK v19 renamed Defense Evasion (TA0005) to Stealth and split out Defense Impairment (TA0112). Both, and the ICS Evasion tactic, deploy as `DefenseEvasion`, the only Sentinel tactic for them. A stage with no Sentinel tactic is dropped ([opentide#568](https://github.com/opentidehq/opentide/issues/568)). Schema id unchanged. |
+| 1.1 | 2026-10-19 | [Durations](#durations): ISO 8601 stays the documented form; shorthand, single-unit or compound (`30m`, `1h10m`, `1d2h`, `2m30s`), with the grammar of [Elastic Security](/docs/specifications/specs/platforms/elastic-1.0/#durations), is accepted and converted to ISO 8601 at deploy ([opentide#564](https://github.com/opentidehq/opentide/pull/564) and the opentide 0.16.0 follow-up, which makes shorthand case-sensitive and adds seconds). Applies to `scheduling.frequency`, `scheduling.lookback`, `alert.suppression`, and `grouping.alert.grouping_lookback`. Schema id unchanged. |
