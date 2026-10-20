@@ -431,6 +431,8 @@ ${SENTINEL_QUERY_BASE}
         - T1003.001
     grouping:
       event: AlertPerResult
+      alert:
+        enabled: false
     entities:
       - entity: Host
         mappings:
