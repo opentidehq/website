@@ -26,6 +26,8 @@ const SOURCE = [
   'chaining: - relation: sequence::preceeds  surface: OS::Windows::Desktop::11',
   // CrowdStrike Falcon: event search
   '#event_simpleName=ProcessRollup2 ImageFileName=/lsass\\.exe/i | groupBy([aid, ComputerName])',
+  // Elastic Security: ES|QL
+  'FROM logs-endpoint.events.process-* | WHERE process.args LIKE "*lsass*" | STATS count = COUNT(*) BY host.name',
   // Microsoft Sentinel: KQL
   'SigninLogs | where AuthenticationProtocol == "deviceCode" | summarize count() by UserPrincipalName',
   // HarfangLab: YARA
