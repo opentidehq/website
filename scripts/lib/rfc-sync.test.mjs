@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { rewriteHref } from './docs-sync.mjs';
+import { publishedMdxViolations } from './mdx-safety.mjs';
 import {
   buildRfcFolderMeta,
   ensureRfcDiscovery,
@@ -258,8 +259,9 @@ test('escapeMdxProse ignores a backtick run that is not a CommonMark fence', () 
     true,
   );
   assert.equal(escaped.includes('export const kept = "{inside}"'), true);
-  assert.equal(escaped.includes(' export const indented = 1'), true);
-  assert.equal(escaped.includes('\nexport const indented'), false);
+  // MDX disables indented code, so a fence indented four spaces is still a fence.
+  assert.equal(escaped.includes('    ```js\nexport const indented = 1\n    ```'), true);
+  assert.deepEqual(publishedMdxViolations(escaped, 'fences'), []);
 });
 
 test('escapeMdxProse keeps column-1 import and export as prose', () => {
@@ -283,6 +285,31 @@ test('escapeMdxProse keeps column-1 import and export as prose', () => {
   assert.equal(escaped.includes('\n\\}'), true);
   assert.equal(escaped.includes('mention export const in the middle.'), true);
   assert.equal(escaped.includes('`export const literal = 1`'), true);
+});
+
+test('escapeMdxProse leaves nothing executable where MDX closes code differently from a fence line', () => {
+  const payload = '{globalThis.process.getBuiltinModule("node:child_process").execSync("id")}';
+  const cases = {
+    'fence in a list item': `- \`\`\`\n  x\n  \`\`\`\n\n${payload}\n`,
+    'fence in an ordered item': `1. \`\`\`\n   x\n   \`\`\`\n\nexport const pwned = 1\n`,
+    'fence in a blockquote': `> \`\`\`\n> x\n> \`\`\`\n\n${payload}\n`,
+    'closer indented four spaces': `\`\`\`\n    \`\`\`\n${payload}\n\`\`\`\n`,
+    'closer indented by a tab': `\`\`\`\n\t\`\`\`\n${payload}\n\`\`\`\n`,
+    'code span across table cells': `| a | b |\n| - | - |\n| \`x | ${payload} | y\` | z |\n`,
+    'comment that hides a fence': `<!-- -->\`\`\`\ntext\n\`\`\`\n${payload}\n\`\`\`\n`,
+  };
+  for (const [name, source] of Object.entries(cases)) {
+    assert.deepEqual(publishedMdxViolations(escapeMdxProse(source), name), [], name);
+  }
+});
+
+test('escapeMdxProse keeps code inside list items and blockquotes verbatim', () => {
+  const source = '- step\n\n  ```toml\n  name = "{field}"\n      ```\n\n> ```\n> <Tag>\n> ```\n\nUse {field}.\n';
+  const escaped = escapeMdxProse(source);
+  assert.equal(escaped.includes('  name = "{field}"\n      ```'), true);
+  assert.equal(escaped.includes('> <Tag>'), true);
+  assert.equal(escaped.includes('Use \\{field\\}.'), true);
+  assert.deepEqual(publishedMdxViolations(escaped, 'containers'), []);
 });
 
 test('syncRfcSection skips symlink RFC files and a symlink rfcs directory', () => {
