@@ -26,9 +26,9 @@ const STOPS: Stop[] = [
   { title: 'Agent drafts', lines: ['the chain, in YAML', 'skills + MCP'], icon: Sparkles, actor: 'agent' },
   { title: 'opentide checks', lines: ['validate --strict', 'validate query --live'], icon: Check, actor: 'tool' },
   { title: 'PR opened', lines: ['branch + diff', 'CI gates run'], icon: GitPullRequest, actor: 'agent' },
-  { title: 'STAGING', lines: ['from the pull request', '--plan STAGING'], icon: Rocket, actor: 'env' },
+  { title: 'STAGING', lines: ['from the pull request', '--strategy PREVIEW'], icon: Rocket, actor: 'env' },
   { title: 'Human review', lines: ['a reviewer', 'approves the merge'], icon: Lock, actor: 'human' },
-  { title: 'PRODUCTION', lines: ['on merge', '--plan PRODUCTION'], icon: ShieldCheck, actor: 'env' },
+  { title: 'PRODUCTION', lines: ['on merge', '--strategy RELEASE'], icon: ShieldCheck, actor: 'env' },
 ];
 
 /** Where stop `i` sits on the wide track, as a percentage of its width. */

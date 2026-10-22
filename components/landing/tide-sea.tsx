@@ -33,7 +33,7 @@ const SOURCE = [
   // Splunk: SPL
   'index=o365 sourcetype=o365:management:activity Operation=New-InboxRule | stats values(Parameters) by UserId',
   'severity: Significant incident  mitre_attack: T1003.001, T1190  impact: Identity Theft',
-  'opentide validate --strict && opentide deploy --plan STAGING --dry-run',
+  'opentide validate --strict && opentide deploy --strategy PREVIEW --dry-run',
 ]
   // Rows wrap around the text, so the last statement needs the same gap before the first.
   .map((statement) => `${statement}   `)

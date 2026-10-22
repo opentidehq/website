@@ -494,8 +494,8 @@ flags = ["cti"]
 
 [[tenants]]
 name = "SOC Staging"
-description = "Pre-production workspace — receives STAGING content"
-deployment = "STAGING"
+description = "Pre-production workspace — receives PREVIEW deploys from pull requests"
+strategies = ["PREVIEW"]
 [tenants.setup]
 ssl = true
 resource_group = "rg-secops-sentinel-stg"
@@ -509,7 +509,7 @@ azure_client_secret = "$AZURE_CLIENT_SECRET"
 [[tenants]]
 name = "SOC Production"
 description = "Production workspace — promotion gated by a protected environment"
-deployment = "PRODUCTION"
+strategies = ["RELEASE"]
 [tenants.setup]
 ssl = true
 resource_group = "rg-secops-sentinel-prd"
@@ -540,8 +540,8 @@ flags = ["rba"]
 
 [[tenants]]
 name = "ES Staging"
-description = "Enterprise Security search head — receives STAGING content"
-deployment = "STAGING"
+description = "Enterprise Security search head — receives PREVIEW deploys from pull requests"
+strategies = ["PREVIEW"]
 [tenants.setup]
 ssl = true
 url = "$SPLUNK_URL"
@@ -657,14 +657,14 @@ export const REVIEW_JOBS: ReviewJob[] = [
     name: 'Deploy Staging',
     trigger: 'on: pull_request',
     duration: '1m 12s',
-    meta: '--plan STAGING · credentials from CI secrets',
+    meta: '--strategy PREVIEW · credentials from CI secrets',
     lines: [
       '::group::Deploy to staging tenants',
-      '$ opentide deploy --dry-run --plan STAGING',
+      '$ opentide deploy --dry-run --strategy PREVIEW',
       '── MDR Deployment ──',
       '── MDR Deployment ──',
       'OK Deployment completed',
-      '$ opentide deploy --plan STAGING --skip-unconfigured',
+      '$ opentide deploy --strategy PREVIEW --skip-unconfigured',
       '── MDR Deployment ──',
       '── MDR Deployment ──',
       'OK Deployment completed',

@@ -33,7 +33,7 @@ const STAGES = [
   },
 ] as const;
 
-const PR_LANE = ['validate --strict', 'lint --strict', 'validate query --live', 'generate', 'deploy --plan STAGING'] as const;
+const PR_LANE = ['validate --strict', 'lint --strict', 'validate query --live', 'generate', 'deploy --strategy PREVIEW'] as const;
 
 /**
  * One run of the pipeline, as a script: the stages light up in turn, then the CI that
@@ -44,7 +44,7 @@ const BEATS = [
   ...STAGES.map(() => 900),
   ...PR_LANE.map(() => 650),
   1600, // a human merges
-  800, // deploy --plan PRODUCTION
+  800, // deploy --strategy RELEASE
   2600, // hold
 ];
 const STAGE_END = STAGES.length;
@@ -178,7 +178,7 @@ export function PipelineFlow() {
             </span>
             {arrow}
             <Chip state={stateAt(now, PROD)} solid>
-              deploy --plan PRODUCTION
+              deploy --strategy RELEASE
             </Chip>
             <span className="ml-2 font-mono text-xs text-[var(--landing-subtle)]">
               add a protected environment for a second approval
