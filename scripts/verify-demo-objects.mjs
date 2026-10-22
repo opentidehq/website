@@ -8,7 +8,7 @@
  *
  *   opentide validate --strict
  *   opentide lint --strict
- *   opentide deploy --dry-run --plan STAGING   (with placeholder credentials)
+ *   opentide deploy --dry-run --strategy PREVIEW --all   (with placeholder credentials)
  *
  * Needs `opentide` on PATH (pip install opentide) and Node with --experimental-strip-types,
  * because the demo data lives in TypeScript modules: `pnpm verify:demos`.
@@ -28,7 +28,7 @@ const failures = [];
 
 // opentide reads TF_BUILD, GITHUB_ACTIONS and CI to pick a CI flavour and then diffs against
 // the CI's remote branches. The scratch folders have no git history, so run the engine without
-// those markers: in local mode it scopes the deploy to the rules folder, as on a laptop.
+// those markers and pass --all to the deploy so it reads every rule file, not a git diff.
 const CI_MARKERS = new Set(['TF_BUILD', 'GITHUB_ACTIONS', 'CI', 'GITLAB_CI']);
 const localEnv = Object.fromEntries(Object.entries(process.env).filter(([name]) => !CI_MARKERS.has(name)));
 
@@ -88,7 +88,7 @@ try {
   const env = placeholderCredentials(Object.values(DEMO_FILES));
   opentide(studio, ['validate', '--strict']);
   opentide(studio, ['lint', '--strict']);
-  opentide(studio, ['deploy', '--dry-run', '--plan', 'STAGING'], env);
+  opentide(studio, ['deploy', '--dry-run', '--strategy', 'PREVIEW', '--all'], env);
   write(studio, INLINE_EDIT.path, INLINE_EDIT.tuned);
   console.log('  after the inline edit:');
   opentide(studio, ['validate', '--strict']);

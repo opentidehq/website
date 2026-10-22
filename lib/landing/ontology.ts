@@ -243,7 +243,7 @@ export const NODES: Record<NodeId, OntologyNode> = {
     tag: 'platforms/*.toml',
     title: 'Integrations',
     question: 'Where does it run?',
-    body: 'The SIEM and EDR platforms the rules deploy to, each configured once per repository with the tenants a plan deploys to.',
+    body: 'The SIEM and EDR platforms the rules deploy to, each configured once per repository with the tenants and the deploy strategies each one accepts.',
     file: '.opentide/configurations/platforms/sentinel.toml',
     excerpt: [
       '[platform]',
@@ -252,7 +252,7 @@ export const NODES: Record<NodeId, OntologyNode> = {
       '',
       '[[tenants]]',
       'name = "SOC Staging"',
-      'deployment = "STAGING"',
+      'strategies = ["PREVIEW"]',
     ],
     records: [
       { name: 'Microsoft Sentinel', facts: ['sentinel'] },
