@@ -10,11 +10,11 @@ Detection engineers, security platform operators, and AI-agent integrators build
 
 ## Product purpose
 
-Marketing site and documentation hub for opentide — spec-driven development for detection engineering. Help visitors evaluate the project, install the CLI/SDK/MCP stack, read normative specifications, and adopt DetectionOps workflows.
+Marketing site and documentation hub for opentide — spec-driven development for agentic detection engineering. Help visitors evaluate the project, install the CLI/SDK/MCP stack, read normative specifications, and adopt spec-driven detection engineering workflows.
 
 ## Positioning
 
-opentide is **spec-driven development for detection engineering**: an **ontology** (threat → objective → rule, linked by UUID) and a **taxonomy** (versioned vocabularies) that keep every detection threat-aligned, maintainable and fast to ship, with or without agents. The engine (one package: CLI, SDK, MCP) enforces the spec; your detection repo stays the source of truth.
+opentide is **spec-driven development for agentic detection engineering**: an **ontology** (threat → objective → rule, linked by UUID) and a **taxonomy** (versioned vocabularies) that keep every detection threat-aligned, maintainable and fast to ship, with or without agents. The engine (one package: CLI, SDK, MCP) enforces the spec; your detection repo stays the source of truth.
 
 - Lead with **threat alignment, maintainability, speed and quality**.
 - The agent story: agents made the query cheap; the spec keeps their output aligned. Agents go through the same gates as a human change.

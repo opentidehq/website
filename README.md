@@ -80,7 +80,7 @@ description: One sentence summary for listings and SEO.
 author: Your Name
 date: 2026-06-25
 tags:
-  - detectionops
+  - detection-engineering
 ---
 
 Your content here.
@@ -121,7 +121,7 @@ That call needs a token with `repo` scope on this repository. If it is not wired
 
 ## Related repositories
 
-- **[opentide](https://github.com/opentidehq/opentide)** — DetectionOps engine (PyPI)
+- **[opentide](https://github.com/opentidehq/opentide)** — The opentide engine: CLI, SDK and MCP server (PyPI)
 - **[specifications](https://github.com/opentidehq/specifications)** — Normative specs
 - **[library](https://github.com/opentidehq/library)** — Public detection objects
 - **[explorer](https://github.com/opentidehq/explorer)** — Browse published objects

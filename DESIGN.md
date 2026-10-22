@@ -1,6 +1,6 @@
 ---
 name: opentide
-description: Spec-driven development for detection engineering — EU coastal precision on the marketing site; Fumadocs clarity in docs.
+description: Spec-driven development for agentic detection engineering — EU coastal precision on the marketing site; Fumadocs clarity in docs.
 colors:
   eu-blue: "#001489"
   eu-yellow: "#ffcc00"

@@ -9,7 +9,7 @@ export const docTabs = [
   {
     key: 'usage',
     title: 'Usage',
-    description: 'Structured DetectionOps — from scaffold to production',
+    description: 'Spec-driven detection engineering — from scaffold to production',
     url: '/docs/usage/',
     icon: 'BookOpen' as const,
     iconColor: '#ffcc00',
@@ -27,7 +27,7 @@ export const docTabs = [
   {
     key: 'cli',
     title: 'CLI',
-    description: 'DetectionOps in terminals, pipelines, and runbooks',
+    description: 'The opentide engine in terminals, pipelines, and runbooks',
     url: '/docs/cli/',
     icon: 'Terminal' as const,
     iconColor: '#fff0a3',
@@ -45,7 +45,7 @@ export const docTabs = [
   {
     key: 'sdk',
     title: 'SDK',
-    description: 'Embed DetectionOps in your own orchestration',
+    description: 'Embed the opentide engine in your own orchestration',
     url: '/docs/sdk/',
     icon: 'Code' as const,
     iconColor: '#c9a000',
