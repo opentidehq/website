@@ -7,6 +7,8 @@
  */
 import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
+import { createProcessor } from '@mdx-js/mdx';
+import { remarkGfm } from 'fumadocs-core/mdx-plugins';
 
 export const SPECS_GITHUB = 'https://github.com/opentidehq/specifications/blob/main';
 export const RFC_TEMPLATE_FILENAME = '0000-template.md';
@@ -89,64 +91,54 @@ export function rfcDescription(paragraph) {
 /**
  * MDX treats `{`, `<Tag`, column-1 `import`/`export`, and HTML comments in
  * prose as JavaScript / JSX. RFC sources are markdown, so drop comments and
- * escape the rest outside CommonMark fences and inline code.
+ * escape the rest outside code.
  *
- * Only a line that starts with 0–3 spaces and a run of backticks or tildes
- * opens a fence. A backtick run in the middle of a paragraph does not, and
- * the following lines stay prose. `import`/`export` are ESM only when the
- * keyword is the first character on the line and a space follows; prefix
- * those lines so micromark keeps them as prose.
+ * Code is located by parsing with the same block rules MDX uses (GFM, no
+ * indented code, no HTML, no autolinks) rather than by matching fence lines.
+ * MDX accepts fences inside list items and blockquotes, closing fences
+ * indented by four or more spaces, and splits GFM table cells before code
+ * spans; a line matcher that disagrees on any of these leaves an expression
+ * live after what it wrongly thinks is code.
  */
-const OPENING_FENCE = /^( {0,3})(`{3,}|~{3,})(.*)$/;
-const CLOSING_FENCE = /^( {0,3})(`+|~+)[ \t]*$/;
-
-function lineWithoutReturn(line) {
-  return line.endsWith('\r') ? line.slice(0, -1) : line;
+function remarkMdxBlockRules() {
+  const data = this.data();
+  (data.micromarkExtensions ??= []).push({
+    disable: { null: ['autolink', 'codeIndented', 'htmlFlow', 'htmlText'] },
+  });
 }
 
-function openingFence(line) {
-  const match = OPENING_FENCE.exec(lineWithoutReturn(line));
-  if (!match) return null;
-  const marker = match[2];
-  const info = match[3];
-  if (marker.startsWith('`') && info.includes('`')) return null;
-  return { char: marker[0], length: marker.length };
+let codeParser;
+
+function codeRanges(markdown) {
+  codeParser ??= createProcessor({ format: 'md', remarkPlugins: [remarkGfm, remarkMdxBlockRules] });
+  const ranges = [];
+  const walk = (node) => {
+    if (node.type === 'code' || node.type === 'inlineCode') {
+      ranges.push([node.position.start.offset, node.position.end.offset]);
+      return;
+    }
+    for (const child of node.children ?? []) walk(child);
+  };
+  walk(codeParser.parse(markdown));
+  return ranges.sort((a, b) => a[0] - b[0]);
 }
 
-function closingFence(line, open) {
-  const match = CLOSING_FENCE.exec(lineWithoutReturn(line));
-  if (!match) return false;
-  const marker = match[2];
-  return marker[0] === open.char && marker.length >= open.length;
+function mapProse(markdown, transform) {
+  let out = '';
+  let last = 0;
+  for (const [start, end] of codeRanges(markdown)) {
+    if (start < last) continue;
+    out += transform(markdown.slice(last, start), last === 0 || markdown[last - 1] === '\n');
+    out += markdown.slice(start, end);
+    last = end;
+  }
+  return out + transform(markdown.slice(last), last === 0 || markdown[last - 1] === '\n');
 }
 
 export function escapeMdxProse(markdown) {
-  const lines = markdown.split('\n');
-  const chunks = [];
-  let prose = [];
-
-  const flushProse = () => {
-    if (prose.length === 0) return;
-    chunks.push(escapeProseSegment(prose.join('\n')));
-    prose = [];
-  };
-
-  for (let index = 0; index < lines.length; index += 1) {
-    const open = openingFence(lines[index]);
-    if (!open) {
-      prose.push(lines[index]);
-      continue;
-    }
-    flushProse();
-    const block = [lines[index]];
-    for (index += 1; index < lines.length; index += 1) {
-      block.push(lines[index]);
-      if (closingFence(lines[index], open)) break;
-    }
-    chunks.push(block.join('\n'));
-  }
-  flushProse();
-  return chunks.join('\n');
+  // Removing a comment can join text into a fence, so find code again afterwards.
+  const uncommented = mapProse(markdown, (segment) => segment.replace(/<!--[\s\S]*?-->/g, ''));
+  return mapProse(uncommented, escapeProseSegment);
 }
 
 /**
@@ -185,22 +177,18 @@ function sanitizeProseHrefs(segment) {
     .replace(/\]\(\s*([^)\s]+)/g, (full, dest) => `](${safeProseHref(dest)}`);
 }
 
-function escapeProseSegment(segment) {
-  return segment
-    .split(/(`[^`\n]+`)/g)
-    .map((part, index) => {
-      if (index % 2 === 1) return part;
-      const escaped = sanitizeProseHrefs(part)
-        .replace(/<!--[\s\S]*?-->/g, '')
-        .replace(/[{}]/g, (ch) => `\\${ch}`)
-        .replace(/<(?!https?:\/\/)(?=[A-Za-z/!?])/g, '&lt;');
-      return neutralizeModuleStatements(escaped);
-    })
-    .join('');
+function escapeProseSegment(segment, atLineStart) {
+  const escaped = sanitizeProseHrefs(segment)
+    .replace(/[{}]/g, (ch) => `\\${ch}`)
+    .replace(/<(?!https?:\/\/)(?=[A-Za-z/!?])/g, '&lt;');
+  return neutralizeModuleStatements(escaped, atLineStart);
 }
 
-function neutralizeModuleStatements(part) {
-  return part.replace(/^(import|export) /gm, ' $1 ');
+/** `import`/`export` are ESM only as the first characters of a line. */
+function neutralizeModuleStatements(segment, atLineStart) {
+  return segment.replace(/^(import|export) /gm, (statement, keyword, offset) =>
+    offset === 0 && !atLineStart ? statement : ` ${keyword} `,
+  );
 }
 
 export function parseRichText(value) {

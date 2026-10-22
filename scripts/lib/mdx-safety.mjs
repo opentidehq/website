@@ -4,6 +4,7 @@
  * Docs may use a fixed set of components and static prop literals only.
  */
 import { createProcessor } from '@mdx-js/mdx';
+import { remarkGfm } from 'fumadocs-core/mdx-plugins';
 
 const ALLOWED_COMPONENTS = new Set([
   'Callout',
@@ -19,8 +20,11 @@ const ALLOWED_COMPONENTS = new Set([
 
 let processor;
 
+// Parse with GFM like the docs build does. A table splits cells before code
+// spans, so a backtick pair across a cell pipe hides a live expression from
+// a plain MDX parse.
 function mdxProcessor() {
-  processor ??= createProcessor({ format: 'mdx' });
+  processor ??= createProcessor({ format: 'mdx', remarkPlugins: [remarkGfm] });
   return processor;
 }
 

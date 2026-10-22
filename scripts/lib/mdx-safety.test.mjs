@@ -91,6 +91,11 @@ test('a column-1 import is refused', () => {
   assert.equal(violations.some((item) => item.includes('import/export')), true);
 });
 
+test('a code span split by GFM table cells does not hide an expression', () => {
+  const source = '| a | b |\n| - | - |\n| `x | {globalThis.process.exit(1)} | y` | z |\n';
+  assert.match(publishedMdxViolations(source, 'page.mdx')[0] ?? '', /expression is not a static literal/);
+});
+
 test('unknown tags and prop calls are refused', () => {
   assert.match(
     publishedMdxViolations('<script src="https://evil.example/a.js"></script>\n', 'page.mdx')[0],
