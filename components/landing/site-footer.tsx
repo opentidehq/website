@@ -69,7 +69,7 @@ export function SiteFooter({ version }: { version?: string | null }) {
           <div className="max-w-md">
             <OpentideWordmark height={34} />
             <p className="mt-5 text-[15px] leading-relaxed text-[var(--landing-muted)] text-pretty">
-              Spec-driven development for detection engineering: an ontology, a taxonomy and the tools that hold
+              Spec-driven development for agentic detection engineering: an ontology, a taxonomy and the tools that hold
               every detection to them. Open source, and forever free.
             </p>
             <div className="mt-6 flex flex-wrap items-center gap-2">

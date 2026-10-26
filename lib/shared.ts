@@ -2,7 +2,7 @@ import { VOCABULARIES } from '@/lib/landing/vocabularies';
 
 export const appName = 'opentide';
 export const appDescription =
-  'Spec-driven development for detection engineering: an ontology and a taxonomy that keep every detection threat-aligned, maintainable and fast to ship.';
+  'Spec-driven development for agentic detection engineering: an ontology and a taxonomy that keep every detection threat-aligned, maintainable and fast to ship.';
 export const docsRoute = '/docs';
 export const docsImageRoute = '/og/docs';
 export const blogImageRoute = '/og/blog';

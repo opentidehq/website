@@ -28,7 +28,7 @@ import { readBuildTimePypiVersion } from '@/lib/pypi-build';
 import { appDescription, siteOgImage } from '@/lib/shared';
 import { SPEC_DRIVEN_POST_HREF } from '@/lib/blog';
 
-const title = 'opentide · spec-driven development for detection engineering';
+const title = 'opentide · spec-driven development for agentic detection engineering';
 
 export const metadata: Metadata = {
   title: { absolute: title },
