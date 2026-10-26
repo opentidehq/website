@@ -136,7 +136,7 @@ export function SiteHeader({ pathname }: { pathname: string }) {
                   href={link.href}
                   onMouseEnter={follow}
                   aria-current={active ? 'page' : undefined}
-                  className="landing-pill-link landing-pill-focus relative rounded-full px-3.5 py-1.5 text-sm"
+                  className="landing-pill-link landing-pill-focus relative inline-flex h-9 items-center rounded-full px-3.5 text-sm"
                 >
                   {link.label}
                 </Link>

@@ -379,16 +379,10 @@ html > body[data-scroll-locked] {
     color: var(--landing-ink);
   }
 
-  .landing-pill-link[aria-current='page']::after {
-    content: '';
-    position: absolute;
-    bottom: 0.2rem;
-    left: 50%;
-    width: 0.25rem;
-    height: 0.25rem;
-    border-radius: 9999px;
-    background-color: var(--landing-accent);
-    transform: translateX(-50%);
+  /* The current page sits in a nested pill, concentric with the icons and the button. */
+  .landing-pill-link[aria-current='page'] {
+    background-color: color-mix(in srgb, var(--landing-accent) 11%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--landing-accent) 24%, transparent);
   }
 
   .landing-pill-mark {
