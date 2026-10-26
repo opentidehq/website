@@ -165,24 +165,29 @@ function ReleaseTags({ release, latest }: { release: ReleaseNote; latest?: boole
   );
 }
 
-function SectionBlock({ section }: { section: ReleaseSection }) {
+type HeadingLevel = 'h3' | 'h4' | 'h5';
+
+const BELOW: Record<HeadingLevel, HeadingLevel> = { h3: 'h4', h4: 'h5', h5: 'h5' };
+
+function SectionBlock({ section, level }: { section: ReleaseSection; level: HeadingLevel }) {
+  const Heading = level;
   return (
     <section className="mt-6 first:mt-0">
-      <h4 className="font-mono text-xs text-[var(--landing-subtle)]">
+      <Heading className="font-mono text-xs text-[var(--landing-subtle)]">
         {section.title.toLowerCase()}
         {section.items.length > 0 ? (
           <span className="text-[var(--landing-dim)]"> · {section.items.length}</span>
         ) : null}
-      </h4>
-      {section.paragraphs.map((paragraph) => (
-        <p key={paragraph} className="mt-2 text-sm leading-relaxed text-pretty text-[var(--landing-muted)]">
+      </Heading>
+      {section.paragraphs.map((paragraph, index) => (
+        <p key={index} className="mt-2 text-sm leading-relaxed text-pretty text-[var(--landing-muted)]">
           <RichText text={paragraph} />
         </p>
       ))}
       {section.items.length > 0 ? (
         <ul className="mt-2.5 space-y-2 text-sm leading-relaxed text-[var(--landing-muted)]">
-          {section.items.map((item) => (
-            <li key={item} className="relative pl-4 text-pretty">
+          {section.items.map((item, index) => (
+            <li key={index} className="relative pl-4 text-pretty">
               <span
                 aria-hidden
                 className="absolute top-[0.6rem] left-0 size-1 rounded-full bg-[var(--landing-accent)]"
@@ -196,19 +201,20 @@ function SectionBlock({ section }: { section: ReleaseSection }) {
   );
 }
 
-function ReleaseChanges({ release }: { release: ReleaseNote }) {
+/** Sections are headed one level below the version they belong to. */
+function ReleaseChanges({ release, level }: { release: ReleaseNote; level: HeadingLevel }) {
   return (
     <>
-      {release.notes.map((note) => (
+      {release.notes.map((note, index) => (
         <p
-          key={note}
+          key={index}
           className="mb-6 rounded-lg bg-[color-mix(in_srgb,var(--landing-accent)_7%,transparent)] px-4 py-3 text-sm leading-relaxed text-pretty text-[var(--landing-muted)]"
         >
           <RichText text={note} />
         </p>
       ))}
-      {release.sections.map((section) => (
-        <SectionBlock key={section.title} section={section} />
+      {release.sections.map((section, index) => (
+        <SectionBlock key={index} section={section} level={level} />
       ))}
     </>
   );
@@ -222,8 +228,8 @@ function ReleaseLinks({ release }: { release: ReleaseNote }) {
   if (links.length === 0) return null;
   return (
     <ul className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
-      {links.map((link) => (
-        <li key={link.href}>
+      {links.map((link, index) => (
+        <li key={index}>
           <a
             href={link.href}
             target="_blank"
@@ -271,14 +277,16 @@ function LatestRelease({
         >
           {release.version}
         </h3>
-        <p className="mt-5 max-w-[65ch] text-lg leading-relaxed text-pretty text-[var(--landing-muted)]">
-          <RichText text={release.summary} />
-        </p>
+        {release.summary ? (
+          <p className="mt-5 max-w-[65ch] text-lg leading-relaxed text-pretty text-[var(--landing-muted)]">
+            <RichText text={release.summary} />
+          </p>
+        ) : null}
       </div>
       <div className="grid border-t border-[var(--landing-border)] md:grid-cols-[minmax(0,1fr)_18rem]">
         {/* Below md the install panel comes first, ahead of a long change list. */}
         <div className="min-w-0 p-6 md:p-8">
-          <ReleaseChanges release={release} />
+          <ReleaseChanges release={release} level="h4" />
         </div>
         <div className="order-first min-w-0 space-y-5 border-b border-[var(--landing-border)] bg-[var(--landing-band)] p-6 md:order-none md:border-b-0 md:border-l md:p-8">
           {release.installCommand ? (
@@ -296,8 +304,11 @@ function LatestRelease({
   );
 }
 
-function EarlierRelease({ release }: { release: ReleaseNote }) {
-  const changes = release.sections.reduce((n, section) => n + Math.max(section.items.length, 1), 0);
+function EarlierRelease({ release, level }: { release: ReleaseNote; level: 'h3' | 'h4' }) {
+  const Heading = level;
+  const changes =
+    release.notes.length +
+    release.sections.reduce((n, section) => n + Math.max(section.items.length, 1), 0);
   return (
     <li
       id={releaseAnchor(release.version)}
@@ -310,11 +321,11 @@ function EarlierRelease({ release }: { release: ReleaseNote }) {
         }`}
       />
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-        <h4 className="font-mono text-xl font-semibold tracking-tight text-[var(--landing-ink)]">
+        <Heading className="font-mono text-xl font-semibold tracking-tight text-[var(--landing-ink)]">
           <a href={`#${releaseAnchor(release.version)}`} className={`hover:text-[var(--landing-accent)] ${focusRing}`}>
             {release.version}
           </a>
-        </h4>
+        </Heading>
         <time dateTime={release.dateIso ?? undefined} className="text-sm text-[var(--landing-dim)]">
           {release.dateLabel}
         </time>
@@ -322,10 +333,12 @@ function EarlierRelease({ release }: { release: ReleaseNote }) {
           <ReleaseTags release={release} />
         </span>
       </div>
-      <p className="mt-3 max-w-[65ch] leading-relaxed text-pretty text-[var(--landing-muted)]">
-        <RichText text={release.summary} />
-      </p>
-      {changes > 0 || release.notes.length > 0 ? (
+      {release.summary ? (
+        <p className="mt-3 max-w-[65ch] leading-relaxed text-pretty text-[var(--landing-muted)]">
+          <RichText text={release.summary} />
+        </p>
+      ) : null}
+      {changes > 0 ? (
         <details className="group mt-4">
           <summary
             className={`inline-flex cursor-pointer list-none items-center gap-1.5 rounded-md text-sm font-medium text-[var(--landing-accent)] [&::-webkit-details-marker]:hidden ${focusRing}`}
@@ -335,7 +348,7 @@ function EarlierRelease({ release }: { release: ReleaseNote }) {
             <span className="hidden group-open:inline">Hide changes</span>
           </summary>
           <div className="mt-4 rounded-xl border border-[var(--landing-border)] p-5 md:p-6">
-            <ReleaseChanges release={release} />
+            <ReleaseChanges release={release} level={BELOW[level]} />
             <div className="mt-6 space-y-4 border-t border-[var(--landing-border-subtle)] pt-5">
               {release.installCommand ? (
                 <InstallCommand command={release.installCommand} caption={`pin ${release.version}`} />
@@ -369,7 +382,7 @@ function EarlierReleases({ releases }: { releases: ReleaseNote[] }) {
           ) : null}
           <ol className="mt-1 ml-1">
             {group.releases.map((release) => (
-              <EarlierRelease key={release.version} release={release} />
+              <EarlierRelease key={release.version} release={release} level={group.series ? 'h4' : 'h3'} />
             ))}
           </ol>
         </div>
@@ -458,10 +471,24 @@ export function ReleaseLog({
               >
                 repository changelog
               </a>
-              . New to opentide? Start with{' '}
-              <Link href="/docs/usage/installation/" className={`font-medium text-[var(--landing-accent)] ${focusRing}`}>
-                installation
-              </Link>
+              . New to the {project.id === 'opentide' ? 'package' : project.name.toLowerCase()}? Start with{' '}
+              {project.gettingStarted.href.startsWith('/') ? (
+                <Link
+                  href={project.gettingStarted.href}
+                  className={`font-medium text-[var(--landing-accent)] ${focusRing}`}
+                >
+                  {project.gettingStarted.label}
+                </Link>
+              ) : (
+                <a
+                  href={project.gettingStarted.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`font-medium text-[var(--landing-accent)] ${focusRing}`}
+                >
+                  {project.gettingStarted.label}
+                </a>
+              )}
               .
             </p>
             <a

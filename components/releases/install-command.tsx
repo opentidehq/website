@@ -16,12 +16,15 @@ export function InstallCommand({ command, caption = 'install' }: { command: stri
           onClick={() => {
             void copy();
           }}
-          aria-label={copied ? 'Copied' : `Copy ${caption} command`}
+          aria-label={`Copy the ${caption} command`}
           className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[var(--landing-code-dim)] transition hover:bg-white/10 hover:text-[var(--landing-code-ink)] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[var(--landing-code-key)]"
         >
           {copied ? <Check className="size-3.5" aria-hidden /> : <Copy className="size-3.5" aria-hidden />}
-          <span aria-live="polite">{copied ? 'copied' : 'copy'}</span>
+          <span aria-hidden>{copied ? 'copied' : 'copy'}</span>
         </button>
+        <span role="status" className="sr-only">
+          {copied ? 'Copied to the clipboard' : ''}
+        </span>
       </figcaption>
       <pre className="m-0 px-4 py-3 font-mono text-[13px] leading-relaxed whitespace-pre-wrap break-words">
         <code>

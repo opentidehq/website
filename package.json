@@ -5,7 +5,7 @@
   "scripts": {
     "sync:content": "node scripts/sync-content.mjs",
     "fetch:pypi": "node scripts/fetch-pypi-version.mjs",
-    "sync:changelogs": "node scripts/sync-changelogs.mjs",
+    "sync:changelogs": "node --experimental-strip-types --no-warnings scripts/sync-changelogs.mjs",
     "check:docs": "node scripts/check-docs-freshness.mjs",
     "verify:docs": "node scripts/verify-built-docs.mjs",
     "verify:demos": "node --experimental-strip-types --no-warnings scripts/verify-demo-objects.mjs",

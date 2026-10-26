@@ -96,11 +96,16 @@ function toIsoDate(label: string): string | null {
   return `${match[3]}-${month}-${match[1].padStart(2, '0')}`;
 }
 
+/** The engine's notes open with "Patch release." or "First public beta"; a version alone says less. */
 function kindFor(version: string, summary: string): ReleaseKind {
   const plain = summary.replaceAll('**', '');
   if (/first public/i.test(plain)) return 'beta';
   if (/^minor\b/i.test(plain)) return 'minor';
   if (/^patch\b/i.test(plain)) return 'patch';
+  return kindForVersion(version);
+}
+
+function kindForVersion(version: string): ReleaseKind {
   const parts = version.split('.').map((part) => Number(part));
   const minor = parts[1] ?? 0;
   const patch = parts[2] ?? 0;
@@ -109,12 +114,11 @@ function kindFor(version: string, summary: string): ReleaseKind {
   return 'patch';
 }
 
-const BREAKING = /\bbreaking\b/i;
+// "breaking changes", "**Breaking:**", but never "non-breaking" or "no breaking changes".
+const BREAKING = /(?<![-\w])(?<!\bno\s)(?<!\bnot\s)breaking\b/i;
 
 function isBreaking(summary: string, sections: readonly ReleaseSection[]): boolean {
-  return (
-    BREAKING.test(summary) || sections.some((section) => /^(breaking|removed)\b/i.test(section.title))
-  );
+  return BREAKING.test(summary) || sections.some((section) => /^breaking\b/i.test(section.title));
 }
 
 function collapse(lines: string[]): string {
@@ -294,36 +298,67 @@ export function formatIsoDate(iso: string): string {
   return `${day} ${MONTH_NAMES[(month ?? 1) - 1]} ${year}`;
 }
 
-function compareVersions(a: string, b: string): number {
-  const pa = a.split('.').map(Number);
-  const pb = b.split('.').map(Number);
+/** SemVer order: the numeric core, then a prerelease (`1.0.0-rc.1`) before its release. */
+export function compareVersions(a: string, b: string): number {
+  const [coreA = '', preA] = a.split(/-(.*)/s);
+  const [coreB = '', preB] = b.split(/-(.*)/s);
+  const pa = coreA.split('.').map(Number);
+  const pb = coreB.split('.').map(Number);
   for (let i = 0; i < 3; i++) {
     const diff = (pa[i] ?? 0) - (pb[i] ?? 0);
     if (diff !== 0) return diff;
   }
-  return 0;
+  if (preA === preB) return 0;
+  if (preA === undefined) return 1;
+  if (preB === undefined) return -1;
+  return preA.localeCompare(preB, 'en', { numeric: true });
 }
 
-const CHANGELOG_HEADING = /^##\s+\[(\d+\.\d+\.\d+)\]\s+[—–-]\s+(\d{4}-\d{2}-\d{2})\s*$/;
+const CHANGELOG_HEADING =
+  /^##\s+\[(\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)\]\s+[—–-]\s+(\d{4})-(\d{2})-(\d{2})(\s+\[yanked\])?\s*$/i;
+const UNRELEASED = /^##\s+\[?unreleased\]?/i;
 const CHANGELOG_SECTION = /^###\s+(.+?)\s*$/;
+const LIST_ITEM = /^[-*+]\s+(.+)$/;
 const LINK_REFERENCE = /^\[[^\]]+\]:\s/;
 
+/** The `## ` headings of a markdown file, ignoring lines inside code fences. */
+function versionChunks(markdown: string): string[][] {
+  const chunks: string[][] = [];
+  let fence = false;
+  for (const line of markdown.replaceAll('\r\n', '\n').split('\n')) {
+    if (line.trimStart().startsWith('```')) fence = !fence;
+    if (!fence && line.startsWith('## ')) chunks.push([line]);
+    else chunks.at(-1)?.push(line);
+  }
+  return chunks;
+}
+
+function isoDate(year: string, month: string, day: string): string | null {
+  const date = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
+  const iso = `${year}-${month}-${day}`;
+  return date.toISOString().startsWith(iso) ? iso : null;
+}
+
 /**
- * A Keep a Changelog file (`## [1.2.0] - 2026-10-26`, `### Added`) as release notes. The
- * first paragraph under a version is its summary; `[Unreleased]` is skipped.
+ * A Keep a Changelog file (`## [1.2.0] - 2026-10-26`, `### Added`) as release notes,
+ * newest first. The first paragraph under a version, when there is one, is its summary.
+ * `Unreleased` is skipped, nested list items become items of their own, and code blocks
+ * are left out. A heading that is not a version and a real date throws: the sync keeps
+ * the committed copy rather than publish a broken page.
  */
 export function parseChangelog(markdown: string, project: ReleaseProject): ReleaseNote[] {
   const releases: ReleaseNote[] = [];
 
-  for (const chunk of markdown.replaceAll('\r\n', '\n').split(/\n(?=## )/)) {
-    const lines = chunk.trim().split('\n');
+  for (const lines of versionChunks(markdown)) {
     const heading = lines[0] ?? '';
-    if (!heading.startsWith('## ') || /^##\s+\[unreleased\]/i.test(heading)) continue;
+    if (UNRELEASED.test(heading)) continue;
     const match = CHANGELOG_HEADING.exec(heading);
-    if (!match?.[1] || !match[2]) {
+    const version = match?.[1];
+    const dateIso = match ? isoDate(match[2]!, match[3]!, match[4]!) : null;
+    if (!version || !dateIso) {
       throw new Error(`${project.name}: changelog heading is not a version and date: ${heading}`);
     }
-    const [, version, dateIso] = match;
+    const yanked = Boolean(match?.[5]);
 
     const summaryParts: string[] = [];
     const notes: string[] = [];
@@ -360,17 +395,17 @@ export function parseChangelog(markdown: string, project: ReleaseProject): Relea
         sections.push(current);
         continue;
       }
-      const bullet = BULLET.exec(trimmed);
-      if (bullet?.[1] && !/^\s/.test(raw)) {
+      const item = LIST_ITEM.exec(trimmed);
+      if (item?.[1]) {
         flush();
         if (!current) {
           current = { title: 'Details', paragraphs: [], items: [] };
           sections.push(current);
         }
-        current.items.push(bullet[1].trim());
+        current.items.push(item[1].trim());
         continue;
       }
-      // A wrapped bullet continues the item above it.
+      // An indented line under a list item continues it.
       if (/^\s/.test(raw) && current && current.items.length > 0 && paragraph.length === 0) {
         const last = current.items.length - 1;
         current.items[last] = `${current.items[last]} ${trimmed}`;
@@ -381,19 +416,18 @@ export function parseChangelog(markdown: string, project: ReleaseProject): Relea
     flush();
 
     const summary = summaryParts.join(' ');
-    if (!summary) throw new Error(`${project.name} ${version} is missing a summary paragraph`);
     const kept = sections.filter((section) => section.items.length > 0 || section.paragraphs.length > 0);
     const published =
-      project.firstPublished !== undefined && compareVersions(version, project.firstPublished) >= 0;
+      !yanked && project.firstPublished !== undefined && compareVersions(version, project.firstPublished) >= 0;
 
     releases.push({
       version,
       dateLabel: formatIsoDate(dateIso),
       dateIso,
-      kind: kindFor(version, summary),
+      kind: kindForVersion(version),
       breaking: isBreaking(summary, kept),
       summary,
-      notes,
+      notes: yanked ? ['This version was yanked: do not install it.', ...notes] : notes,
       sections: kept,
       links: [
         ...(published ? [{ label: project.registry.label, href: project.registry.versionUrl(version) }] : []),
@@ -406,7 +440,7 @@ export function parseChangelog(markdown: string, project: ReleaseProject): Relea
   if (releases.length === 0) {
     throw new Error(`${project.name}: the changelog did not include any versions`);
   }
-  return releases;
+  return releases.sort((a, b) => compareVersions(b.version, a.version));
 }
 
 /** Releases grouped by minor series, newest first, in the order they arrive. */

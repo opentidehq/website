@@ -5,6 +5,7 @@ import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { PROJECTS } from './release-projects.ts';
 import {
+  compareVersions,
   formatIsoDate,
   groupBySeries,
   kindLabel,
@@ -207,4 +208,69 @@ test('every project\'s committed release notes parse', async () => {
     assert.ok(releases.length > 0, project.id);
     assert.ok(releases.every((release) => release.summary.length > 0), project.id);
   }
+});
+
+test('a changelog parses the shapes Keep a Changelog allows', () => {
+  const markdown = `# Changelog
+
+\`\`\`bash
+## not a heading inside a fence
+\`\`\`
+
+## Unreleased
+
+- Coming.
+
+## [0.6.0] - 2026-11-01
+
+### Added
+
+* A star bullet.
++ A plus bullet.
+- A parent
+  - a nested child
+
+## [0.7.0] - 2026-11-05 [YANKED]
+
+A non-breaking cleanup that went wrong.
+
+## [0.5.1] - 2026-10-30
+
+No breaking changes here.
+
+### Breaking
+
+- Settings renamed.
+`;
+  const releases = parseChangelog(markdown, changelogProject);
+  // Sorted newest first whatever the file order.
+  assert.deepEqual(
+    releases.map((release) => release.version),
+    ['0.7.0', '0.6.0', '0.5.1'],
+  );
+  const [yanked, added, fixed] = releases;
+  assert.equal(yanked?.installCommand, null);
+  assert.match(yanked?.notes[0] ?? '', /yanked/);
+  assert.equal(yanked?.breaking, false);
+  assert.equal(added?.summary, '');
+  assert.deepEqual(added?.sections[0]?.items, [
+    'A star bullet.',
+    'A plus bullet.',
+    'A parent',
+    'a nested child',
+  ]);
+  // A Breaking section marks it, whatever the summary says.
+  assert.equal(fixed?.breaking, true);
+});
+
+test('a changelog date that is not a real day fails loudly', () => {
+  assert.throws(
+    () => parseChangelog('## [0.6.0] - 2026-13-45\n\nSummary.\n', changelogProject),
+    /version and date/,
+  );
+});
+
+test('versions order by SemVer, a prerelease before its release', () => {
+  const versions = ['0.10.0', '1.0.0', '1.0.0-rc.2', '0.9.1', '1.0.0-rc.10'];
+  assert.deepEqual(versions.toSorted(compareVersions), ['0.9.1', '0.10.0', '1.0.0-rc.2', '1.0.0-rc.10', '1.0.0']);
 });

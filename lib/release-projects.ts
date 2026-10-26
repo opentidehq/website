@@ -14,6 +14,8 @@ export type ReleaseProject = {
   href: string;
   repository: string;
   changelogUrl: string;
+  /** Where a newcomer starts: the footer links here. */
+  gettingStarted: { label: string; href: string };
   /** File under `content/releases/`; the engine's notes are synced docs instead. */
   changelog: string | null;
   /** The first version a registry carries; earlier ones were tagged after the fact. */
@@ -36,6 +38,7 @@ export const PROJECTS: readonly ReleaseProject[] = [
       'The opentide package: validate, generate, and deploy detection objects. Install the latest, or pin the version your pipeline should keep.',
     href: '/releases/',
     repository: 'https://github.com/opentidehq/opentide',
+    gettingStarted: { label: 'installation', href: '/docs/usage/installation/' },
     changelogUrl: 'https://github.com/opentidehq/opentide/blob/development/CHANGELOG.md',
     changelog: null,
     registry: {
@@ -54,6 +57,7 @@ export const PROJECTS: readonly ReleaseProject[] = [
       'Diagnostics, hover, completion, and highlighting for detection queries and Tide objects, in any editor that speaks LSP.',
     href: '/releases/language-server/',
     repository: 'https://github.com/opentidehq/language-server',
+    gettingStarted: { label: 'the README', href: 'https://github.com/opentidehq/language-server#install' },
     changelogUrl: 'https://github.com/opentidehq/language-server/blob/main/CHANGELOG.md',
     changelog: 'language-server.md',
     firstPublished: '0.5.0',
@@ -73,6 +77,7 @@ export const PROJECTS: readonly ReleaseProject[] = [
       'Browse a corpus of threats, objectives, signals, and rules as a graph, a catalogue, and an ATT&CK matrix, built from its exports.',
     href: '/releases/explorer/',
     repository: 'https://github.com/opentidehq/explorer',
+    gettingStarted: { label: 'the README', href: 'https://github.com/opentidehq/explorer#run-it-on-a-corpus' },
     changelogUrl: 'https://github.com/opentidehq/explorer/blob/main/CHANGELOG.md',
     changelog: 'explorer.md',
     firstPublished: '0.5.0',
