@@ -397,7 +397,7 @@ description: |
   Suspicious handle access to LSASS. Implements the credential-access
   objective so every alert traces back to the gateway threat narrative.
 status: STAGING
-severity: Substantial incident
+severity: High
 techniques:
   - T1003.001
 detection_model: ${UUID.objectiveCredential}
