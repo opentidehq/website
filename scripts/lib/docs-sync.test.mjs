@@ -393,6 +393,31 @@ test('postProcessMarkdown publishes RFC links on the site and keeps schema links
   assert.equal(out.includes(`${SPECS_BLOB}/schemas/pins/`), true);
 });
 
+test('postProcessMarkdown drops HTML comments that MDX cannot parse, outside code fences', () => {
+  const out = postProcessMarkdown(
+    [
+      '---',
+      'title: Diagnostic codes',
+      '---',
+      '',
+      '<!-- Generated from src/opentide/data/diagnostics/ by',
+      '     scripts/build/render_diagnostics_docs.py. Edit the pages there. -->',
+      '',
+      'Body text.',
+      '<!-- one line -->',
+      '',
+      '```html',
+      '<!-- kept in code -->',
+      '```',
+    ].join('\n'),
+    'cli/diagnostics.mdx',
+  );
+  assert.equal(out.includes('Generated from'), false);
+  assert.equal(out.includes('one line'), false);
+  assert.equal(out.includes('<!-- kept in code -->'), true);
+  assert.equal(out.includes('Body text.'), true);
+});
+
 test('postProcessMarkdown keeps published vocabulary spec links on /docs', () => {
   const out = postProcessMarkdown(
     'See [format](vocabularies/format.md) and [tlp](../vocabularies/tlp.vocab.toml).',
