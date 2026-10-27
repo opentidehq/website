@@ -23,7 +23,7 @@ python Orchestration/validate.py
 ### After (pip package)
 
 ```toml
-dependencies = ["opentide==0.17.2"]
+dependencies = ["opentide==0.18.0"]
 ```
 
 ```python
@@ -46,7 +46,7 @@ Use `--platform`, not legacy `--system`.
 ### 1. Install
 
 ```bash
-pip install 'opentide==0.17.2'
+pip install 'opentide==0.18.0'
 ```
 
 Enable platforms in the repo (not at pip install time):
@@ -55,7 +55,7 @@ Enable platforms in the repo (not at pip install time):
 opentide setup platforms --sentinel --splunk --yes
 ```
 
-Optional MCP server setup: `opentide setup mcp --cursor --yes` (after `pip install 'opentide==0.17.2'`).
+Optional MCP server setup: `opentide setup mcp --cursor --yes` (after `pip install 'opentide==0.18.0'`).
 
 ### 2. Remove submodule
 
@@ -101,7 +101,7 @@ Query validation: **six platforms only** (no CrowdStrike/HarfangLab).
 Remove `submodules: recursive`. Add:
 
 ```yaml
-- run: pip install 'opentide==0.17.2'
+- run: pip install 'opentide==0.18.0'
 - run: opentide validate --strict
   env:
     OPENTIDE_REPO_ROOT: ${{ github.workspace }}
@@ -156,6 +156,12 @@ Keys on every other platform (Sentinel, Splunk, HarfangLab, Carbon Black Cloud, 
 
 `ExternalIdHelper` is removed from `opentide.deployment`. Use `opentide.states.deployment` (`DeploymentState`, `record_external_id`, `forget_external_id`) instead.
 
+## Skill pack `detection-ops` renamed
+
+The skill pack bundled under `data/setup/skills/detection-ops/` is now `data/setup/skills/detection-workflow/`, and its skill is named `opentide-detection-workflow` instead of `opentide-detection-ops`. `copy_skill_pack("detection-ops", …)` still copies it.
+
+`opentide setup skills` never installed this pack, so repositories set up with that command have nothing to change. If you copied the pack into your repository by hand, the copy keeps working. To match the new name, rename its folder to `detection-workflow` and its `name:` line to `opentide-detection-workflow`. Do not name it `detection-engineering`: `opentide setup skills` installs a different skill under that name and replaces the folder.
+
 ## Layout migration
 
 If the repository still uses CoreTide directory names (`Configurations/`, `Objects/Threat Vectors`, `.opentide/framework/`), preview and apply:
@@ -180,7 +186,7 @@ Replacing a CoreTide **git submodule**, Orchestration scripts, and Python import
 
 ## Verification checklist
 
-- [ ] `pip install 'opentide==0.17.2'` succeeds
+- [ ] `pip install 'opentide==0.18.0'` succeeds
 - [ ] `OPENTIDE_REPO_ROOT` set
 - [ ] `opentide validate --strict` passes
 - [ ] `opentide deploy migrate-state` exits `0`, and `.opentide/states/deployment/` is committed and not gitignored
