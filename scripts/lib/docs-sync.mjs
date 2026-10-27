@@ -256,6 +256,46 @@ export function stripRedundantSummary(content) {
   return joinFrontmatter(parts.frontmatter, body);
 }
 
+/**
+ * MDX has no HTML comments: `<!-- … -->` fails to parse and stops the sync.
+ * Drop block-level comments (generator notes and the like) outside code fences.
+ */
+export function stripHtmlComments(content) {
+  const lines = content.split('\n');
+  const out = [];
+  let fence = null;
+  let inComment = false;
+  for (const line of lines) {
+    if (inComment) {
+      if (line.includes('-->')) {
+        inComment = false;
+        const rest = line.slice(line.indexOf('-->') + 3);
+        if (rest.trim()) out.push(rest);
+      }
+      continue;
+    }
+    const marker = line.match(/^ {0,3}(`{3,}|~{3,})/);
+    if (marker) {
+      if (!fence) fence = marker[1];
+      else if (marker[1][0] === fence[0] && marker[1].length >= fence.length) fence = null;
+      out.push(line);
+      continue;
+    }
+    if (!fence && /^ {0,3}<!--/.test(line)) {
+      const end = line.indexOf('-->', line.indexOf('<!--') + 4);
+      if (end === -1) {
+        inComment = true;
+      } else {
+        const rest = line.slice(end + 3);
+        if (rest.trim()) out.push(rest);
+      }
+      continue;
+    }
+    out.push(line);
+  }
+  return out.join('\n');
+}
+
 export function rewritePublishedLinks(content) {
   let out = content;
   for (const tree of UNPUBLISHED_SPECS_TREES) {
@@ -372,7 +412,7 @@ export function stripReleasesFromUsageNav(outDir = OUT) {
 }
 
 export function postProcessMarkdown(content, publishedRelPath = '') {
-  const stripped = stripRedundantSummary(stripLeadingH1(content));
+  const stripped = stripRedundantSummary(stripLeadingH1(stripHtmlComments(content)));
   const linked = rewritePublishedLinks(stripped);
   const withSiteLinks = publishedRelPath ? rewriteSiteLinks(linked, publishedRelPath) : linked;
   const processed = rewriteReleasePageLinks(rewriteBrandName(withSiteLinks));
