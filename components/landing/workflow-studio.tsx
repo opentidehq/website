@@ -193,7 +193,7 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
       {
         kind: 'cli',
         command: `opentide validate --file ${THREAT_FILE}`,
-        output: 'OK Validation passed',
+        output: '✓ 1 object valid · 0.4s',
       },
       {
         kind: 'response',
@@ -201,7 +201,7 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
       },
     ],
     cmd: `opentide validate --file ${THREAT_FILE}`,
-    out: ['OK Validation passed'],
+    out: ['✓ 1 object valid · 0.4s'],
   },
   objective: {
     events: [
@@ -224,7 +224,7 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
       {
         kind: 'cli',
         command: `opentide validate --file ${OBJECTIVE_FILE}`,
-        output: 'OK Validation passed',
+        output: '✓ 1 object valid · 0.4s',
       },
       {
         kind: 'response',
@@ -232,7 +232,7 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
       },
     ],
     cmd: `opentide validate --file ${OBJECTIVE_FILE}`,
-    out: ['OK Validation passed'],
+    out: ['✓ 1 object valid · 0.4s'],
   },
   rule: {
     events: [
@@ -261,7 +261,7 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
       {
         kind: 'cli',
         command: `opentide validate --file ${RULE_PATH}`,
-        output: 'OK Validation passed',
+        output: '✓ 1 object valid · 0.4s',
       },
       {
         kind: 'mcp',
@@ -275,7 +275,7 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
       },
     ],
     cmd: `opentide validate --file ${RULE_PATH}`,
-    out: ['OK Validation passed'],
+    out: ['✓ 1 object valid · 0.4s'],
   },
   inline: {
     events: [
@@ -294,7 +294,7 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
       {
         kind: 'cli',
         command: 'opentide validate query --platform sentinel --live',
-        output: 'OK Query validation passed for sentinel',
+        output: '✓ 1 query valid on 1 tenant',
       },
       {
         kind: 'response',
@@ -302,10 +302,7 @@ const stepScripts: Record<Step, { events: AgentEvent[]; cmd: string; out: string
       },
     ],
     cmd: 'opentide validate query --platform sentinel --live',
-    out: [
-      '── Query Validation - Microsoft Sentinel ──',
-      'OK Query validation passed for sentinel',
-    ],
+    out: ['✓ 1 query valid on 1 tenant'],
   },
   ci: {
     events: [
