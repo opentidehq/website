@@ -11,7 +11,7 @@ const RUN_MS = 300;
 const LINE_MS = 70;
 const HOLD_MS = 2800;
 
-/** Token colours for one line: flags, keys, strings and literals, OK and FATAL. */
+/** Token colours for one line: flags, keys, strings and literals, and the CLI's own result lines. */
 function Highlight({ line, prompt }: { line: Line; prompt: string }): ReactNode {
   if (line.kind === 'note') return <span className="text-[var(--landing-code-dim)]">{line.text}</span>;
   if (line.kind === 'in') {
@@ -35,12 +35,19 @@ function Highlight({ line, prompt }: { line: Line; prompt: string }): ReactNode 
       </>
     );
   }
-  const status = line.text.match(/^(OK|FATAL:)( .*)$/);
-  if (status) {
+  const rich = richSegments(line.text);
+  if (rich) {
     return (
       <>
-        <span className={status[1] === 'OK' ? 'text-emerald-300' : 'text-rose-300'}>{status[1]}</span>
-        {status[2]}
+        {rich.map(([text, cls], k) =>
+          cls ? (
+            <span key={k} className={cls}>
+              {text}
+            </span>
+          ) : (
+            text
+          ),
+        )}
       </>
     );
   }
@@ -57,6 +64,37 @@ function Highlight({ line, prompt }: { line: Line; prompt: string }): ReactNode 
       )}
     </>
   );
+}
+
+const DIM = 'text-[var(--landing-code-dim)]';
+const ERR = 'text-rose-300';
+const OK = 'text-emerald-300';
+
+type Segment = [text: string, className?: string];
+
+/**
+ * The CLI's human output, coloured as its terminal colours it: `✓` and `✗` results,
+ * `error[code]:` headers, the source snippet's gutter and underline, `→` next steps and the
+ * deploy plan. Anything else (JSON, Python reprs) falls through to `tokens`.
+ */
+function richSegments(text: string): Segment[] | null {
+  let m: RegExpMatchArray | null;
+  if ((m = text.match(/^(✓|✗)( .*)$/))) return [[m[1], m[1] === '✓' ? OK : ERR], [m[2]]];
+  if ((m = text.match(/^(error\[[\w-]+\]:)( .*)$/))) return [[m[1], `font-semibold ${ERR}`], [m[2]]];
+  if ((m = text.match(/^( *\d* )(│|╭─▶|╰─)(.*)$/))) {
+    const head: Segment[] = [[m[1] + m[2], DIM]];
+    const rest = m[3];
+    const under = rest.match(/^( +)(━+)( .*)?$/);
+    if (under) return [...head, [under[1]], [under[2], ERR], [under[3] ?? '', ERR]];
+    const help = rest.match(/^( help:)( .*)$/);
+    if (help) return [...head, [help[1], 'text-[var(--landing-code-key)]'], [help[2]]];
+    return [...head, [rest]];
+  }
+  if ((m = text.match(/^(→)( opentide .*?)( · .*)?$/))) return [[m[1], DIM], [m[2], 'text-[var(--landing-code-key)]'], [m[3] ?? '', DIM]];
+  if ((m = text.match(/^( +)([+~-] [a-z ]+?)(  .*)$/))) return [[m[1]], [m[2], OK], [m[3]]];
+  if ((m = text.match(/^(Plan:|Deploy plan)( .*)$/))) return [[m[1], 'font-semibold'], [m[2], m[1] === 'Plan:' ? undefined : DIM]];
+  if ((m = text.match(/^([a-z_]+)( · \d+ tenants?)$/))) return [[m[1], 'text-[var(--landing-code-key)]'], [m[2], DIM]];
+  return null;
 }
 
 const TOKEN = /(?<key>"(?:[^"\\]|\\.)*"(?=\s*:))|(?<str>"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|(?<err>\[error\])|(?<lit>\b(?:true|false|null|True|False)\b)/g;
@@ -98,7 +136,8 @@ const Row = memo(function Row({
   const partial = typed !== undefined;
   const shown = partial ? { ...line, text: line.text.slice(0, typed) } : line;
   return (
-    <span className={`block whitespace-pre px-5 ${line.mark && !partial ? 'bg-[#ffcc00]/[0.1]' : ''}`}>
+    // min-h keeps a blank line, the gap the CLI prints before its summary, one line tall.
+    <span className={`block min-h-[1.75em] whitespace-pre px-5 ${line.mark && !partial ? 'bg-[#ffcc00]/[0.1]' : ''}`}>
       <Highlight line={shown} prompt={prompt} />
       {partial && <Caret />}
     </span>

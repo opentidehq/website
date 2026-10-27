@@ -1,8 +1,8 @@
 /**
  * Renderer for opentide console output.
  *
- * A default run prints Rich section rules (`── Title ──`, or `== Title ==` under
- * `--no-color`) and ends on one `OK …` result line. Structlog records (a dim timestamp, a
+ * A default run ends on one `✓ …` (or `✗ …`) result line; a deploy prints its plan first, one
+ * tenant and one `+ create or update` line per rule. Structlog records (a dim timestamp, a
  * padded level, the snake_case event name, then one indented `key: value` line per field)
  * only appear with `--debug`. CI logs wrap all of that in GitHub Actions group headers.
  * This component reproduces that shape line by line.
@@ -94,23 +94,43 @@ export function LogLine({ line, className }: { line: string; className?: string 
     );
   }
 
-  // opentide section: a Rich rule, or a plain `== Title ==` panel under --no-color
-  const section = /^(?:==|──) (.+) (?:==|──)$/.exec(line);
-  if (section) {
+  // Command result: `✓ <summary>` or `✗ <summary>`
+  const result = /^(✓|✗) (.+)$/.exec(line);
+  if (result) {
+    const tone = result[1] === '✓' ? 'text-emerald-700 dark:text-emerald-400' : 'text-red-600 dark:text-red-400';
     return (
-      <p className={cls('mt-1.5 flex items-center gap-2 font-medium text-fuchsia-700 dark:text-fuchsia-300')}>
-        <span aria-hidden className="h-px w-3 shrink-0 bg-current opacity-50" />
-        {section[1]}
-        <span aria-hidden className="h-px flex-1 bg-current opacity-50" />
+      <p className={cls('text-[var(--landing-ink)]')}>
+        <span className={`font-semibold ${tone}`}>{result[1]}</span> {result[2]}
       </p>
     );
   }
 
-  // Command result: `OK <message>`
-  if (line.startsWith('OK ')) {
+  // Deploy plan: the header and totals, a platform, then `+ create or update` per rule
+  const plan = /^(Deploy plan|Plan:)( .+)$/.exec(line);
+  if (plan) {
     return (
-      <p className={cls('text-[var(--landing-ink)]')}>
-        <span className="font-semibold text-emerald-700 dark:text-emerald-400">OK</span> {line.slice(3)}
+      <p className={cls('text-[var(--landing-muted)]')}>
+        <span className="font-medium text-[var(--landing-ink)]">{plan[1]}</span>
+        {plan[2]}
+      </p>
+    );
+  }
+  const change = /^( +)([+~-] [a-z ]+?)(  .+)$/.exec(line);
+  if (change) {
+    return (
+      <p className={cls('whitespace-pre text-[var(--landing-muted)]')}>
+        {change[1]}
+        <span className="text-emerald-700 dark:text-emerald-400">{change[2]}</span>
+        {change[3]}
+      </p>
+    );
+  }
+  const platform = /^([a-z_]+)( · \d+ tenants?)$/.exec(line);
+  if (platform) {
+    return (
+      <p className={cls('mt-1 text-[var(--landing-muted)]')}>
+        <span className="font-medium text-sky-700 dark:text-sky-300">{platform[1]}</span>
+        {platform[2]}
       </p>
     );
   }
@@ -127,7 +147,7 @@ export function LogLine({ line, className }: { line: string; className?: string 
         </p>
       );
     }
-    return <p className={cls('pl-[11ch] text-[var(--landing-muted)]')}>{trimmed}</p>;
+    return <p className={cls('whitespace-pre text-[var(--landing-muted)]')}>{line}</p>;
   }
 
   // `HH:MM:SS  LEVEL     event_name`

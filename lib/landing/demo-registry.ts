@@ -608,8 +608,8 @@ export type ReviewJob = {
  * Jobs mirror the workflow `opentide setup ci github` writes into a detection repo. The install
  * step is the generated `pip install opentide==<version>`: every platform SDK ships with it.
  * Validate → Generate → Deploy Staging on the pull request; production deploys on merge.
- * Log lines are what a default (non-debug) run prints: Rich section rules and the `OK …`
- * result line. INFO events only appear with `--debug` or `--json`, so they are left out.
+ * Log lines are what a default (non-debug) opentide 0.18.0 run prints: the deploy plan and the
+ * `✓ …` result line. INFO events only appear with `--debug` or `--json`, so they are left out.
  */
 export const REVIEW_JOBS: ReviewJob[] = [
   {
@@ -621,17 +621,15 @@ export const REVIEW_JOBS: ReviewJob[] = [
     lines: [
       '::group::Validate objects',
       '$ opentide validate --strict',
-      'OK Validation passed',
+      '✓ 4 objects valid · 1.3s',
       '$ opentide lint --strict',
-      'OK Catalogue lint passed',
+      '✓ 4 files clean',
       '::group::Validate Sentinel queries',
       '$ opentide validate query --platform sentinel --live',
-      '── Query Validation - Microsoft Sentinel ──',
-      'OK Query validation passed for sentinel',
+      '✓ 1 query valid on 1 tenant',
       '::group::Validate Splunk queries',
       '$ opentide validate query --platform splunk --live',
-      '── Query Validation - Splunk Enterprise Security ──',
-      'OK Query validation passed for splunk',
+      '✓ 1 query valid on 1 tenant',
     ],
   },
   {
@@ -643,13 +641,13 @@ export const REVIEW_JOBS: ReviewJob[] = [
     lines: [
       '::group::Generate schemas, exports and docs',
       '$ opentide generate',
-      '── Documentation generation ──',
-      '── Export generation ──',
-      '── Object vocabulary generation ──',
-      '── Template generation ──',
-      '── JSON schema generation ──',
-      '── VS Code snippet generation ──',
-      'OK Full generation pipeline completed',
+      '✓ docs · 8 files · 3.3s · docs/',
+      '✓ exports · 3 files · 0.0s · .opentide/exports/',
+      '✓ vocabularies · 0 files · 0.0s',
+      '✓ templates · 4 files · 0.4s · .opentide/templates/',
+      '✓ schemas · 6 files · 0.9s · .opentide/schemas/',
+      '✓ snippets · 1 file · 0.0s · .vscode/',
+      '✓ Generated 22 files in 4.7s · 6 phases',
     ],
   },
   {
@@ -661,13 +659,16 @@ export const REVIEW_JOBS: ReviewJob[] = [
     lines: [
       '::group::Deploy to staging tenants',
       '$ opentide deploy --dry-run --strategy PREVIEW',
-      '── MDR Deployment ──',
-      '── MDR Deployment ──',
-      'OK Deployment completed',
+      'Deploy plan · strategy PREVIEW · 2 platforms, 2 tenants · dry run, nothing is sent',
+      'sentinel · 1 tenant',
+      '  SOC Staging',
+      '    + create or update  LSASS memory access  …000000000001  status STAGING',
+      'splunk · 1 tenant',
+      '  ES Staging',
+      '    + create or update  LSASS memory access  …000000000001  status STAGING',
+      'Plan: 0 to create, 0 to update, 2 to create or update, 0 to disable, 0 to delete',
       '$ opentide deploy --strategy PREVIEW --skip-unconfigured',
-      '── MDR Deployment ──',
-      '── MDR Deployment ──',
-      'OK Deployment completed',
+      '✓ Deployed 1 rule to 2 tenants · 2 created or updated · 6.1s',
     ],
   },
 ];
