@@ -19,7 +19,7 @@ Run `opentide --help` for the live command tree.
 | [`setup`](/docs/cli/setup/) | Onboard detection repositories (repo, platforms, CI, MCP, skills) |
 | [`migrate`](/docs/cli/migrate/) | Move legacy `Configurations/` and `Objects/` into the greenfield layout |
 | [`generate`](/docs/cli/generate/) | Documentation, exports, framework artifacts, optional platform import |
-| [`validate`](/docs/cli/validate/) | Validate objects and queries |
+| [`validate`](/docs/cli/validate/) | Validate objects and queries: offline with the analysis engine, or on the tenants (`--live`) |
 | [`query`](/docs/cli/query/) | Run a read-only query on platform tenants and show the rows |
 | [`lint`](/docs/cli/lint/) | Catalogue hygiene (filename slugs, recommended metadata) |
 | [`rules`](/docs/cli/rules/) | Review staleness for detection rules |
@@ -32,6 +32,7 @@ Run `opentide --help` for the live command tree.
 | [`explain`](/docs/cli/diagnostics/) | What a diagnostic code means, an example, and how to fix it |
 | [`commands`](#command-tree-for-agents) | Every command with its options, defaults and an example; `--json` for the tree |
 | [`mcp`](/docs/mcp/) | Stdio MCP server (`mcp start`); the editor owns the process |
+| [`lsp`](/docs/cli/lsp/) | Language server for editors (`lsp start`) |
 
 <Callout type="info">
 
@@ -144,8 +145,8 @@ opentide --json commands
   "$defs": { "QueryValidationResult": { "…": "…" }, "CommandError": { "…": "…" } },
   "ok": true,
   "status": "completed",
-  "message": "56 commands",
-  "summary": { "commands": 56, "groups": 14 },
+  "message": "58 commands",
+  "summary": { "commands": 58, "groups": 15 },
   "…": "envelope keys"
 }
 ```
@@ -163,7 +164,7 @@ opentide --json commands
 | `output_schema` | The JSON Schema of the document the command prints with `--json`: its own result, or `CommandError` for a usage error. A group that only prints its help prints a document only for a usage error, such as an unknown subcommand, so its schema is `CommandError`. `null` for `mcp start`, which prints JSON-RPC. See [JSON output](/docs/cli/json-output/#output-schemas). |
 | `$defs` | The schemas each `output_schema` refers to. |
 
-Without `--json`, `opentide commands` prints the tree, one command per line with its summary, and ends with `✓ 56 commands`. Listing the tree imports every command's module once; it never loads the detection registry.
+Without `--json`, `opentide commands` prints the tree, one command per line with its summary, and ends with `✓ 58 commands`. Listing the tree imports every command's module once; it never loads the detection registry.
 
 ## Choosing between CLI, SDK, and MCP
 
