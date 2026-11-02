@@ -39,7 +39,7 @@ If bundled config lacks `global`, `paths` is aliased to `global`. If `platforms`
 | `paths.toml` | Yes | Workspace directory paths |
 | `deployment.toml` | Yes | Rule lifecycle statuses and promotion |
 | `schema.toml` | Yes | Template defaults, vocabulary extensions |
-| `visibility.toml` | Yes | Visibility configuration |
+| `visibility.toml` | Yes | Assets, log sources (each named by its dataset, with optional columns) and external detectors ([visibility.md](/docs/specifications/specs/visibility/)) |
 | `documentation.toml` | Yes | Documentation generation settings |
 | `platforms/*.toml` | Yes | Per-platform connection and behavior |
 | `sharing.toml` | Yes | Every sharing integration block (`[[misp]]`), in one file |
@@ -64,6 +64,7 @@ Path values in merged configuration MUST resolve to absolute paths, including le
 - [specs/vocabularies/format.md](/docs/specifications/specs/vocabularies/format/) — vocabulary extension via `schema.toml`
 - [platforms/index.md](/docs/specifications/specs/platforms/) — platform TOML under `platforms/`
 - [sharing.md](/docs/specifications/specs/sharing/) — single-file `sharing.toml`, integration arrays merged by `name`
+- [visibility.md](/docs/specifications/specs/visibility/) — `visibility.toml`, `visibility::1.0`
 
 ## Defaults & overrides
 
