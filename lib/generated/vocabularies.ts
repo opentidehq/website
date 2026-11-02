@@ -33,7 +33,7 @@ export type GeneratedVocabulary = {
 export const VOCABULARY_SOURCE = {
   repo: "opentidehq/specifications",
   directory: "vocabularies",
-  sha: "2ae37a7738554ba8dd52fe3dd1651893594f6a04",
+  sha: "f51b8e2bdd9c676fe06ce4ab0bf54e30c77f2861",
 } as const;
 
 /** Integrity problems found in the specification while deriving. */
@@ -50,15 +50,15 @@ export const GENERATED_VOCABULARIES: readonly GeneratedVocabulary[] = [
     valueKey: "id",
     staged: true,
     stages: ["misp","att&ck"],
-    keyCount: 1249,
-    valueCount: 1249,
+    keyCount: 1309,
+    valueCount: 1309,
     samples: [
-      { value: "att&ck::G1028", label: "[Mobile] APT-C-23" },
-      { value: "misp::4b79d1f6-8333-44b6-ac32-d1ea7e47e77f", label: "TA530" },
-      { value: "misp::3806516d-151b-4869-88bc-1f2a2cb73c3c", label: "GOLD RIVERVIEW" },
-      { value: "misp::79a347d9-1938-4550-8836-98e4ed95f77c", label: "Denim Tsunami" },
-      { value: "misp::82318cc9-41d6-4143-9c20-edbc12538c56", label: "DieNet" },
-      { value: "misp::eb8fb25d-ba4f-4970-ae8a-b0020b2b9841", label: "BlackLock" },
+      { value: "att&ck::G1028", label: "[Enterprise] APT-C-23" },
+      { value: "misp::ada08ea8-4517-4eea-aff1-3ad69e5466bb", label: "NEODYMIUM" },
+      { value: "misp::0d72c57c-73e3-4739-8144-c8055cabd7dc", label: "BladeHawk" },
+      { value: "misp::33bfb09d-c6f4-4403-b434-1d4d4733ec52", label: "TA2719" },
+      { value: "att&ck::G1056", label: "[Enterprise] TeamPCP" },
+      { value: "misp::529ab5a8-b53d-4c4d-b2c2-75f13a5eaaa6", label: "UTA0576" },
     ],
   },
   {
@@ -92,9 +92,9 @@ export const GENERATED_VOCABULARIES: readonly GeneratedVocabulary[] = [
     keyCount: 191,
     valueCount: 191,
     samples: [
-      { value: "G1028", label: "[Mobile] APT-C-23" },
+      { value: "G1028", label: "APT-C-23" },
       { value: "G0052", label: "CopyKittens" },
-      { value: "G1004", label: "[Mobile] LAPSUS$" },
+      { value: "G1004", label: "LAPSUS$" },
       { value: "G0121", label: "Sidewinder" },
       { value: "G0014", label: "Night Dragon" },
       { value: "G1059", label: "NIMBUS MANTICORE" },
