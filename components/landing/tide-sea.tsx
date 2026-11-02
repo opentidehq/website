@@ -30,6 +30,8 @@ const SOURCE = [
   'FROM logs-endpoint.events.process-* | WHERE process.command_line LIKE "*lsass*" | STATS count = COUNT(*) BY host.name',
   // Microsoft Sentinel: KQL
   'SigninLogs | where AuthenticationProtocol == "deviceCode" | summarize count() by UserPrincipalName',
+  // Sysdig Secure and Falco: Falco condition
+  'spawned_process and container and shell_procs and proc.tty != 0 and not proc.pname in (kubectl, runc)',
   // HarfangLab: YARA
   'rule lsass_minidump { strings: $a = "MiniDumpWriteDump" ascii condition: uint16(0) == 0x5A4D and $a }',
   // Splunk: SPL

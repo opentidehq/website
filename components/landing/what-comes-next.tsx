@@ -20,7 +20,6 @@ const ROADMAP: Direction[] = [
     intent: 'More places the same rule runs.',
     items: [
       { name: 'Elastic Security', detail: 'RFC 0007 · deploys through Elastic’s detection engine', status: 'rfc accepted', issue: '386' },
-      { name: 'Sysdig Secure + Falco', detail: 'Falco-native rules', status: 'proposed', issue: '143' },
     ],
   },
   {

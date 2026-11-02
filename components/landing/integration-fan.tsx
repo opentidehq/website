@@ -27,6 +27,7 @@ const INTEGRATIONS: Integration[] = [
   { key: 'crowdstrike', name: 'CrowdStrike Falcon', deploys: 'correlation rule', src: '/icons/platforms/crowdstrike.png', kind: 'raster' },
   { key: 'harfanglab', name: 'HarfangLab', deploys: 'Sigma or YARA rule', src: '/icons/platforms/harfanglab.png', kind: 'raster' },
   { key: 'elastic', name: 'Elastic Security', deploys: 'KQL, EQL or ES|QL rule', src: '/icons/platforms/elastic.svg', kind: 'color' },
+  { key: 'sysdig', name: 'Sysdig Secure + Falco', deploys: 'Falco rule', src: '/icons/platforms/falco.svg', kind: 'color' },
 ];
 
 /** When a wire has drawn in: the check on its tile lands just after. */
