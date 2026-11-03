@@ -211,8 +211,8 @@ criticality = "Medium"
 surface = ["OS::Windows::Desktop::11"]
 
 [[logsources]]
-name = "Endpoint process events"
-description = "Defender for Endpoint DeviceProcessEvents, forwarded to Sentinel"
+name = "DeviceProcessEvents"
+description = "Defender for Endpoint process events, forwarded to Sentinel"
 system = "sentinel"
 assets = ["Corporate workstations"]
 
@@ -371,7 +371,7 @@ objective:
         availability: Complete
         requirements: EDR process and handle telemetry
         logsources:
-          - Endpoint process events
+          - DeviceProcessEvents
       detectors:
         - name: Defender for Endpoint
           technology: EDR
@@ -484,13 +484,10 @@ ${SENTINEL_QUERY_BASE}
 `,
   '.opentide/configurations/platforms/sentinel.toml': `[platform]
 enabled = true
-identifier = "sentinel"
 name = "Microsoft Sentinel"
-subschema = "Microsoft Sentinel"
 description = """Microsoft Sentinel delivers intelligent security analytics
 across the estate — attack detection, threat visibility, proactive hunting
 and response."""
-flags = ["cti"]
 
 [[tenants]]
 name = "SOC Staging"
@@ -531,12 +528,9 @@ alert.title = "prefix::[STAGING] "
 `,
   '.opentide/configurations/platforms/splunk.toml': `[platform]
 enabled = true
-identifier = "splunk"
 name = "Splunk Enterprise Security"
-subschema = "Splunk Sub Schema"
 description = """Splunk Enterprise Security runs the same detection content as
 correlation searches, raising notables and risk-based alerting objects."""
-flags = ["rba"]
 
 [[tenants]]
 name = "ES Staging"
