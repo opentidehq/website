@@ -190,7 +190,7 @@ export const DOORS: Door[] = [
         lines: [
           i('signal = objective.objective.signals[0]'),
           i('signal.name, signal.data.logsources'),
-          o("('LSASS process access', ['Endpoint process events'])", true),
+          o("('LSASS process access', ['DeviceProcessEvents'])", true),
         ],
       },
       {
