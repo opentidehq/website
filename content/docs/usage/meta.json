@@ -26,8 +26,6 @@
     "workflows/agentic-setup",
     "---Operate---",
     "troubleshooting",
-    "---Migration---",
-    "migration",
     "!releases"
   ]
 }
