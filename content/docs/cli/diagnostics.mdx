@@ -35,9 +35,9 @@ Every finding `opentide validate` and `opentide lint` report carries a stable `c
 | [`doctor_checks_failed`](#doctor_checks_failed) | At least one `opentide doctor` check failed. |
 | [`duplicate_id`](#duplicate_id) | Two object files carry the same UUID. |
 | [`duplicate_name`](#duplicate_name) | Two `sharing.toml` blocks share a name. |
-| [`ecs_type_mismatch`](#ecs_type_mismatch) | The operation cannot apply to the ECS field's type. |
-| [`ecs_unknown_field`](#ecs_unknown_field) | The field is not in the Elastic Common Schema, on indices that use it; ECS allows custom fields. |
-| [`elastic_dataset_not_declared`](#elastic_dataset_not_declared) | The index pattern or data view is not one the workspace declares in visibility.toml. |
+| [`ecs_type_mismatch`](#ecs_type_mismatch) | The operation cannot apply to the field's type, from ECS or from the columns visibility.toml declares for the index. |
+| [`ecs_unknown_field`](#ecs_unknown_field) | The field is not in the Elastic Common Schema, on indices that use it, nor declared for the index in visibility.toml; ECS allows custom fields. |
+| [`elastic_dataset_not_declared`](#elastic_dataset_not_declared) | The index pattern is not one the workspace declares in visibility.toml. |
 | [`engine_unavailable`](#engine_unavailable) | The analysis engine (the Rust module compiled into opentide) does not load, so the command cannot check queries or serve the language server. |
 | [`eql_argument_type`](#eql_argument_type) | A literal has a type the EQL verifier rejects in this position. |
 | [`eql_case_sensitive`](#eql_case_sensitive) | The comparison is case-sensitive; the case-insensitive form may be meant. |
@@ -68,7 +68,7 @@ Every finding `opentide validate` and `opentide lint` report carries a stable `c
 | [`esql_unknown_type`](#esql_unknown_type) | The ::type cast names a type no Elasticsearch release can cast to. |
 | [`external_id_in_rule`](#external_id_in_rule) | A rule still carries a vendor rule id key, which belongs in deployment state. |
 | [`external_id_shape`](#external_id_shape) | A vendor rule id in deployment state has the wrong form. |
-| [`filename_mismatch`](#filename_mismatch) | An object file's name is not the stem `lint.toml` `[filenames].style` asks for: `slugify(name)` by default. |
+| [`filename_mismatch`](#filename_mismatch) | An object file's name is not the stem `lint.toml` `[filenames].style` (or its kind's `[filenames.<kind>].style`) asks for: `slugify(name)` by default. |
 | [`filename_pattern`](#filename_pattern) | An object file's name does not match the regular expression `lint.toml` sets for it. |
 | [`filename_slug`](#filename_slug) | The file name is not the slug of the object's name. |
 | [`git`](#git) | git is on `PATH`. |
@@ -86,12 +86,12 @@ Every finding `opentide validate` and `opentide lint` report carries a stable `c
 | [`kql_join_summarize_before_project`](#kql_join_summarize_before_project) | join or summarize runs before project, so it carries every column. |
 | [`kql_parse_error`](#kql_parse_error) | The KQL query does not parse. |
 | [`kql_render_not_valid`](#kql_render_not_valid) | render draws a chart; it has no effect in a detection rule. |
-| [`kql_table_not_declared`](#kql_table_not_declared) | The table is not one the workspace declares in visibility.toml for the platform. |
-| [`kql_type_mismatch`](#kql_type_mismatch) | The operator cannot apply to the column's documented type. |
-| [`kql_unknown_column`](#kql_unknown_column) | The column is not in the documented schema of the table or ASIM parser it comes from. |
+| [`kql_table_not_declared`](#kql_table_not_declared) | The table is one the engine knows for the platform, but no log source of the workspace declares it in visibility.toml. |
+| [`kql_type_mismatch`](#kql_type_mismatch) | The operator cannot apply to the column's documented or declared type. |
+| [`kql_unknown_column`](#kql_unknown_column) | The column is not in the documented schema of the table or ASIM parser it comes from, or in the columns visibility.toml declares for the table. |
 | [`kql_unknown_function`](#kql_unknown_function) | The KQL function is not in the Kusto function catalog. |
 | [`kql_unknown_operator`](#kql_unknown_operator) | The KQL tabular operator is not one Kusto knows. |
-| [`kql_unknown_table`](#kql_unknown_table) | The table is not one the engine knows for the platform: a warning under Sentinel, whose workspaces hold tables no catalog lists; an error under Defender's advanced hunting schema. |
+| [`kql_unknown_table`](#kql_unknown_table) | The table is neither one the engine knows for the platform nor one the workspace declares in visibility.toml: a warning under Sentinel, whose workspaces hold tables no catalog lists; an error under Defender's advanced hunting schema. Declaring it in visibility.toml makes it known. |
 | [`kql_unscoped_search`](#kql_unscoped_search) | search without a table scans every table in the workspace. |
 | [`kql_unscoped_union`](#kql_unscoped_union) | union * or an unscoped union reads every table. |
 | [`kql_where_not_first`](#kql_where_not_first) | A filter comes after a more expensive operator; filtering first scans fewer rows. |
@@ -163,7 +163,7 @@ Every finding `opentide validate` and `opentide lint` report carries a stable `c
 | [`sharing_config`](#sharing_config) | `sharing.toml` failed validation, so `share` did not run. |
 | [`sharing_directory`](#sharing_directory) | A `sharing/` configuration directory exists; sharing is configured in one `sharing.toml` file. |
 | [`spl_command_without_pipe`](#spl_command_without_pipe) | The query starts with a command name but no |, so Splunk searches for the word instead of running the command. |
-| [`spl_dataset_not_declared`](#spl_dataset_not_declared) | The index, sourcetype or macro is not one the workspace declares in visibility.toml. |
+| [`spl_dataset_not_declared`](#spl_dataset_not_declared) | The sourcetype is not one the workspace declares in visibility.toml. |
 | [`spl_empty_command`](#spl_empty_command) | A command with no arguments: Splunk runs it, but it does nothing, returns no results, or fails at run time. |
 | [`spl_empty_stage`](#spl_empty_stage) | A trailing | with no command; Splunk ignores it. |
 | [`spl_leading_not`](#spl_leading_not) | A base search that starts with NOT scans every event before excluding any. |
@@ -678,7 +678,7 @@ Give each block a unique `name`; `share --target` selects blocks by it.
 
 ## ecs_type_mismatch
 
-The operation cannot apply to the ECS field's type.
+The operation cannot apply to the field's type, from ECS or from the columns visibility.toml declares for the index.
 
 Reported by the analysis engine in an ECS field query, at the place in the query: as an error, a query the platform would reject, by `opentide validate` (its `queries` check) and `opentide validate query`; as a warning or a note, style, by `opentide lint` (its `queries` check). An editor running `opentide lsp start` shows both.
 
@@ -694,7 +694,7 @@ Change the query where the frame points, then run `opentide validate query` (`--
 
 ## ecs_unknown_field
 
-The field is not in the Elastic Common Schema, on indices that use it; ECS allows custom fields.
+The field is not in the Elastic Common Schema, on indices that use it, nor declared for the index in visibility.toml; ECS allows custom fields.
 
 Reported by the analysis engine in an ECS field query, at the place in the query: as an error, a query the platform would reject, by `opentide validate` (its `queries` check) and `opentide validate query`; as a warning or a note, style, by `opentide lint` (its `queries` check). An editor running `opentide lsp start` shows both.
 
@@ -710,18 +710,17 @@ Change the query where the frame points, then run `opentide validate query` (`--
 
 ## elastic_dataset_not_declared
 
-The index pattern or data view is not one the workspace declares in visibility.toml.
+The index pattern is not one the workspace declares in visibility.toml.
 
-Severity: warning. Reported by the analysis engine on an Elastic rule (`elastic`): its `index`, `data_view_id`, a threat match's `index`, or an ES|QL `FROM`. `opentide lint` (its `queries` check) and an editor running `opentide lsp start` show it; `opentide validate` does not fail on it. It is opt-in per kind: only a workspace whose `visibility.toml` names at least one Elastic index pattern (or data view) gets it. A declared pattern covers the patterns inside it: `logs-*` covers `logs-azure.*`.
+Severity: warning. Reported by the analysis engine on an Elastic rule (`elastic`): its `index`, a threat match's `index`, or an ES|QL `FROM`. `opentide lint` (its `queries` check) and an editor running `opentide lsp start` show it; `opentide validate` does not fail on it. It is opt-in: only a workspace whose `visibility.toml` has at least one `elastic` log source gets it, for an index pattern no log source names, whether or not the engine knows it otherwise. An Elastic log source's `name` is its index pattern or data stream; data views are not declared. A declared pattern covers the patterns inside it: `logs-*` covers `logs-azure.*`.
 
 ### Example
 
 ```toml
 [[logsources]]
-name = "Endpoint telemetry"
+name = "logs-endpoint.events.*"
 description = "Elastic Defend endpoint data."
 system = "elastic"
-indices = ["logs-endpoint.events.*"]
 ```
 
 ```yaml
@@ -733,7 +732,14 @@ configurations:
 
 ### How to fix
 
-Correct the pattern, or add it to the `indices` (or the data view to `data_views`) of the log source that fills it in `visibility.toml`. The editor applies the change as you type it; the CLI reads the file on its next run. See [The datasets a log source fills](/docs/usage/configuration/#the-datasets-a-log-source-fills).
+Correct the pattern, or declare it: add an `elastic` log source whose `name` is the index pattern in `visibility.toml`. The editor applies the change as you type it; the CLI reads the file on its next run. See [The datasets a log source fills](/docs/usage/configuration/#the-datasets-a-log-source-fills).
+
+```toml
+[[logsources]]
+name = "winlogbeat-*"
+description = "Windows event logs shipped by Winlogbeat."
+system = "elastic"
+```
 
 ## engine_unavailable
 
@@ -1220,7 +1226,7 @@ Write the id the platform returned. Defender and SentinelOne ids are canonical d
 
 ## filename_mismatch
 
-An object file's name is not the stem `lint.toml` `[filenames].style` asks for: `slugify(name)` by default.
+An object file's name is not the stem `lint.toml` `[filenames].style` (or its kind's `[filenames.<kind>].style`) asks for: `slugify(name)` by default.
 
 Severity: warning. Reported by `opentide lint` (filenames check).
 
@@ -1240,13 +1246,13 @@ objects/threats/actor.yaml   # name: Simulated Actor → Simulated Actor.yaml
 
 Run `opentide lint --fix`, which renames the file. When another file already has the expected name (compared without regard to case), the object gets the first eight characters of its UUID as a suffix.
 
-If the catalogue keeps another convention, set `style` in `.opentide/configurations/lint.toml`: `"name"` for the object's name as the file name, `"none"` to stop comparing the stem with the name. `pattern` checks the stem against a regular expression (`opentide explain filename_pattern`).
+If the catalogue keeps another convention, set `style` in `.opentide/configurations/lint.toml`: `"name"` for the object's name as the file name, `"none"` to stop comparing the stem with the name. `pattern` checks the stem against a regular expression (`opentide explain filename_pattern`). `[filenames.threats]`, `[filenames.objectives]` and `[filenames.rules]` set either key for one kind of object.
 
 ## filename_pattern
 
 An object file's name does not match the regular expression `lint.toml` sets for it.
 
-Severity: warning, or the severity `[filenames]` sets. Reported by `opentide lint` (filenames check), only when `[filenames].pattern` is set.
+Severity: warning, or the severity `[filenames]` sets. Reported by `opentide lint` (filenames check), only when `[filenames].pattern`, or the object kind's `[filenames.<kind>].pattern`, is set.
 
 ### Example
 
@@ -1533,32 +1539,38 @@ Change the query where the frame points, then run `opentide validate query` (`--
 
 ## kql_table_not_declared
 
-The table is not one the workspace declares in visibility.toml for the platform.
+The table is one the engine knows for the platform, but no log source of the workspace declares it in visibility.toml.
 
-Severity: warning. Reported by the analysis engine on a KQL query (`sentinel`, `defender_for_endpoint`): `opentide lint` (its `queries` check) and an editor running `opentide lsp start` show it; `opentide validate` does not fail on it. It is opt-in: only a workspace whose `visibility.toml` names at least one table for that platform gets it, for a table the engine does not otherwise know. `*` in a declared name matches any run of characters.
+Severity: warning. Reported by the analysis engine on a KQL query (`sentinel`, `defender_for_endpoint`): `opentide lint` (its `queries` check) and an editor running `opentide lsp start` show it; `opentide validate` does not fail on it. It is opt-in per system: only a workspace whose `visibility.toml` has at least one log source for that platform gets it. It applies to a table the engine's catalog knows (a built-in table such as `SigninLogs`) that no log source names; a table the catalog does not know and no log source names is `kql_unknown_table` instead. Every name a query reads from counts (a pipeline's first source, a `union` leg, a `join` or `lookup` right side), whatever its case, except a `let` binding, a query parameter or a function the engine knows, so a workspace function is declared as a log source too. `*` in a declared name matches any run of characters.
 
 ### Example
 
 ```toml
 [[logsources]]
-name = "VNet flow logs"
+name = "NTANetAnalytics"
 description = "Traffic analytics on the production VNet flow logs."
 system = "sentinel"
-tables = ["NTANetAnalytics"]
 ```
 
 ```kusto
-NTAIpDetails   // not declared for sentinel
+NTAIpDetails   // known to the engine, not declared for sentinel
 | where FlowType == "MaliciousFlow"
 ```
 
 ### How to fix
 
-Correct the table name, or add it (or a pattern such as `*_CL`) to the `tables` of the log source that fills it in `visibility.toml`. The editor applies the change as you type it; the CLI reads the file on its next run. See [The datasets a log source fills](/docs/usage/configuration/#the-datasets-a-log-source-fills).
+Correct the table name, or declare it: add a log source whose `name` is the table (or a pattern such as `*_CL` that covers it) in `visibility.toml`. The editor applies the change as you type it; the CLI reads the file on its next run. See [The datasets a log source fills](/docs/usage/configuration/#the-datasets-a-log-source-fills).
+
+```toml
+[[logsources]]
+name = "NTAIpDetails"
+description = "IP details from traffic analytics."
+system = "sentinel"
+```
 
 ## kql_type_mismatch
 
-The operator cannot apply to the column's documented type.
+The operator cannot apply to the column's documented or declared type.
 
 Reported by the analysis engine in a KQL query, at the place in the query: as an error, a query the platform would reject, by `opentide validate` (its `queries` check) and `opentide validate query`; as a warning or a note, style, by `opentide lint` (its `queries` check). An editor running `opentide lsp start` shows both.
 
@@ -1574,7 +1586,7 @@ Change the query where the frame points, then run `opentide validate query` (`--
 
 ## kql_unknown_column
 
-The column is not in the documented schema of the table or ASIM parser it comes from.
+The column is not in the documented schema of the table or ASIM parser it comes from, or in the columns visibility.toml declares for the table.
 
 Reported by the analysis engine in a KQL query, at the place in the query: as an error, a query the platform would reject, by `opentide validate` (its `queries` check) and `opentide validate query`; as a warning or a note, style, by `opentide lint` (its `queries` check). An editor running `opentide lsp start` shows both.
 
@@ -1622,7 +1634,7 @@ Change the query where the frame points, then run `opentide validate query` (`--
 
 ## kql_unknown_table
 
-The table is not one the engine knows for the platform: a warning under Sentinel, whose workspaces hold tables no catalog lists; an error under Defender's advanced hunting schema.
+The table is neither one the engine knows for the platform nor one the workspace declares in visibility.toml: a warning under Sentinel, whose workspaces hold tables no catalog lists; an error under Defender's advanced hunting schema. Declaring it in visibility.toml makes it known.
 
 Reported by the analysis engine in a KQL query, at the place in the query: as an error, a query the platform would reject, by `opentide validate` (its `queries` check) and `opentide validate query`; as a warning or a note, style, by `opentide lint` (its `queries` check). An editor running `opentide lsp start` shows both.
 
@@ -2806,27 +2818,33 @@ Change the query where the frame points, then run `opentide validate query` (`--
 
 ## spl_dataset_not_declared
 
-The index, sourcetype or macro is not one the workspace declares in visibility.toml.
+The sourcetype is not one the workspace declares in visibility.toml.
 
-Severity: warning. Reported by the analysis engine on an SPL search (`splunk`): `opentide lint` (its `queries` check) and an editor running `opentide lsp start` show it; `opentide validate` does not fail on it. It is opt-in per kind: only a workspace whose `visibility.toml` names at least one Splunk index (or sourcetype, or macro) gets it for an index (or sourcetype, or macro). Names match regardless of case, and `*` matches any run of characters.
+Severity: warning. Reported by the analysis engine on an SPL search (`splunk`): `opentide lint` (its `queries` check) and an editor running `opentide lsp start` show it; `opentide validate` does not fail on it. It is opt-in: only a workspace whose `visibility.toml` has at least one `splunk` log source gets it, for a sourcetype no log source names, whether or not the engine knows it otherwise. A Splunk log source's `name` is its sourcetype; indexes and macros are not declared. Names match regardless of case, and `*` matches any run of characters.
 
 ### Example
 
 ```toml
 [[logsources]]
-name = "Windows security events"
+name = "WinEventLog:Security"
 description = "Security event log of the domain controllers."
 system = "splunk"
-indexes = ["wineventlog"]
 ```
 
 ```text illustrative
-index=winevents EventCode=4688   # winevents is not declared
+sourcetype=XmlWinEventLog:Security EventCode=4688   # not declared
 ```
 
 ### How to fix
 
-Correct the name, or add it to the `indexes`, `sourcetypes` or `macros` of the log source that fills it in `visibility.toml`. The editor applies the change as you type it; the CLI reads the file on its next run. See [The datasets a log source fills](/docs/usage/configuration/#the-datasets-a-log-source-fills).
+Correct the sourcetype, or declare it: add a `splunk` log source whose `name` is the sourcetype (or a pattern that covers it) in `visibility.toml`. The editor applies the change as you type it; the CLI reads the file on its next run. See [The datasets a log source fills](/docs/usage/configuration/#the-datasets-a-log-source-fills).
+
+```toml
+[[logsources]]
+name = "XmlWinEventLog:Security"
+description = "Security event log, XML rendering."
+system = "splunk"
+```
 
 ## spl_empty_command
 
