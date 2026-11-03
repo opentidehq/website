@@ -58,6 +58,6 @@ test('showcase: the objects it names exist in the demo repository', () => {
     assert.ok(Object.values(files).some((body) => body.startsWith(`name: ${name}\n`)), `no demo object named ${name}`);
   }
   assert.ok(files['objects/objectives/credential-access-via-lsass.yaml'].includes('    - name: LSASS process access\n'));
-  assert.ok(VISIBILITY_TOML.includes('name = "Endpoint process events"'));
+  assert.ok(VISIBILITY_TOML.includes('name = "DeviceProcessEvents"'));
   assert.ok(files['objects/threats/gateway-exploitation-cve-2026-0300.yaml'].includes(`    - relation: sequence::preceeds\n      vector: ${CHAINED}\n`));
 });
