@@ -6,7 +6,7 @@ pre-releases odd ones.
 
 ## [0.1.0] - 2026-11-04
 
-The first pre-release, on the Visual Studio Marketplace and Open VSX. It bundles opentide 0.21.0. (Temporary summary for local verification.)
+The first pre-release, on the Visual Studio Marketplace and Open VSX. (Temporary summary for local verification.)
 
 ### Added
 

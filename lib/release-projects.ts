@@ -82,7 +82,7 @@ export const PROJECTS: readonly ReleaseProject[] = [
       'The opentide workbench for VS Code and its forks: live checks for Tide objects and their queries, templates, a catalogue, a graph and ATT&CK coverage, query results, and deploy previews, with an opentide runtime bundled.',
     href: '/releases/vscode-extension/',
     repository: 'https://github.com/opentidehq/vscode-extension',
-    gettingStarted: { label: 'the README', href: 'https://github.com/opentidehq/vscode-extension#works-on-install' },
+    gettingStarted: { label: 'the README', href: 'https://github.com/opentidehq/vscode-extension#install' },
     changelogUrl: 'https://github.com/opentidehq/vscode-extension/blob/main/CHANGELOG.md',
     changelog: 'vscode-extension.md',
     firstPublished: '0.1.0',
