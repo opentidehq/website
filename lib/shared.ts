@@ -80,9 +80,9 @@ export const ecosystemLinks: EcosystemItem[] = [
   },
   {
     name: 'language-server',
-    description: 'Rust and tree-sitter language server for KQL, SPL and Tide YAML. In progress.',
+    description: 'Native language server for KQL, SPL, ES|QL, EQL, Kibana KQL, Lucene, Falco and Tide YAML, on crates.io and in pip install opentide.',
     href: 'https://github.com/opentidehq/language-server',
-    status: 'soon',
+    status: 'live',
     tag: 'Editor',
   },
   {
