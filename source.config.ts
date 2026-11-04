@@ -6,6 +6,7 @@ import {
   remarkSteps,
 } from 'fumadocs-core/mdx-plugins';
 import { z } from 'zod';
+import { rehypeCliOutput } from './lib/mdx/cli-output.mjs';
 
 export const docs = defineDocs({
   dir: 'content/docs',
@@ -41,5 +42,7 @@ export default defineConfig({
       remarkSteps,
       [remarkNpm, { persist: { id: 'package-manager' } }],
     ],
+    // Before rehype-code: CLI output samples are highlighted as `ansi`.
+    rehypePlugins: (plugins) => [rehypeCliOutput, ...plugins],
   },
 });
