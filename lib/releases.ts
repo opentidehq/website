@@ -8,7 +8,7 @@ export const RELEASE_NOTES_PATH = join(process.cwd(), 'content/docs/usage/releas
 /** Each project's CHANGELOG.md, synced by `scripts/sync-changelogs.mjs`. */
 export const CHANGELOG_DIR = join(process.cwd(), 'content/releases');
 
-export type ReleaseKind = 'major' | 'minor' | 'patch' | 'beta';
+export type ReleaseKind = 'major' | 'minor' | 'patch' | 'beta' | 'prerelease';
 
 export type ReleaseLink = {
   label: string;
@@ -19,6 +19,8 @@ export type ReleaseSection = {
   title: string;
   paragraphs: string[];
   items: string[];
+  /** The nested list under each item, by index: `subitems[i]` belongs to `items[i]`. */
+  subitems: string[][];
 };
 
 export type ReleaseNote = {
@@ -83,6 +85,7 @@ export function friendlySectionTitle(title: string): string {
 
 export function kindLabel(kind: ReleaseKind): string {
   if (kind === 'beta') return 'Public beta';
+  if (kind === 'prerelease') return 'Pre-release';
   if (kind === 'major') return 'Major';
   if (kind === 'minor') return 'Minor';
   return 'Patch';
@@ -210,7 +213,7 @@ function parseReleaseBody(body: string, version: string): Omit<
         current = null;
         continue;
       }
-      current = { title: friendlySectionTitle(title), paragraphs: [], items: [] };
+      current = { title: friendlySectionTitle(title), paragraphs: [], items: [], subitems: [] };
       sections.push(current);
       mode = 'body';
       continue;
@@ -225,10 +228,11 @@ function parseReleaseBody(body: string, version: string): Omit<
     if (bullet?.[1]) {
       flushOpen();
       if (!current) {
-        current = { title: 'Details', paragraphs: [], items: [] };
+        current = { title: 'Details', paragraphs: [], items: [], subitems: [] };
         sections.push(current);
       }
       current.items.push(bullet[1].trim());
+      current.subitems.push([]);
       continue;
     }
 
@@ -317,7 +321,7 @@ export function compareVersions(a: string, b: string): number {
 const CHANGELOG_HEADING =
   /^##\s+\[(\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)\]\s+[—–-]\s+(\d{4})-(\d{2})-(\d{2})(\s+\[yanked\])?\s*$/i;
 const UNRELEASED = /^##\s+\[?unreleased\]?/i;
-const CHANGELOG_SECTION = /^###\s+(.+?)\s*$/;
+const CHANGELOG_SECTION = /^(#{3,6})\s+(.+?)\s*$/;
 const LIST_ITEM = /^[-*+]\s+(.+)$/;
 const LINK_REFERENCE = /^\[[^\]]+\]:\s/;
 
@@ -342,8 +346,9 @@ function isoDate(year: string, month: string, day: string): string | null {
 /**
  * A Keep a Changelog file (`## [1.2.0] - 2026-10-26`, `### Added`) as release notes,
  * newest first. The first paragraph under a version, when there is one, is its summary.
- * `Unreleased` is skipped, nested list items become items of their own, and code blocks
- * are left out. A heading that is not a version and a real date throws: the sync keeps
+ * `Unreleased` is skipped and code blocks are left out. A `####` heading under `### Added`
+ * is a section of its own, `Added: Runtime and core`. A list nested under an item becomes
+ * that item's subitems; anything nested deeper joins the same list. A heading that is not a version and a real date throws: the sync keeps
  * the committed copy rather than publish a broken page.
  */
 export function parseChangelog(markdown: string, project: ReleaseProject): ReleaseNote[] {
@@ -364,8 +369,12 @@ export function parseChangelog(markdown: string, project: ReleaseProject): Relea
     const notes: string[] = [];
     const sections: ReleaseSection[] = [];
     let current: ReleaseSection | null = null;
+    let parent: string | null = null;
     let paragraph: string[] = [];
     let fence = false;
+    // The indent of the last top-level item, and whether the last line was a nested item.
+    let itemIndent = 0;
+    let inSubitem = false;
 
     const flush = () => {
       const text = collapse(paragraph);
@@ -389,26 +398,44 @@ export function parseChangelog(markdown: string, project: ReleaseProject): Relea
         continue;
       }
       const section = CHANGELOG_SECTION.exec(trimmed);
-      if (section?.[1]) {
+      if (section?.[1] && section[2]) {
         flush();
-        current = { title: section[1], paragraphs: [], items: [] };
+        const title = section[2];
+        if (section[1].length === 3) parent = title;
+        current = {
+          title: section[1].length > 3 && parent ? `${parent}: ${title}` : title,
+          paragraphs: [],
+          items: [],
+          subitems: [],
+        };
         sections.push(current);
+        inSubitem = false;
         continue;
       }
+      const indent = raw.length - raw.trimStart().length;
       const item = LIST_ITEM.exec(trimmed);
       if (item?.[1]) {
         flush();
+        if (current && current.items.length > 0 && indent > itemIndent) {
+          current.subitems[current.subitems.length - 1]!.push(item[1].trim());
+          inSubitem = true;
+          continue;
+        }
         if (!current) {
-          current = { title: 'Details', paragraphs: [], items: [] };
+          current = { title: 'Details', paragraphs: [], items: [], subitems: [] };
           sections.push(current);
         }
         current.items.push(item[1].trim());
+        current.subitems.push([]);
+        itemIndent = indent;
+        inSubitem = false;
         continue;
       }
-      // An indented line under a list item continues it.
-      if (/^\s/.test(raw) && current && current.items.length > 0 && paragraph.length === 0) {
-        const last = current.items.length - 1;
-        current.items[last] = `${current.items[last]} ${trimmed}`;
+      // An indented line under a list item continues it, or the nested item it is under.
+      if (indent > 0 && current && current.items.length > 0 && paragraph.length === 0) {
+        const list = inSubitem ? current.subitems[current.subitems.length - 1]! : current.items;
+        const last = list.length - 1;
+        list[last] = `${list[last]} ${trimmed}`;
         continue;
       }
       paragraph.push(trimmed);
@@ -424,13 +451,18 @@ export function parseChangelog(markdown: string, project: ReleaseProject): Relea
       version,
       dateLabel: formatIsoDate(dateIso),
       dateIso,
-      kind: kindForVersion(version),
+      kind: version.includes('-') || project.prerelease?.(version) ? 'prerelease' : kindForVersion(version),
       breaking: isBreaking(summary, kept),
       summary,
       notes: yanked ? ['This version was yanked: do not install it.', ...notes] : notes,
       sections: kept,
       links: [
-        ...(published ? [{ label: project.registry.label, href: project.registry.versionUrl(version) }] : []),
+        ...(published
+          ? [
+              { label: project.registry.label, href: project.registry.versionUrl(version) },
+              ...(project.mirrors ?? []).map((mirror) => ({ label: mirror.label, href: mirror.versionUrl(version) })),
+            ]
+          : []),
         { label: 'GitHub Release', href: `${project.repository}/releases/tag/v${version}` },
       ],
       installCommand: published ? project.install(version) : null,

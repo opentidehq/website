@@ -23,8 +23,13 @@ export type ReleaseProject = {
   registry: {
     label: string;
     url: string;
+    /** A page for one version, or the registry's page where it has none per version. */
     versionUrl: (version: string) => string;
   };
+  /** Other registries that carry every published version, linked beside the registry. */
+  mirrors?: readonly { label: string; versionUrl: (version: string) => string }[];
+  /** A version on a pre-release channel, though its number has no SemVer suffix. */
+  prerelease?: (version: string) => boolean;
   install: (version: string) => string;
 };
 

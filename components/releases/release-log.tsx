@@ -193,6 +193,19 @@ function SectionBlock({ section, level }: { section: ReleaseSection; level: Head
                 className="absolute top-[0.6rem] left-0 size-1 rounded-full bg-[var(--landing-accent)]"
               />
               <RichText text={item} />
+              {section.subitems[index]?.length ? (
+                <ul className="mt-2 space-y-1.5">
+                  {section.subitems[index].map((subitem, subindex) => (
+                    <li key={subindex} className="relative pl-4 text-pretty">
+                      <span
+                        aria-hidden
+                        className="absolute top-[0.6rem] left-0 size-1 rounded-full bg-[var(--landing-dim)]"
+                      />
+                      <RichText text={subitem} />
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
             </li>
           ))}
         </ul>
