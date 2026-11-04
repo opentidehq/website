@@ -1268,3 +1268,19 @@ a.landing-footer-chip:focus-visible {
     @apply font-sans;
   }
 }
+
+/*
+ * CLI output samples are Shiki `ansi` fences (lib/mdx/cli-output.mjs). Fumadocs
+ * applies each theme's colour and font style, but not its weight, so the bold the
+ * CLI prints (error labels, outcome glyphs, commands) is applied here, with the
+ * selectors of fumadocs-ui/css/lib/shiki.css: code blocks, then inline code.
+ */
+.shiki code span,
+code.shiki span {
+  font-weight: var(--shiki-light-font-weight);
+}
+
+.dark .shiki code span,
+.dark code.shiki span {
+  font-weight: var(--shiki-dark-font-weight);
+}
