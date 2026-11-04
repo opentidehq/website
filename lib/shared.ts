@@ -87,8 +87,9 @@ export const ecosystemLinks: EcosystemItem[] = [
   },
   {
     name: 'vscode-extension',
-    description: 'VS Code onboarding, validation and authoring, built on the language server.',
-    status: 'soon',
+    description: 'The workbench: live checks, a catalogue, a graph and deploy previews in VS Code and its forks, with opentide bundled.',
+    href: 'https://github.com/opentidehq/vscode-extension',
+    status: 'live',
     tag: 'Editor',
   },
 ];

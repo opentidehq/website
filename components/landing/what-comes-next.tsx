@@ -27,7 +27,7 @@ const ROADMAP: Direction[] = [
     intent: 'The spec where you type.',
     items: [
       { name: 'Language server', detail: 'KQL · SPL · Tide YAML, in pip install opentide', status: 'in progress', issue: '332' },
-      { name: 'VS Code extension', detail: 'replaces opentide setup vscode', status: 'planned', issue: '47' },
+      { name: 'VS Code extension', detail: '0.1 pre-release · replaces opentide setup vscode', status: 'in progress', issue: '47' },
       { name: 'Agent plugins, bundled', detail: 'skills + MCP in one install', status: 'planned', issue: '431' },
     ],
   },
