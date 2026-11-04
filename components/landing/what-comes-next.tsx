@@ -16,27 +16,17 @@ type Direction = { title: string; intent: string; items: Item[] };
 
 const ROADMAP: Direction[] = [
   {
-    title: 'Integrations',
-    intent: 'More places the same rule runs.',
-    items: [
-      { name: 'Elastic Security', detail: 'RFC 0007 · deploys through Elastic’s detection engine', status: 'rfc accepted', issue: '386' },
-    ],
-  },
-  {
     title: 'In the editor',
     intent: 'The spec where you type.',
     items: [
-      { name: 'VS Code extension', detail: '0.1 pre-release · replaces opentide setup vscode', status: 'in progress', issue: '47' },
-      { name: 'Agent plugins, bundled', detail: 'skills + MCP in one install', status: 'planned', issue: '431' },
+      { name: 'VS Code extension', detail: '0.1 pre-release · Marketplace and Open VSX', status: 'in progress', issue: '47' },
     ],
   },
   {
     title: 'A stronger model',
-    intent: 'Richer rules, cleaner state.',
+    intent: 'Richer rules.',
     items: [
       { name: 'rule::2.0 beside rule::1.x', detail: 'both shapes in one workspace', status: 'proposed', issue: '394', code: true },
-      { name: 'Portable rule validation', detail: 'a disabled integration warns, not fails', status: 'planned', issue: '410' },
-      { name: 'Deployment state out of YAML', detail: 'vendor rule ids in state shards', status: 'planned', issue: '396' },
     ],
   },
   {
@@ -113,7 +103,7 @@ function Mix({ items }: { items: Item[] }) {
   );
 }
 
-/** Four directions, each tracked in a public issue or RFC. */
+/** Where opentide goes next, by direction, each item tracked in a public issue or the migration guide. */
 export function Roadmap() {
   return (
     <div className="@container">
@@ -126,7 +116,7 @@ export function Roadmap() {
         ))}
       </ul>
 
-      <ol data-reveal-group className="mt-8 grid list-none grid-cols-1 gap-4 p-0 @2xl:grid-cols-2 @7xl:grid-cols-4">
+      <ol data-reveal-group className="mt-8 grid list-none grid-cols-1 gap-4 p-0 @3xl:grid-cols-3">
         {ROADMAP.map((dir, d) => (
           <li key={dir.title} className="landing-panel flex flex-col p-6">
             <div className="flex items-baseline justify-between gap-3">

@@ -196,7 +196,7 @@ export default async function HomePage() {
         <div className={block}>
           <BlockHead
             title="Where opentide goes next."
-            lead="Four directions, tracked in public issues, RFCs and the migration guide, each with a clear status."
+            lead="Three directions, tracked in public issues and the migration guide, each with a clear status."
           />
           <div className="mt-10">
             <Roadmap />
