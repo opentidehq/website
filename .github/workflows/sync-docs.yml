@@ -119,7 +119,7 @@ jobs:
       - name: Sync published docs
         run: pnpm sync:content
 
-      - name: Sync language server and explorer changelogs
+      - name: Sync project changelogs
         run: pnpm sync:changelogs
 
       - name: Commit documentation changes

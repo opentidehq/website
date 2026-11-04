@@ -1,14 +1,14 @@
 import type { Metadata } from 'next';
 import { ReleaseLog } from '@/components/releases/release-log';
 import { readBuildTimePypiVersion } from '@/lib/pypi-build';
-import { PROJECTS, releaseProject, type ProjectId } from '@/lib/release-projects';
+import { PROJECTS, nameInSentence, releaseProject, type ProjectId } from '@/lib/release-projects';
 import { loadProjectReleases } from '@/lib/releases';
 import { siteOgImage } from '@/lib/shared';
 
 export function releasesMetadata(id: ProjectId): Metadata {
   const project = releaseProject(id);
   const title = id === 'opentide' ? 'Releases' : `${project.name} releases`;
-  const description = `What shipped in each version of ${id === 'opentide' ? 'opentide' : `the opentide ${project.name.toLowerCase()}`}: ${project.description}`;
+  const description = `What shipped in each version of ${id === 'opentide' ? 'opentide' : `the opentide ${nameInSentence(project)}`}: ${project.description}`;
   return {
     title,
     description,

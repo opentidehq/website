@@ -1,9 +1,9 @@
 import Link from 'next/link';
-import { ArrowUpRight, Braces, ChevronRight, Network, Waves, type LucideIcon } from 'lucide-react';
+import { ArrowUpRight, Braces, ChevronRight, Network, SquareCode, Waves, type LucideIcon } from 'lucide-react';
 import { Tag } from '@/components/landing/ui';
 import { InstallCommand } from '@/components/releases/install-command';
 import { RichText, focusRing } from '@/components/releases/rich-text';
-import type { ProjectId, ReleaseProject } from '@/lib/release-projects';
+import { nameInSentence, type ProjectId, type ReleaseProject } from '@/lib/release-projects';
 import { safeHref } from '@/lib/safe-href';
 import {
   groupBySeries,
@@ -17,6 +17,7 @@ import {
 const ICONS: Record<ProjectId, LucideIcon> = {
   opentide: Waves,
   'language-server': Braces,
+  'vscode-extension': SquareCode,
   explorer: Network,
 };
 
@@ -43,7 +44,7 @@ function shortDate(release: ReleaseNote): string {
 function ProjectSwitcher({ projects, current }: { projects: ProjectSummary[]; current: ProjectId }) {
   return (
     <nav aria-label="Projects" className="mt-10">
-      <ul className="grid grid-cols-3 gap-2 sm:gap-3">
+      <ul className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-4">
         {projects.map(({ project, latest }) => {
           const active = project.id === current;
           const Icon = ICONS[project.id];
@@ -484,7 +485,7 @@ export function ReleaseLog({
               >
                 repository changelog
               </a>
-              . New to the {project.id === 'opentide' ? 'package' : project.name.toLowerCase()}? Start with{' '}
+              . New to the {project.id === 'opentide' ? 'package' : nameInSentence(project)}? Start with{' '}
               {project.gettingStarted.href.startsWith('/') ? (
                 <Link
                   href={project.gettingStarted.href}

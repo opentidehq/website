@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { PROJECTS } from './release-projects.ts';
+import { PROJECTS, nameInSentence, releaseProject } from './release-projects.ts';
 import {
   compareVersions,
   formatIsoDate,
@@ -336,7 +336,33 @@ test('a changelog with #### subsections and nested lists keeps both', () => {
   assert.ok(first?.sections.every((section) => section.paragraphs.length === 0));
 });
 
+const extension = releaseProject('vscode-extension');
+
+test('an odd minor of the extension is a pre-release, an even one stable', () => {
+  const [stable, pre] = parseChangelog(nestedFixture, extension);
+  assert.equal(stable?.kind, 'minor');
+  assert.equal(pre?.kind, 'prerelease');
+  assert.equal(kindLabel('prerelease'), 'Pre-release');
+  // A pinned version installs on either channel.
+  assert.equal(pre?.installCommand, 'code --install-extension opentidehq.opentide@0.1.0');
+  assert.deepEqual(pre?.links, [
+    { label: 'Visual Studio Marketplace', href: 'https://marketplace.visualstudio.com/items?itemName=opentidehq.opentide' },
+    { label: 'Open VSX', href: 'https://open-vsx.org/extension/opentidehq/opentide/0.1.0' },
+    { label: 'GitHub Release', href: 'https://github.com/opentidehq/vscode-extension/releases/tag/v0.1.0' },
+  ]);
+  // Projects without a channel rule keep the kind their version gives.
+  const [lsp] = parseChangelog('## [0.5.0] - 2026-10-26\n\nSummary.\n', changelogProject);
+  assert.equal(lsp?.kind, 'minor');
+});
+
 test('a SemVer prerelease is a pre-release in any project', () => {
   const [rc] = parseChangelog('## [1.0.0-rc.1] - 2026-11-01\n\nRelease candidate.\n', changelogProject);
   assert.equal(rc?.kind, 'prerelease');
+});
+
+test('project names read inside a sentence', () => {
+  assert.deepEqual(
+    PROJECTS.map((project) => nameInSentence(project)),
+    ['opentide', 'language server', 'VS Code extension', 'explorer'],
+  );
 });

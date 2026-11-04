@@ -1,5 +1,5 @@
 /** The projects the Releases page covers. Order is the switcher's order. */
-export type ProjectId = 'opentide' | 'language-server' | 'explorer';
+export type ProjectId = 'opentide' | 'language-server' | 'vscode-extension' | 'explorer';
 
 export type ReleaseProject = {
   id: ProjectId;
@@ -74,6 +74,33 @@ export const PROJECTS: readonly ReleaseProject[] = [
     install: (version) => `cargo install opentide-lsp --version ${version}`,
   },
   {
+    id: 'vscode-extension',
+    name: 'VS Code extension',
+    shortName: 'VS Code',
+    tagline: 'Checks · graph · deploy preview',
+    description:
+      'The opentide workbench for VS Code and its forks: live checks for Tide objects and their queries, templates, a catalogue, a graph and ATT&CK coverage, query results, and deploy previews, with an opentide runtime bundled.',
+    href: '/releases/vscode-extension/',
+    repository: 'https://github.com/opentidehq/vscode-extension',
+    gettingStarted: { label: 'the README', href: 'https://github.com/opentidehq/vscode-extension#works-on-install' },
+    changelogUrl: 'https://github.com/opentidehq/vscode-extension/blob/main/CHANGELOG.md',
+    changelog: 'vscode-extension.md',
+    firstPublished: '0.1.0',
+    registry: {
+      label: 'Visual Studio Marketplace',
+      url: 'https://marketplace.visualstudio.com/items?itemName=opentidehq.opentide',
+      // The Marketplace has no page per version.
+      versionUrl: () => 'https://marketplace.visualstudio.com/items?itemName=opentidehq.opentide',
+    },
+    mirrors: [
+      { label: 'Open VSX', versionUrl: (version) => `https://open-vsx.org/extension/opentidehq/opentide/${version}` },
+    ],
+    // An odd minor is the pre-release channel; the Marketplace takes no `-beta` suffix.
+    prerelease: (version) => Number(version.split('.')[1]) % 2 === 1,
+    // A pinned version installs whatever its channel; `--pre-release` only picks the newest.
+    install: (version) => `code --install-extension opentidehq.opentide@${version}`,
+  },
+  {
     id: 'explorer',
     name: 'Explorer',
     shortName: 'Explorer',
@@ -94,6 +121,14 @@ export const PROJECTS: readonly ReleaseProject[] = [
     install: (version) => `npx @opentide/explorer@${version} serve --exports-dir .opentide/exports`,
   },
 ];
+
+/** The project's name inside a sentence: "the language server", "the VS Code extension". */
+export function nameInSentence(project: ReleaseProject): string {
+  const [first = '', ...rest] = project.name.split(' ');
+  // An acronym keeps its capitals; any other first word is lowercased.
+  const lead = /^[A-Z]{2,}$/.test(first) ? first : first.toLowerCase();
+  return [lead, ...rest].join(' ');
+}
 
 export function releaseProject(id: ProjectId): ReleaseProject {
   const project = PROJECTS.find((candidate) => candidate.id === id);
