@@ -4,16 +4,18 @@ All notable changes to the opentide extension (`opentidehq.opentide`). The forma
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Stable releases use even minor versions and
 pre-releases odd ones.
 
+## [Unreleased]
+
 ## [0.1.0] - 2026-11-04
 
-The first pre-release, on the Visual Studio Marketplace and Open VSX. (Temporary summary for local verification.)
+The first pre-release of opentide for VS Code and its forks: live checks for Tide objects and their queries, new objects from templates, the catalogue with its Relations view, the graph and the ATT&CK coverage, query results and deploy previews beside the object, the setup wizard and an MCP server for agents. Each platform package bundles opentide 0.22.0 (engine: language server 0.10.0) on CPython 3.13, so it works offline on a machine without Python; a repository's own opentide is used when it has one.
 
 ### Added
 
 #### Runtime and core
 
 - Per-platform packages for win32-x64, linux-x64, linux-arm64, alpine-x64, alpine-arm64, darwin-x64
-  and darwin-arm64 bundle opentide 0.21.0 on CPython 3.13, with a CycloneDX SBOM and third-party
+  and darwin-arm64 bundle opentide 0.22.0 on CPython 3.13, with a CycloneDX SBOM and third-party
   notices that include the native libraries linked into CPython (OpenSSL, zlib, libffi, sqlite, …). For Berkeley DB (Sleepycat licence, in the Linux and Alpine runtimes) the notices and SBOM say where its exact source, and CPython's, can be obtained. Every other platform, including win32-arm64 for now, gets the universal package.
 - Runtime resolution in four tiers: `opentide.path`, the workspace's environment, uv with the
   repository's pin (opt-in), and the bundled runtime; a version check (an untagged dev build such as
@@ -25,7 +27,8 @@ The first pre-release, on the Visual Studio Marketplace and Open VSX. (Temporary
 - The language server: one client per window with pulled diagnostics, the reference lens's
   `opentide.showReferences`, and fix-all on save off by default.
 - The backend: `opentide serve` when the runtime has it, spawning `opentide --json` otherwise, with
-  cancellation, capability gating from `opentide --json commands`, and an activity log.
+  cancellation, capability gating from `opentide --json commands`, and an activity log. A command that
+  reaches a serve shutting down for a runtime restart, which refuses it unrun, runs again on the new one.
 - opentide runs in UTF-8 mode (`-X utf8` for the bundled runtime, `PYTHONUTF8` and `PYTHONIOENCODING`
   for the others), so rule names and paths with accents read correctly on Windows.
 - Languages for Tide YAML (`opentide-yaml`, on `objects/**` and the object folders `paths.toml`
@@ -111,7 +114,7 @@ The first pre-release, on the Visual Studio Marketplace and Open VSX. (Temporary
   create, merge or remove (with `setup --plan`) before anything is written. It applies step by step, and Copy
   as Script reproduces it in a terminal. The window takes up the new repository without a reload. It also adds platforms, CI and agents to an existing
   repository. A CoreTIDE layout (`Objects/`, `Configurations/`, `global.toml`) is reported as not
-  supported: opentide 0.21.0 has no migration.
+  supported: opentide removed its migration in 0.21.0.
 - "Get started with opentide": a seven-step walkthrough from runtime to agents, each step completing
   when you do it.
 
@@ -152,8 +155,8 @@ The first pre-release, on the Visual Studio Marketplace and Open VSX. (Temporary
     `has:errors`, `has:placeholders`, `uuid:`, `path:`, `created:`/`modified:`/`reviewed:` and
     `unreviewed:>90d` (from `opentide rules unreviewed`).
   - Results open at their name line, to the side, or in the graph, all together if you choose.
-  - With opentide 0.21.0 it searches names, types and paths, and says which filters need a newer
-    opentide.
+  - With an opentide that has no `info catalog` (0.21.0 and earlier) it searches names, types and
+    paths, and says which filters need a newer opentide.
 
 #### Panels
 
@@ -246,4 +249,4 @@ The first pre-release, on the Visual Studio Marketplace and Open VSX. (Temporary
 
 - Releases to the Visual Studio Marketplace and Open VSX from one workflow, with trusted publishing
   (no long-lived token), plus a `SHA256SUMS` for every release and a build-provenance attestation for
-  every VSIX once the repository is public.
+  every VSIX.
