@@ -1,7 +1,22 @@
 'use client';
 
+import { Fragment } from 'react';
 import { Check, Copy } from 'lucide-react';
 import { useCopy } from '@/lib/hooks/use-copy';
+
+/**
+ * A command, with a line break allowed before a version pin's `@` (`opentidehq.opentide@0.1.0`),
+ * so a narrow panel wraps it there instead of inside the version.
+ */
+function Wrappable({ command }: { command: string }) {
+  const parts = command.split(/(?<=\S)(?=@)/);
+  return parts.map((part, index) => (
+    <Fragment key={index}>
+      {index > 0 ? <wbr /> : null}
+      {part}
+    </Fragment>
+  ));
+}
 
 /** A command in a deep-tide code panel, with a copy button. Long commands wrap. */
 export function InstallCommand({ command, caption = 'install' }: { command: string; caption?: string }) {
@@ -29,7 +44,7 @@ export function InstallCommand({ command, caption = 'install' }: { command: stri
       <pre className="m-0 px-4 py-3 font-mono text-[13px] leading-relaxed whitespace-pre-wrap break-words">
         <code>
           <span className="text-[var(--landing-code-dim)] select-none">$ </span>
-          {command}
+          <Wrappable command={command} />
         </code>
       </pre>
     </figure>

@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { PROJECTS } from './release-projects.ts';
+import { PROJECTS, nameInSentence, releaseProject } from './release-projects.ts';
 import {
   compareVersions,
   formatIsoDate,
@@ -83,6 +83,7 @@ test('parseReleaseNotes keeps newest first and classifies the upgrade', () => {
     ['What changes', 'Fixes'],
   );
   assert.equal(releases[0]?.sections[0]?.items.length, 1);
+  assert.deepEqual(releases[0]?.sections[0]?.subitems, [[]]);
   assert.deepEqual(
     publicLinks(releases[0]?.links ?? []).map((link) => link.label),
     ['PyPI', 'GitHub Release'],
@@ -253,12 +254,8 @@ No breaking changes here.
   assert.match(yanked?.notes[0] ?? '', /yanked/);
   assert.equal(yanked?.breaking, false);
   assert.equal(added?.summary, '');
-  assert.deepEqual(added?.sections[0]?.items, [
-    'A star bullet.',
-    'A plus bullet.',
-    'A parent',
-    'a nested child',
-  ]);
+  assert.deepEqual(added?.sections[0]?.items, ['A star bullet.', 'A plus bullet.', 'A parent']);
+  assert.deepEqual(added?.sections[0]?.subitems, [[], [], ['a nested child']]);
   // A Breaking section marks it, whatever the summary says.
   assert.equal(fixed?.breaking, true);
 });
@@ -273,4 +270,99 @@ test('a changelog date that is not a real day fails loudly', () => {
 test('versions order by SemVer, a prerelease before its release', () => {
   const versions = ['0.10.0', '1.0.0', '1.0.0-rc.2', '0.9.1', '1.0.0-rc.10'];
   assert.deepEqual(versions.toSorted(compareVersions), ['0.9.1', '0.10.0', '1.0.0-rc.2', '1.0.0-rc.10', '1.0.0']);
+});
+
+const nestedFixture = `# Changelog
+
+Stable releases use even minor versions and pre-releases odd ones.
+
+## [Unreleased]
+
+## [0.2.0] - 2026-11-20
+
+The first stable release.
+
+### Fixed
+
+- A fix.
+
+## [0.1.0] - 2026-11-04
+
+The first pre-release.
+
+### Added
+
+#### Runtime and core
+
+- Per-platform packages that
+  bundle opentide.
+
+#### Graph and search
+
+- Graph panel: how objects connect.
+  - Modes: Focus, Catalogue, and Threat
+    chains.
+  - Search and export.
+- "Find Detection…": a quick search.
+
+### Fixed
+
+#### Problems
+
+- A squiggle per finding.
+
+### Security
+
+- No telemetry.
+`;
+
+test('a changelog with #### subsections and nested lists keeps both', () => {
+  const [, first] = parseChangelog(nestedFixture, changelogProject);
+  assert.deepEqual(
+    first?.sections.map((section) => [section.title, section.items.length]),
+    [
+      ['Added: Runtime and core', 1],
+      ['Added: Graph and search', 2],
+      ['Fixed: Problems', 1],
+      ['Security', 1],
+    ],
+  );
+  assert.deepEqual(first?.sections[0]?.items, ['Per-platform packages that bundle opentide.']);
+  const graph = first?.sections[1];
+  assert.deepEqual(graph?.items, ['Graph panel: how objects connect.', '"Find Detection…": a quick search.']);
+  // A nested item's wrapped line continues the nested item, not its parent.
+  assert.deepEqual(graph?.subitems, [['Modes: Focus, Catalogue, and Threat chains.', 'Search and export.'], []]);
+  // No heading is left in the text.
+  assert.ok(first?.sections.every((section) => section.paragraphs.length === 0));
+});
+
+const extension = releaseProject('vscode-extension');
+
+test('an odd minor of the extension is a pre-release, an even one stable', () => {
+  const [stable, pre] = parseChangelog(nestedFixture, extension);
+  assert.equal(stable?.kind, 'minor');
+  assert.equal(pre?.kind, 'prerelease');
+  assert.equal(kindLabel('prerelease'), 'Pre-release');
+  // A pinned version installs on either channel.
+  assert.equal(pre?.installCommand, 'code --install-extension opentidehq.opentide@0.1.0');
+  assert.deepEqual(pre?.links, [
+    { label: 'Visual Studio Marketplace', href: 'https://marketplace.visualstudio.com/items?itemName=opentidehq.opentide' },
+    { label: 'Open VSX', href: 'https://open-vsx.org/extension/opentidehq/opentide/0.1.0' },
+    { label: 'GitHub Release', href: 'https://github.com/opentidehq/vscode-extension/releases/tag/v0.1.0' },
+  ]);
+  // Projects without a channel rule keep the kind their version gives.
+  const [lsp] = parseChangelog('## [0.5.0] - 2026-10-26\n\nSummary.\n', changelogProject);
+  assert.equal(lsp?.kind, 'minor');
+});
+
+test('a SemVer prerelease is a pre-release in any project', () => {
+  const [rc] = parseChangelog('## [1.0.0-rc.1] - 2026-11-01\n\nRelease candidate.\n', changelogProject);
+  assert.equal(rc?.kind, 'prerelease');
+});
+
+test('project names read inside a sentence', () => {
+  assert.deepEqual(
+    PROJECTS.map((project) => nameInSentence(project)),
+    ['opentide', 'language server', 'VS Code extension', 'explorer'],
+  );
 });

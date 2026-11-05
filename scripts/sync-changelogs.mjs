@@ -20,6 +20,12 @@ const FETCH_TIMEOUT_MS = 8_000;
 const MAX_BYTES = 512 * 1024;
 const SOURCES = [
   { id: 'language-server', file: 'language-server.md', repo: 'opentidehq/language-server', env: 'LANGUAGE_SERVER_CHANGELOG' },
+  {
+    id: 'vscode-extension',
+    file: 'vscode-extension.md',
+    repo: 'opentidehq/vscode-extension',
+    env: 'VSCODE_EXTENSION_CHANGELOG',
+  },
   { id: 'explorer', file: 'explorer.md', repo: 'opentidehq/explorer', env: 'EXPLORER_CHANGELOG' },
 ];
 

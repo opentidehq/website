@@ -80,15 +80,16 @@ export const ecosystemLinks: EcosystemItem[] = [
   },
   {
     name: 'language-server',
-    description: 'Rust and tree-sitter language server for KQL, SPL and Tide YAML. In progress.',
+    description: 'Native language server for KQL, SPL, ES|QL, EQL, Kibana KQL, Lucene, Falco and Tide YAML, on crates.io and in pip install opentide.',
     href: 'https://github.com/opentidehq/language-server',
-    status: 'soon',
+    status: 'live',
     tag: 'Editor',
   },
   {
     name: 'vscode-extension',
-    description: 'VS Code onboarding, validation and authoring, built on the language server.',
-    status: 'soon',
+    description: 'The workbench: live checks, a catalogue, a graph and deploy previews in VS Code and its forks, with opentide bundled.',
+    href: 'https://github.com/opentidehq/vscode-extension',
+    status: 'live',
     tag: 'Editor',
   },
 ];
