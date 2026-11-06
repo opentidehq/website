@@ -4,6 +4,18 @@ Notable changes to the opentide explorer, newest first. The format follows [Keep
 
 Each version's first paragraph is its summary: the GitHub Release and [opentide.org/releases](https://opentide.org/releases/explorer/) show it above the change lists. How to write a version: [`.agents/skills/release-notes/SKILL.md`](.agents/skills/release-notes/SKILL.md). Versions before 0.5.0 were tagged after the fact, on the commit each one shipped as; they were not published to npm.
 
+## [Unreleased]
+
+## [0.6.0] - 2026-11-06
+
+A Visibility view shows the telemetry a library declares and the detections that use it, when the library exports it with `opentide generate explorer --include-visibility`.
+
+### Added
+
+- **A Visibility view for the log sources a library declares.** Tiles count log sources, those without columns, those no detection uses and datasets rules read that none declares; cards filter by search and system; each log source's page lists its columns and the rules and objectives that use it, under the export's TLP ([#85](https://github.com/opentidehq/explorer/issues/85)).
+- **The inspector links a detection to its log sources.** A rule, signal or objective lists the log sources it uses and how, each opening its page; key `4` and the command palette open the view.
+- **`opentide-explorer build` publishes the visibility export only while it exists.** It copies `explorer.visibility.json` when the exports have it and removes an earlier copy when they do not; without it there is no Visibility view, and an address that names it opens the graph.
+
 ## [0.5.1] - 2026-10-27
 
 `npx @opentide/explorer serve` works: 0.5.0 shipped two commands, so npx could not tell which to run and stopped with "could not determine executable to run".
@@ -96,6 +108,7 @@ The first explorer: a search-first WebGL graph of a corpus's threats, objectives
 - **A static export for GitHub Pages**, which the `opentide` CI can build.
 - **Dark and light themes**, remembered between visits.
 
+[0.6.0]: https://github.com/opentidehq/explorer/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/opentidehq/explorer/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/opentidehq/explorer/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/opentidehq/explorer/compare/v0.3.0...v0.4.0
