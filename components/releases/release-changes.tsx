@@ -258,7 +258,7 @@ export function ReleaseChanges({ release, level }: { release: ReleaseNote; level
           className="scroll-mt-24"
         >
           <CategoryHeading category={block.category} label={block.label} count={block.count} level={level} />
-          <div className="pl-[2.125rem]">
+          <div className="sm:pl-[2.125rem]">
             {block.groups.map((group, index) => {
               const GroupHeading = BELOW[level];
               return (
