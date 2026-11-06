@@ -15,8 +15,29 @@ export type ReleaseLink = {
   href: string;
 };
 
+/**
+ * The parts of a version that list changes, in the order every project's notes use (the
+ * release-notes skill in each repository): Keep a Changelog's six types, after Breaking.
+ */
+export type ChangeCategory = 'breaking' | 'added' | 'changed' | 'deprecated' | 'removed' | 'fixed' | 'security';
+
+export const CHANGE_CATEGORIES: readonly { id: ChangeCategory; label: string }[] = [
+  { id: 'breaking', label: 'Breaking' },
+  { id: 'added', label: 'Added' },
+  { id: 'changed', label: 'Changed' },
+  { id: 'deprecated', label: 'Deprecated' },
+  { id: 'removed', label: 'Removed' },
+  { id: 'fixed', label: 'Fixed' },
+  { id: 'security', label: 'Security' },
+];
+
 export type ReleaseSection = {
+  /** The category's label, or the heading as written when it names no category. */
   title: string;
+  /** The category the heading names; null for any other heading. */
+  category: ChangeCategory | null;
+  /** The `####` heading under the category's, when the category is split into groups. */
+  group: string | null;
   paragraphs: string[];
   items: string[];
   /** The nested list under each item, by index: `subitems[i]` belongs to `items[i]`. */
@@ -28,11 +49,14 @@ export type ReleaseNote = {
   dateLabel: string;
   dateIso: string | null;
   kind: ReleaseKind;
-  /** The summary or a section says the release breaks something users rely on. */
+  /** The summary, a Breaking section or an entry marked breaking says it breaks something users rely on. */
   breaking: boolean;
   summary: string;
-  /** Prose that sits between the install block and the first change list. */
+  /** Prose that sits between the summary (or install block) and the first section. */
   notes: string[];
+  /** What a user does after installing this version; null when there is nothing to do. */
+  upgrade: ReleaseSection | null;
+  /** The categories in their standard order, then any other heading in the order it was written. */
   sections: ReleaseSection[];
   links: ReleaseLink[];
   /** Null for a version tagged after the fact, which no registry carries. */
@@ -60,15 +84,119 @@ const MONTHS: Record<string, string> = {
   december: '12',
 };
 
-const SECTION_TITLES: Record<string, string> = {
-  'What changes for authors and scripts': 'What changes',
-  'What changes for scripts': 'What changes',
-  'What this version fixes': 'Fixes',
-  'What this version adds': 'Adds',
-  'What this version changes': 'Changes',
-  'What this version is': 'In this release',
-  'What it is not': 'Not in this release',
+/** Headings, lowercased, that name a category in the words some notes use instead of its label. */
+const CATEGORY_ALIASES: Record<string, ChangeCategory> = {
+  'breaking changes': 'breaking',
+  'breaking change': 'breaking',
+  adds: 'added',
+  new: 'added',
+  features: 'added',
+  'what this version adds': 'added',
+  changes: 'changed',
+  'what this version changes': 'changed',
+  deprecations: 'deprecated',
+  removals: 'removed',
+  fixes: 'fixed',
+  'bug fixes': 'fixed',
+  'what this version fixes': 'fixed',
 };
+
+const UPGRADE_HEADINGS = new Set(['upgrade', 'upgrading', 'upgrade steps', 'upgrade notes']);
+
+/** Headings that name no category, shown in plainer words. */
+const OTHER_TITLES: Record<string, string> = {
+  'what changes': 'What changes',
+  'what changes for authors and scripts': 'What changes',
+  'what changes for scripts': 'What changes',
+  'what this version is': 'In this release',
+  'what it is not': 'Not in this release',
+};
+
+export type HeadingKind = (
+  | { kind: 'category'; category: ChangeCategory; title: string }
+  | { kind: 'upgrade'; title: string }
+  | { kind: 'other'; title: string }
+) & {
+  /**
+   * The heading is exactly a part's name or alias, not a longer heading that starts with
+   * Security or Breaking. Only an exact name ends a summary written in bold.
+   */
+  exact?: boolean;
+};
+
+/**
+ * What a section heading names: one of the categories, the upgrade steps, or something else.
+ * Case, a trailing colon and a leading warning sign do not matter, and a heading that starts
+ * with Security or Breaking is that category (`Security: regenerate CI`, `Breaking for scripts`).
+ */
+export function classifyHeading(heading: string): HeadingKind {
+  const written = heading.trim().replace(/:\s*$/, '');
+  const key = written
+    .replace(/^[^\p{L}\p{N}]+/u, '')
+    .toLowerCase()
+    .replaceAll(/\s+/g, ' ');
+  const named = CHANGE_CATEGORIES.find(({ id }) => id === key)?.id ?? CATEGORY_ALIASES[key];
+  const category =
+    named ?? (/^security\b/.test(key) ? 'security' : /^breaking\b/.test(key) ? 'breaking' : undefined);
+  if (category) {
+    const title = CHANGE_CATEGORIES.find(({ id }) => id === category)!.label;
+    return { kind: 'category', category, title, exact: named !== undefined };
+  }
+  if (UPGRADE_HEADINGS.has(key)) return { kind: 'upgrade', title: 'Upgrade', exact: true };
+  return { kind: 'other', title: OTHER_TITLES[key] ?? written };
+}
+
+const CATEGORY_RANK = new Map(CHANGE_CATEGORIES.map(({ id }, index) => [id, index]));
+
+/** Categories in their standard order, groups in the order written; other headings after them. */
+function ordered(sections: readonly ReleaseSection[]): ReleaseSection[] {
+  const rank = (section: ReleaseSection) =>
+    section.category === null ? CHANGE_CATEGORIES.length : CATEGORY_RANK.get(section.category)!;
+  return sections
+    .map((section, index) => ({ section, index }))
+    .sort((a, b) => rank(a.section) - rank(b.section) || a.index - b.index)
+    .map(({ section }) => section);
+}
+
+function newSection(heading: HeadingKind, group: string | null = null): ReleaseSection {
+  return {
+    title: heading.title,
+    category: heading.kind === 'category' ? heading.category : null,
+    group,
+    paragraphs: [],
+    items: [],
+    subitems: [],
+  };
+}
+
+function hasContent(section: ReleaseSection): boolean {
+  return section.items.length > 0 || section.paragraphs.length > 0;
+}
+
+/**
+ * What separates the mark from the entry: a colon or a dash. A hyphen counts only with space
+ * around it, so `**Breaking-change detection**` is a lead, not a mark.
+ */
+const MARK_SEPARATOR = String.raw`(?:\s*[:—–]\s*|\s+-\s+)`;
+/** `**Breaking:** detail` or `**Breaking** — detail`: the mark is the whole bold run. */
+const BREAKING_RUN = new RegExp(String.raw`^\*\*breaking(?:${MARK_SEPARATOR}\*\*|\*\*${MARK_SEPARATOR})\s*`, 'i');
+/** `**Breaking: lead.** detail`: the mark opens the lead, which stays bold. */
+const BREAKING_LEAD = new RegExp(String.raw`^\*\*breaking${MARK_SEPARATOR}(?!\*\*)`, 'i');
+
+/**
+ * An entry with its breaking mark taken off, and whether it had one. The mark is how notes
+ * without a Breaking section flag an entry under Changed or Removed.
+ */
+export function breakingEntry(item: string): { breaking: boolean; text: string } {
+  const run = BREAKING_RUN.exec(item);
+  if (run) return { breaking: true, text: item.slice(run[0].length) };
+  const lead = BREAKING_LEAD.exec(item);
+  if (lead) return { breaking: true, text: `**${item.slice(lead[0].length)}` };
+  return { breaking: false, text: item };
+}
+
+/** `See the [CHANGELOG](…) for every change.`: a link to the full record, not prose. */
+const CHANGELOG_POINTER = /^See the \[CHANGELOG\]\(([^)\s]+)\) for every change\.?$/i;
 
 const VERSION_HEADING = /^##\s+(\d+\.\d+\.\d+)\s+[—–-]\s+(.+?)\s*$/;
 const BOLD_LINE = /^\*\*(.+?)\*\*\s*$/;
@@ -79,8 +207,9 @@ export function releaseAnchor(version: string): string {
   return `v${version.replaceAll('.', '-')}`;
 }
 
-export function friendlySectionTitle(title: string): string {
-  return SECTION_TITLES[title] ?? title;
+/** The anchor of a release's upgrade steps, or of one category's list, inside the release. */
+export function categoryAnchor(version: string, part: ChangeCategory | 'upgrade'): string {
+  return `${releaseAnchor(version)}-${part}`;
 }
 
 export function kindLabel(kind: ReleaseKind): string {
@@ -121,132 +250,201 @@ function kindForVersion(version: string): ReleaseKind {
 const BREAKING = /(?<![-\w])(?<!\bno\s)(?<!\bnot\s)breaking\b/i;
 
 function isBreaking(summary: string, sections: readonly ReleaseSection[]): boolean {
-  return BREAKING.test(summary) || sections.some((section) => /^breaking\b/i.test(section.title));
+  return (
+    BREAKING.test(summary) ||
+    sections.some(
+      (section) =>
+        (section.category === 'breaking' && hasContent(section)) ||
+        section.items.some((item) => breakingEntry(item).breaking),
+    )
+  );
 }
 
 function collapse(lines: string[]): string {
   return lines.join(' ').replaceAll(/\s+/g, ' ').trim();
 }
 
-type ParseMode = 'summary' | 'body' | 'links' | 'fence';
+type Block = Pick<ReleaseSection, 'paragraphs' | 'items' | 'subitems'>;
 
-function parseReleaseBody(body: string, version: string): Omit<
-  ReleaseNote,
-  'version' | 'dateLabel' | 'dateIso' | 'kind' | 'breaking' | 'installCommand'
-> {
-  const lines = body.replaceAll('\r\n', '\n').split('\n');
-  let mode: ParseMode = 'summary';
-  let resume: ParseMode = 'body';
-  const summaryParts: string[] = [];
-  const notes: string[] = [];
-  const sections: ReleaseSection[] = [];
-  const links: ReleaseLink[] = [];
-  let current: ReleaseSection | null = null;
+/** `- item`, `* item` and `+ item`. */
+const BULLET_ITEM = /^[-*+]\s+(.+)$/;
+/** `1. item` or `1) item`: upgrade steps are often numbered. */
+const ORDERED_ITEM = /^(\d{1,3})[.)]\s+(.+)$/;
+
+/**
+ * The paragraphs and list of one section. A list nested under an item becomes that item's
+ * subitems, and anything nested deeper joins the same list. An indented line continues the
+ * item, or the nested item, above it.
+ *
+ * A numbered line starts an item as CommonMark has it: after a blank line, as the next item of
+ * a numbered list, or from `1`. Anywhere else it continues the text above it, so a hard-wrapped
+ * line that happens to begin "2. " stays in its sentence.
+ */
+function parseBlock(lines: readonly string[]): Block {
+  const block: Block = { paragraphs: [], items: [], subitems: [] };
   let paragraph: string[] = [];
-
-  function flush(target: 'summary' | 'note' | 'section') {
+  // The indent of the last top-level item, and whether the last line was a nested item.
+  let itemIndent = 0;
+  let inSubitem = false;
+  // The indent of the numbered list the lines are in, if any, and whether the last line was blank.
+  let orderedIndent: number | null = null;
+  let afterBlank = true;
+  const flush = () => {
     const text = collapse(paragraph);
     paragraph = [];
-    if (!text) return;
-    if (target === 'summary') {
-      summaryParts.push(text);
-      return;
-    }
-    if (target === 'note') {
-      notes.push(text);
-      return;
-    }
-    current?.paragraphs.push(text);
-  }
-
-  function flushOpen() {
-    if (mode === 'summary') {
-      flush('summary');
-      return;
-    }
-    if (current) {
-      flush('section');
-      return;
-    }
-    flush('note');
-  }
-
-  for (const rawLine of lines) {
-    const trimmed = rawLine.trim();
-    if (trimmed.startsWith('```')) {
-      flushOpen();
-      if (mode === 'fence') {
-        mode = resume;
-      } else {
-        resume = mode === 'summary' ? 'body' : mode;
-        mode = 'fence';
-      }
-      continue;
-    }
-    if (mode === 'fence') continue;
-
+    if (text) block.paragraphs.push(text);
+  };
+  for (const raw of lines) {
+    const trimmed = raw.trim();
     if (!trimmed) {
-      flushOpen();
-      if (mode === 'summary' && summaryParts.length > 0) mode = 'body';
+      flush();
+      afterBlank = true;
       continue;
     }
-
-    if (mode === 'links') {
-      const link = LINK_BULLET.exec(trimmed);
-      if (link?.[1] && link[2]) {
-        links.push({ label: link[1], href: link[2] });
-      }
-      continue;
-    }
-
-    const heading = BOLD_LINE.exec(trimmed);
-    if (heading?.[1] && (mode !== 'summary' || heading[1] === 'Install' || heading[1] === 'Links')) {
-      flushOpen();
-      const title = heading[1].trim();
-      if (title === 'Links') {
-        mode = 'links';
-        current = null;
+    const indent = raw.length - raw.trimStart().length;
+    const bullet = BULLET_ITEM.exec(trimmed);
+    const numbered = bullet ? null : ORDERED_ITEM.exec(trimmed);
+    const startsItem =
+      numbered !== null && (numbered[1] === '1' || afterBlank || orderedIndent === indent);
+    const text = bullet?.[1] ?? (startsItem ? numbered?.[2] : undefined);
+    afterBlank = false;
+    if (text) {
+      flush();
+      if (numbered) orderedIndent = indent;
+      else if (orderedIndent !== null && indent <= orderedIndent) orderedIndent = null;
+      if (block.items.length > 0 && indent > itemIndent) {
+        block.subitems.at(-1)!.push(text.trim());
+        inSubitem = true;
         continue;
       }
-      if (title === 'Install') {
-        mode = 'body';
-        current = null;
-        continue;
-      }
-      current = { title: friendlySectionTitle(title), paragraphs: [], items: [], subitems: [] };
-      sections.push(current);
-      mode = 'body';
+      block.items.push(text.trim());
+      block.subitems.push([]);
+      itemIndent = indent;
+      inSubitem = false;
       continue;
     }
-
-    if (mode === 'summary') {
-      paragraph.push(trimmed);
+    if (indent > 0 && block.items.length > 0 && paragraph.length === 0) {
+      const list = inSubitem ? block.subitems.at(-1)! : block.items;
+      list[list.length - 1] = `${list.at(-1)} ${trimmed}`;
       continue;
     }
-
-    const bullet = BULLET.exec(trimmed);
-    if (bullet?.[1]) {
-      flushOpen();
-      if (!current) {
-        current = { title: 'Details', paragraphs: [], items: [], subitems: [] };
-        sections.push(current);
-      }
-      current.items.push(bullet[1].trim());
-      current.subitems.push([]);
-      continue;
-    }
-
+    if (indent === 0) orderedIndent = null;
     paragraph.push(trimmed);
   }
+  flush();
+  return block;
+}
 
-  flushOpen();
+/** A run of lines under one heading; `group` is the `####` heading under a category's. */
+type Segment = { heading: HeadingKind; group: string | null; lines: string[] };
 
+/** Prose, with each `See the [CHANGELOG](…) for every change.` taken out as a link. */
+function withoutPointers(paragraphs: readonly string[], links: ReleaseLink[]): string[] {
+  return paragraphs.filter((paragraph) => {
+    const pointer = CHANGELOG_POINTER.exec(paragraph);
+    if (!pointer?.[1]) return true;
+    if (!links.some((link) => link.href === pointer[1])) links.push({ label: 'Full changelog', href: pointer[1] });
+    return false;
+  });
+}
+
+/**
+ * A version's notes and its sections. The Upgrade steps come out on their own; the categories
+ * are put in their standard order, whatever order they were written in. A list before the first
+ * heading is a section of its own, Details.
+ */
+function assemble(
+  intro: Block,
+  segments: readonly Segment[],
+  links: ReleaseLink[],
+): Pick<ReleaseNote, 'notes' | 'upgrade' | 'sections'> {
+  let upgrade: ReleaseSection | null = null;
+  const sections: ReleaseSection[] = [];
+  if (intro.items.length > 0) {
+    sections.push({ ...newSection({ kind: 'other', title: 'Details' }), items: intro.items, subitems: intro.subitems });
+  }
+  for (const segment of segments) {
+    const block = parseBlock(segment.lines);
+    const paragraphs = withoutPointers(block.paragraphs, links);
+    if (segment.heading.kind === 'upgrade') {
+      // The steps are one list; a `####` group under Upgrade ("From 0.9") leads each of its own.
+      const lead = (text: string) => (segment.group ? `**${segment.group}:** ${text}` : text);
+      upgrade ??= newSection(segment.heading);
+      upgrade.paragraphs.push(...paragraphs.map(lead));
+      upgrade.items.push(...block.items.map(lead));
+      upgrade.subitems.push(...block.subitems);
+      continue;
+    }
+    sections.push({ ...newSection(segment.heading, segment.group), paragraphs, items: block.items, subitems: block.subitems });
+  }
   return {
-    summary: summaryParts.join(' '),
-    notes,
-    sections: sections.filter((section) => section.items.length > 0 || section.paragraphs.length > 0),
-    links,
+    notes: withoutPointers(intro.paragraphs, links),
+    upgrade: upgrade && hasContent(upgrade) ? upgrade : null,
+    sections: ordered(sections.filter(hasContent)),
   };
+}
+
+/**
+ * Before the summary has ended, a bold line is a heading only when it is exactly a part's name:
+ * a summary may itself be bold (`**Security release: upgrade now.**`).
+ */
+function isNotesHeading(title: string): boolean {
+  return /^(install|links)$/i.test(title) || classifyHeading(title).exact === true;
+}
+
+/**
+ * One version of the engine's notes (`docs/usage/releases.md`): the summary paragraph, an
+ * `**Install**` fence the page replaces with its own command, notes, sections headed by a bold
+ * line (`**Added**`), and `**Links**`.
+ */
+function parseReleaseBody(body: string): Pick<ReleaseNote, 'summary' | 'notes' | 'upgrade' | 'sections' | 'links'> {
+  const summaryLines: string[] = [];
+  const notes: string[] = [];
+  const segments: Segment[] = [];
+  const links: ReleaseLink[] = [];
+  let state: 'summary' | 'notes' | 'links' | 'section' = 'summary';
+  let fence = false;
+
+  const push = (line: string) => {
+    if (state === 'section') segments.at(-1)!.lines.push(line);
+    else if (state === 'notes') notes.push(line);
+  };
+
+  for (const raw of body.replaceAll('\r\n', '\n').split('\n')) {
+    const trimmed = raw.trim();
+    if (trimmed.startsWith('```')) {
+      fence = !fence;
+      if (state === 'summary' && summaryLines.length > 0) state = 'notes';
+      // A fence ends the paragraph it interrupts.
+      push('');
+      continue;
+    }
+    if (fence) continue;
+    const bold = BOLD_LINE.exec(trimmed)?.[1]?.trim();
+    if (bold && (state !== 'summary' || isNotesHeading(bold))) {
+      if (/^links$/i.test(bold)) state = 'links';
+      else if (/^install$/i.test(bold)) state = 'notes';
+      else {
+        segments.push({ heading: classifyHeading(bold), group: null, lines: [] });
+        state = 'section';
+      }
+      continue;
+    }
+    if (state === 'summary') {
+      if (trimmed) summaryLines.push(trimmed);
+      else if (summaryLines.length > 0) state = 'notes';
+      continue;
+    }
+    if (state === 'links') {
+      const link = LINK_BULLET.exec(trimmed);
+      if (link?.[1] && link[2]) links.push({ label: link[1], href: link[2] });
+      continue;
+    }
+    push(raw);
+  }
+
+  // The summary is the first paragraph; everything else before the first section is a note.
+  return { summary: collapse(summaryLines), ...assemble(parseBlock(notes), segments, links), links };
 }
 
 export function parseReleaseNotes(markdown: string): ReleaseNote[] {
@@ -265,7 +463,7 @@ export function parseReleaseNotes(markdown: string): ReleaseNote[] {
     }
     const version = match[1];
     const dateLabel = match[2].trim();
-    const parsed = parseReleaseBody(body, version);
+    const parsed = parseReleaseBody(body);
     if (!parsed.summary) {
       throw new Error(`Release ${version} is missing a summary paragraph`);
     }
@@ -277,6 +475,7 @@ export function parseReleaseNotes(markdown: string): ReleaseNote[] {
       breaking: isBreaking(parsed.summary, parsed.sections),
       summary: parsed.summary,
       notes: parsed.notes,
+      upgrade: parsed.upgrade,
       sections: parsed.sections,
       links: parsed.links,
       installCommand: `pip install opentide==${version}`,
@@ -292,6 +491,75 @@ export function parseReleaseNotes(markdown: string): ReleaseNote[] {
 
 export function publicLinks(links: readonly ReleaseLink[]): ReleaseLink[] {
   return links.filter((link) => link.label.toLowerCase() !== 'changelog');
+}
+
+export type ChangeCount = {
+  category: ChangeCategory;
+  label: string;
+  count: number;
+  /** The category has its own list on the page (an entry marked breaking elsewhere has none). */
+  listed: boolean;
+};
+
+/** Entries in one section; a section of prose alone counts as one. */
+function entries(section: ReleaseSection): number {
+  return section.items.length || (section.paragraphs.length > 0 ? 1 : 0);
+}
+
+/**
+ * How many entries each category holds, in the standard order, leaving out empty ones. The
+ * breaking count adds the entries marked breaking under another category.
+ */
+export function changeCounts(release: Pick<ReleaseNote, 'sections'>): ChangeCount[] {
+  const marked = release.sections
+    .filter((section) => section.category !== 'breaking')
+    .reduce((total, section) => total + section.items.filter((item) => breakingEntry(item).breaking).length, 0);
+  return CHANGE_CATEGORIES.flatMap(({ id, label }) => {
+    const listed = release.sections
+      .filter((section) => section.category === id)
+      .reduce((total, section) => total + entries(section), 0);
+    const count = listed + (id === 'breaking' ? marked : 0);
+    return count > 0 ? [{ category: id, label, count, listed: listed > 0 }] : [];
+  });
+}
+
+/** Entries under headings that name no category. */
+export function otherChangeCount(release: Pick<ReleaseNote, 'sections'>): number {
+  return release.sections
+    .filter((section) => section.category === null)
+    .reduce((total, section) => total + entries(section), 0);
+}
+
+/** Every entry of a release: its notes, its upgrade steps, and every section's. */
+export function totalChanges(release: Pick<ReleaseNote, 'notes' | 'upgrade' | 'sections'>): number {
+  return (
+    release.notes.length +
+    (release.upgrade ? entries(release.upgrade) : 0) +
+    release.sections.reduce((total, section) => total + entries(section), 0)
+  );
+}
+
+export type CategoryBlock = {
+  category: ChangeCategory;
+  label: string;
+  /** The entries this list holds. */
+  count: number;
+  /** The category's sections: one, or one per `####` group, in the order written. */
+  groups: ReleaseSection[];
+};
+
+/** The categories a release lists, each with its groups, in the standard order. */
+export function categoryBlocks(release: Pick<ReleaseNote, 'sections'>): CategoryBlock[] {
+  return CHANGE_CATEGORIES.flatMap(({ id, label }) => {
+    const groups = release.sections.filter((section) => section.category === id && hasContent(section));
+    const count = groups.reduce((total, section) => total + entries(section), 0);
+    return count > 0 ? [{ category: id, label, count, groups }] : [];
+  });
+}
+
+/** Sections whose heading names no category, in the order written. */
+export function otherSections(release: Pick<ReleaseNote, 'sections'>): ReleaseSection[] {
+  return release.sections.filter((section) => section.category === null);
 }
 
 const MONTH_NAMES = Object.keys(MONTHS).map((name) => name[0]!.toUpperCase() + name.slice(1));
@@ -322,7 +590,6 @@ const CHANGELOG_HEADING =
   /^##\s+\[(\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)\]\s+[—–-]\s+(\d{4})-(\d{2})-(\d{2})(\s+\[yanked\])?\s*$/i;
 const UNRELEASED = /^##\s+\[?unreleased\]?/i;
 const CHANGELOG_SECTION = /^(#{3,6})\s+(.+?)\s*$/;
-const LIST_ITEM = /^[-*+]\s+(.+)$/;
 const LINK_REFERENCE = /^\[[^\]]+\]:\s/;
 
 /** The `## ` headings of a markdown file, ignoring lines inside code fences. */
@@ -344,12 +611,13 @@ function isoDate(year: string, month: string, day: string): string | null {
 }
 
 /**
- * A Keep a Changelog file (`## [1.2.0] - 2026-10-26`, `### Added`) as release notes,
- * newest first. The first paragraph under a version, when there is one, is its summary.
- * `Unreleased` is skipped and code blocks are left out. A `####` heading under `### Added`
- * is a section of its own, `Added: Runtime and core`. A list nested under an item becomes
- * that item's subitems; anything nested deeper joins the same list. A heading that is not a version and a real date throws: the sync keeps
- * the committed copy rather than publish a broken page.
+ * A Keep a Changelog file (`## [1.2.0] - 2026-10-26`, `### Added`) as release notes, newest
+ * first. The first paragraph under a version, when there is one, is its summary; later prose
+ * before the first heading is a note. `### Upgrade` holds the upgrade steps, and the categories
+ * are put in their standard order. A `####` heading under a category splits it into groups
+ * (`Added`, group `Runtime and core`). `Unreleased` is skipped and code blocks are left out. A
+ * heading that is not a version and a real date throws: the sync keeps the committed copy
+ * rather than publish a broken page.
  */
 export function parseChangelog(markdown: string, project: ReleaseProject): ReleaseNote[] {
   const releases: ReleaseNote[] = [];
@@ -365,85 +633,45 @@ export function parseChangelog(markdown: string, project: ReleaseProject): Relea
     }
     const yanked = Boolean(match?.[5]);
 
-    const summaryParts: string[] = [];
-    const notes: string[] = [];
-    const sections: ReleaseSection[] = [];
-    let current: ReleaseSection | null = null;
-    let parent: string | null = null;
-    let paragraph: string[] = [];
+    const intro: string[] = [];
+    const segments: Segment[] = [];
+    let parent: HeadingKind | null = null;
     let fence = false;
-    // The indent of the last top-level item, and whether the last line was a nested item.
-    let itemIndent = 0;
-    let inSubitem = false;
-
-    const flush = () => {
-      const text = collapse(paragraph);
-      paragraph = [];
-      if (!text) return;
-      if (current) current.paragraphs.push(text);
-      else if (summaryParts.length === 0) summaryParts.push(text);
-      else notes.push(text);
-    };
-
     for (const raw of lines.slice(1)) {
       const trimmed = raw.trim();
+      const target = segments.at(-1)?.lines ?? intro;
       if (trimmed.startsWith('```')) {
-        flush();
         fence = !fence;
+        // A fence ends the paragraph it interrupts.
+        target.push('');
         continue;
       }
       if (fence || LINK_REFERENCE.test(trimmed)) continue;
-      if (!trimmed) {
-        flush();
-        continue;
-      }
       const section = CHANGELOG_SECTION.exec(trimmed);
       if (section?.[1] && section[2]) {
-        flush();
-        const title = section[2];
-        if (section[1].length === 3) parent = title;
-        current = {
-          title: section[1].length > 3 && parent ? `${parent}: ${title}` : title,
-          paragraphs: [],
-          items: [],
-          subitems: [],
-        };
-        sections.push(current);
-        inSubitem = false;
-        continue;
-      }
-      const indent = raw.length - raw.trimStart().length;
-      const item = LIST_ITEM.exec(trimmed);
-      if (item?.[1]) {
-        flush();
-        if (current && current.items.length > 0 && indent > itemIndent) {
-          current.subitems[current.subitems.length - 1]!.push(item[1].trim());
-          inSubitem = true;
-          continue;
+        const kind = classifyHeading(section[2]);
+        if (section[1].length === 3) {
+          parent = kind;
+          segments.push({ heading: kind, group: null, lines: [] });
+        } else if (parent === null) {
+          // A `####` with no `###` above it is a heading of its own, as each one after it is.
+          segments.push({ heading: kind, group: null, lines: [] });
+        } else if (parent.kind === 'category' || parent.kind === 'upgrade') {
+          segments.push({ heading: parent, group: section[2], lines: [] });
+        } else {
+          segments.push({ heading: { kind: 'other', title: `${parent.title}: ${section[2]}` }, group: null, lines: [] });
         }
-        if (!current) {
-          current = { title: 'Details', paragraphs: [], items: [], subitems: [] };
-          sections.push(current);
-        }
-        current.items.push(item[1].trim());
-        current.subitems.push([]);
-        itemIndent = indent;
-        inSubitem = false;
         continue;
       }
-      // An indented line under a list item continues it, or the nested item it is under.
-      if (indent > 0 && current && current.items.length > 0 && paragraph.length === 0) {
-        const list = inSubitem ? current.subitems[current.subitems.length - 1]! : current.items;
-        const last = list.length - 1;
-        list[last] = `${list[last]} ${trimmed}`;
-        continue;
-      }
-      paragraph.push(trimmed);
+      target.push(raw);
     }
-    flush();
 
-    const summary = summaryParts.join(' ');
-    const kept = sections.filter((section) => section.items.length > 0 || section.paragraphs.length > 0);
+    const extraLinks: ReleaseLink[] = [];
+    const introBlock = parseBlock(intro);
+    // The CHANGELOG pointer is a link wherever it sits, never the summary.
+    const introParagraphs = withoutPointers(introBlock.paragraphs, extraLinks);
+    const summary = introParagraphs[0] ?? '';
+    const parsed = assemble({ ...introBlock, paragraphs: introParagraphs.slice(1) }, segments, extraLinks);
     const published =
       !yanked && project.firstPublished !== undefined && compareVersions(version, project.firstPublished) >= 0;
 
@@ -452,10 +680,11 @@ export function parseChangelog(markdown: string, project: ReleaseProject): Relea
       dateLabel: formatIsoDate(dateIso),
       dateIso,
       kind: version.includes('-') || project.prerelease?.(version) ? 'prerelease' : kindForVersion(version),
-      breaking: isBreaking(summary, kept),
+      breaking: isBreaking(summary, parsed.sections),
       summary,
-      notes: yanked ? ['This version was yanked: do not install it.', ...notes] : notes,
-      sections: kept,
+      notes: yanked ? ['This version was yanked: do not install it.', ...parsed.notes] : parsed.notes,
+      upgrade: parsed.upgrade,
+      sections: parsed.sections,
       links: [
         ...(published
           ? [
@@ -464,6 +693,7 @@ export function parseChangelog(markdown: string, project: ReleaseProject): Relea
             ]
           : []),
         { label: 'GitHub Release', href: `${project.repository}/releases/tag/v${version}` },
+        ...extraLinks,
       ],
       installCommand: published ? project.install(version) : null,
     });

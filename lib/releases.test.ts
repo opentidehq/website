@@ -5,15 +5,23 @@ import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { PROJECTS, nameInSentence, releaseProject } from './release-projects.ts';
 import {
+  breakingEntry,
+  categoryAnchor,
+  categoryBlocks,
+  changeCounts,
+  classifyHeading,
   compareVersions,
   formatIsoDate,
   groupBySeries,
   kindLabel,
   loadProjectReleases,
+  otherChangeCount,
+  otherSections,
   parseChangelog,
   parseReleaseNotes,
   publicLinks,
   releaseAnchor,
+  totalChanges,
   type ReleaseNote,
 } from './releases.ts';
 
@@ -78,11 +86,15 @@ test('parseReleaseNotes keeps newest first and classifies the upgrade', () => {
   assert.equal(releases[0]?.installCommand, 'pip install opentide==1.2.0');
   assert.match(releases[0]?.summary ?? '', /Upgrade if deploys skipped/);
   assert.match(releases[0]?.notes.join(' ') ?? '', /Regenerate CI/);
+  // A category comes before a heading that names none, whatever the order written.
   assert.deepEqual(
-    releases[0]?.sections.map((section) => section.title),
-    ['What changes', 'Fixes'],
+    releases[0]?.sections.map((section) => [section.title, section.category]),
+    [
+      ['Fixed', 'fixed'],
+      ['What changes', null],
+    ],
   );
-  assert.equal(releases[0]?.sections[0]?.items.length, 1);
+  assert.deepEqual(releases[0]?.sections[0]?.items, ['Setup no longer prints a traceback.']);
   assert.deepEqual(releases[0]?.sections[0]?.subitems, [[]]);
   assert.deepEqual(
     publicLinks(releases[0]?.links ?? []).map((link) => link.label),
@@ -107,7 +119,8 @@ test('published release notes parse into a version log', () => {
   const six = releases.find((release) => release.version === '0.6.0');
   assert.ok(six);
   assert.equal(six.kind, 'minor');
-  assert.match(six.notes.join('\n'), /setup ci/);
+  // Regenerating CI is a note in older notes and an upgrade step in notes to the standard.
+  assert.match([...six.notes, ...(six.upgrade?.items ?? [])].join('\n'), /setup ci/);
   assert.ok(six.sections.some((section) => section.items.length > 0));
 });
 
@@ -318,13 +331,23 @@ The first pre-release.
 
 test('a changelog with #### subsections and nested lists keeps both', () => {
   const [, first] = parseChangelog(nestedFixture, changelogProject);
+  assert.ok(first);
+  // A #### heading under a category is a group of that category.
   assert.deepEqual(
-    first?.sections.map((section) => [section.title, section.items.length]),
+    first.sections.map((section) => [section.category, section.group, section.items.length]),
     [
-      ['Added: Runtime and core', 1],
-      ['Added: Graph and search', 2],
-      ['Fixed: Problems', 1],
-      ['Security', 1],
+      ['added', 'Runtime and core', 1],
+      ['added', 'Graph and search', 2],
+      ['fixed', 'Problems', 1],
+      ['security', null, 1],
+    ],
+  );
+  assert.deepEqual(
+    categoryBlocks(first).map((block) => [block.label, block.count, block.groups.length]),
+    [
+      ['Added', 3, 2],
+      ['Fixed', 1, 1],
+      ['Security', 1, 1],
     ],
   );
   assert.deepEqual(first?.sections[0]?.items, ['Per-platform packages that bundle opentide.']);
@@ -364,5 +387,289 @@ test('project names read inside a sentence', () => {
   assert.deepEqual(
     PROJECTS.map((project) => nameInSentence(project)),
     ['opentide', 'language server', 'VS Code extension', 'explorer'],
+  );
+});
+
+test('headings name a category, the upgrade steps, or something else', () => {
+  const cases: [string, ReturnType<typeof classifyHeading>][] = [
+    ['Added', { kind: 'category', category: 'added', title: 'Added', exact: true }],
+    ['FIXED', { kind: 'category', category: 'fixed', title: 'Fixed', exact: true }],
+    ['What this version fixes', { kind: 'category', category: 'fixed', title: 'Fixed', exact: true }],
+    ['Bug fixes:', { kind: 'category', category: 'fixed', title: 'Fixed', exact: true }],
+    ['Security: regenerate GitHub CI', { kind: 'category', category: 'security', title: 'Security', exact: false }],
+    ['⚠ Breaking changes', { kind: 'category', category: 'breaking', title: 'Breaking', exact: true }],
+    // A heading that starts with Breaking is still Breaking, as it was before the standard.
+    ['Breaking for scripts', { kind: 'category', category: 'breaking', title: 'Breaking', exact: false }],
+    ['Deprecations', { kind: 'category', category: 'deprecated', title: 'Deprecated', exact: true }],
+    ['Upgrade', { kind: 'upgrade', title: 'Upgrade', exact: true }],
+    ['Upgrading', { kind: 'upgrade', title: 'Upgrade', exact: true }],
+    ['What changes for authors and scripts', { kind: 'other', title: 'What changes' }],
+    ['Tests', { kind: 'other', title: 'Tests' }],
+  ];
+  for (const [heading, kind] of cases) assert.deepEqual(classifyHeading(heading), kind, heading);
+});
+
+const standardFixture = `# Changelog
+
+## [0.11.0] - 2026-11-20
+
+Editors get the workspace index, and placeholder queries are not reported.
+
+### Fixed
+
+- **A deleted folder leaves the index** ([#9](https://example.com/9)).
+
+### Highlights
+
+- Not a category: it stays, after them.
+
+### Upgrade
+
+1. Re-run \`setup\`.
+2. If you pin the grammar, include \`source.opentide.esql\`.
+
+### Changed
+
+- **Breaking: the ES|QL scope is \`source.opentide.esql\`.** It was \`source.esql\`.
+- **Grammars ship in one zip.**
+
+### Added
+
+- **\`opentide/catalog\` serves the index.**
+  - \`refs\` on each object
+  - \`opentide/catalogChanged\`
+
+### Breaking
+
+- **\`--plan\` is removed.** Use \`--strategy\`.
+`;
+
+test('a changelog to the standard: categories in order, upgrade steps apart, breaking marked', () => {
+  const [release] = parseChangelog(standardFixture, changelogProject);
+  assert.ok(release);
+  assert.deepEqual(
+    release.sections.map((section) => section.title),
+    ['Breaking', 'Added', 'Changed', 'Fixed', 'Highlights'],
+  );
+  assert.deepEqual(release.upgrade?.items, [
+    'Re-run `setup`.',
+    'If you pin the grammar, include `source.opentide.esql`.',
+  ]);
+  assert.equal(release.breaking, true);
+  // The Breaking list's entry, and the entry marked breaking under Changed.
+  assert.deepEqual(
+    changeCounts(release).map(({ category, count }) => [category, count]),
+    [
+      ['breaking', 2],
+      ['added', 1],
+      ['changed', 2],
+      ['fixed', 1],
+    ],
+  );
+  assert.equal(otherChangeCount(release), 1);
+  assert.deepEqual(
+    otherSections(release).map((section) => section.title),
+    ['Highlights'],
+  );
+  // The upgrade steps, then every entry: 2 + 1 + 1 + 2 + 1 + 1.
+  assert.equal(totalChanges(release), 8);
+  assert.deepEqual(release.sections[1]?.subitems, [['`refs` on each object', '`opentide/catalogChanged`']]);
+  assert.equal(categoryAnchor('0.11.0', 'fixed'), 'v0-11-0-fixed');
+  assert.equal(categoryAnchor('0.11.0', 'upgrade'), 'v0-11-0-upgrade');
+});
+
+test('an entry marked breaking keeps its lead and loses the mark', () => {
+  assert.deepEqual(breakingEntry('**Breaking: the scope is `x`.** It was `y`.'), {
+    breaking: true,
+    text: '**the scope is `x`.** It was `y`.',
+  });
+  assert.deepEqual(breakingEntry('**Breaking:** `--plan` is removed.'), { breaking: true, text: '`--plan` is removed.' });
+  assert.deepEqual(breakingEntry('**Breaking** — `--plan` is removed.'), { breaking: true, text: '`--plan` is removed.' });
+  // A lead that only starts with the word is not a mark, with or without a hyphen.
+  for (const entry of [
+    '**Breaking changes are listed first.**',
+    '**Breaking** changes are flagged by diff.',
+    '**Breaking-change detection** for schemas.',
+  ]) {
+    assert.deepEqual(breakingEntry(entry), { breaking: false, text: entry }, entry);
+  }
+  assert.deepEqual(breakingEntry('**Breaking - the scope.** It was y.'), { breaking: true, text: '**the scope.** It was y.' });
+  assert.deepEqual(breakingEntry('A plain entry.'), { breaking: false, text: 'A plain entry.' });
+});
+
+const standardNotes = `---
+title: Releases
+---
+
+## 2.0.0 — 20 November 2026
+
+\`validate\` catches what a deploy would reject.
+
+**Install**
+
+\`\`\`bash
+pip install opentide==2.0.0
+\`\`\`
+
+**Upgrade**
+
+- Run \`opentide setup ci <provider> --yes\`.
+
+**Breaking**
+
+- **CoreTIDE layouts are retired.**
+  - \`global.toml\` fails every command.
+  - A platform file is named by its file name.
+
+**Added**
+
+- **\`opentide serve\` answers from one warm process** ([#750](https://example.com/750)).
+
+**Fixed**
+
+- **\`deploy\` works with no commit yet.**
+
+See the [CHANGELOG](https://github.com/opentidehq/opentide/blob/development/CHANGELOG.md#200--2026-11-20) for every change.
+
+**Links**
+
+- [PyPI](https://pypi.org/project/opentide/2.0.0/)
+- [CHANGELOG](https://github.com/opentidehq/opentide/blob/development/CHANGELOG.md)
+`;
+
+test('engine notes to the standard: upgrade steps, nested lists and the changelog pointer', () => {
+  const [release] = parseReleaseNotes(standardNotes);
+  assert.ok(release);
+  assert.equal(release.summary, '`validate` catches what a deploy would reject.');
+  assert.deepEqual(release.notes, []);
+  assert.deepEqual(release.upgrade?.items, ['Run `opentide setup ci <provider> --yes`.']);
+  assert.deepEqual(
+    release.sections.map((section) => [section.category, section.items.length]),
+    [
+      ['breaking', 1],
+      ['added', 1],
+      ['fixed', 1],
+    ],
+  );
+  // A nested list belongs to its item; it is not a run of items of its own.
+  assert.deepEqual(release.sections[0]?.subitems, [
+    ['`global.toml` fails every command.', 'A platform file is named by its file name.'],
+  ]);
+  assert.equal(release.breaking, true);
+  // The pointer is a link to that version's record, not prose in the Fixed list.
+  assert.deepEqual(release.sections[2]?.paragraphs, []);
+  assert.deepEqual(
+    publicLinks(release.links).map((link) => link.label),
+    ['PyPI', 'Full changelog'],
+  );
+  assert.equal(
+    release.links.find((link) => link.label === 'Full changelog')?.href,
+    'https://github.com/opentidehq/opentide/blob/development/CHANGELOG.md#200--2026-11-20',
+  );
+});
+
+test('a release with no summary still fails, whatever follows it', () => {
+  assert.throws(
+    () => parseReleaseNotes('## 1.0.0 — 1 March 2026\n\n**Install**\n\nA note.\n'),
+    /missing a summary/,
+  );
+});
+
+test('#### headings with no ### above them are headings of their own', () => {
+  const [release] = parseChangelog('## [1.0.0] - 2026-11-20\n\nSummary.\n\n#### Added\n\n- a\n\n#### Fixed\n\n- b\n', changelogProject);
+  assert.deepEqual(
+    release?.sections.map((section) => [section.category, section.group, section.items]),
+    [
+      ['added', null, ['a']],
+      ['fixed', null, ['b']],
+    ],
+  );
+});
+
+test('#### groups under Upgrade lead their steps', () => {
+  const [release] = parseChangelog(
+    '## [1.0.0] - 2026-11-20\n\nSummary.\n\n### Upgrade\n\n#### From 0.9\n\n- Run `a`.\n\n#### From 0.8\n\n- Run `b`.\n',
+    changelogProject,
+  );
+  assert.deepEqual(release?.upgrade?.items, ['**From 0.9:** Run `a`.', '**From 0.8:** Run `b`.']);
+});
+
+test('a numbered line starts an item only where CommonMark starts one', () => {
+  const [release] = parseChangelog(
+    [
+      '## [1.0.0] - 2026-11-20',
+      '',
+      'Summary.',
+      '',
+      '### Fixed',
+      '',
+      'The import handles the version',
+      '2. It also does more.',
+      '',
+      '### Upgrade',
+      '',
+      '1. Run `a`',
+      '   and wait.',
+      '2. Run `b`.',
+      '',
+      '### Added',
+      '',
+      '- An entry wrapped after',
+      '  3. a number.',
+      '',
+    ].join('\n'),
+    changelogProject,
+  );
+  assert.ok(release);
+  // A wrapped line that begins "2. " stays in its sentence.
+  assert.deepEqual(release.sections.find((section) => section.category === 'fixed')?.paragraphs, [
+    'The import handles the version 2. It also does more.',
+  ]);
+  // The next item of a numbered list, after a continued item.
+  assert.deepEqual(release.upgrade?.items, ['Run `a` and wait.', 'Run `b`.']);
+  // A number inside a wrapped bullet continues the bullet.
+  assert.deepEqual(release.sections.find((section) => section.category === 'added')?.items, [
+    'An entry wrapped after 3. a number.',
+  ]);
+});
+
+test('an entry marked breaking elsewhere counts as breaking, with no list to link to', () => {
+  const [release] = parseChangelog(
+    '## [1.0.0] - 2026-11-20\n\nSummary.\n\n### Changed\n\n- **Breaking:** `--plan` is removed.\n- **A plain change.**\n',
+    changelogProject,
+  );
+  assert.ok(release);
+  assert.equal(release.breaking, true);
+  assert.deepEqual(
+    changeCounts(release).map(({ category, count, listed }) => [category, count, listed]),
+    [
+      ['breaking', 1, false],
+      ['changed', 2, true],
+    ],
+  );
+  assert.deepEqual(
+    categoryBlocks(release).map(({ category, count }) => [category, count]),
+    [['changed', 2]],
+  );
+});
+
+test('a CHANGELOG pointer as the first paragraph is a link, not the summary', () => {
+  const [release] = parseChangelog(
+    '## [1.0.0] - 2026-11-20\n\nSee the [CHANGELOG](https://example.com/c#100) for every change.\n\nThe summary.\n\n### Added\n\n- **a**\n',
+    changelogProject,
+  );
+  assert.equal(release?.summary, 'The summary.');
+  assert.deepEqual(release?.notes, []);
+  assert.equal(release?.links.find((link) => link.label === 'Full changelog')?.href, 'https://example.com/c#100');
+});
+
+test('a bold summary that starts like a part is still the summary', () => {
+  const [release] = parseReleaseNotes(
+    '## 1.0.0 — 1 March 2026\n\n**Security release: upgrade now.**\n\n**Security**\n\n- **A fix.**\n',
+  );
+  assert.equal(release?.summary, '**Security release: upgrade now.**');
+  assert.deepEqual(
+    release?.sections.map((section) => [section.category, section.items]),
+    [['security', ['**A fix.**']]],
   );
 });

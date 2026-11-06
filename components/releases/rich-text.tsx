@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
+import { plainText } from '@/lib/markdown-text';
 import { safeHref } from '@/lib/safe-href';
 
 export const focusRing =
@@ -36,21 +37,22 @@ function renderInline(text: string, keyPrefix: string): ReactNode[] {
     const link = /^\[([^\]]+)\]\(([^)\s]+)\)$/.exec(part);
     if (link?.[1] && link[2]) {
       const href = safeHref(link[2]);
-      if (!href) return <span key={key}>{link[1]}</span>;
+      const label = renderInline(link[1], key);
+      if (!href) return <span key={key}>{label}</span>;
       if (/^https?:/i.test(href)) {
         return (
           <a key={key} href={href} target="_blank" rel="noopener noreferrer" className={linkClass}>
-            {link[1]}
+            {label}
           </a>
         );
       }
       return (
         <Link key={key} href={href} className={linkClass}>
-          {link[1]}
+          {label}
         </Link>
       );
     }
-    return <span key={key}>{part}</span>;
+    return <span key={key}>{plainText(part)}</span>;
   });
 }
 

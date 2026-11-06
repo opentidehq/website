@@ -70,6 +70,29 @@ Environment overrides (first match wins):
 | `pnpm lint` | ESLint |
 | `pnpm types:check` | TypeScript + Fumadocs MDX types |
 
+## Release notes
+
+`/releases/` reads each project's notes in one shape, the release-notes standard every project's
+repository carries as its `release-notes` skill (opentide: `.agents/skills/release-notes/`,
+language-server: `skills/release-notes/`, vscode-extension and explorer:
+`.agents/skills/release-notes/`). `lib/releases.ts` parses it:
+
+| In the notes | On the page |
+|--------------|-------------|
+| The first paragraph under a version | The summary, large |
+| `Upgrade` | Numbered steps in a tinted panel, ahead of the changes, and "N upgrade steps" in the counts |
+| `Breaking`, `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed`, `Security` | One list each, in that order whatever order they were written in, under an icon, the label and a count; the counts again beside every earlier version |
+| `####` under a category | A group inside that category's list |
+| An entry starting `**Breaking: …**` under another category | A `breaking` tag on the entry and on the release, and a place in the breaking count |
+| `See the [CHANGELOG](…) for every change.` | A "Full changelog" link beside the install command |
+| Any other heading | Its list, as written, after the categories |
+
+Headings are `###` in a Keep a Changelog file and bold lines (`**Added**`) in opentide's
+`docs/usage/releases.md`. Older spellings still parse (`What this version fixes` is Fixed,
+`Security: regenerate GitHub CI` is Security). Categories are told apart by icon and label,
+never by colour. A part added to or renamed in the standard changes `CHANGE_CATEGORIES` and
+`classifyHeading` here, and the four skills, together.
+
 ## Writing a blog post
 
 Add an MDX file under `content/blog/`:
