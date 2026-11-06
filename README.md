@@ -83,7 +83,7 @@ language-server: `skills/release-notes/`, vscode-extension and explorer:
 | `Upgrade` | Numbered steps in a tinted panel, ahead of the changes, and "N upgrade steps" in the counts |
 | `Breaking`, `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed`, `Security` | One list each, in that order whatever order they were written in, under an icon, the label and a count; the counts again beside every earlier version |
 | `####` under a category | A group inside that category's list |
-| An entry starting `**Breaking: …**` under another category | A `breaking` tag on the entry, and on the release |
+| An entry starting `**Breaking: …**` under another category | A `breaking` tag on the entry and on the release, and a place in the breaking count |
 | `See the [CHANGELOG](…) for every change.` | A "Full changelog" link beside the install command |
 | Any other heading | Its list, as written, after the categories |
 
