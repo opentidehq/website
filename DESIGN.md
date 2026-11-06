@@ -141,6 +141,7 @@ Landing uses flat tonal layering: chapters alternate page and `landing-band`, co
 - **Footer** (`SiteFooter`): a quiet band — what opentide is, the latest release and both licences as chips, product, specification and ecosystem columns, and a bottom bar with Back to top.
 - **Chapter navigation**: a floating dock (`ChapterNav`) between the hero and the footer — every chapter at `xl` with the current one filled and a thin progress line, one pill with a menu below `xl`. Blocks keep their old anchors (`#pipeline`, `#platforms`, `#doors`).
 - **Workflow studio**: plays its six-step scenario in a fixed frame and idles off screen; it never pins or resizes with scroll.
+- **Release log** (`components/releases/`): every project's releases in one shape. The latest version is a panel: summary, the counts of each category (each a link to its list), the Upgrade steps numbered in a tinted panel, then the categories, beside the install command, which stays in view. Earlier versions sit on a timeline, folded to their summary and counts. Categories (Breaking, Added, Changed, Deprecated, Removed, Fixed, Security) keep that order on every page and are told apart by icon and label, never by colour (`CATEGORY_ICONS`).
 - **Docs root switcher**: Fumadocs popover; Usage default; accent focus ring.
 - **MDX**: Callout, Cards, Steps, Tabs, TypeTable, Mermaid (Fumadocs UI + remark plugins).
 

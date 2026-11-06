@@ -1,7 +1,17 @@
 import Link from 'next/link';
-import { ArrowUpRight, Braces, ChevronRight, Network, SquareCode, Waves, type LucideIcon } from 'lucide-react';
+import {
+  ArrowUpRight,
+  Braces,
+  ChevronRight,
+  Network,
+  SquareCode,
+  TriangleAlert,
+  Waves,
+  type LucideIcon,
+} from 'lucide-react';
 import { Tag } from '@/components/landing/ui';
 import { InstallCommand } from '@/components/releases/install-command';
+import { ChangeCounts, ReleaseChanges } from '@/components/releases/release-changes';
 import { RichText, focusRing } from '@/components/releases/rich-text';
 import { nameInSentence, type ProjectId, type ReleaseProject } from '@/lib/release-projects';
 import { safeHref } from '@/lib/safe-href';
@@ -10,8 +20,8 @@ import {
   kindLabel,
   publicLinks,
   releaseAnchor,
+  totalChanges,
   type ReleaseNote,
-  type ReleaseSection,
 } from '@/lib/releases';
 
 const ICONS: Record<ProjectId, LucideIcon> = {
@@ -130,6 +140,12 @@ function VersionList({ releases }: { releases: ReleaseNote[] }) {
                       }`}
                     />
                     {release.version}
+                    {release.breaking ? (
+                      <>
+                        <TriangleAlert className="size-3 text-[var(--landing-accent)]" aria-hidden />
+                        <span className="sr-only">, breaking</span>
+                      </>
+                    ) : null}
                   </span>
                   <span className="text-xs text-[var(--landing-dim)]">{shortDate(release)}</span>
                 </a>
@@ -162,74 +178,6 @@ function ReleaseTags({ release, latest }: { release: ReleaseNote; latest?: boole
       <Tag tone="outline">{kindLabel(release.kind).toLowerCase()}</Tag>
       {release.breaking ? <Tag tone="accent">breaking</Tag> : null}
       {release.installCommand === null ? <Tag tone="dashed">tagged after release</Tag> : null}
-    </>
-  );
-}
-
-type HeadingLevel = 'h3' | 'h4' | 'h5';
-
-const BELOW: Record<HeadingLevel, HeadingLevel> = { h3: 'h4', h4: 'h5', h5: 'h5' };
-
-function SectionBlock({ section, level }: { section: ReleaseSection; level: HeadingLevel }) {
-  const Heading = level;
-  return (
-    <section className="mt-6 first:mt-0">
-      <Heading className="font-mono text-xs text-[var(--landing-subtle)]">
-        {section.title.toLowerCase()}
-        {section.items.length > 0 ? (
-          <span className="text-[var(--landing-dim)]"> · {section.items.length}</span>
-        ) : null}
-      </Heading>
-      {section.paragraphs.map((paragraph, index) => (
-        <p key={index} className="mt-2 text-sm leading-relaxed text-pretty text-[var(--landing-muted)]">
-          <RichText text={paragraph} />
-        </p>
-      ))}
-      {section.items.length > 0 ? (
-        <ul className="mt-2.5 space-y-2 text-sm leading-relaxed text-[var(--landing-muted)]">
-          {section.items.map((item, index) => (
-            <li key={index} className="relative pl-4 text-pretty">
-              <span
-                aria-hidden
-                className="absolute top-[0.6rem] left-0 size-1 rounded-full bg-[var(--landing-accent)]"
-              />
-              <RichText text={item} />
-              {section.subitems[index]?.length ? (
-                <ul className="mt-2 space-y-1.5">
-                  {section.subitems[index].map((subitem, subindex) => (
-                    <li key={subindex} className="relative pl-4 text-pretty">
-                      <span
-                        aria-hidden
-                        className="absolute top-[0.6rem] left-0 size-1 rounded-full bg-[var(--landing-dim)]"
-                      />
-                      <RichText text={subitem} />
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
-            </li>
-          ))}
-        </ul>
-      ) : null}
-    </section>
-  );
-}
-
-/** Sections are headed one level below the version they belong to. */
-function ReleaseChanges({ release, level }: { release: ReleaseNote; level: HeadingLevel }) {
-  return (
-    <>
-      {release.notes.map((note, index) => (
-        <p
-          key={index}
-          className="mb-6 rounded-lg bg-[color-mix(in_srgb,var(--landing-accent)_7%,transparent)] px-4 py-3 text-sm leading-relaxed text-pretty text-[var(--landing-muted)]"
-        >
-          <RichText text={note} />
-        </p>
-      ))}
-      {release.sections.map((section, index) => (
-        <SectionBlock key={index} section={section} level={level} />
-      ))}
     </>
   );
 }
@@ -273,7 +221,7 @@ function LatestRelease({
     <article
       id={releaseAnchor(release.version)}
       aria-labelledby="latest-version"
-      className="landing-panel scroll-mt-24 overflow-hidden"
+      className="landing-panel scroll-mt-24 overflow-clip"
     >
       <div className="p-6 md:p-8">
         <div className="flex flex-wrap items-center gap-2">
@@ -287,31 +235,37 @@ function LatestRelease({
         </div>
         <h3
           id="latest-version"
-          className="mt-5 font-mono text-[clamp(2.5rem,7vw,3.75rem)] leading-none font-semibold tracking-[-0.04em] text-[var(--landing-ink)]"
+          className="mt-5 font-mono text-[clamp(2.25rem,5.5vw,3.25rem)] leading-none font-semibold tracking-[-0.04em] text-[var(--landing-ink)]"
         >
           {release.version}
         </h3>
         {release.summary ? (
-          <p className="mt-5 max-w-[65ch] text-lg leading-relaxed text-pretty text-[var(--landing-muted)]">
+          <p className="mt-5 max-w-[62ch] text-lg leading-relaxed text-pretty text-[var(--landing-muted)]">
             <RichText text={release.summary} />
           </p>
         ) : null}
+        <div className="mt-5">
+          <ChangeCounts release={release} linked />
+        </div>
       </div>
       <div className="grid border-t border-[var(--landing-border)] md:grid-cols-[minmax(0,1fr)_18rem]">
         {/* Below md the install panel comes first, ahead of a long change list. */}
         <div className="min-w-0 p-6 md:p-8">
           <ReleaseChanges release={release} level="h4" />
         </div>
-        <div className="order-first min-w-0 space-y-5 border-b border-[var(--landing-border)] bg-[var(--landing-band)] p-6 md:order-none md:border-b-0 md:border-l md:p-8">
-          {release.installCommand ? (
-            <InstallCommand command={release.installCommand} caption={`install ${release.version}`} />
-          ) : null}
-          {registryAhead ? (
-            <p className="text-sm text-[var(--landing-muted)]">
-              PyPI is on {pypiVersion}. These notes go through {release.version}.
-            </p>
-          ) : null}
-          <ReleaseLinks release={release} />
+        <div className="order-first min-w-0 border-b border-[var(--landing-border)] bg-[var(--landing-band)] p-6 md:order-none md:border-b-0 md:border-l md:p-8">
+          {/* Beside a long change list the install command and links stay in view. */}
+          <div className="space-y-5 md:sticky md:top-24">
+            {release.installCommand ? (
+              <InstallCommand command={release.installCommand} caption={`install ${release.version}`} />
+            ) : null}
+            {registryAhead ? (
+              <p className="text-sm text-[var(--landing-muted)]">
+                PyPI is on {pypiVersion}. These notes go through {release.version}.
+              </p>
+            ) : null}
+            <ReleaseLinks release={release} />
+          </div>
         </div>
       </div>
     </article>
@@ -320,9 +274,6 @@ function LatestRelease({
 
 function EarlierRelease({ release, level }: { release: ReleaseNote; level: 'h3' | 'h4' }) {
   const Heading = level;
-  const changes =
-    release.notes.length +
-    release.sections.reduce((n, section) => n + Math.max(section.items.length, 1), 0);
   return (
     <li
       id={releaseAnchor(release.version)}
@@ -352,17 +303,20 @@ function EarlierRelease({ release, level }: { release: ReleaseNote; level: 'h3' 
           <RichText text={release.summary} />
         </p>
       ) : null}
-      {changes > 0 ? (
+      {totalChanges(release) > 0 ? (
         <details className="group mt-4">
           <summary
-            className={`inline-flex cursor-pointer list-none items-center gap-1.5 rounded-md text-sm font-medium text-[var(--landing-accent)] [&::-webkit-details-marker]:hidden ${focusRing}`}
+            className={`flex cursor-pointer list-none flex-wrap items-center gap-x-5 gap-y-2 rounded-md [&::-webkit-details-marker]:hidden ${focusRing}`}
           >
-            <ChevronRight className="size-4 motion-safe:transition-transform group-open:rotate-90" aria-hidden />
-            <span className="group-open:hidden">Show {changes} {changes === 1 ? 'change' : 'changes'}</span>
-            <span className="hidden group-open:inline">Hide changes</span>
+            <span className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--landing-accent)]">
+              <ChevronRight className="size-4 motion-safe:transition-transform group-open:rotate-90" aria-hidden />
+              <span className="group-open:hidden">Show changes</span>
+              <span className="hidden group-open:inline">Hide changes</span>
+            </span>
+            <ChangeCounts release={release} inline />
           </summary>
           <div className="mt-4 rounded-xl border border-[var(--landing-border)] p-5 md:p-6">
-            <ReleaseChanges release={release} level={BELOW[level]} />
+            <ReleaseChanges release={release} level={level === 'h3' ? 'h4' : 'h5'} />
             <div className="mt-6 space-y-4 border-t border-[var(--landing-border-subtle)] pt-5">
               {release.installCommand ? (
                 <InstallCommand command={release.installCommand} caption={`pin ${release.version}`} />
