@@ -112,15 +112,22 @@ const OTHER_TITLES: Record<string, string> = {
   'what it is not': 'Not in this release',
 };
 
-export type HeadingKind =
+export type HeadingKind = (
   | { kind: 'category'; category: ChangeCategory; title: string }
   | { kind: 'upgrade'; title: string }
-  | { kind: 'other'; title: string };
+  | { kind: 'other'; title: string }
+) & {
+  /**
+   * The heading is exactly a part's name or alias, not a longer heading that starts with
+   * Security or Breaking. Only an exact name ends a summary written in bold.
+   */
+  exact?: boolean;
+};
 
 /**
  * What a section heading names: one of the categories, the upgrade steps, or something else.
- * Case, a trailing colon and a leading warning sign do not matter; `Security: regenerate CI`
- * is still Security.
+ * Case, a trailing colon and a leading warning sign do not matter, and a heading that starts
+ * with Security or Breaking is that category (`Security: regenerate CI`, `Breaking for scripts`).
  */
 export function classifyHeading(heading: string): HeadingKind {
   const written = heading.trim().replace(/:\s*$/, '');
@@ -128,14 +135,14 @@ export function classifyHeading(heading: string): HeadingKind {
     .replace(/^[^\p{L}\p{N}]+/u, '')
     .toLowerCase()
     .replaceAll(/\s+/g, ' ');
+  const named = CHANGE_CATEGORIES.find(({ id }) => id === key)?.id ?? CATEGORY_ALIASES[key];
   const category =
-    CHANGE_CATEGORIES.find(({ id }) => id === key)?.id ??
-    CATEGORY_ALIASES[key] ??
-    (/^security\b/.test(key) ? 'security' : undefined);
+    named ?? (/^security\b/.test(key) ? 'security' : /^breaking\b/.test(key) ? 'breaking' : undefined);
   if (category) {
-    return { kind: 'category', category, title: CHANGE_CATEGORIES.find(({ id }) => id === category)!.label };
+    const title = CHANGE_CATEGORIES.find(({ id }) => id === category)!.label;
+    return { kind: 'category', category, title, exact: named !== undefined };
   }
-  if (UPGRADE_HEADINGS.has(key)) return { kind: 'upgrade', title: 'Upgrade' };
+  if (UPGRADE_HEADINGS.has(key)) return { kind: 'upgrade', title: 'Upgrade', exact: true };
   return { kind: 'other', title: OTHER_TITLES[key] ?? written };
 }
 
@@ -166,10 +173,15 @@ function hasContent(section: ReleaseSection): boolean {
   return section.items.length > 0 || section.paragraphs.length > 0;
 }
 
+/**
+ * What separates the mark from the entry: a colon or a dash. A hyphen counts only with space
+ * around it, so `**Breaking-change detection**` is a lead, not a mark.
+ */
+const MARK_SEPARATOR = String.raw`(?:\s*[:—–]\s*|\s+-\s+)`;
 /** `**Breaking:** detail` or `**Breaking** — detail`: the mark is the whole bold run. */
-const BREAKING_RUN = /^\*\*breaking(?:\s*[:—–-]\s*\*\*|\*\*\s*[:—–-]?)\s*/i;
+const BREAKING_RUN = new RegExp(String.raw`^\*\*breaking(?:${MARK_SEPARATOR}\*\*|\*\*${MARK_SEPARATOR})\s*`, 'i');
 /** `**Breaking: lead.** detail`: the mark opens the lead, which stays bold. */
-const BREAKING_LEAD = /^\*\*breaking\s*[:—–-]\s*(?!\*\*)/i;
+const BREAKING_LEAD = new RegExp(String.raw`^\*\*breaking${MARK_SEPARATOR}(?!\*\*)`, 'i');
 
 /**
  * An entry with its breaking mark taken off, and whether it had one. The mark is how notes
@@ -254,13 +266,19 @@ function collapse(lines: string[]): string {
 
 type Block = Pick<ReleaseSection, 'paragraphs' | 'items' | 'subitems'>;
 
-/** `- item`, `* item`, `+ item`, and the `1.` of an ordered list (upgrade steps are often numbered). */
-const LIST_ITEM = /^(?:[-*+]|\d{1,3}[.)])\s+(.+)$/;
+/** `- item`, `* item` and `+ item`. */
+const BULLET_ITEM = /^[-*+]\s+(.+)$/;
+/** `1. item` or `1) item`: upgrade steps are often numbered. */
+const ORDERED_ITEM = /^(\d{1,3})[.)]\s+(.+)$/;
 
 /**
  * The paragraphs and list of one section. A list nested under an item becomes that item's
  * subitems, and anything nested deeper joins the same list. An indented line continues the
  * item, or the nested item, above it.
+ *
+ * A numbered line starts an item as CommonMark has it: after a blank line, as the next item of
+ * a numbered list, or from `1`. Anywhere else it continues the text above it, so a hard-wrapped
+ * line that happens to begin "2. " stays in its sentence.
  */
 function parseBlock(lines: readonly string[]): Block {
   const block: Block = { paragraphs: [], items: [], subitems: [] };
@@ -268,6 +286,9 @@ function parseBlock(lines: readonly string[]): Block {
   // The indent of the last top-level item, and whether the last line was a nested item.
   let itemIndent = 0;
   let inSubitem = false;
+  // The indent of the numbered list the lines are in, if any, and whether the last line was blank.
+  let orderedIndent: number | null = null;
+  let afterBlank = true;
   const flush = () => {
     const text = collapse(paragraph);
     paragraph = [];
@@ -277,18 +298,26 @@ function parseBlock(lines: readonly string[]): Block {
     const trimmed = raw.trim();
     if (!trimmed) {
       flush();
+      afterBlank = true;
       continue;
     }
     const indent = raw.length - raw.trimStart().length;
-    const item = LIST_ITEM.exec(trimmed);
-    if (item?.[1]) {
+    const bullet = BULLET_ITEM.exec(trimmed);
+    const numbered = bullet ? null : ORDERED_ITEM.exec(trimmed);
+    const startsItem =
+      numbered !== null && (numbered[1] === '1' || afterBlank || orderedIndent === indent);
+    const text = bullet?.[1] ?? (startsItem ? numbered?.[2] : undefined);
+    afterBlank = false;
+    if (text) {
       flush();
+      if (numbered) orderedIndent = indent;
+      else if (orderedIndent !== null && indent <= orderedIndent) orderedIndent = null;
       if (block.items.length > 0 && indent > itemIndent) {
-        block.subitems.at(-1)!.push(item[1].trim());
+        block.subitems.at(-1)!.push(text.trim());
         inSubitem = true;
         continue;
       }
-      block.items.push(item[1].trim());
+      block.items.push(text.trim());
       block.subitems.push([]);
       itemIndent = indent;
       inSubitem = false;
@@ -299,6 +328,7 @@ function parseBlock(lines: readonly string[]): Block {
       list[list.length - 1] = `${list.at(-1)} ${trimmed}`;
       continue;
     }
+    if (indent === 0) orderedIndent = null;
     paragraph.push(trimmed);
   }
   flush();
@@ -337,9 +367,11 @@ function assemble(
     const block = parseBlock(segment.lines);
     const paragraphs = withoutPointers(block.paragraphs, links);
     if (segment.heading.kind === 'upgrade') {
+      // The steps are one list; a `####` group under Upgrade ("From 0.9") leads each of its own.
+      const lead = (text: string) => (segment.group ? `**${segment.group}:** ${text}` : text);
       upgrade ??= newSection(segment.heading);
-      upgrade.paragraphs.push(...paragraphs);
-      upgrade.items.push(...block.items);
+      upgrade.paragraphs.push(...paragraphs.map(lead));
+      upgrade.items.push(...block.items.map(lead));
       upgrade.subitems.push(...block.subitems);
       continue;
     }
@@ -352,9 +384,12 @@ function assemble(
   };
 }
 
-/** A bold line names a part of the notes before the summary has ended only when it is a known one. */
+/**
+ * Before the summary has ended, a bold line is a heading only when it is exactly a part's name:
+ * a summary may itself be bold (`**Security release: upgrade now.**`).
+ */
 function isNotesHeading(title: string): boolean {
-  return /^(install|links)$/i.test(title) || classifyHeading(title).kind !== 'other';
+  return /^(install|links)$/i.test(title) || classifyHeading(title).exact === true;
 }
 
 /**
@@ -458,20 +493,33 @@ export function publicLinks(links: readonly ReleaseLink[]): ReleaseLink[] {
   return links.filter((link) => link.label.toLowerCase() !== 'changelog');
 }
 
-export type ChangeCount = { category: ChangeCategory; label: string; count: number };
+export type ChangeCount = {
+  category: ChangeCategory;
+  label: string;
+  count: number;
+  /** The category has its own list on the page (an entry marked breaking elsewhere has none). */
+  listed: boolean;
+};
 
 /** Entries in one section; a section of prose alone counts as one. */
 function entries(section: ReleaseSection): number {
   return section.items.length || (section.paragraphs.length > 0 ? 1 : 0);
 }
 
-/** How many entries each category holds, in the standard order, leaving out empty ones. */
+/**
+ * How many entries each category holds, in the standard order, leaving out empty ones. The
+ * breaking count adds the entries marked breaking under another category.
+ */
 export function changeCounts(release: Pick<ReleaseNote, 'sections'>): ChangeCount[] {
+  const marked = release.sections
+    .filter((section) => section.category !== 'breaking')
+    .reduce((total, section) => total + section.items.filter((item) => breakingEntry(item).breaking).length, 0);
   return CHANGE_CATEGORIES.flatMap(({ id, label }) => {
-    const count = release.sections
+    const listed = release.sections
       .filter((section) => section.category === id)
       .reduce((total, section) => total + entries(section), 0);
-    return count > 0 ? [{ category: id, label, count }] : [];
+    const count = listed + (id === 'breaking' ? marked : 0);
+    return count > 0 ? [{ category: id, label, count, listed: listed > 0 }] : [];
   });
 }
 
@@ -491,17 +539,22 @@ export function totalChanges(release: Pick<ReleaseNote, 'notes' | 'upgrade' | 's
   );
 }
 
-export type CategoryBlock = ChangeCount & {
+export type CategoryBlock = {
+  category: ChangeCategory;
+  label: string;
+  /** The entries this list holds. */
+  count: number;
   /** The category's sections: one, or one per `####` group, in the order written. */
   groups: ReleaseSection[];
 };
 
 /** The categories a release lists, each with its groups, in the standard order. */
 export function categoryBlocks(release: Pick<ReleaseNote, 'sections'>): CategoryBlock[] {
-  return changeCounts(release).map((count) => ({
-    ...count,
-    groups: release.sections.filter((section) => section.category === count.category && hasContent(section)),
-  }));
+  return CHANGE_CATEGORIES.flatMap(({ id, label }) => {
+    const groups = release.sections.filter((section) => section.category === id && hasContent(section));
+    const count = groups.reduce((total, section) => total + entries(section), 0);
+    return count > 0 ? [{ category: id, label, count, groups }] : [];
+  });
 }
 
 /** Sections whose heading names no category, in the order written. */
@@ -597,13 +650,14 @@ export function parseChangelog(markdown: string, project: ReleaseProject): Relea
       const section = CHANGELOG_SECTION.exec(trimmed);
       if (section?.[1] && section[2]) {
         const kind = classifyHeading(section[2]);
-        if (section[1].length === 3 || parent === null) {
+        if (section[1].length === 3) {
           parent = kind;
           segments.push({ heading: kind, group: null, lines: [] });
-        } else if (parent.kind === 'category') {
+        } else if (parent === null) {
+          // A `####` with no `###` above it is a heading of its own, as each one after it is.
+          segments.push({ heading: kind, group: null, lines: [] });
+        } else if (parent.kind === 'category' || parent.kind === 'upgrade') {
           segments.push({ heading: parent, group: section[2], lines: [] });
-        } else if (parent.kind === 'upgrade') {
-          segments.push({ heading: parent, group: null, lines: [] });
         } else {
           segments.push({ heading: { kind: 'other', title: `${parent.title}: ${section[2]}` }, group: null, lines: [] });
         }
@@ -614,8 +668,10 @@ export function parseChangelog(markdown: string, project: ReleaseProject): Relea
 
     const extraLinks: ReleaseLink[] = [];
     const introBlock = parseBlock(intro);
-    const summary = introBlock.paragraphs[0] ?? '';
-    const parsed = assemble({ ...introBlock, paragraphs: introBlock.paragraphs.slice(1) }, segments, extraLinks);
+    // The CHANGELOG pointer is a link wherever it sits, never the summary.
+    const introParagraphs = withoutPointers(introBlock.paragraphs, extraLinks);
+    const summary = introParagraphs[0] ?? '';
+    const parsed = assemble({ ...introBlock, paragraphs: introParagraphs.slice(1) }, segments, extraLinks);
     const published =
       !yanked && project.firstPublished !== undefined && compareVersions(version, project.firstPublished) >= 0;
 

@@ -64,15 +64,26 @@ export function ChangeCounts({
   const categories = changeCounts(release);
   // Entries under a heading that names no category, as notes written before the standard have.
   const other = otherChangeCount(release);
-  const counts: { part: ChangeCategory | 'upgrade' | 'other'; text: string; Icon: LucideIcon }[] = [
-    ...(steps > 0 ? [{ part: 'upgrade' as const, text: plural(steps, 'upgrade step'), Icon: ListChecks }] : []),
-    ...categories.map(({ category, label, count }) => ({
+  const counts: { part: ChangeCategory | 'upgrade' | 'other'; text: string; Icon: LucideIcon; anchored: boolean }[] = [
+    ...(steps > 0
+      ? [{ part: 'upgrade' as const, text: plural(steps, 'upgrade step'), Icon: ListChecks, anchored: true }]
+      : []),
+    ...categories.map(({ category, label, count, listed }) => ({
       part: category,
       text: `${count} ${label.toLowerCase()}`,
       Icon: CATEGORY_ICONS[category],
+      // Entries marked breaking under other categories have no Breaking list to link to.
+      anchored: listed,
     })),
     ...(other > 0
-      ? [{ part: 'other' as const, text: categories.length > 0 ? `${other} other` : plural(other, 'change'), Icon: ListIcon }]
+      ? [
+          {
+            part: 'other' as const,
+            text: categories.length > 0 ? `${other} other` : plural(other, 'change'),
+            Icon: ListIcon,
+            anchored: false,
+          },
+        ]
       : []),
   ];
   if (counts.length === 0) return null;
@@ -80,7 +91,7 @@ export function ChangeCounts({
   const Item = inline ? 'span' : 'li';
   return (
     <List className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-[var(--landing-muted)]">
-      {counts.map(({ part, text, Icon }) => (
+      {counts.map(({ part, text, Icon, anchored }) => (
         <Item
           key={part}
           className={`inline-flex items-center gap-1.5 whitespace-nowrap ${
@@ -88,7 +99,7 @@ export function ChangeCounts({
           }`}
         >
           <Icon className="size-4 shrink-0 text-[var(--landing-accent)]" aria-hidden />
-          {linked && part !== 'other' ? (
+          {linked && anchored && part !== 'other' ? (
             <a
               href={`#${categoryAnchor(release.version, part)}`}
               className="underline-offset-2 hover:text-[var(--landing-ink)] hover:underline"
@@ -110,8 +121,10 @@ function Entries({ section, ordered = false }: { section: ReleaseSection; ordere
   return (
     <List className="mt-3 space-y-2.5 text-sm leading-relaxed text-[var(--landing-muted)]">
       {section.items.map((raw, index) => {
-        // Under Breaking every entry breaks; elsewhere an entry may carry the mark itself.
-        const { breaking, text } = section.category === 'breaking' ? { breaking: false, text: raw } : breakingEntry(raw);
+        // An entry may carry the breaking mark itself; under Breaking the tag would repeat the heading.
+        const marked = breakingEntry(raw);
+        const breaking = marked.breaking && section.category !== 'breaking';
+        const text = marked.text;
         return (
           <li key={index} className={`relative text-pretty ${ordered ? 'pl-8' : 'pl-4'}`}>
             {ordered ? (

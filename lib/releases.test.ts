@@ -392,15 +392,17 @@ test('project names read inside a sentence', () => {
 
 test('headings name a category, the upgrade steps, or something else', () => {
   const cases: [string, ReturnType<typeof classifyHeading>][] = [
-    ['Added', { kind: 'category', category: 'added', title: 'Added' }],
-    ['FIXED', { kind: 'category', category: 'fixed', title: 'Fixed' }],
-    ['What this version fixes', { kind: 'category', category: 'fixed', title: 'Fixed' }],
-    ['Bug fixes:', { kind: 'category', category: 'fixed', title: 'Fixed' }],
-    ['Security: regenerate GitHub CI', { kind: 'category', category: 'security', title: 'Security' }],
-    ['⚠ Breaking changes', { kind: 'category', category: 'breaking', title: 'Breaking' }],
-    ['Deprecations', { kind: 'category', category: 'deprecated', title: 'Deprecated' }],
-    ['Upgrade', { kind: 'upgrade', title: 'Upgrade' }],
-    ['Upgrading', { kind: 'upgrade', title: 'Upgrade' }],
+    ['Added', { kind: 'category', category: 'added', title: 'Added', exact: true }],
+    ['FIXED', { kind: 'category', category: 'fixed', title: 'Fixed', exact: true }],
+    ['What this version fixes', { kind: 'category', category: 'fixed', title: 'Fixed', exact: true }],
+    ['Bug fixes:', { kind: 'category', category: 'fixed', title: 'Fixed', exact: true }],
+    ['Security: regenerate GitHub CI', { kind: 'category', category: 'security', title: 'Security', exact: false }],
+    ['⚠ Breaking changes', { kind: 'category', category: 'breaking', title: 'Breaking', exact: true }],
+    // A heading that starts with Breaking is still Breaking, as it was before the standard.
+    ['Breaking for scripts', { kind: 'category', category: 'breaking', title: 'Breaking', exact: false }],
+    ['Deprecations', { kind: 'category', category: 'deprecated', title: 'Deprecated', exact: true }],
+    ['Upgrade', { kind: 'upgrade', title: 'Upgrade', exact: true }],
+    ['Upgrading', { kind: 'upgrade', title: 'Upgrade', exact: true }],
     ['What changes for authors and scripts', { kind: 'other', title: 'What changes' }],
     ['Tests', { kind: 'other', title: 'Tests' }],
   ];
@@ -454,10 +456,11 @@ test('a changelog to the standard: categories in order, upgrade steps apart, bre
     'If you pin the grammar, include `source.opentide.esql`.',
   ]);
   assert.equal(release.breaking, true);
+  // The Breaking list's entry, and the entry marked breaking under Changed.
   assert.deepEqual(
     changeCounts(release).map(({ category, count }) => [category, count]),
     [
-      ['breaking', 1],
+      ['breaking', 2],
       ['added', 1],
       ['changed', 2],
       ['fixed', 1],
@@ -482,11 +485,15 @@ test('an entry marked breaking keeps its lead and loses the mark', () => {
   });
   assert.deepEqual(breakingEntry('**Breaking:** `--plan` is removed.'), { breaking: true, text: '`--plan` is removed.' });
   assert.deepEqual(breakingEntry('**Breaking** — `--plan` is removed.'), { breaking: true, text: '`--plan` is removed.' });
-  // A lead that only starts with the word is not a mark.
-  assert.deepEqual(breakingEntry('**Breaking changes are listed first.**'), {
-    breaking: false,
-    text: '**Breaking changes are listed first.**',
-  });
+  // A lead that only starts with the word is not a mark, with or without a hyphen.
+  for (const entry of [
+    '**Breaking changes are listed first.**',
+    '**Breaking** changes are flagged by diff.',
+    '**Breaking-change detection** for schemas.',
+  ]) {
+    assert.deepEqual(breakingEntry(entry), { breaking: false, text: entry }, entry);
+  }
+  assert.deepEqual(breakingEntry('**Breaking - the scope.** It was y.'), { breaking: true, text: '**the scope.** It was y.' });
   assert.deepEqual(breakingEntry('A plain entry.'), { breaking: false, text: 'A plain entry.' });
 });
 
@@ -565,5 +572,104 @@ test('a release with no summary still fails, whatever follows it', () => {
   assert.throws(
     () => parseReleaseNotes('## 1.0.0 — 1 March 2026\n\n**Install**\n\nA note.\n'),
     /missing a summary/,
+  );
+});
+
+test('#### headings with no ### above them are headings of their own', () => {
+  const [release] = parseChangelog('## [1.0.0] - 2026-11-20\n\nSummary.\n\n#### Added\n\n- a\n\n#### Fixed\n\n- b\n', changelogProject);
+  assert.deepEqual(
+    release?.sections.map((section) => [section.category, section.group, section.items]),
+    [
+      ['added', null, ['a']],
+      ['fixed', null, ['b']],
+    ],
+  );
+});
+
+test('#### groups under Upgrade lead their steps', () => {
+  const [release] = parseChangelog(
+    '## [1.0.0] - 2026-11-20\n\nSummary.\n\n### Upgrade\n\n#### From 0.9\n\n- Run `a`.\n\n#### From 0.8\n\n- Run `b`.\n',
+    changelogProject,
+  );
+  assert.deepEqual(release?.upgrade?.items, ['**From 0.9:** Run `a`.', '**From 0.8:** Run `b`.']);
+});
+
+test('a numbered line starts an item only where CommonMark starts one', () => {
+  const [release] = parseChangelog(
+    [
+      '## [1.0.0] - 2026-11-20',
+      '',
+      'Summary.',
+      '',
+      '### Fixed',
+      '',
+      'The import handles the version',
+      '2. It also does more.',
+      '',
+      '### Upgrade',
+      '',
+      '1. Run `a`',
+      '   and wait.',
+      '2. Run `b`.',
+      '',
+      '### Added',
+      '',
+      '- An entry wrapped after',
+      '  3. a number.',
+      '',
+    ].join('\n'),
+    changelogProject,
+  );
+  assert.ok(release);
+  // A wrapped line that begins "2. " stays in its sentence.
+  assert.deepEqual(release.sections.find((section) => section.category === 'fixed')?.paragraphs, [
+    'The import handles the version 2. It also does more.',
+  ]);
+  // The next item of a numbered list, after a continued item.
+  assert.deepEqual(release.upgrade?.items, ['Run `a` and wait.', 'Run `b`.']);
+  // A number inside a wrapped bullet continues the bullet.
+  assert.deepEqual(release.sections.find((section) => section.category === 'added')?.items, [
+    'An entry wrapped after 3. a number.',
+  ]);
+});
+
+test('an entry marked breaking elsewhere counts as breaking, with no list to link to', () => {
+  const [release] = parseChangelog(
+    '## [1.0.0] - 2026-11-20\n\nSummary.\n\n### Changed\n\n- **Breaking:** `--plan` is removed.\n- **A plain change.**\n',
+    changelogProject,
+  );
+  assert.ok(release);
+  assert.equal(release.breaking, true);
+  assert.deepEqual(
+    changeCounts(release).map(({ category, count, listed }) => [category, count, listed]),
+    [
+      ['breaking', 1, false],
+      ['changed', 2, true],
+    ],
+  );
+  assert.deepEqual(
+    categoryBlocks(release).map(({ category, count }) => [category, count]),
+    [['changed', 2]],
+  );
+});
+
+test('a CHANGELOG pointer as the first paragraph is a link, not the summary', () => {
+  const [release] = parseChangelog(
+    '## [1.0.0] - 2026-11-20\n\nSee the [CHANGELOG](https://example.com/c#100) for every change.\n\nThe summary.\n\n### Added\n\n- **a**\n',
+    changelogProject,
+  );
+  assert.equal(release?.summary, 'The summary.');
+  assert.deepEqual(release?.notes, []);
+  assert.equal(release?.links.find((link) => link.label === 'Full changelog')?.href, 'https://example.com/c#100');
+});
+
+test('a bold summary that starts like a part is still the summary', () => {
+  const [release] = parseReleaseNotes(
+    '## 1.0.0 — 1 March 2026\n\n**Security release: upgrade now.**\n\n**Security**\n\n- **A fix.**\n',
+  );
+  assert.equal(release?.summary, '**Security release: upgrade now.**');
+  assert.deepEqual(
+    release?.sections.map((section) => [section.category, section.items]),
+    [['security', ['**A fix.**']]],
   );
 });
