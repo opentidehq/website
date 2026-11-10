@@ -15,6 +15,8 @@
     "0008-rule-reviewed-date",
     "0005-scoped-signal-entities",
     "---Accepted---",
+    "0016-bitdefender-gravityzone-platform",
+    "0015-yara-language",
     "0014-sysdig-falco-platform",
     "0013-visibility-logsource-is-a-dataset",
     "0010-deployment-external-ids",
