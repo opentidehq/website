@@ -147,7 +147,7 @@ Inflight overlay rules are unchanged. A reference to a signal whose definition a
 
 ### TLP
 
-Rank, least restrictive first, matches [`vocabularies/tlp.vocab.toml`](https://github.com/opentidehq/specifications/blob/main/vocabularies/tlp.vocab.toml): `clear` < `green` < `amber` < `amber+strict` < `red`.
+Rank, least restrictive first, matches [`vocabularies/tlp.vocab.toml`](https://github.com/opentidehq/specifications/blob/main/vocabularies/tlp.vocab.toml): `clear` &lt; `green` &lt; `amber` &lt; `amber+strict` &lt; `red`.
 
 A binding is valid when the consumer's `metadata.tlp` is the same rank as the owner's or stricter. A consumer that is less restrictive than the owner is `signal_tlp`. The check uses the two objectives' metadata, not `sharing.toml` `max_tlp`.
 

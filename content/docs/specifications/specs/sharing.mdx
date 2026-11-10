@@ -88,7 +88,7 @@ A two-instance MISP setup is two `[[misp]]` entries. A MISP instance plus an Ope
 |-------|------|----------|---------|-----------|
 | `name` | string | yes | — | Identifier used by `--target`, the share report, and the state ledger. 1–64 characters of lowercase letters, digits, hyphen, and underscore. |
 | `enabled` | bool | no | `false` | Participate in share runs. |
-| `max_tlp` | string | yes | — | A `tlp` vocabulary `name`. Objects above this ceiling are `skipped_tlp`. Order: `clear` < `green` < `amber` < `amber+strict` < `red`. |
+| `max_tlp` | string | yes | — | A `tlp` vocabulary `name`. Objects above this ceiling are `skipped_tlp`. Order: `clear` &lt; `green` &lt; `amber` &lt; `amber+strict` &lt; `red`. |
 | `object_types` | list[string] | no | `["threat", "objective", "rule"]` | Families this block shares. |
 | `rule_statuses` | list[string] | no | `["PRODUCTION"]` | Rule statuses this block shares. A rule matches when the status of at least one enabled platform block (`configurations.<platform>` with `enabled: true`) is in the list. The root `status` is matched only when no enabled platform block has a status. Values MUST be names from merged `deployment.toml`. Threats and objectives ignore this key. |
 
