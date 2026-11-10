@@ -54,7 +54,9 @@ jobs:
         with:
           python-version: '3.12'
 
-      - run: pip install opentide
+      # typer<0.29: opentide 0.24.0 crashes on Typer 0.29 (fixed on opentide development,
+      # unreleased). Drop the cap once a release requires typer<0.29 itself.
+      - run: pip install opentide 'typer<0.29'
 
       - run: node --experimental-strip-types --no-warnings scripts/verify-demo-objects.mjs
 
