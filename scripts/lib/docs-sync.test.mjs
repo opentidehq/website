@@ -12,6 +12,7 @@ import {
   gitHeadForPath,
   gitLinkSha,
   main,
+  escapeStrayAngleBrackets,
   postProcessMarkdown,
   promoteCommittedMarkdownToMdx,
   publishedDestName,
@@ -841,4 +842,29 @@ test('syncContent falls back to a generated specifications index', () => {
   assert.equal(index.includes('](/docs/specifications/SPECS/)'), true);
   assert.equal(index.includes('/docs/specifications/AGENTS/'), false);
   assert.equal(index.includes(`${SPECS_BLOB}/AGENTS.md`), true);
+});
+
+test('escapeStrayAngleBrackets escapes prose operators but keeps tags and code', () => {
+  const input = [
+    'The CQL link operator <=> appears outside correlate(), and a < b.',
+    'Keep `<=>` and `a <= b` in code, and <div>tags</div> <!-- c --> <>x</>.',
+    '```',
+    'x <= y',
+    '```',
+  ].join('\n');
+  assert.equal(
+    escapeStrayAngleBrackets(input),
+    [
+      'The CQL link operator &lt;=> appears outside correlate(), and a &lt; b.',
+      'Keep `<=>` and `a <= b` in code, and <div>tags</div> <!-- c --> <>x</>.',
+      '```',
+      'x <= y',
+      '```',
+    ].join('\n'),
+  );
+});
+
+test('postProcessMarkdown publishes a page with a bare <=> operator', () => {
+  const out = postProcessMarkdown('# T\n\nThe CQL link operator <=> links fields.\n', 'cli/diagnostics.mdx');
+  assert.match(out, /&lt;=>/);
 });

@@ -145,7 +145,7 @@ There are no global keys. Selection and the TLP ceiling are decided **at the int
 |-------|------|----------|---------|-----------|
 | `name` | string | **yes** | — | Identifier used by `--target`, the share report, and the state ledger. 1–64 characters of lowercase letters, digits, hyphen, and underscore. Unique across every block in the file. |
 | `enabled` | bool | no | `false` | Participate in share runs. |
-| `max_tlp` | string | **yes** | — | MUST be a `tlp` vocabulary `name`. No default. Objects whose `metadata.tlp` exceeds this ceiling are `skipped_tlp` in the share report (not a silent omit, and not exit `1`). TLP order for comparison: `clear` < `green` < `amber` < `amber+strict` < `red`. `max_tlp = "red"` shares TLP:RED. |
+| `max_tlp` | string | **yes** | — | MUST be a `tlp` vocabulary `name`. No default. Objects whose `metadata.tlp` exceeds this ceiling are `skipped_tlp` in the share report (not a silent omit, and not exit `1`). TLP order for comparison: `clear` &lt; `green` &lt; `amber` &lt; `amber+strict` &lt; `red`. `max_tlp = "red"` shares TLP:RED. |
 | `object_types` | list[string] | no | `["threat", "objective", "rule"]` | Families this block shares. |
 | `rule_statuses` | list[string] | no | `["PRODUCTION"]` | MUST match names from merged `deployment.toml`. Threats and objectives ignore this key. |
 
