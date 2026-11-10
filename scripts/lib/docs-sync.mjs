@@ -411,11 +411,39 @@ export function stripReleasesFromUsageNav(outDir = OUT) {
   writeFileSync(metaPath, `${JSON.stringify(withoutReleasesNav(meta), null, 2)}\n`);
 }
 
+/**
+ * Escape a `<` in prose that cannot open a tag (`<=>`, `a < b`, `<-`), which MDX would
+ * otherwise reject as a broken JSX element and fail the whole sync. Fenced code blocks and
+ * inline code spans are left alone; real tags (`<div`, `</p`, `<!--`, `<>`) are kept.
+ */
+export function escapeStrayAngleBrackets(content) {
+  const fence = /^\s{0,3}(`{3,}|~{3,})/;
+  let open = null;
+  return content
+    .split('\n')
+    .map((line) => {
+      const marker = line.match(fence)?.[1];
+      if (open) {
+        if (marker && marker[0] === open[0] && marker.length >= open.length) open = null;
+        return line;
+      }
+      if (marker) {
+        open = marker;
+        return line;
+      }
+      return line
+        .split(/(`+[^`]*?`+)/)
+        .map((part, i) => (i % 2 ? part : part.replace(/<(?![A-Za-z/!>])/g, '&lt;')))
+        .join('');
+    })
+    .join('\n');
+}
+
 export function postProcessMarkdown(content, publishedRelPath = '') {
   const stripped = stripRedundantSummary(stripLeadingH1(stripHtmlComments(content)));
   const linked = rewritePublishedLinks(stripped);
   const withSiteLinks = publishedRelPath ? rewriteSiteLinks(linked, publishedRelPath) : linked;
-  const processed = rewriteReleasePageLinks(rewriteBrandName(withSiteLinks));
+  const processed = escapeStrayAngleBrackets(rewriteReleasePageLinks(rewriteBrandName(withSiteLinks)));
   assertSafePublishedMdx(processed, publishedRelPath || 'MDX');
   return processed;
 }
