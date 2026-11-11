@@ -2,10 +2,9 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, Check } from 'lucide-react';
-import { useCallback, useRef, useState } from 'react';
+import { ArrowRight, Check, Shield } from 'lucide-react';
+import type { CSSProperties } from 'react';
 import { BlockHead } from '@/components/landing/ui';
-import { useMeasure } from '@/lib/hooks/use-measure';
 import { useOnScreen } from '@/lib/hooks/use-on-screen';
 import { usePrefersReducedMotion } from '@/lib/hooks/use-prefers-reduced-motion';
 
@@ -14,8 +13,10 @@ type Integration = {
   name: string;
   /** What `opentide deploy` creates there, in the platform specs' words. */
   deploys: string;
-  src: string;
-  kind: 'color' | 'mono' | 'raster';
+  /** Unset for `placeholder`. */
+  src?: string;
+  /** `placeholder`: no vendor artwork in the repo yet, so a neutral glyph stands in for the logo. */
+  kind: 'color' | 'mono' | 'raster' | 'placeholder';
 };
 
 const INTEGRATIONS: Integration[] = [
@@ -28,12 +29,24 @@ const INTEGRATIONS: Integration[] = [
   { key: 'harfanglab', name: 'HarfangLab', deploys: 'Sigma or YARA rule', src: '/icons/platforms/harfanglab.png', kind: 'raster' },
   { key: 'elastic', name: 'Elastic Security', deploys: 'KQL, EQL or ES|QL rule', src: '/icons/platforms/elastic.svg', kind: 'color' },
   { key: 'sysdig', name: 'Sysdig Secure + Falco', deploys: 'Falco rule', src: '/icons/platforms/falco.svg', kind: 'color' },
+  // No Bitdefender artwork in public/icons/platforms yet: a neutral placeholder, not the vendor mark.
+  { key: 'bitdefender', name: 'Bitdefender GravityZone', deploys: 'custom detection or YARA rule', kind: 'placeholder' },
 ];
 
 /** When a wire has drawn in: the check on its tile lands just after. */
 const wireDelay = (i: number) => 150 + i * 90;
 
-function Logo({ src, kind }: { src: string; kind: Integration['kind'] }) {
+function Logo({ src, kind }: { src?: string; kind: Integration['kind'] }) {
+  if (kind === 'placeholder' || !src) {
+    return (
+      <span
+        aria-hidden
+        className="grid size-7 shrink-0 place-items-center rounded-md border border-dashed border-[color-mix(in_srgb,var(--landing-ink)_25%,transparent)] text-[var(--landing-subtle)]"
+      >
+        <Shield className="size-3.5" strokeWidth={2} />
+      </span>
+    );
+  }
   if (kind === 'raster') {
     return <Image src={src} alt="" width={28} height={28} className="size-7 shrink-0 rounded-md object-contain" aria-hidden />;
   }
@@ -48,47 +61,59 @@ function Logo({ src, kind }: { src: string; kind: Integration['kind'] }) {
   );
 }
 
-type Wire = { d: string; x1: number; y1: number; dashed?: boolean };
+
+/** The card's header and its `detection_model` / `configurations:` lines take the first two rows. */
+const HEAD_ROWS = 2;
+/** One row per block, `your_next_one` included. */
+const BLOCK_ROWS = INTEGRATIONS.length + 1;
 
 /**
- * One rule, one block per integration: the configuration keys fan out to the integrations
- * they deploy to. Wires are measured from the rows they join, so they hold at any width.
+ * A short horizontal connector from the card's edge to the tile on the same row. Both sit in one
+ * grid row, so a key and its integration always line up and no connector crosses another.
+ */
+function Wire({ row, next, drawn, flowing, delay }: { row: number; next?: boolean; drawn: boolean; flowing: boolean; delay: number }) {
+  return (
+    <div aria-hidden className="hidden items-center pr-1 md:flex" style={{ gridColumn: 2, gridRow: row }}>
+      <svg className="h-2 w-full overflow-visible">
+        <line
+          x1="0"
+          x2="100%"
+          y1="50%"
+          y2="50%"
+          stroke={next ? 'color-mix(in srgb, var(--landing-ink) 28%, transparent)' : 'color-mix(in srgb, var(--landing-accent) 45%, transparent)'}
+          strokeWidth={1.5}
+          strokeDasharray="3 4"
+          className="landing-fade-line"
+          data-drawn={drawn ? '' : undefined}
+          style={{ transitionDelay: `${delay}ms` }}
+        />
+        {flowing && (
+          <line x1="0" x2="100%" y1="50%" y2="50%" stroke="var(--landing-accent)" strokeWidth={2} className="landing-flow" style={{ animationDelay: `${row * -0.13}s` }} />
+        )}
+        <circle
+          cx="0"
+          cy="50%"
+          r={3}
+          fill={next ? 'var(--landing-panel)' : 'var(--landing-accent)'}
+          stroke={next ? 'color-mix(in srgb, var(--landing-ink) 30%, transparent)' : 'none'}
+        />
+      </svg>
+    </div>
+  );
+}
+
+/**
+ * One rule, one block per integration: each configuration key sits level with the integration
+ * it deploys to. From `md` the card, the connectors and the tiles share one grid row per block
+ * (the card and the list are subgrids), so they line up at any width without measuring. Below
+ * `md` the card stacks above the list and the connectors drop out.
  */
 export function IntegrationFan() {
   const reduced = usePrefersReducedMotion();
-  // Starts with the block's reveal, so the wires draw in where they can be seen.
+  // Starts with the block's reveal, so the connectors come in where they can be seen.
   const { ref: viewRef, seen: inView } = useOnScreen<HTMLDivElement>({ rootMargin: '0px 0px -15% 0px' });
-  const stageRef = useRef<HTMLDivElement>(null);
-  const cardRef = useRef<HTMLElement>(null);
-  const keyRefs = useRef<(HTMLSpanElement | null)[]>([]);
-  const tileRefs = useRef<(HTMLElement | null)[]>([]);
-  const [wires, setWires] = useState<Wire[]>([]);
-
-  const measure = useCallback(() => {
-    const stage = stageRef.current;
-    if (!stage) return;
-    const card = cardRef.current;
-    if (!card) return;
-    const box = stage.getBoundingClientRect();
-    // Every wire leaves from the card's edge, level with its key, so the fan never crosses.
-    const edge = card.getBoundingClientRect().right - box.left;
-    const next: Wire[] = [];
-    keyRefs.current.forEach((keyEl, i) => {
-      const tileEl = tileRefs.current[i];
-      if (!keyEl || !tileEl) return;
-      const k = keyEl.getBoundingClientRect();
-      const t = tileEl.getBoundingClientRect();
-      const x1 = edge;
-      const y1 = k.top + k.height / 2 - box.top;
-      const x2 = t.left - box.left - 4;
-      const y2 = t.top + t.height / 2 - box.top;
-      const mx = x1 + (x2 - x1) * 0.5;
-      next.push({ d: `M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`, x1, y1, dashed: i === INTEGRATIONS.length });
-    });
-    setWires(next);
-  }, []);
-
-  useMeasure(stageRef, measure);
+  const shown = inView || reduced;
+  const rows = { '--fan-rows': HEAD_ROWS + BLOCK_ROWS, '--fan-blocks': BLOCK_ROWS } as CSSProperties;
 
   return (
     <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,4fr)_minmax(0,8fr)] lg:gap-14">
@@ -114,89 +139,40 @@ export function IntegrationFan() {
 
       <div ref={viewRef} data-reveal>
         <div
-          ref={stageRef}
-          className="relative grid grid-cols-1 gap-6 md:grid-cols-[minmax(0,15rem)_minmax(0,1fr)] md:items-center md:gap-20"
+          style={rows}
+          className="grid grid-cols-1 gap-6 md:grid-cols-[minmax(0,14.5rem)_minmax(2rem,4.5rem)_minmax(0,1fr)] md:gap-x-0 md:gap-y-2"
         >
-          <figure ref={cardRef} className="landing-panel relative z-10 m-0 overflow-hidden">
+          <figure className="landing-panel m-0 overflow-hidden md:col-start-1 md:grid md:grid-rows-subgrid md:[grid-row:1/span_var(--fan-rows)]">
             <figcaption className="border-b border-[var(--landing-border)] px-4 py-3">
               <span className="block font-mono text-[11px] text-[var(--landing-subtle)]">rule::1.1</span>
               <span className="block text-sm font-semibold text-[var(--landing-ink)]">one rule, one block each</span>
             </figcaption>
-            <pre className="m-0 overflow-hidden px-4 py-3 font-mono text-[12.5px] leading-[1.9] text-[var(--landing-ink)]">
-              <span className="text-[var(--landing-subtle)]">detection_model: …0001{'\n'}</span>
-              <span className="text-[var(--landing-subtle)]">configurations:{'\n'}</span>
-              {INTEGRATIONS.map((p, i) => (
-                <span key={p.key}>
-                  {'  '}
-                  <span
-                    ref={(el) => {
-                      keyRefs.current[i] = el;
-                    }}
-                    className="text-[var(--landing-accent)]"
-                  >
-                    {p.key}:
-                  </span>
-                  {'\n'}
-                </span>
-              ))}
-              {'  '}
+            <div className="self-end px-4 pt-3 font-mono text-[12.5px] leading-[1.9] text-[var(--landing-subtle)]">
+              <span className="block">detection_model: …0001</span>
+              <span className="block">configurations:</span>
+            </div>
+            {INTEGRATIONS.map((p) => (
               <span
-                ref={(el) => {
-                  keyRefs.current[INTEGRATIONS.length] = el;
-                }}
-                className="text-[var(--landing-dim)]"
+                key={p.key}
+                className="block truncate pl-8 pr-4 font-mono text-[12.5px] leading-[1.9] text-[var(--landing-accent)] md:flex md:items-center"
               >
-                your_next_one:
+                {p.key}:
               </span>
-            </pre>
+            ))}
+            <span className="block truncate pb-3 pl-8 pr-4 font-mono text-[12.5px] leading-[1.9] text-[var(--landing-dim)] md:flex md:items-center md:pb-0">
+              your_next_one:
+            </span>
           </figure>
 
-          {/* Wires only where the two columns sit side by side. */}
-          <svg
-            aria-hidden
-            className="pointer-events-none absolute inset-0 hidden h-full w-full overflow-visible md:block"
-          >
-            {wires.map((wire, i) => (
-              <g key={i}>
-                <path
-                  d={wire.d}
-                  pathLength={wire.dashed ? undefined : 1}
-                  fill="none"
-                  stroke={wire.dashed ? 'color-mix(in srgb, var(--landing-ink) 25%, transparent)' : 'color-mix(in srgb, var(--landing-accent) 38%, transparent)'}
-                  strokeWidth={1.5}
-                  strokeDasharray={wire.dashed ? '3 4' : undefined}
-                  className={wire.dashed ? undefined : 'landing-draw'}
-                  data-drawn={inView || reduced ? '' : undefined}
-                  style={{ transitionDelay: `${wireDelay(i)}ms` }}
-                />
-                <circle
-                  cx={wire.x1}
-                  cy={wire.y1}
-                  r={3}
-                  fill={wire.dashed ? 'var(--landing-panel)' : 'var(--landing-accent)'}
-                  stroke={wire.dashed ? 'color-mix(in srgb, var(--landing-ink) 30%, transparent)' : 'none'}
-                />
-                {!wire.dashed && inView && !reduced && (
-                  <path
-                    d={wire.d}
-                    fill="none"
-                    stroke="var(--landing-accent)"
-                    strokeWidth={2}
-                    className="landing-flow"
-                    style={{ animationDelay: `${i * -0.13}s` }}
-                  />
-                )}
-              </g>
-            ))}
-          </svg>
+          {INTEGRATIONS.map((p, i) => (
+            <Wire key={p.key} row={HEAD_ROWS + 1 + i} drawn={shown} flowing={inView && !reduced} delay={wireDelay(i)} />
+          ))}
+          <Wire row={HEAD_ROWS + BLOCK_ROWS} next drawn={shown} flowing={false} delay={wireDelay(INTEGRATIONS.length)} />
 
-          <ul className="relative z-10 m-0 grid list-none grid-cols-1 gap-2 p-0">
+          <ul className="m-0 grid list-none grid-cols-1 gap-2 p-0 md:col-start-3 md:grid-rows-subgrid md:[grid-row:3/span_var(--fan-blocks)]">
             {INTEGRATIONS.map((p, i) => (
               <li
                 key={p.key}
-                ref={(el) => {
-                  tileRefs.current[i] = el;
-                }}
                 className="landing-panel flex items-center gap-3 px-3.5 py-2.5 transition-[translate,border-color] duration-300 hover:-translate-y-0.5 hover:border-[color-mix(in_srgb,var(--landing-accent)_45%,transparent)]"
               >
                 <Logo src={p.src} kind={p.kind} />
@@ -204,11 +180,11 @@ export function IntegrationFan() {
                   <p className="truncate text-sm font-semibold leading-snug text-[var(--landing-ink)]">{p.name}</p>
                   <p className="truncate font-mono text-[11px] text-[var(--landing-subtle)]">{p.deploys}</p>
                 </div>
-                {/* Lands once the block's wire has drawn in: the rule, deployed. */}
+                {/* Lands once the block's connector has come in: the rule, deployed. */}
                 <span
                   aria-hidden
                   className={`grid size-5 shrink-0 place-items-center rounded-full bg-[var(--landing-accent)] text-[var(--brand-accent-foreground)] transition-[opacity,scale] duration-300 ${
-                    inView || reduced ? 'scale-100 opacity-100' : 'scale-50 opacity-0'
+                    shown ? 'scale-100 opacity-100' : 'scale-50 opacity-0'
                   }`}
                   style={{ transitionDelay: reduced ? undefined : `${wireDelay(i) + 800}ms` }}
                 >
@@ -216,16 +192,12 @@ export function IntegrationFan() {
                 </span>
               </li>
             ))}
-            <li
-              ref={(el) => {
-                tileRefs.current[INTEGRATIONS.length] = el;
-              }}
-            >
+            <li className="flex">
               <a
                 href="https://github.com/opentidehq/opentide/issues/new"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-between gap-3 rounded-2xl border border-dashed border-[color-mix(in_srgb,var(--landing-ink)_22%,transparent)] px-3.5 py-3 text-sm transition hover:border-[var(--landing-accent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--landing-accent)]"
+                className="flex flex-1 items-center justify-between gap-3 rounded-2xl border border-dashed border-[color-mix(in_srgb,var(--landing-ink)_22%,transparent)] px-3.5 py-3 text-sm transition hover:border-[var(--landing-accent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--landing-accent)]"
               >
                 <span className="text-[var(--landing-subtle)]">Your integration next?</span>
                 <span className="inline-flex items-center gap-1 font-semibold text-[var(--landing-accent)]">
