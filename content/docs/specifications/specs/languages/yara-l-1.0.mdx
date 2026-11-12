@@ -12,7 +12,7 @@ supersedes: null
 
 YARA-L 2.0 is the detection and search language of Google Security Operations (Google SecOps, formerly Chronicle). This spec defines it once for opentide: the text forms a platform block or a file carries, the dialect the analysis engine accepts, the diagnostics it reports, the profiles that separate a rule from a search, and how the language is highlighted.
 
-The contract is YARA-L as the Google SecOps rules engine compiles it, as Google documents it at [cloud.google.com/chronicle/docs/yara-l](https://cloud.google.com/chronicle/docs/yara-l/getting-started) (fetched 2026-11-11). Google publishes no grammar, no compiler, and no reference parser. The analysis engine (language-server) is therefore an offline approximation: it reports the [errors](#errors) below, which Google's compiler also refuses, and never claims a compile. The tenant's own compiler, `verifyRuleText`, is the live check ([google-secops-1.0](/docs/specifications/specs/platforms/google-secops-1.0/#query-validation)). Design and research are in [RFC 0017](/docs/specifications/rfcs/0017-google-secops-yara-l/).
+The contract is YARA-L as the Google SecOps rules engine compiles it, as Google documents it at [cloud.google.com/chronicle/docs/yara-l](https://cloud.google.com/chronicle/docs/yara-l/getting-started) (fetched 2026-11-11). Google publishes no grammar, no compiler, and no reference parser. The analysis engine (language-server) is therefore an offline approximation: it reports the [errors](#errors) below, which Google's compiler also refuses, and never claims a compile. The tenant's own compiler, `verifyRuleText`, is the live check ([google-secops-1.0](/docs/specifications/specs/platforms/google-secops-1.0/#query-validation)). Design and research are in [RFC 0019](/docs/specifications/rfcs/0019-google-secops-yara-l/).
 
 YARA-L shares its name and little else with [YARA](/docs/specifications/specs/languages/yara-1.0/). Google's keyword page lists YARA's string keywords (`strings`, `ascii`, `wide`, `filesize`, …); no YARA-L rule uses them, and this spec does not reserve them. It matches events, not bytes. No YARA code applies to it, and no `yara_*` code is reused.
 
@@ -47,6 +47,8 @@ rule <identifier> {
   meta:
     <key> = "<value>"
     ...
+  [setup:
+    ...]
   events:
     ...
   [match:
@@ -55,6 +57,8 @@ rule <identifier> {
     ...]
   condition:
     ...
+  [export:
+    ...]
   [options:
     ...]
 }
@@ -104,7 +108,7 @@ A profile names which sections, functions, and data a text may use. The engine p
 | Profile | Used by | Sections | `meta` |
 |---------|---------|----------|--------|
 | `rule` | `YaraLRule`, `YaraLSections` | `meta`, `setup`, `events`, `match`, `outcome`, `condition`, `options`, `export` | required in a `YaraLRule`; generated for `YaraLSections` |
-| `search` | `YaraLSearch` | `events` (label optional), `match`, `outcome`, `condition`, `dedup`, `order`, `limit`, `select`, `unselect`, and up to four named `stage <name> { … }` blocks with a root query (multi-stage search) | optional and ignored, as Google's getting-started table says |
+| `search` | `YaraLSearch` | `events` (label optional), `match`, `outcome`, `condition`, `dedup`, `order`, `limit`, `select`, `unselect`, `export`, and up to four named `stage <name> { … }` blocks with a root query (multi-stage search) | optional and ignored, as Google's getting-started table says |
 
 ### Sections
 
@@ -134,7 +138,7 @@ A section label is its name followed by `:`, case-insensitive like every keyword
 | Token | Syntax |
 |-------|--------|
 | Comment | `// …` to end of line; `/* … */`, not nested |
-| Keyword | case-insensitive, in any mix of cases (`and`, `AND`, `aNd`): `rule`, the section names, `and`, `or`, `not`, `nocase`, `in`, `regex`, `cidr`, `any`, `all`, `over`, `by`, `before`, `after`, `if`, `of`, `true`, `false`, and in search `asc`, `desc`. YARA-L has no `null` and no `is null`: a missing field is its zero value (`""`, `0`, `false`, the first enum value). |
+| Keyword | case-insensitive, in any mix of cases (`and`, `AND`, `aNd`): `rule`, the section names, `and`, `or`, `not`, `nocase`, `in`, `regex`, `cidr`, `any`, `all`, `over`, `by`, `stage`, `before`, `after`, `if`, `of`, `true`, `false`, and in search `asc`, `desc`. YARA-L has no `null` and no `is null`: a missing field is its zero value (`""`, `0`, `false`, the first enum value). |
 | Identifier | `[A-Za-z_][A-Za-z0-9_]*`. A keyword is not an identifier (`yaral_reserved_identifier`). |
 | Event or placeholder variable | `$` identifier: `$e`, `$user`. `$window_start` and `$window_end` are reserved (`yaral_reserved_identifier`). |
 | Outcome variable | `$` identifier assigned in `outcome` |
@@ -169,7 +173,7 @@ Precedence from highest: `not` (and `!`), `and`, `or`. In `events`, lines are jo
 | `$a, $b over <d> before $pivot` / `after $pivot` | sliding, anchored on a UDM event variable (never an entity) | rule: `1m` ≤ d ≤ `14d`; search: `1m` ≤ d ≤ `48h` |
 | `$a, $b by <d>` | tumbling (Google: pre-GA) | rule: `1m` ≤ d ≤ `72h`; search: `1m` ≤ d ≤ `30d` without a join, `48h` with one. A search joins when it has a `cross join`, two or more event variables, or event predicates together with reads of an earlier stage |
 
-Google's pages disagree on the hop bound: `match` syntax says 48 hours, while the run-frequency reference (`DAILY` for windows over 2 days) and composite detections allow 14 days. The engine follows the rules engine: 14 days for a rule, 48 hours for a search ([RFC 0017](/docs/specifications/rfcs/0017-google-secops-yara-l/#resolved-questions)).
+Google's pages disagree on the hop bound: `match` syntax says 48 hours, while the run-frequency reference (`DAILY` for windows over 2 days) and composite detections allow 14 days. The engine follows the rules engine: 14 days for a rule, 48 hours for a search ([RFC 0019](/docs/specifications/rfcs/0019-google-secops-yara-l/#resolved-questions)).
 
 A window outside its bounds, or with a unit other than `m`, `h`, or `d`, is `yaral_match_window`. Under `rule`, every name before `over` or `by` MUST be a placeholder bound in `events` (`yaral_match_variable`). Under `search`, a bare UDM path (`principal.ip`) also groups, and the window is optional. In a search, predicates name fields without an event variable (`metadata.event_type = "USER_LOGIN"`); `$e.`-prefixed paths are also accepted, and so are the grouped fields of Google's [search syntax reference](https://cloud.google.com/chronicle/docs/investigation/search-syntax-reference) (`ip`, `hostname`, `user`, `hash`, …), `raw = /…/` for raw-log search, and top-level maps (`labels["k"]`). Google drops zero values of match placeholders unless `options: allow_zero_values = true`; the engine reports nothing for this.
 
@@ -213,7 +217,7 @@ Data tables (`%table.column`) replace reference lists, which Google retires in 2
 The engine ships Google's function list with each function's namespace, arity, argument and result types, and availability (rules, search, dashboards). Namespaces: `arrays`, `bytes`, `cast`, `hash`, `math`, `metrics`, `net`, `optimization`, `re`, `strings`, `timestamp`, `window`, plus the bare `group` and `if`. Two functions used on Google's syntax pages but missing from its functions page, `arrays.contains` and `cast.as_uint`, are in the catalogue with that evidence. Every `metrics.*` function on Google's [metrics functions](https://cloud.google.com/chronicle/docs/detection/metrics-functions) page is catalogued, with its named arguments: `period:`, `window:`, `metric:`, `agg:`, and `filter:`, whose value is a boolean expression over the metric's own fields (`value_sum > 10 AND event_count_sum > 2`), and grouping arguments that take `*`. `math.round` takes one or two arguments.
 
 - An unknown namespace or function, or the wrong number of arguments, is `yaral_unknown_function`.
-- A function the profile does not offer is `yaral_function_unavailable`. Under `rule`, that is `group` and `math.round`; under `search`, `hash.fingerprint2011`, `hash.sha256`, `math.geo_distance`, `metrics.*`, and `optimization.sample_rate`. The `window.*` functions are offered in both profiles: the functions page marks most of them rules-only, but Google's own multi-stage, dashboard, and SPL-transition searches use `window.avg`, `window.stddev`, `window.median`, `window.first`, and `window.last`.
+- A function the profile does not offer is `yaral_function_unavailable`. Under `rule`, that is `group`, `math.round`, and the search-only aggregates `avg`, `stddev`, `earliest`, and `latest`; under `search`, `hash.fingerprint2011`, `hash.sha256`, `math.geo_distance`, `metrics.*`, and `optimization.sample_rate`. The `window.*` functions are offered in both profiles: the functions page marks most of them rules-only, but Google's own multi-stage, dashboard, and SPL-transition searches use `window.avg`, `window.stddev`, `window.median`, `window.first`, and `window.last`.
 
 The catalogue is generated from [YARA-L functions](https://cloud.google.com/chronicle/docs/yara-l/functions) by a sync script in language-server (`catalogs/yaral/functions.toml`), as the GravityZone criteria are.
 
@@ -307,7 +311,7 @@ The language id is `yaral`, the file suffixes `.yaral` (Google's community conve
 - [platforms](/docs/specifications/specs/platforms/): capability matrix and static-validation bar
 - [validation.md](/docs/specifications/specs/validation/): language diagnostics, offline and live query validation
 - [rule-1.1.md](/docs/specifications/specs/objects/rule-1.1/): `response.procedure.searches[]`
-- [RFC 0017](/docs/specifications/rfcs/0017-google-secops-yara-l/): design and research
+- [RFC 0019](/docs/specifications/rfcs/0019-google-secops-yara-l/): design and research
 - [yara-1.0](/docs/specifications/specs/languages/yara-1.0/): the language-spec pattern this follows. No code is shared.
 
 ## Defaults & overrides
@@ -389,5 +393,4 @@ Fixtures: [fixtures/platforms/google-secops.yaml](https://github.com/opentidehq/
 | Version | Date | Notes |
 |---------|------|-------|
 | 1.1 | 2026-11-12 | (Settled during implementation: `yaral_export_value` in a search refuses `match` variables only; what a search join is, for the tumbling bound; the `yaral_outcome_aggregation` row matches the prose.) From a conformance review that ran Google's 765 documented code blocks and 410 community rules through the engine: multi-stage searches (stages and roots that read earlier stages need no `events`, `cross join`, four stages), sliding windows and the `window.*` functions in search, search tumbling windows up to 30 days, `w` and `mo` bound-checked, search grouped fields, `raw`, and top-level maps, `meta` optional in a search, keywords case-insensitive in any mix, `metrics.*` with named arguments and `filter:`, `math.round` with one argument. `yaral_string_escape` is a warning; `yaral_nesting_depth` is removed (Google no longer documents the limit). New errors `yaral_export_value` and `yaral_window_bound`; `yaral_outcome_aggregation` covers non-match placeholders; `any`/`all` on a Struct map is `yaral_type`. A list of the compile errors only the tenant checks. |
-| 1.0 | 2026-11-12 | Clarifications from the language-server implementation, checked against Google's pages and the 410 community rules: `condition` may reference an event variable through a placeholder or outcome it binds; `yaral_undefined_variable` also covers `export`, `dedup`, and `order`; function names are `hash.fingerprint2011` and `optimization.sample_rate`, and `arrays.contains` and `cast.as_uint` are catalogued; search durations take unit words; mixed-case keywords are a parse error. No code is added or removed. |
-| 1.0 | 2026-11-11 | Initial language spec ([RFC 0017](/docs/specifications/rfcs/0017-google-secops-yara-l/)): `YaraLRule`, `YaraLSections` (section texts as keys, `match` and `options` as YAML objects), and `YaraLSearch`; the `rule` and `search` profiles; sections, lexical structure, expressions, and limits from Google's YARA-L pages; UDM and function catalogues; 28 error and 4 warning codes; HighlightSpec mapping with no new capture. |
+| 1.0 | 2026-11-11 | Initial language spec ([RFC 0019](/docs/specifications/rfcs/0019-google-secops-yara-l/)): `YaraLRule`, `YaraLSections` (section texts as keys, `match` and `options` as YAML objects), and `YaraLSearch`; the `rule` and `search` profiles; sections, lexical structure, expressions, and limits from Google's YARA-L pages; UDM and function catalogues; 28 error and 4 warning codes; HighlightSpec mapping with no new capture. Clarified on 2026-11-12 from the language-server implementation, checked against Google's pages and the 410 community rules: `condition` may reference an event variable through a placeholder or outcome it binds; `yaral_undefined_variable` also covers `export`, `dedup`, and `order`; function names are `hash.fingerprint2011` and `optimization.sample_rate`, and `arrays.contains` and `cast.as_uint` are catalogued; search durations take unit words; mixed-case keywords are a parse error. No code is added or removed. |
