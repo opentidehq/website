@@ -34,6 +34,8 @@ const SOURCE = [
   'spawned_process and container and shell_procs and proc.tty != 0 and not proc.pname in (kubectl, runc)',
   // Graylog: an event definition's search query
   'EventID:10 AND TargetImage:/.*\\\\lsass\\.exe/ AND NOT SourceImage:/.*\\\\MsMpEng\\.exe/',
+  // Exabeam New-Scale SIEM: a correlation rule's sequence query
+  'activity_type:"process-open" AND dest_process_name:"lsass.exe" AND NOT process_name:("MsMpEng.exe", "csrss.exe")',
   // Google Security Operations: YARA-L
   '$e.metadata.event_type = "PROCESS_LAUNCH" and re.regex($e.target.process.file.full_path, `(?i)\\\\rundll32\\.exe$`)',
   // HarfangLab: YARA

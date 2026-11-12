@@ -6,9 +6,42 @@ Each version's first paragraph is its summary: the GitHub Release and [opentide.
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-11-12
+
+Google Security Operations support: YARA-L 2.0 rules, searches and `configurations.google_secops` blocks are checked, completed and highlighted as you type.
+
+### Added
+
+- **`.yaral` and `.yl2` files are YARA-L 2.0, language id `yaral`.** Google Security Operations rules and searches are checked offline as yara-l-1.0 1.1 defines them; keywords are case-insensitive in any mix (`and`, `AND`, `aNd`), and Google's own examples for each form are fixtures (`testdata/conformance/google-yaral/`); Google publishes no compiler, so `verifyRuleText` in a tenant stays the live check. `docs/YARAL.md` maps each code to Google's page, and `opentide explain` describes it.
+  - Errors: `yaral_parse_error`, `yaral_section_*`, `yaral_meta_duplicate`, `yaral_reserved_identifier`, `yaral_undefined_variable`, `yaral_multi_event_match`, `yaral_match_*`, `yaral_condition_shape`, `yaral_outcome_*`, `yaral_unknown_function`, `yaral_function_unavailable`, `yaral_unknown_udm_field`, `yaral_enum_value`, `yaral_type`, `yaral_regex`, `yaral_export_value` (in a rule, a `write_row` value that is not an outcome variable; in a search, a `match` variable), `yaral_window_bound` (`window_start`/`window_end` without a window, or in `events`), and the other limits of the spec
+  - Warnings: `yaral_deprecated_field`, `yaral_unfiltered_event`, `yaral_leading_wildcard_regex`, `yaral_reference_list_deprecated`, `yaral_string_escape` (an escape Google does not document, which its own rules use)
+- **Field paths and calls are checked against Google's UDM and function list.** Every event, entity (`graph`) and detection (`detection`) field with its type and enum values, and every function with its arity and where it is available (rules or search), generated from Google's pages: all 22 `metrics.*` functions with their `filter:` expressions and `*` grouping values, `math.round` with one or two arguments, and the `window.*` functions in searches too. Reference lists, data tables and map keys are never reported unknown.
+- **Google SecOps blocks (`configurations.google_secops`) are checked as the one rule deploy assembles.** `setup`, `events`, `outcome`, `condition` and `export` are one YARA-L rule with `match` and `options` rendered from YAML, each finding on its own line in the YAML; the block's codes are reported at the spec's field paths.
+  - Errors: `google_secops_rule_name`, `google_secops_severity`, `google_secops_run_frequency`, `google_secops_schedule`, `google_secops_meta_key`, and `yaral_section_header`, `yaral_section_empty`, `yaral_section_alias`, `yaral_match_shape` on the YAML
+  - Warnings: `google_secops_risk_score_missing`, `google_secops_rule_id_literal`, `google_secops_live_frequency_unavailable`
+- **Google SecOps hunts are YARA-L searches.** `response.procedure.searches[].query` with `system: google_secops` is checked under the `search` profile: bare UDM paths, grouped fields (`ip`, `hostname`, ...), `raw = /.../`, `labels["k"]`, `dedup`, `order`, `limit`, `select`, `unselect`, multi-stage `stage` blocks and `cross join`. A stage reading only earlier stages needs no `events`, `meta` is ignored, and match windows are bound as Google documents for search (hop and sliding to 48h, tumbling to 30d, 48h with a join).
+- **YARA-L editing: hover, completion and signature help.** Hover shows a UDM field's type, description and enum values, and a function's signature and availability; completion offers UDM fields after `$e.`, enum values after `metadata.event_type =`, and a namespace's functions after `strings.`.
+- **YARA-L is highlighted.** Semantic tokens use the existing HighlightSpec captures; `highlights/generated/yaral.tmLanguage.json` (`source.yaral`) is the TextMate grammar, the Tide grammar embeds a Google SecOps block's section texts as `meta.embedded.block.yaral`, and the Neovim, Helix, Zed and `@opentide/lsp-client` samples map `.yaral` and `.yl2` to `yaral`.
+- **API: `opentide_core::LanguageId::Yaral`** and the `opentide-yaral` crate.
+- **The Tide catalog knows `configurations.google_secops`.** Regenerated with opentide's generator from the opentide branch that adds the block, so editors complete and validate its keys and nested `match`, `options` and `schedule` objects.
+
+## [0.15.0] - 2026-11-12
+
+Exabeam support: Exabeam queries and `configurations.exabeam` correlation rules are checked and highlighted as you type.
+
+### Added
+
+- **`.exabeam` files are the Exabeam Query Language, language id `exabeam`.** The search language of Exabeam's New-Scale SIEM, which Exabeam's guides call "EQL" (`eql` stays Elastic's), is checked as the specification exabeam-1.0 defines it: the filter and the advanced operators (`SELECT`, `WHERE`, `GROUP-BY`, `ORDER-BY`, `LIMIT`, pipes, `FOREACH`, the aggregations, `RGX_EXTRACT`), every `exabeam_*` error and warning of the spec, and `RGX` patterns as RE2 reads them. A `.exabeam` file is a search. `opentide explain` describes each code; `docs/EXABEAM.md` lists them with the conformance results ([specifications RFC 0018](https://github.com/opentidehq/specifications/blob/main/rfcs/0018-exabeam-platform.md)) ([#243](https://github.com/opentidehq/language-server/pull/243)).
+- **Exabeam correlation rules and hunts are checked.** `configurations.exabeam.sequences[].query` is analysed under the spec's `rule` profile, where the advanced operators are `exabeam_advanced_in_rule`, and hunts with `system: exabeam` under `search`; `analyze_query` with `platform: exabeam` is the `rule` profile. On Exabeam's 2,371 published correlation rules the engine agrees with the specification's reference checker on every rule: 75 of the 2,294 Sigma conversions have errors, and none of Exabeam's 77 own rules ([#243](https://github.com/opentidehq/language-server/pull/243)).
+- **Exabeam fields come from Exabeam's Common Information Model.** Hover and completion know its 1,130 fields, subjects, activity types and outcomes (`catalogs/exabeam/`, `scripts/sync_exabeam_catalog.py`). A field it lacks is the warning `exabeam_unknown_field` (never for `c_` and `m_` fields or an earlier `AS` name), and an unquoted number on a string field (`event_code:4625`) the warning `exabeam_string_field_number` ([#243](https://github.com/opentidehq/language-server/pull/243)).
+- **The `configurations.exabeam` block is checked as exabeam-1.0 says.** Its constraint codes and advisories are reported on their fields, from the YAML itself, and the bundled Tide catalog, regenerated from the opentide that models the block, knows `configurations.exabeam` (its keys, `status`, and the threshold and outcome values) ([#243](https://github.com/opentidehq/language-server/pull/243)):
+  - Errors: `exabeam_sequences`, `exabeam_correlation`, `exabeam_threshold_function`, `exabeam_threshold_operator`, `exabeam_threshold_value`, `exabeam_group_by`, `exabeam_duration`, `exabeam_severity`, `exabeam_outcome`, `exabeam_email`, `exabeam_schedule`, `exabeam_name_length`, `exabeam_context_table_trigger`, and `exabeam_name_duplicate` across the workspace
+  - Warnings: `exabeam_outcome_silent`, `exabeam_correlation_window`
+- **Exabeam queries are highlighted.** Semantic tokens follow the spec's highlight table with the existing captures; `highlights/generated/exabeam.tmLanguage.json` (`source.exabeam`) is the TextMate grammar, and the Neovim, Helix, Zed and `@opentide/lsp-client` samples map `.exabeam` to `exabeam` ([#243](https://github.com/opentidehq/language-server/pull/243)).
+
 ## [0.14.0] - 2026-11-12
 
-Graylog is a platform: Graylog queries are checked in a Graylog dialect of Lucene, as live Graylog 6.3 and 7.2 read them, and `configurations.graylog` event definitions are checked as graylog-1.1 says, aggregation conditions included.
+Graylog support: Graylog queries and `configurations.graylog` blocks are checked as you type.
 
 ### Added
 
@@ -22,7 +55,7 @@ Graylog is a platform: Graylog queries are checked in a Graylog dialect of Lucen
 
 ## [0.13.0] - 2026-11-11
 
-YARA is a language: `.yar` files and the YARA in HarfangLab and Bitdefender rules are checked as libyara 4.5 compiles them, with YARA-X differences flagged, and Bitdefender GravityZone rules are checked against GravityZone's criteria.
+YARA support: `.yar` files and the YARA in HarfangLab and Bitdefender rules are checked as you type. Bitdefender GravityZone rules are checked too.
 
 ### Upgrade
 
@@ -53,7 +86,7 @@ YARA is a language: `.yar` files and the YARA in HarfangLab and Bitdefender rule
 
 ## [0.12.1] - 2026-11-09
 
-A Splunk block's `advanced` table is no longer reported as an unknown key, as opentide accepts it again.
+Fixes a false unknown-key warning on a Splunk block's `advanced` table.
 
 ### Fixed
 
@@ -61,7 +94,7 @@ A Splunk block's `advanced` table is no longer reported as an unknown key, as op
 
 ## [0.12.0] - 2026-11-08
 
-CrowdStrike queries are checked: the CrowdStrike Query Language (CQL) of Falcon LogScale and Next-Gen SIEM is a language, with diagnostics, hover, completion and highlighting for correlation rules, hunts and `.cql` files.
+CrowdStrike support: CrowdStrike queries (CQL) get diagnostics, hover, completion and highlighting.
 
 ### Upgrade
 
@@ -84,7 +117,7 @@ CrowdStrike queries are checked: the CrowdStrike Query Language (CQL) of Falcon 
 
 ## [0.11.0] - 2026-11-06
 
-Filename and metadata warnings now follow the workspace's `lint.toml` as `opentide lint` does, a `detection_model` naming a signal is no longer an `invalid_ref`, and hover and findings point at the exact value they are about.
+Filename and metadata warnings follow your `lint.toml`, and hover and findings point at the exact value.
 
 ### Added
 
@@ -124,7 +157,7 @@ Filename and metadata warnings now follow the workspace's `lint.toml` as `openti
 
 ## [0.10.0] - 2026-11-04
 
-Editors get the workspace index for their catalogue, graph and search views, following unsaved edits on the desktop and in the browser, and placeholder queries from `opentide new` are no longer reported as errors.
+Editors get catalogue, graph and search views of the workspace. Placeholder queries from `opentide new` are no longer errors.
 
 ### Upgrade
 
@@ -163,7 +196,7 @@ Editors get the workspace index for their catalogue, graph and search views, fol
 
 ## [0.9.1] - 2026-11-03
 
-`opentide-lsp` on its own reports the unknown keys and platform `schema` values that `opentide validate` reports, as the bundled Tide catalog follows opentide's removal of its CoreTIDE compatibility.
+`opentide-lsp` on its own reports the same unknown keys and `schema` values as `opentide validate`.
 
 ### Changed
 
@@ -173,7 +206,7 @@ Editors get the workspace index for their catalogue, graph and search views, fol
 
 ## [0.9.0] - 2026-11-03
 
-The server runs in a browser Web Worker, and a rebuilt protocol host keeps up with typing and gives each workspace folder its own objects. Editors get an outline, links, lenses and configuration TOML checked by opentide.
+The server runs in the browser and keeps up with typing. Editors get an outline, links and lenses.
 
 ### Upgrade
 
@@ -335,7 +368,7 @@ The server runs in a browser Web Worker, and a rebuilt protocol host keeps up wi
 
 ## [0.8.0] - 2026-11-03
 
-Sysdig Secure rules are checked as Falco loads them: a `configurations.sysdig` block's condition, macros, exceptions and output, with Falco highlighting, hover and completion. Sentinel's `alert.techniques` takes ATT&CK v18 ids.
+Sysdig Secure support: Falco conditions, macros and output are checked, with highlighting, hover and completion.
 
 ### Added
 
@@ -377,7 +410,7 @@ Sysdig Secure rules are checked as Falco loads them: a `configurations.sysdig` b
 
 ## [0.7.1] - 2026-11-03
 
-Declared datasets carry their columns: in the corrected `visibility::1.0`, a log source's `name` is its table, sourcetype or index pattern, and the columns it lists feed the query checks, hover and completion.
+Log sources in `visibility.toml` can list their columns, and query checks, hover and completion use them.
 
 ### Upgrade
 
@@ -426,7 +459,7 @@ Declared datasets carry their columns: in the corrected `visibility::1.0`, a log
 
 ## [0.7.0] - 2026-11-02
 
-Queries are checked against the tables and columns they read: every Azure Monitor Logs, Defender XDR and ASIM table for KQL, the whole CIM for SPL, ECS for Elastic, and the datasets a workspace's `visibility.toml` declares.
+Queries are checked against the tables and columns they read, for KQL, SPL, Elastic and your own `visibility.toml`.
 
 ### Added
 
@@ -546,7 +579,7 @@ Queries are checked against the tables and columns they read: every Azure Monito
 
 ## [0.6.0] - 2026-10-29
 
-A host API lets opentide compile the engine into its Python package, each Tide object is checked against the schema revision it names, and `@opentide/lsp-client` works on stdio, a browser worker and WASI.
+The engine compiles into opentide's Python package, and each Tide object is checked against the schema version it names.
 
 ### Upgrade
 
@@ -615,7 +648,7 @@ A host API lets opentide compile the engine into its Python package, each Tide o
 
 ## [0.5.0] - 2026-10-26
 
-ES|QL, EQL, Kibana KQL and Lucene rules get the same editing support as KQL and SPL, and the server installs from crates.io with `cargo install opentide-lsp`.
+Elastic support: ES|QL, EQL, Kibana KQL and Lucene get the same editing support as KQL and SPL. Install with `cargo install opentide-lsp`.
 
 ### Added
 
@@ -634,7 +667,7 @@ ES|QL, EQL, Kibana KQL and Lucene rules get the same editing support as KQL and 
 
 ## [0.4.0] - 2026-10-23
 
-KQL and SPL close the grammar and catalog gaps that a comparison with Microsoft's Kusto.Language and Splunk's own parser found.
+More complete KQL and SPL: grammar and catalog gaps closed against Microsoft's and Splunk's own parsers.
 
 ### Added
 
@@ -655,7 +688,7 @@ KQL and SPL close the grammar and catalog gaps that a comparison with Microsoft'
 
 ## [0.3.0] - 2026-09-29
 
-KQL and SPL signatures follow Microsoft Learn and the Splunk Search Reference, and slow query shapes warn, with vendor citations.
+KQL and SPL function signatures match the vendor docs, and slow query patterns get a warning.
 
 ### Added
 
@@ -674,7 +707,7 @@ KQL and SPL signatures follow Microsoft Learn and the Splunk Search Reference, a
 
 ## [0.2.0] - 2026-09-24
 
-Tide hover, completion and highlighting come from opentide 0.5.0's schema export, and deprecated fields warn.
+Tide hover, completion and highlighting follow opentide's schemas, and deprecated fields warn.
 
 ### Added
 
@@ -699,7 +732,7 @@ Tide hover, completion and highlighting come from opentide 0.5.0's schema export
 
 ## [0.1.0] - 2026-09-16
 
-The first working server serves KQL, SPL and Tide YAML over stdio and WASM, with the highlighting spec every editor shares.
+First release: KQL, SPL and Tide YAML support for any LSP editor, over stdio and WASM.
 
 ### Added
 
@@ -708,6 +741,8 @@ The first working server serves KQL, SPL and Tide YAML over stdio and WASM, with
 - **A frozen HighlightSpec with generated editor maps.** Semantic tokens use the standard LSP legend.
 - **Stdio and WASM hosts, with Zed, Helix and Neovim samples.**
 
+[0.16.0]: https://github.com/opentidehq/language-server/compare/v0.15.0...v0.16.0
+[0.15.0]: https://github.com/opentidehq/language-server/compare/v0.14.0...v0.15.0
 [0.14.0]: https://github.com/opentidehq/language-server/compare/v0.13.0...v0.14.0
 [0.13.0]: https://github.com/opentidehq/language-server/compare/v0.12.1...v0.13.0
 [0.12.1]: https://github.com/opentidehq/language-server/compare/v0.12.0...v0.12.1

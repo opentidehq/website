@@ -127,6 +127,14 @@ export const INTEGRATIONS: Integration[] = [
     ],
   },
   {
+    key: 'exabeam',
+    name: 'Exabeam New-Scale SIEM',
+    deploys: 'correlation rule',
+    src: '/icons/platforms/exabeam.png',
+    kind: 'raster',
+    block: ['outcome: case', 'sequences:', '  - query: activity_type:"app-login" AND outcome:"fail"'],
+  },
+  {
     key: 'google_secops',
     name: 'Google Security Operations',
     deploys: 'YARA-L detection rule',
