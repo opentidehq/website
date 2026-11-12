@@ -126,4 +126,12 @@ export const INTEGRATIONS: Integration[] = [
       'aggregation: { group_by: source, condition: count() >= 3 }',
     ],
   },
+  {
+    key: 'exabeam',
+    name: 'Exabeam New-Scale SIEM',
+    deploys: 'correlation rule',
+    src: '/icons/platforms/exabeam.png',
+    kind: 'raster',
+    block: ['outcome: case', 'sequences:', '  - query: activity_type:"app-login" AND outcome:"fail"'],
+  },
 ];
