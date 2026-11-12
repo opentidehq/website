@@ -8,6 +8,7 @@ import {
 } from 'fumadocs-core/mdx-plugins';
 import { z } from 'zod';
 import { rehypeCliOutput } from './lib/mdx/cli-output.mjs';
+import { EXTRA_LANGUAGES } from './lib/mdx/languages';
 
 export const docs = defineDocs({
   dir: 'content/docs',
@@ -45,8 +46,13 @@ export default defineConfig({
     ],
     // Before rehype-code: CLI output samples are highlighted as `ansi`.
     rehypePlugins: (plugins) => [rehypeCliOutput, ...plugins],
-    // A fence in a language Shiki does not bundle (a synced spec's `ebnf` grammar) renders as
-    // plain text instead of failing the build. Options replace the defaults, so spread them.
-    rehypeCodeOptions: { ...rehypeCodeDefaultOptions, fallbackLanguage: 'plaintext' },
+    // Fumadocs' defaults, plus the opentide languages Shiki does not bundle (`yaral`). A fence
+    // in any other language Shiki lacks (a synced spec's `ebnf` grammar) renders as plain text
+    // instead of failing the build. Options replace the defaults, so spread them.
+    rehypeCodeOptions: {
+      ...rehypeCodeDefaultOptions,
+      langs: EXTRA_LANGUAGES,
+      fallbackLanguage: 'plaintext',
+    },
   },
 });

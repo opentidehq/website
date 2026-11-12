@@ -36,6 +36,8 @@ const SOURCE = [
   'EventID:10 AND TargetImage:/.*\\\\lsass\\.exe/ AND NOT SourceImage:/.*\\\\MsMpEng\\.exe/',
   // Exabeam New-Scale SIEM: a correlation rule's sequence query
   'activity_type:"process-open" AND dest_process_name:"lsass.exe" AND NOT process_name:("MsMpEng.exe", "csrss.exe")',
+  // Google Security Operations: YARA-L
+  '$e.metadata.event_type = "PROCESS_LAUNCH" and re.regex($e.target.process.file.full_path, `(?i)\\\\rundll32\\.exe$`)',
   // HarfangLab: YARA
   'rule lsass_minidump { strings: $a = "MiniDumpWriteDump" ascii condition: uint16(0) == 0x5A4D and $a }',
   // Splunk: SPL

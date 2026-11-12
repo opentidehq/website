@@ -134,4 +134,12 @@ export const INTEGRATIONS: Integration[] = [
     kind: 'raster',
     block: ['outcome: case', 'sequences:', '  - query: activity_type:"app-login" AND outcome:"fail"'],
   },
+  {
+    key: 'google_secops',
+    name: 'Google Security Operations',
+    deploys: 'YARA-L detection rule',
+    src: '/icons/platforms/google-secops.svg',
+    kind: 'mono',
+    block: ['run_frequency: LIVE', `events: '$e.metadata.event_type = "PROCESS_LAUNCH"'`, "condition: '$e'"],
+  },
 ];
