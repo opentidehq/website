@@ -1,6 +1,7 @@
 import { defineConfig, defineCollections, defineDocs, frontmatterSchema } from 'fumadocs-mdx/config';
 import { metaSchema, pageSchema } from 'fumadocs-core/source/schema';
 import {
+  rehypeCodeDefaultOptions,
   remarkMdxMermaid,
   remarkNpm,
   remarkSteps,
@@ -44,5 +45,8 @@ export default defineConfig({
     ],
     // Before rehype-code: CLI output samples are highlighted as `ansi`.
     rehypePlugins: (plugins) => [rehypeCliOutput, ...plugins],
+    // A fence in a language Shiki does not bundle (a synced spec's `ebnf` grammar) renders as
+    // plain text instead of failing the build. Options replace the defaults, so spread them.
+    rehypeCodeOptions: { ...rehypeCodeDefaultOptions, fallbackLanguage: 'plaintext' },
   },
 });
