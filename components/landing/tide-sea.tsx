@@ -32,6 +32,10 @@ const SOURCE = [
   'SigninLogs | where AuthenticationProtocol == "deviceCode" | summarize count() by UserPrincipalName',
   // Sysdig Secure and Falco: Falco condition
   'spawned_process and container and shell_procs and proc.tty != 0 and not proc.pname in (kubectl, runc)',
+  // Graylog: an event definition's search query
+  'EventID:10 AND TargetImage:/.*\\\\lsass\\.exe/ AND NOT SourceImage:/.*\\\\MsMpEng\\.exe/',
+  // Exabeam New-Scale SIEM: a correlation rule's sequence query
+  'activity_type:"process-open" AND dest_process_name:"lsass.exe" AND NOT process_name:("MsMpEng.exe", "csrss.exe")',
   // HarfangLab: YARA
   'rule lsass_minidump { strings: $a = "MiniDumpWriteDump" ascii condition: uint16(0) == 0x5A4D and $a }',
   // Splunk: SPL

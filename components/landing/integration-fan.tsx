@@ -9,15 +9,18 @@ import { useOnScreen } from '@/lib/hooks/use-on-screen';
 import { usePrefersReducedMotion } from '@/lib/hooks/use-prefers-reduced-motion';
 import { INTEGRATIONS, type Integration } from '@/lib/landing/integrations';
 
-/**
- * The tile list's rows at `lg`: two tiles a row. With an odd number of integrations the request
- * tile fills the last row's empty cell; with an even number it gets a row of its own.
- */
-const requestFillsRow = INTEGRATIONS.length % 2 === 1;
-const tileRows = Math.ceil(INTEGRATIONS.length / 2);
-
 /** How long each block stays open while the figure plays. */
 const DWELL_MS = 2600;
+
+/**
+ * Two tiles per row at `lg`. With an odd count the request tile takes the last row's free cell;
+ * with an even count it spans its own row below the tiles.
+ */
+const ODD = INTEGRATIONS.length % 2 === 1;
+const TILE_ROWS = Math.ceil(INTEGRATIONS.length / 2);
+const LIST_ROWS = {
+  '--fan-rows': `repeat(${TILE_ROWS},minmax(0,1fr))${ODD ? '' : ' auto'}`,
+} as CSSProperties;
 
 function Logo({ src, kind }: { src: string; kind: Integration['kind'] }) {
   if (kind === 'raster') {
@@ -157,12 +160,8 @@ export function IntegrationFan() {
         </figure>
 
         <ul
-          className={`m-0 grid list-none grid-cols-1 gap-2 p-0 sm:grid-cols-2 ${
-            requestFillsRow
-              ? 'lg:grid-rows-[repeat(var(--fan-rows),minmax(0,1fr))]'
-              : 'lg:grid-rows-[repeat(var(--fan-rows),minmax(0,1fr))_auto]'
-          }`}
-          style={{ '--fan-rows': tileRows } as CSSProperties}
+          className="m-0 grid list-none grid-cols-1 gap-2 p-0 sm:grid-cols-2 lg:grid-rows-[var(--fan-rows)]"
+          style={LIST_ROWS}
           aria-label="Integrations"
         >
           {INTEGRATIONS.map((p, i) => {
@@ -198,7 +197,7 @@ export function IntegrationFan() {
               </li>
             );
           })}
-          <li className={requestFillsRow ? 'flex' : 'flex sm:col-span-2'}>
+          <li className={`flex ${ODD ? '' : 'sm:col-span-2'}`}>
             <a
               href="https://github.com/opentidehq/opentide/issues/new"
               target="_blank"
