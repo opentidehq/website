@@ -46,7 +46,13 @@ export default defineConfig({
     ],
     // Before rehype-code: CLI output samples are highlighted as `ansi`.
     rehypePlugins: (plugins) => [rehypeCliOutput, ...plugins],
-    // Fumadocs' defaults plus the opentide languages Shiki does not bundle (`yaral`).
-    rehypeCodeOptions: { ...rehypeCodeDefaultOptions, langs: EXTRA_LANGUAGES },
+    // Fumadocs' defaults, plus the opentide languages Shiki does not bundle (`yaral`). A fence
+    // in any other language Shiki lacks (a synced spec's `ebnf` grammar) renders as plain text
+    // instead of failing the build. Options replace the defaults, so spread them.
+    rehypeCodeOptions: {
+      ...rehypeCodeDefaultOptions,
+      langs: EXTRA_LANGUAGES,
+      fallbackLanguage: 'plaintext',
+    },
   },
 });
