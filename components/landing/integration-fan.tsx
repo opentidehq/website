@@ -3,11 +3,18 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, Check } from 'lucide-react';
-import { useEffect, useState, type FocusEvent } from 'react';
+import { useEffect, useState, type CSSProperties, type FocusEvent } from 'react';
 import { BlockHead } from '@/components/landing/ui';
 import { useOnScreen } from '@/lib/hooks/use-on-screen';
 import { usePrefersReducedMotion } from '@/lib/hooks/use-prefers-reduced-motion';
 import { INTEGRATIONS, type Integration } from '@/lib/landing/integrations';
+
+/**
+ * The tile list's rows at `lg`: two tiles a row. With an odd number of integrations the request
+ * tile fills the last row's empty cell; with an even number it gets a row of its own.
+ */
+const requestFillsRow = INTEGRATIONS.length % 2 === 1;
+const tileRows = Math.ceil(INTEGRATIONS.length / 2);
 
 /** How long each block stays open while the figure plays. */
 const DWELL_MS = 2600;
@@ -149,7 +156,15 @@ export function IntegrationFan() {
           </div>
         </figure>
 
-        <ul className="m-0 grid list-none grid-cols-1 gap-2 p-0 sm:grid-cols-2 lg:grid-rows-[repeat(5,minmax(0,1fr))_auto]" aria-label="Integrations">
+        <ul
+          className={`m-0 grid list-none grid-cols-1 gap-2 p-0 sm:grid-cols-2 ${
+            requestFillsRow
+              ? 'lg:grid-rows-[repeat(var(--fan-rows),minmax(0,1fr))]'
+              : 'lg:grid-rows-[repeat(var(--fan-rows),minmax(0,1fr))_auto]'
+          }`}
+          style={{ '--fan-rows': tileRows } as CSSProperties}
+          aria-label="Integrations"
+        >
           {INTEGRATIONS.map((p, i) => {
             const on = i === active;
             return (
@@ -183,7 +198,7 @@ export function IntegrationFan() {
               </li>
             );
           })}
-          <li className="flex sm:col-span-2">
+          <li className={requestFillsRow ? 'flex' : 'flex sm:col-span-2'}>
             <a
               href="https://github.com/opentidehq/opentide/issues/new"
               target="_blank"

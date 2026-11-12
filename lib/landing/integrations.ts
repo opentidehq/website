@@ -114,4 +114,12 @@ export const INTEGRATIONS: Integration[] = [
     kind: 'color',
     block: ['detection:', '  target: process', '  criteria: [{ field: Process.Name, is: mshta.exe }]'],
   },
+  {
+    key: 'exabeam',
+    name: 'Exabeam New-Scale SIEM',
+    deploys: 'correlation rule',
+    src: '/icons/platforms/exabeam.png',
+    kind: 'raster',
+    block: ['outcome: case', 'sequences:', '  - query: activity_type:"app-login" AND outcome:"fail"'],
+  },
 ];
