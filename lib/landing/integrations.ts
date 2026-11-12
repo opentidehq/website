@@ -114,4 +114,16 @@ export const INTEGRATIONS: Integration[] = [
     kind: 'color',
     block: ['detection:', '  target: process', '  criteria: [{ field: Process.Name, is: mshta.exe }]'],
   },
+  {
+    key: 'graylog',
+    name: 'Graylog',
+    deploys: 'event definition',
+    src: '/icons/platforms/graylog.svg',
+    kind: 'color',
+    block: [
+      'query: EventID:1 AND image_lc:/.*\\\\mshta\\.exe/',
+      'schedule: { every: 5m, window: 15m }',
+      'aggregation: { group_by: source, condition: count() >= 3 }',
+    ],
+  },
 ];
