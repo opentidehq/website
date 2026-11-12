@@ -114,4 +114,12 @@ export const INTEGRATIONS: Integration[] = [
     kind: 'color',
     block: ['detection:', '  target: process', '  criteria: [{ field: Process.Name, is: mshta.exe }]'],
   },
+  {
+    key: 'google_secops',
+    name: 'Google Security Operations',
+    deploys: 'YARA-L detection rule',
+    src: '/icons/platforms/google-secops.svg',
+    kind: 'mono',
+    block: ['run_frequency: LIVE', `events: '$e.metadata.event_type = "PROCESS_LAUNCH"'`, "condition: '$e'"],
+  },
 ];
