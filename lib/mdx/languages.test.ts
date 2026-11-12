@@ -18,3 +18,20 @@ test('a yaral fence highlights with the language-server grammar', async () => {
   assert.notEqual(keyword.color, string.color);
   highlighter.dispose();
 });
+
+test('the yaral grammar compiles under the JavaScript regex engine the site uses', async () => {
+  // source.config.ts keeps Fumadocs' default `engine: "js"`: an Oniguruma-only pattern
+  // would pass the test above and fail the docs build.
+  const { createJavaScriptRegexEngine } = await import('shiki/engine/javascript');
+  const highlighter = await createHighlighter({
+    themes: ['github-light'],
+    langs: EXTRA_LANGUAGES,
+    engine: createJavaScriptRegexEngine(),
+  });
+  const tokens = highlighter.codeToTokensBase('rule r {\n  events:\n    re.regex($e.target.hostname, `^ab.*`) nocase\n  match:\n    $h over 10m\n  condition:\n    #e > 3\n}', {
+    lang: 'yaral',
+    theme: 'github-light',
+  });
+  assert.ok(new Set(tokens.flat().map((t) => t.color)).size > 1);
+  highlighter.dispose();
+});
