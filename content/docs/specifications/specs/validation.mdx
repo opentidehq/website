@@ -86,16 +86,16 @@ A platform spec MAY list advisories: conditions that validation SHOULD report as
 | `bitdefender_registry_full_hive` | warning | Bitdefender: a `Registry.Key` value starts with a full hive name, so the rule never triggers |
 | `bitdefender_contains_no_wildcard` | warning | Bitdefender: a `contains` value has neither `*` nor `?` |
 | `bitdefender_severity_collapsed` | warning | Bitdefender: `Critical` or `Informational` severity sent as GravityZone `High` or `Low` |
-| `google_secops_risk_score_missing` | warning | Google SecOps: the body assigns no `$risk_score`, so Google scores every alert 40 |
+| `google_secops_risk_score_missing` | warning | Google SecOps: `outcome` assigns no `$risk_score`, so every detection gets the instance's default score |
 | `google_secops_rule_id_literal` | warning | Google SecOps: the body matches a producer rule by a literal `ru_…` id, which differs per tenant |
-| `google_secops_live_frequency_unavailable` | warning | Google SecOps: `run_frequency: LIVE` on a multi-event rule, which Google stores as `LIVE_CUSTOMIZABLE` |
+| `google_secops_live_frequency_unavailable` | warning | Google SecOps: `run_frequency: LIVE` on a rule with two or more event variables, which deploy refuses (`LIVE` is for single-event rules) |
 | `harfanglab_yara_context` | warning | HarfangLab: a YARA rule's meta `context` is not a comma-joined list of `file`, `memory`, `file.pe`, `file.elf`, `file.macho` |
 
 The conditions and their reasons are in [elastic-1.0](/docs/specifications/specs/platforms/elastic-1.0/#advisories), [sysdig-1.0](/docs/specifications/specs/platforms/sysdig-1.0/#advisories), [bitdefender-1.0](/docs/specifications/specs/platforms/bitdefender-1.0/#advisories), [google-secops-1.0](/docs/specifications/specs/platforms/google-secops-1.0/#advisories), and [harfanglab-1.0](/docs/specifications/specs/platforms/harfanglab-1.0/#yara-profile).
 
 ### Language diagnostics
 
-A language spec MAY define diagnostics with stable codes. Its errors fail static validation like a constraint code. Its warnings are reported like advisories and never set `VALIDATION_ERROR_RAISED`. The YARA codes are in [yara-1.0](/docs/specifications/specs/languages/yara-1.0/#diagnostics): every `yara_*` error fails the rule, and the warnings are `yara_x_incompatible`, `yara_slow_pattern`, `yara_entrypoint_deprecated`, `yara_suspicious_expression`, `yara_module_unconfirmed`, and `yara_meta_missing`. The YARA-L codes are in [yara-l-1.0](/docs/specifications/specs/languages/yara-l-1.0/#diagnostics): every `yaral_*` error fails the rule, and the warnings are `yaral_deprecated_field`, `yaral_unfiltered_event`, `yaral_leading_wildcard_regex`, and `yaral_reference_list_deprecated`.
+A language spec MAY define diagnostics with stable codes. Its errors fail static validation like a constraint code. Its warnings are reported like advisories and never set `VALIDATION_ERROR_RAISED`. The YARA codes are in [yara-1.0](/docs/specifications/specs/languages/yara-1.0/#diagnostics): every `yara_*` error fails the rule, and the warnings are `yara_x_incompatible`, `yara_slow_pattern`, `yara_entrypoint_deprecated`, `yara_suspicious_expression`, `yara_module_unconfirmed`, and `yara_meta_missing`. The YARA-L codes are in [yara-l-1.0](/docs/specifications/specs/languages/yara-l-1.0/#diagnostics): every `yaral_*` error fails the rule, and the warnings are `yaral_deprecated_field`, `yaral_unfiltered_event`, `yaral_leading_wildcard_regex`, `yaral_reference_list_deprecated`, and `yaral_string_escape`.
 
 ### Query validation
 
