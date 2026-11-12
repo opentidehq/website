@@ -1,12 +1,14 @@
 import { defineConfig, defineCollections, defineDocs, frontmatterSchema } from 'fumadocs-mdx/config';
 import { metaSchema, pageSchema } from 'fumadocs-core/source/schema';
 import {
+  rehypeCodeDefaultOptions,
   remarkMdxMermaid,
   remarkNpm,
   remarkSteps,
 } from 'fumadocs-core/mdx-plugins';
 import { z } from 'zod';
 import { rehypeCliOutput } from './lib/mdx/cli-output.mjs';
+import { EXTRA_LANGUAGES } from './lib/mdx/languages';
 
 export const docs = defineDocs({
   dir: 'content/docs',
@@ -44,5 +46,7 @@ export default defineConfig({
     ],
     // Before rehype-code: CLI output samples are highlighted as `ansi`.
     rehypePlugins: (plugins) => [rehypeCliOutput, ...plugins],
+    // Fumadocs' defaults plus the opentide languages Shiki does not bundle (`yaral`).
+    rehypeCodeOptions: { ...rehypeCodeDefaultOptions, langs: EXTRA_LANGUAGES },
   },
 });
