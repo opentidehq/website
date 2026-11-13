@@ -6,18 +6,23 @@ Each version's first paragraph is its summary: the GitHub Release and [opentide.
 
 ## [Unreleased]
 
+## [0.16.1] - 2026-11-13
+
+Missing optional fields such as `author` are information, not warnings. Exabeam activity types, subjects and outcomes are checked against the CIM.
+
 ### Upgrade
 
-- To keep a missing `author` or `organisation` as a warning, set `severity = "warning"` under `[metadata]` in `.opentide/configurations/lint.toml`. For a rule's missing `configurations` or `response`, set it under `[recommended]`; that table needs an opentide that knows it (the release after 0.28.0), since older ones reject an unknown table.
+- To keep a missing `author` or `organisation` as a warning, set `severity = "warning"` under `[metadata]` in `.opentide/configurations/lint.toml`. For a rule's missing `configurations` or `response`, set it under `[recommended]`; that table needs opentide 0.28.1 or later, since older ones reject an unknown table.
 
 ### Breaking
 
-- **A missing optional field is information, not a warning.** `missing_author`, `missing_organisation` and `recommended_field_missing` (a rule without `configurations` or `response`) now default to information, so editors stop warning about fields `opentide validate` does not require. A host or CI that counts warnings no longer counts them. `opentide lint` already reports a missing author or organisation as a note, and reports `configurations` and `response` the same way from the release after 0.28.0 ([#249](https://github.com/opentidehq/language-server/issues/249)).
+- **A missing optional field is information, not a warning.** `missing_author`, `missing_organisation` and `recommended_field_missing` (a rule without `configurations` or `response`) now default to information, so editors stop warning about fields `opentide validate` does not require. A host or CI that counts warnings no longer counts them. `opentide lint` already reports a missing author or organisation as a note, and reports `configurations` and `response` the same way from 0.28.1 ([#249](https://github.com/opentidehq/language-server/issues/249)).
 
 ### Added
 
 - **lint.toml `[recommended]`.** `enabled` and `severity` decide `recommended_field_missing`, as `[metadata]` decides `missing_author` and `missing_organisation` ([#249](https://github.com/opentidehq/language-server/issues/249)).
 - **API: `opentide_core::Diagnostic::information` and `Diagnostic::with_severity`**, next to `error`, `warning` and `with_field_path`.
+- **Exabeam `activity_type`, `subject` and `outcome` values are checked against the CIM.** A value Exabeam's Common Information Model does not list is the warning `exabeam_unknown_value`, with a near miss or the subject's activity types: `activity_type:"network-connection"` suggests `network-session`, `network-traffic` and the rest. Wildcards, functions such as `WLD` and `RGX`, values between slashes, `null`, empty values, unquoted numbers and IP addresses, `@field`s and earlier `AS` names are never reported. When an `activity_type` is a subject (`activity_type:"dns"`), or a `subject` an activity type, the message says so.
 
 ## [0.16.0] - 2026-11-12
 
@@ -754,6 +759,7 @@ First release: KQL, SPL and Tide YAML support for any LSP editor, over stdio and
 - **A frozen HighlightSpec with generated editor maps.** Semantic tokens use the standard LSP legend.
 - **Stdio and WASM hosts, with Zed, Helix and Neovim samples.**
 
+[0.16.1]: https://github.com/opentidehq/language-server/compare/v0.16.0...v0.16.1
 [0.16.0]: https://github.com/opentidehq/language-server/compare/v0.15.0...v0.16.0
 [0.15.0]: https://github.com/opentidehq/language-server/compare/v0.14.0...v0.15.0
 [0.14.0]: https://github.com/opentidehq/language-server/compare/v0.13.0...v0.14.0
