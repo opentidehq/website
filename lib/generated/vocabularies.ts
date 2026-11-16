@@ -33,7 +33,7 @@ export type GeneratedVocabulary = {
 export const VOCABULARY_SOURCE = {
   repo: "opentidehq/specifications",
   directory: "vocabularies",
-  sha: "f400f15751b9698f2d7f89ee5b1b67dc545e345d",
+  sha: "8a28c64f484ed26f0df0646ac09968a050e4c9d7",
 } as const;
 
 /** Integrity problems found in the specification while deriving. */
