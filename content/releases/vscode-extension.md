@@ -6,11 +6,129 @@ pre-releases odd ones.
 
 ## [Unreleased]
 
+### Added
+
+- **The opentide skills and a few lines of guidance come with the extension, for VS Code's agents.** Agent mode
+  gets the 34 skills of [opentidehq/skills](https://github.com/opentidehq/skills) (rules, objectives, threats,
+  each platform's query language and internals) and always-on instructions: use the opentide tools, validate
+  before deploying, never deploy for real unless asked. They are left out when the opentide Agent Plugin
+  supplies the skills (`opentide.agents.embeddedSkills` overrides). Cursor and Kiro do not read them: install the
+  plugin or the Power.
+  The extension now activates in every window to decide that, and starts no opentide and shows no status item
+  in a window with no opentide content.
+- **opentide runs with nothing installed, and the bundled opentide is the default.** The extension carries
+  opentide's own command line, compiled to WebAssembly, and runs it for the language server, the catalogue,
+  the commands and MCP, whether or not you have opentide installed
+  ([#75](https://github.com/opentidehq/vscode-extension/issues/75)).
+- **`opentide.runtime` chooses between the bundled opentide and your own.** `bundled` (the default) runs the
+  module the extension carries; `installed` runs `opentide.path`, the workspace's environment, `uv` or
+  `PATH`, and falls back to the bundled one, with a notice, when none answers. A workspace value applies only
+  in a trusted folder. **opentide: Switch Runtime…** sets it.
+- **Tenant requests work from the bundled opentide in the editor and in MCP.** Queries, deploys and
+  `validate --live` are made by the extension, so VS Code's proxy settings and certificate store apply. In
+  MCP that needs opentide 1.0.0-rc.3 or later (the module asks the extension for each request); with an older
+  module the MCP tenant tools say `network_unavailable`. In a terminal or a task the bundled opentide has no
+  network: install opentide to run a tenant command there.
+- **`opentide.diagnostics.workspacePull` stops slow completion with an older opentide.** VS Code asks the language
+  server for the problems of closed files again 2 seconds after each answer, and an opentide older than
+  1.0.0rc3 re-analyses every closed file each time, on the thread that answers completions: stalls of 0.5 to 3
+  seconds at a thousand objects. With `auto` (the default) those servers are not asked, so **the problems of
+  closed files leave the Problems panel for them**; your open files keep theirs and `opentide validate` still
+  reports the workspace. `always` and `never` decide it by hand.
+- **`opentide.wasi.enabled` turns the bundled opentide off.** With it off, and no opentide installed, only
+  the engine's editor features run.
+- **Grammars for CQL, Exabeam, YARA and YARA-L.** They come with opentide 1.0.0-rc.2's highlights and
+  highlight those queries inside rules. They are available through **Change Language Mode** and have no
+  file association yet.
+
+- **Agents get opentide's MCP tools with no opentide installed.** The extension gives VS Code's agent mode
+  an `opentide` MCP server that runs the bundled opentide through a small script, run by the editor's own
+  Node. With `opentide.runtime` set to `installed`, your own opentide's `mcp start` runs instead.
+  Tenant tools (deploy, live validate, query) work through the extension once opentide's MCP server asks it
+  to make the requests; search, validate, lint, new and the catalogue work now.
+- **Cursor gets the server from the extension.** It is registered with Cursor's extension API, and
+  `~/.cursor/mcp.json` is no longer written.
+- **When the MCP server finds no repository, it says where it was started and what to do.** The bridge's first log line names its working directory and the repository it will use, and a `workspace_not_found` answer says how to fix it (open the repository's folder, or set `OPENTIDE_REPO_ROOT`).
+- **Kiro, Devin Desktop and Windsurf get a user-level MCP entry, if you agree.** Kiro's core has the VS Code API for MCP servers but its agent does not use it, so the extension goes by the editor's name instead of by the API (it still registers the provider where there is one). The extension asks once
+  before adding `opentide` to the editor's MCP file, keeps it current when it updates, and never touches an
+  entry it did not write. `opentide.agents.writeEditorConfig` sets `ask`, `always` or `never`;
+  **Remove opentide from This Editor's MCP Settings** takes it away.
+
 ### Changed
 
 - **The extension is licensed under the EUPL-1.2**, the licence of opentide and of the engine and grammars
   it carries, instead of MIT, so the whole package is under one licence. Third-party material keeps its own
   licence (`NOTICE`, `THIRD-PARTY-LICENSES`).
+- **The extension watches fewer files for the language server.** It watches the object files,
+  `.opentide/configurations` and the deployment state files, not the exports, inflight or templates that its own
+  runs write by the thousand.
+- **The engine reads your workspace's files straight from the disk** when its folders are `file:` ones, instead of
+  asking the editor for each file, which was most of its start-up at a thousand objects.
+- **The package grows from 4 to 13 MiB** for the bundled opentide, one file for every platform.
+- **An opentide you have installed is no longer used unless you ask for it.** Set `opentide.runtime` to
+  `installed`, or keep `opentide.path` set: a non-empty `opentide.path` selects `installed` when
+  `opentide.runtime` is not set, so an existing configuration keeps working. The output channel says which
+  runtime runs and why.
+- **Tasks and the terminal use the bundled opentide by default**, through the extension's own launcher. A
+  tenant command in a task or terminal, and `opentide tui`, do not run there: the extension says so and
+  offers **Switch Runtime…**.
+- **The opentide engine is runtime tier 5, after the bundled opentide.** Restricted Mode still runs the
+  engine only: no opentide runs in an untrusted folder, the bundled one included.
+- **The engine and the grammars are opentide 1.0.0-rc.2's.** The engine now reads a folder's
+  `.opentide/configurations/*.toml`, which it needs to check rules in the object folders `paths.toml`
+  names.
+- **The `opentide` command in terminals also covers the bundled opentide**, where none is installed.
+- **The bundled opentide ships its own licences.** `dist/wasi/` carries the licence set of the module's own
+  release (every Rust crate it links, the wasi-libc texts, `LICENSE` and `NOTICE`), checked against the pinned
+  checksums, instead of the engine's copy.
+
+### Fixed
+
+- **A rule you open right after the language server restarts gets its problems.** The server could be asked
+  for a file's problems before it had been told the file was open, answer that there were none, and VS Code
+  kept that answer. The extension now asks once more after the file is open.
+- **Validate Query on Tenants works from the Command Palette** while the language server is restarting (a
+  setting changed, the folder trusted): the command waits for the server instead of saying the rule has no
+  query.
+- **Validate Query on Tenants and Run Query work from the Command Palette.** They said "this rule has no platform
+  query" because the extension asked the language server for the rule's outline with parameters it rejected;
+  the CodeLens, which asks another way, worked.
+- **`opentide.trace.server` shows the trace.** The `opentide Language Server Trace` output stayed empty unless the
+  channel's log level was set to Trace by hand; it now follows the setting.
+- **An `opentide.path` that is not named `opentide` or `opentide-lsp` is named in the log.** The extension runs it as
+  a full opentide and says so, with its path, and says why when it does not answer and the next runtime runs.
+- **The credential check no longer says a variable is "not set" when `opentide.envFile` provides it.** It
+  reads the same file the run does.
+- **The query-validation notification no longer shows `$(pass)` as text.**
+- **The log no longer tells you to install opentide in Restricted Mode.** It says no opentide runs there and
+  to trust the folder.
+- **The status bar says "bundled WASI" next to the version** when the module the extension carries is the
+  runtime, so you can see which opentide is running without opening the tooltip.
+- **Closing a window ends its opentide processes before it finishes closing.** The extension waits for the
+  language server, `opentide serve` and MCP to stop, in that order, instead of leaving them to exit on
+  their own.
+- **Stopping an opentide process works the same on every platform and runtime.** It is asked to stop first
+  and ended after two seconds if it does not, and on Windows its child processes end with it.
+- **Changing a setting while opentide is being looked for no longer waits for the search.** The search for
+  an installed opentide (a slow `uv` check can take minutes) is cancelled and starts again with the new
+  settings.
+- **A damaged `dist/wasi/wasi.json` or `dist/engine/engine.json` is reported in the log** with what is wrong
+  with it, and that runtime is skipped. It no longer fails without a word.
+- **A reply from `opentide serve` that does not have the expected shape is reported as a protocol error**
+  instead of being read as if it were well formed.
+- **The opentide entry in Kiro's, Devin Desktop's and Windsurf's MCP file keeps working after an extension
+  update.** It runs a small launcher the extension keeps in its own storage, which starts the newest installed
+  copy of the extension, instead of naming a folder the update deletes. If the extension was uninstalled, the
+  agent is told to remove the entry or reinstall.
+- **A window with no opentide folder no longer starts the opentide MCP server.** Agents there got a server that
+  could only say it found no repository; it appears when an opentide folder does.
+- **Kiro, Devin Desktop and Windsurf get the bundled MCP server when your installed opentide is older than
+  1.0.0rc3.** Kiro rejects the older opentide's tool list. The extension says so once and writes the bundled
+  entry; upgrade opentide to use your own there.
+- **A damaged Kiro, Devin Desktop or Windsurf MCP file is left alone and the problem is named.** A file that
+  is not JSON, has an `mcpServers` that is not an object, or holds comments is no longer offered an
+  opentide entry, and **opentide: Remove from the Editor's MCP Settings** says what is wrong with it instead
+  of saying it has no entry.
 
 ## [0.1.2] - 2026-11-10
 
