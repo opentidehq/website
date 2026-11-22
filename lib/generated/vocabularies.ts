@@ -33,7 +33,7 @@ export type GeneratedVocabulary = {
 export const VOCABULARY_SOURCE = {
   repo: "opentidehq/specifications",
   directory: "vocabularies",
-  sha: "653fb9f88f95108864bf44089eca71f3c38a5c01",
+  sha: "f476a73f8d527982e51a7769b51fe28d18c8c6a4",
 } as const;
 
 /** Integrity problems found in the specification while deriving. */
@@ -374,26 +374,6 @@ export const GENERATED_VOCABULARIES: readonly GeneratedVocabulary[] = [
       { value: "Fraudulent transaction", label: "Fraudulent transaction" },
       { value: "Modify data", label: "Modify data" },
       { value: "Safety Bypass", label: "Safety Bypass" },
-    ],
-  },
-  {
-    field: "malapi",
-    file: "malapi.vocab.toml",
-    name: "Malicious Window API",
-    description: "MalAPI.io maps Windows APIs to common techniques used by malware.",
-    reference: "https://malapi.io",
-    valueKey: "name",
-    staged: true,
-    stages: ["Enumeration","Injection","Evasion","Spying","Internet","Anti-Debugging","Ransomware","Helper"],
-    keyCount: 368,
-    valueCount: 426,
-    samples: [
-      { value: "Internet::Accept", label: "Accept" },
-      { value: "Anti-Debugging::FindWindowA", label: "FindWindowA" },
-      { value: "Internet::InternetCloseHandle", label: "InternetCloseHandle" },
-      { value: "Injection::NtWaitForSingleObject", label: "NtWaitForSingleObject" },
-      { value: "Evasion::SetEnvironmentVariableA", label: "SetEnvironmentVariableA" },
-      { value: "Evasion::timeSetEvent", label: "timeSetEvent" },
     ],
   },
   {
