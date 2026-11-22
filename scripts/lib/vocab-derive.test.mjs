@@ -70,7 +70,7 @@ test('stagesForEntry: normalises scalar and list stage scopes', () => {
 });
 
 test('stageIdsFor: stage TABLES scope a vocabulary, a plain string list does not', () => {
-  // `[[stages]]` tables — surface, signal.entities, actors, chaining_relations, malapi.
+  // `[[stages]]` tables — surface, signal.entities, actors, chaining_relations.
   assert.deepEqual(stageIdsFor({ stages: [{ id: 'sequence' }, { id: 'support' }] }), [
     'sequence',
     'support',

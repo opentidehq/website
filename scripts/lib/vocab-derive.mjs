@@ -55,7 +55,7 @@ export function valueKeyFor(doc) {
  *
  * `stages` comes in two shapes, and only one of them scopes values. A *table* array
  * (`[[stages]]` with `id`/`name`) declares the stage namespace of a scoped vocabulary —
- * `surface`, `signal.entities`, `actors`, `chaining_relations`, `malapi`. A plain *string*
+ * `surface`, `signal.entities`, `actors`, `chaining_relations`. A plain *string*
  * array (`stages = ["Reconnaissance", ...]` in `att&ck` and `killchain`) is classification
  * metadata whose values stay bare. Returning `[]` for the string form is what keeps `att&ck`
  * rendering `T1548` rather than `Defense Evasion::T1548`.

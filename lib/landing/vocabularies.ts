@@ -35,7 +35,6 @@ const RIBBON_ORDER: readonly string[] = [
   'datasources',
   'att&ck.groups',
   'mitigations',
-  'malapi',
   'collection',
   'objectives',
   'stakeholders',
