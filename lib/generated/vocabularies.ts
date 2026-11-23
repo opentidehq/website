@@ -33,7 +33,7 @@ export type GeneratedVocabulary = {
 export const VOCABULARY_SOURCE = {
   repo: "opentidehq/specifications",
   directory: "vocabularies",
-  sha: "f476a73f8d527982e51a7769b51fe28d18c8c6a4",
+  sha: "54cdb561cfda25516c53a7956ae2aa2d5d3802ad",
 } as const;
 
 /** Integrity problems found in the specification while deriving. */
@@ -50,15 +50,15 @@ export const GENERATED_VOCABULARIES: readonly GeneratedVocabulary[] = [
     valueKey: "id",
     staged: true,
     stages: ["misp","att&ck"],
-    keyCount: 1309,
-    valueCount: 1309,
+    keyCount: 1323,
+    valueCount: 1323,
     samples: [
       { value: "att&ck::G1028", label: "[Enterprise] APT-C-23" },
-      { value: "misp::ada08ea8-4517-4eea-aff1-3ad69e5466bb", label: "NEODYMIUM" },
-      { value: "misp::0d72c57c-73e3-4739-8144-c8055cabd7dc", label: "BladeHawk" },
-      { value: "misp::33bfb09d-c6f4-4403-b434-1d4d4733ec52", label: "TA2719" },
-      { value: "att&ck::G1056", label: "[Enterprise] TeamPCP" },
-      { value: "misp::529ab5a8-b53d-4c4d-b2c2-75f13a5eaaa6", label: "UTA0576" },
+      { value: "misp::03f13462-003c-4296-8784-bccea16710a9", label: "Cadelle" },
+      { value: "misp::bfe66711-32dc-4c1f-b78b-9b2f9e4c1525", label: "Red Menshen" },
+      { value: "misp::624cc006-1131-4e53-a53c-3958cfbe233f", label: "Operation Ghoul" },
+      { value: "misp::6e5eb2f5-bc36-4ba8-95ff-c31a21098d40", label: "Larva-24010" },
+      { value: "misp::8c8f4d0e-ef58-4f3d-9936-2c29c53de947", label: "DARK CARTOGRAPHER" },
     ],
   },
   {
