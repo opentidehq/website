@@ -1308,13 +1308,6 @@ code.shiki span {
   --pg-error: #ff6b6b;
 }
 
-@media (min-width: 1024px) {
-  .landing-playground-frame {
-    height: min(82svh, 800px);
-    min-height: 600px;
-  }
-}
-
 .landing-playground .cm-editor { height: 100%; }
 
 .landing-playground .ot-property,

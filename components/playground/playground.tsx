@@ -279,46 +279,45 @@ export function Playground() {
   const activeFile = files.find((f) => f.path === active);
 
   return (
-    <div className="landing-playground">
-      {/* Guided edits */}
-      <div className="mb-3 flex flex-wrap items-center gap-2">
-        <span className="font-mono text-xs text-[var(--landing-subtle)]">try:</span>
-        {TRIES.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            onClick={() => tryEdit(t)}
-            className="rounded-full border border-[var(--landing-border)] bg-[var(--landing-panel)] px-3 py-1.5 text-xs font-medium text-[var(--landing-muted)] transition hover:border-[var(--landing-accent)] hover:text-[var(--landing-accent)]"
-          >
-            {t.label}
-          </button>
-        ))}
-        {anyDirty && (
-          <button
-            type="button"
-            onClick={resetAll}
-            className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium text-[var(--landing-subtle)] transition hover:bg-[var(--landing-hover)] hover:text-[var(--landing-ink)]"
-          >
-            <RotateCcw className="size-3" aria-hidden />
-            Reset
-          </button>
-        )}
-      </div>
-
-      <div className="overflow-hidden rounded-2xl border border-[var(--landing-border)] bg-[var(--landing-surface)] shadow-[0_30px_80px_-40px_rgb(0_20_137/0.45)] dark:shadow-[0_30px_80px_-40px_rgb(0_0_0/0.9)]">
-        {/* Title bar */}
-        <div className="flex items-center gap-3 border-b border-[var(--landing-border)] bg-[var(--landing-panel)] px-3 py-2">
-          <span className="flex min-w-0 items-center gap-2 font-mono text-xs text-[var(--landing-subtle)]">
+    <div className="landing-playground flex flex-col lg:h-full">
+      <div className="flex flex-col bg-[var(--landing-surface)] lg:min-h-0 lg:flex-1">
+        {/* Title bar: the repository, the guided edits, the engine */}
+        <div className="flex min-w-0 items-center gap-3 overflow-hidden border-y border-[var(--landing-border)] bg-[var(--landing-panel)] px-3 py-1.5">
+          <span className="flex shrink-0 items-center gap-2 font-mono text-xs text-[var(--landing-subtle)]">
             <Folder className="size-3.5 shrink-0 text-[var(--landing-accent)]" aria-hidden />
-            <span className="truncate text-[var(--landing-ink)]">detection-repo</span>
-            <span className="hidden truncate sm:inline">· feat/lsass-credential-access</span>
+            <span className="hidden text-[var(--landing-ink)] sm:inline">detection-repo</span>
+            <span className="hidden xl:inline">· feat/lsass-credential-access</span>
           </span>
-          <span className="ml-auto">
+          <span aria-hidden className="hidden h-4 w-px bg-[var(--landing-border)] md:block" />
+          <div className="landing-playground-scroll flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto">
+            <span className="shrink-0 font-mono text-[11px] text-[var(--landing-subtle)]">try</span>
+            {TRIES.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => tryEdit(t)}
+                className="shrink-0 rounded-full border border-[var(--landing-border)] px-2.5 py-1 text-[11.5px] font-medium text-[var(--landing-muted)] transition hover:border-[var(--landing-accent)] hover:text-[var(--landing-accent)]"
+              >
+                {t.label}
+              </button>
+            ))}
+            {anyDirty && (
+              <button
+                type="button"
+                onClick={resetAll}
+                className="inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[11.5px] font-medium text-[var(--landing-subtle)] transition hover:bg-[var(--landing-hover)] hover:text-[var(--landing-ink)]"
+              >
+                <RotateCcw className="size-3" aria-hidden />
+                Reset
+              </button>
+            )}
+          </div>
+          <span className="shrink-0">
             <EngineBadge status={status} />
           </span>
         </div>
 
-        <div className="landing-playground-frame grid grid-cols-[minmax(0,1fr)] lg:grid-cols-[210px_minmax(0,1fr)_360px] xl:grid-cols-[230px_minmax(0,1fr)_390px]">
+        <div className="grid grid-cols-[minmax(0,1fr)] lg:min-h-0 lg:flex-1 lg:grid-cols-[210px_minmax(0,1fr)_360px] xl:grid-cols-[230px_minmax(0,1fr)_390px]">
           {/* Explorer */}
           <nav aria-label="Files" className="landing-playground-scroll hidden min-h-0 overflow-y-auto border-r border-[var(--landing-border)] bg-[var(--landing-panel)] py-2 lg:block">
             <p className="px-3 pb-1 pt-1 font-mono text-[10.5px] text-[var(--landing-subtle)]">explorer</p>
@@ -516,7 +515,8 @@ export function Playground() {
           <span className="hidden shrink-0 sm:inline">
             {status.state === 'ready' ? `opentide ${status.version} · WebAssembly · started in ${status.ms} ms` : 'opentide · WebAssembly'}
           </span>
-          <span className="ml-auto shrink-0">
+          <span className="ml-auto hidden shrink-0 xl:inline">Ctrl Space complete · F12 or ⌘/Ctrl click definition · F2 rename · Shift Alt F format</span>
+          <span className="shrink-0 max-xl:ml-auto">
             Ln {cursor.line}, Col {cursor.col}
           </span>
           <span className="shrink-0">{activeFile?.language === 'toml' ? 'TOML' : 'Tide YAML'}</span>
@@ -573,7 +573,7 @@ function EngineBadge({ status }: { status: EngineStatus }) {
           <span className="absolute inline-flex size-full animate-ping rounded-full bg-current opacity-60 motion-reduce:hidden" />
           <span className="relative inline-flex size-1.5 rounded-full bg-current" />
         </span>
-        opentide {status.version} · in your browser
+        opentide {status.version}<span className="hidden sm:inline"> · in your browser</span>
       </span>
     );
   }
