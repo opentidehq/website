@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useTheme } from 'next-themes';
-import { ArrowRight, Menu, Moon, Sun, X } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, Menu, Moon, Sun, X } from 'lucide-react';
 import { useEffect, useRef, useState, type MouseEvent } from 'react';
 import { OpentideWordmark } from '@/components/brand/opentide-mark';
 import { GITHUB_ORG, siteNavLinks } from '@/lib/shared';
@@ -129,6 +129,25 @@ export function SiteHeader({ pathname }: { pathname: string }) {
               style={{ transform: `translateX(${mark.x}px)`, width: mark.w, opacity: mark.on ? 1 : 0 }}
             />
             {siteNavLinks.map((link) => {
+              if (link.external) {
+                return (
+                  <a
+                    key={link.href}
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onMouseEnter={follow}
+                    className="landing-pill-link landing-pill-focus group relative inline-flex h-9 items-center gap-0.5 rounded-full px-3.5 text-sm"
+                  >
+                    {link.label}
+                    <ArrowUpRight
+                      className="size-3 opacity-60 transition-transform group-hover:-translate-y-px group-hover:translate-x-px group-hover:opacity-100"
+                      aria-hidden
+                    />
+                    <span className="sr-only"> (opens the library explorer in a new tab)</span>
+                  </a>
+                );
+              }
               const active = isActive(pathname, link.href);
               return (
                 <Link
@@ -170,6 +189,18 @@ export function SiteHeader({ pathname }: { pathname: string }) {
           <ul className="m-0 list-none p-0">
             {siteNavLinks.map((link) => (
               <li key={link.href}>
+                {link.external ? (
+                  <a
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setOpen(false)}
+                    className="landing-pill-focus flex items-center justify-between rounded-2xl px-3 py-3 text-base font-medium text-[var(--landing-ink)] transition hover:bg-[var(--landing-hover)]"
+                  >
+                    {link.label}
+                    <ArrowUpRight className="size-4 text-[var(--landing-subtle)]" aria-hidden />
+                  </a>
+                ) : (
                 <Link
                   href={link.href}
                   onClick={() => setOpen(false)}
@@ -179,6 +210,7 @@ export function SiteHeader({ pathname }: { pathname: string }) {
                   {link.label}
                   <ArrowRight className="size-4 text-[var(--landing-subtle)]" aria-hidden />
                 </Link>
+                )}
               </li>
             ))}
             <li>
