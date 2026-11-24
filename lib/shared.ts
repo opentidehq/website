@@ -21,18 +21,27 @@ export const gitConfig = {
   branch: 'main',
 };
 
+/** The library's objects in the explorer, deployed from opentidehq/library to GitHub Pages. */
+export const LIBRARY_EXPLORER_URL = 'https://opentidehq.github.io/library/';
+
 /** Marketing chrome — the wordmark already goes home, so no Home link. */
-export const siteNavLinks = [
+export const siteNavLinks: readonly { label: string; href: string; external?: boolean }[] = [
   { label: 'Docs', href: '/docs/usage/' },
+  { label: 'Playground', href: '/playground/' },
+  { label: 'Library', href: LIBRARY_EXPLORER_URL, external: true },
   { label: 'Releases', href: '/releases/' },
   { label: 'Blog', href: '/blog/' },
-] as const;
+];
 
 /**
  * Docs chrome keeps the sidebar for documentation. Releases is a product page,
  * so it stays in the header instead of the usage tree.
  */
-export const docsNavLinks = [{ label: 'Releases', href: '/releases/' }] as const;
+export const docsNavLinks: readonly { label: string; href: string; external?: boolean }[] = [
+  { label: 'Playground', href: '/playground/' },
+  { label: 'Library', href: LIBRARY_EXPLORER_URL, external: true },
+  { label: 'Releases', href: '/releases/' },
+];
 
 export type EcosystemItem = {
   name: string;

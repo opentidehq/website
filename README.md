@@ -14,6 +14,7 @@ Built with [Next.js](https://nextjs.org/) and [Fumadocs](https://fumadocs.dev/),
 | RFCs | specifications `rfcs/` | `/docs/specifications/rfcs` |
 | Usage, CLI, MCP, SDK | [opentide](https://github.com/opentidehq/opentide) `docs/` | `/docs/{usage,cli,mcp,sdk}` |
 | Blog | This repo `content/blog/` | `/blog/` |
+| Playground | This repo, on opentide's WebAssembly build (`pnpm fetch:engine`) | `/playground/` |
 | Releases | opentide's release notes, and the `CHANGELOG.md` of language-server, vscode-extension and explorer synced into `content/releases/` | `/releases/`, `/releases/<project>/` |
 
 Documentation prose is synced from the opentide and specifications repos via `pnpm sync:content` and **committed** under `content/docs/` as `.mdx` so Fumadocs can compile JSX and private-repo CI can build without cross-repository access. `content/docs/.sync-stamp.json` records the vendor SHAs; `pnpm check:docs` fails if those gitlinks moved without a refresh. A GitHub Actions workflow (`sync-docs.yml`) does this on a schedule and on `repository_dispatch`, then deploys — you do not need to run sync by hand after a package release.
@@ -62,6 +63,7 @@ Environment overrides (first match wins):
 |---------|-------------|
 | `pnpm dev` | Sync docs + start dev server |
 | `pnpm fetch:pypi` | Snapshot the current PyPI version for local/dev first paint |
+| `pnpm fetch:engine` | Download the pinned `opentide-wasm-web` zip from opentide's release into `public/playground/engine/` (gitignored); bump `ENGINE_VERSION` and `ENGINE_SHA256` in `scripts/fetch-engine.mjs` together, with the VS Code extension's `pins.json` |
 | `pnpm sync:content` | Copy opentide + specifications docs into `content/docs/` as `.mdx` |
 | `pnpm check:docs` | Fail if `content/docs` does not match the pinned vendor gitlinks |
 | `pnpm test` | Unit tests for sync, freshness, and GitHub source URLs |

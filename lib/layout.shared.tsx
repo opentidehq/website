@@ -4,11 +4,12 @@ import { docsNavLinks, gitConfig, siteNavLinks } from './shared';
 
 type NavVariant = 'site' | 'docs';
 
-function mapTextLinks(links: readonly { label: string; href: string }[]) {
+function mapTextLinks(links: readonly { label: string; href: string; external?: boolean }[]) {
   return links.map((link) => ({
     text: link.label,
     url: link.href,
     active: 'nested-url' as const,
+    ...(link.external ? { external: true } : {}),
   }));
 }
 

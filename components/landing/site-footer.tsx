@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { ArrowUp, ArrowUpRight } from 'lucide-react';
 import { OpentideWordmark } from '@/components/brand/opentide-mark';
 import { usePrefersReducedMotion } from '@/lib/hooks/use-prefers-reduced-motion';
-import { GITHUB_ORG, ecosystemLinks } from '@/lib/shared';
+import { GITHUB_ORG, LIBRARY_EXPLORER_URL, ecosystemLinks } from '@/lib/shared';
 
 type FooterLink = { label: string; href: string; external?: boolean };
 
@@ -13,6 +13,7 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
     title: 'product',
     links: [
       { label: 'Quickstart', href: '/docs/usage/quickstart/' },
+      { label: 'Playground', href: '/playground/' },
       { label: 'Documentation', href: '/docs/usage/' },
       { label: 'CLI', href: '/docs/cli/' },
       { label: 'Python SDK', href: '/docs/sdk/' },
@@ -36,6 +37,7 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
       ...ecosystemLinks
         .filter((repo) => repo.status === 'live' && repo.href)
         .map((repo) => ({ label: repo.name, href: repo.href as string, external: true })),
+      { label: 'Library explorer', href: LIBRARY_EXPLORER_URL, external: true },
       { label: 'PyPI', href: 'https://pypi.org/project/opentide/', external: true },
     ],
   },

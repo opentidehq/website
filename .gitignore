@@ -36,3 +36,6 @@ next-env.d.ts
 
 # vendor submodules (tracked via git submodule)
 # vendor/
+
+# opentide engine for the playground (scripts/fetch-engine.mjs)
+/public/playground/engine/

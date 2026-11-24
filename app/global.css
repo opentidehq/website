@@ -1284,3 +1284,100 @@ code.shiki span {
 .dark code.shiki span {
   font-weight: var(--shiki-dark-font-weight);
 }
+
+/*
+ * Playground (`/playground/`): an IDE on the opentide engine (WASM). The editor is deep-tide navy
+ * in both themes, like every code panel; the chrome around it follows the landing's surfaces.
+ * Syntax colour comes from the engine's highlight() captures, one `.ot-<capture>` class each.
+ */
+.landing-playground {
+  --pg-code-bg: #000b1f;
+  --pg-code-raised: #03112b;
+  --pg-code-line: rgb(126 200 227 / 0.13);
+  --pg-ink: #e8f0ff;
+  --pg-dim: #8fa8d4;
+  --pg-comment: #5e7299;
+  --pg-foam: #7ec8e3;
+  --pg-yellow: #ffcc00;
+  --pg-string: #ffe58f;
+  --pg-number: #f5a524;
+  --pg-type: #8ee6c4;
+  --pg-fn: #c9b8ff;
+  --pg-keyword: #9db1ef;
+  --pg-caret: #ffcc00;
+  --pg-error: #ff6b6b;
+}
+
+@media (min-width: 1024px) {
+  .landing-playground-frame {
+    height: min(82svh, 800px);
+    min-height: 600px;
+  }
+}
+
+.landing-playground .cm-editor { height: 100%; }
+
+.landing-playground .ot-property,
+.landing-playground .ot-tide-property { color: var(--pg-foam); }
+.landing-playground .ot-tide-keyword,
+.landing-playground .ot-keyword { color: var(--pg-keyword); font-weight: 500; }
+.landing-playground .ot-operator { color: var(--pg-dim); }
+.landing-playground .ot-operator-pipe { color: var(--pg-yellow); font-weight: 700; }
+.landing-playground .ot-string { color: var(--pg-string); }
+.landing-playground .ot-number,
+.landing-playground .ot-boolean,
+.landing-playground .ot-constant { color: var(--pg-number); }
+.landing-playground .ot-type { color: var(--pg-type); }
+.landing-playground .ot-function,
+.landing-playground .ot-function-builtin,
+.landing-playground .ot-macro { color: var(--pg-fn); }
+.landing-playground .ot-variable { color: var(--pg-ink); }
+.landing-playground .ot-comment { color: var(--pg-comment); font-style: italic; }
+.landing-playground .ot-punctuation,
+.landing-playground .ot-punctuation-bracket,
+.landing-playground .ot-punctuation-delimiter { color: var(--pg-dim); }
+.landing-playground .ot-tide-uuid {
+  color: var(--pg-foam);
+  text-decoration: underline dotted rgb(126 200 227 / 0.5);
+  text-underline-offset: 3px;
+}
+.landing-playground .ot-tide-schema { color: var(--pg-yellow); }
+.landing-playground .ot-error { color: var(--pg-error); }
+.landing-playground .ot-markdown-heading,
+.landing-playground .ot-markdown-strong { color: #fff; font-weight: 600; }
+.landing-playground .ot-markdown-emphasis { font-style: italic; }
+.landing-playground .ot-markdown-code { color: var(--pg-type); }
+.landing-playground .ot-markdown-link { color: var(--pg-foam); text-decoration: underline; }
+.landing-playground .ot-markdown-list,
+.landing-playground .ot-markdown-quote { color: var(--pg-dim); }
+
+/* Hairline scrollbars inside the IDE. */
+.landing-playground-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(126 200 227 / 0.25) transparent;
+}
+
+/* The deploy pipeline: a pulse runs along the active step's rail. */
+@keyframes landing-playground-pulse {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+.landing-playground-rail { position: relative; overflow: hidden; }
+.landing-playground-rail[data-active]::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent, var(--landing-accent), transparent);
+  animation: landing-playground-pulse 1.1s linear infinite;
+}
+
+@keyframes landing-playground-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+.landing-playground-in { animation: landing-playground-in 260ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-playground-rail[data-active]::after,
+  .landing-playground-in { animation: none; }
+}
