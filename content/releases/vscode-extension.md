@@ -9,6 +9,10 @@ pre-releases odd ones.
 
 ### Changed
 
+- **Closing a window stops the language server and `opentide serve` together.** A slow stop of one no
+  longer uses up the time VS Code gives the other, so neither is left running behind a closed window.
+- **Windows that never need the language server start faster.** The extension loads its language client the
+  first time a server starts, not in every window as it opens.
 - **The graph's platform, status and hops choices open VS Code's own picker.** They were native drop-downs
   whose popup looked unlike the rest of VS Code.
 - **The ATT&CK coverage panel's folder, platform and tenant choices open VS Code's own picker.** They were
@@ -28,6 +32,22 @@ pre-releases odd ones.
 
 ### Fixed
 
+- **A restart no longer hangs when the bundled opentide is busy (VS Code's WASI host).** Stopping the bundled
+  opentide while it was working could wait for ever for an exit that VS Code's WASI host never reported, and
+  every restart after it waited too.
+- **The editor features no longer stay stuck when the language server is restarted while it is still
+  starting.** A start that gets no answer is given up on after 30 seconds and the opentide engine (WASM) takes
+  over; a stop that gets no answer is cut short, so `opentide: Restart Server` always comes back.
+- **A slow tenant query no longer holds up the sidebar, the problems list or the coverage panel.** With the
+  bundled opentide, queries, deploy previews and other commands that reach a tenant run beside the editor's
+  own checks instead of in front of them. An editor command that answers nothing for 5 minutes is cancelled
+  with `timed-out`.
+- **A command that hangs can be cancelled.** Cancelling it stops it within 5 seconds, even when
+  opentide does not answer, and the commands queued behind it run. A command still waiting its turn
+  is cancelled at once.
+- **opentide stops restarting when it keeps crashing.** After four crashes in two minutes, commands
+  run in a process of their own; with the bundled opentide they stop, with a notice, until you run
+  "opentide: Restart Server".
 - **CQL, Exabeam, YARA and YARA-L queries are fully coloured in every theme.** Fields, functions and types
   were left plain in themes that do not turn on semantic highlighting, such as High Contrast Light.
 - **A query written on one line in quotes is coloured as a query.** `query: '…'` was painted as a single
