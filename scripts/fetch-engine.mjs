@@ -79,6 +79,12 @@ async function main() {
     const zip = Buffer.from(await response.arrayBuffer());
     const digest = createHash('sha256').update(zip).digest('hex');
     if (digest !== ENGINE_SHA256) throw new Error(`engine zip SHA-256 ${digest} does not match the pinned ${ENGINE_SHA256}`);
+    // Both downloads are checked before the current install is touched.
+    const licences = await fetch(LICENSES_URL, { signal: controller.signal });
+    if (!licences.ok) throw new Error(`GitHub responded ${licences.status} for ${LICENSES_URL}`);
+    const licencesBytes = Buffer.from(await licences.arrayBuffer());
+    const licencesDigest = createHash('sha256').update(licencesBytes).digest('hex');
+    if (licencesDigest !== LICENSES_SHA256) throw new Error(`THIRD-PARTY-LICENSES.html SHA-256 ${licencesDigest} does not match the pinned ${LICENSES_SHA256}`);
 
     rmSync(OUT, { recursive: true, force: true });
     for (const { name, data } of unzip(zip)) {
@@ -87,11 +93,6 @@ async function main() {
       mkdirSync(dirname(target), { recursive: true });
       writeFileSync(target, data);
     }
-    const licences = await fetch(LICENSES_URL, { signal: controller.signal });
-    if (!licences.ok) throw new Error(`GitHub responded ${licences.status} for ${LICENSES_URL}`);
-    const licencesBytes = Buffer.from(await licences.arrayBuffer());
-    const licencesDigest = createHash('sha256').update(licencesBytes).digest('hex');
-    if (licencesDigest !== LICENSES_SHA256) throw new Error(`THIRD-PARTY-LICENSES.html SHA-256 ${licencesDigest} does not match the pinned ${LICENSES_SHA256}`);
     writeFileSync(join(OUT, 'THIRD-PARTY-LICENSES.html'), licencesBytes);
     // The playground reads this before it loads the engine: the version, and the module's size for
     // its download progress (a gzipped response's Content-Length is not the size it streams).

@@ -1,12 +1,38 @@
 'use client';
 
 import type { LSPClient } from '@codemirror/lsp-client';
-import { ChevronDown, CircleAlert, CircleX, Cpu, FileCode2, FileCog, Folder, Info, RotateCcw, TerminalSquare, TriangleAlert, X } from 'lucide-react';
+import {
+  Bug,
+  Check,
+  ChevronDown,
+  ChevronUp,
+  CircleAlert,
+  CircleX,
+  Command,
+  Cpu,
+  Crosshair,
+  GitBranch,
+  Info,
+  Link2,
+  RotateCcw,
+  Rocket,
+  Search,
+  ShieldCheck,
+  SlidersHorizontal,
+  SpellCheck,
+  Target,
+  TriangleAlert,
+  Unlink,
+  X,
+  type LucideIcon,
+} from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { DeployPanel, type LogLine } from '@/components/playground/deploy-panel';
 import { createClient, createFileEditor, PlaygroundWorkspace, type FileEditor, type LspDiagnostic } from '@/components/playground/editor';
 import { startEngine, type Engine, type EngineStatus } from '@/components/playground/engine';
 import { compileRule } from '@/lib/playground/compile';
+import { isApplied, SCENARIOS, toggleScenario, type Scenario } from '@/lib/playground/scenarios';
+import { decodeShare, encodeShare } from '@/lib/playground/share';
 import {
   INITIAL_PATH,
   initialFiles,
@@ -27,33 +53,33 @@ const SEVERITY_ICON: Record<number, ReactNode> = {
   4: <Info className="size-3.5 shrink-0 text-[var(--landing-subtle)]" aria-label="hint" />,
 };
 
-/** Guided edits on the demo rule: each one shows the engine or the deploy answering. */
-const TRIES: { id: string; label: string; find: string | RegExp; replace: string }[] = [
-  { id: 'typo', label: 'Break the KQL', find: '| where FileName =~', replace: '| wher FileName =~' },
-  { id: 'vocab', label: 'Misspell a severity', find: /^severity: High$/m, replace: 'severity: Hihg' },
-  { id: 'ref', label: 'Point at a missing objective', find: /^detection_model: .+$/m, replace: 'detection_model: 00000000-0000-4000-8002-0000000000ff' },
-  { id: 'prod', label: 'Promote to PRODUCTION', find: /status: STAGING/g, replace: 'status: PRODUCTION' },
+type Kind = 'threat' | 'objective' | 'rule' | 'config';
+
+/** The explorer groups files by what they are, not by folder. */
+const KINDS: { kind: Kind; label: string; icon: LucideIcon; match: RegExp }[] = [
+  { kind: 'threat', label: 'Threats', icon: Crosshair, match: /^objects\/threats\// },
+  { kind: 'objective', label: 'Objectives', icon: Target, match: /^objects\/objectives\// },
+  { kind: 'rule', label: 'Rules', icon: ShieldCheck, match: /^objects\/rules\// },
+  { kind: 'config', label: 'Configuration', icon: SlidersHorizontal, match: /^\.opentide\// },
 ];
 
-function fileIcon(path: string) {
-  return path.endsWith('.toml') ? (
-    <FileCog className="size-3.5 shrink-0 text-[var(--landing-subtle)]" aria-hidden />
-  ) : (
-    <FileCode2 className="size-3.5 shrink-0 text-[var(--landing-accent)]" aria-hidden />
-  );
+const kindOf = (path: string) => KINDS.find((k) => k.match.test(path)) ?? KINDS[3];
+
+function FileIcon({ path, className = '' }: { path: string; className?: string }) {
+  const { icon: Icon } = kindOf(path);
+  return <Icon className={`size-3.5 shrink-0 ${className}`} aria-hidden />;
 }
 
 const baseName = (path: string) => path.split('/').pop() ?? path;
 
-/** The explorer tree: directories in order of first appearance, files under them. */
-function tree(paths: string[]) {
-  const dirs = new Map<string, string[]>();
-  for (const path of paths) {
-    const dir = path.split('/').slice(0, -1).join('/');
-    dirs.set(dir, [...(dirs.get(dir) ?? []), path]);
-  }
-  return [...dirs.entries()].sort(([a], [b]) => (a.startsWith('.') === b.startsWith('.') ? a.localeCompare(b) : a.startsWith('.') ? 1 : -1));
+/** A Tide object's `name:`, or the file name for anything else. */
+function displayName(path: string, text: string | undefined) {
+  if (path.endsWith('visibility.toml')) return 'Visibility';
+  if (path.endsWith('.toml')) return /^name\s*=\s*"([^"]+)"/m.exec(text ?? '')?.[1] ?? baseName(path);
+  return /^name:\s*(.+)$/m.exec(text ?? '')?.[1]?.trim() || baseName(path);
 }
+
+const SCENARIO_ICON: Record<string, LucideIcon> = { kql: Bug, vocab: SpellCheck, ref: Unlink, prod: Rocket };
 
 export function Playground() {
   const [files] = useState<PlaygroundFile[]>(initialFiles);
@@ -95,6 +121,7 @@ export function Playground() {
   // Editors: one per file, created once; the engine attaches to them when it is ready.
   useEffect(() => {
     const created: Record<string, FileEditor> = {};
+    let disposed = false;
     const pendingText: Record<string, string> = {};
     let flush = 0;
     for (const file of files) {
@@ -118,6 +145,15 @@ export function Playground() {
     }
     editors.current = created;
 
+    // A shared link carries edited files in its fragment: put them in the editors.
+    void decodeShare(window.location.hash).then((shared) => {
+      if (!shared || disposed) return;
+      for (const [path, text] of Object.entries(shared)) {
+        const view = created[path]?.view;
+        if (view) view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: text } });
+      }
+    });
+
     PlaygroundWorkspace.display = (uri) => {
       const path = pathOf(uri);
       if (!created[path]) return null;
@@ -126,7 +162,6 @@ export function Playground() {
     };
 
     let engine: Engine | null = null;
-    let disposed = false;
     void startEngine((s) => !disposed && setStatus(s)).then((e) => {
       if (disposed) {
         e?.dispose();
@@ -241,18 +276,19 @@ export function Playground() {
     });
   };
 
-  const tryEdit = (t: (typeof TRIES)[number]) => {
+  /** Apply a scenario to the demo rule, or undo it when it is in effect. */
+  const toggle = (scenario: Scenario) => {
     const path = INITIAL_PATH;
     open(path);
     const view = editors.current[path]?.view;
     if (!view) return;
-    const doc = view.state.doc.toString();
-    const regex = typeof t.find === 'string' ? new RegExp(t.find.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g') : new RegExp(t.find.source, t.find.flags.includes('g') ? t.find.flags : `${t.find.flags}g`);
-    const changes: { from: number; to: number; insert: string }[] = [];
-    for (const m of doc.matchAll(regex)) changes.push({ from: m.index!, to: m.index! + m[0].length, insert: t.replace });
-    if (!changes.length) return;
+    const changes = toggleScenario(scenario, view.state.doc.toString());
+    if (!changes.length) {
+      flash(`“${scenario.label}” needs the demo text: reset the rule first`);
+      return;
+    }
     requestAnimationFrame(() => {
-      view.dispatch({ changes, selection: { anchor: changes[0].from + t.replace.length }, scrollIntoView: true, userEvent: 'input.try' });
+      view.dispatch({ changes, selection: { anchor: changes[0].from + changes[0].insert.length }, scrollIntoView: true, userEvent: 'input.scenario' });
       view.focus();
     });
   };
@@ -264,117 +300,204 @@ export function Playground() {
         view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: file.text } });
       }
     }
+    if (window.location.hash) history.replaceState(null, '', window.location.pathname);
   };
 
   const closeTab = (path: string) => {
-    setTabs((t) => {
-      const next = t.filter((p) => p !== path);
-      if (path === active && next.length) setActive(next[Math.max(0, t.indexOf(path) - 1)]);
-      return next.length ? next : t;
-    });
+    if (tabs.length === 1) return;
+    const next = tabs.filter((p) => p !== path);
+    setTabs(next);
+    if (path === active) setActive(next[Math.max(0, tabs.indexOf(path) - 1)]);
   };
+
+  const [toast, setToast] = useState<string | null>(null);
+  const toastTimer = useRef(0);
+  const flash = (message: string) => {
+    setToast(message);
+    window.clearTimeout(toastTimer.current);
+    toastTimer.current = window.setTimeout(() => setToast(null), 2600);
+  };
+
+  /** Put the files that differ from the demo in the URL fragment and copy the link. */
+  const share = async () => {
+    const changed: Record<string, string> = {};
+    for (const file of files) {
+      const text = editors.current[file.path]?.view.state.doc.toString() ?? texts[file.path];
+      if (text !== file.text) changed[file.path] = text;
+    }
+    const hash = Object.keys(changed).length ? await encodeShare(changed) : '';
+    history.replaceState(null, '', `${window.location.pathname}${hash}`);
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      flash(hash ? 'Link copied: it carries your edits' : 'Link copied: no edits yet, it opens the demo');
+    } catch {
+      flash('The link is in the address bar');
+    }
+  };
+
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [panelOpen, setPanelOpen] = useState(true);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey && (e.key === 'p' || e.key === 'k')) {
+        e.preventDefault();
+        setPaletteOpen((o) => !o);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   const dirty = (path: string) => texts[path] !== original[path];
   const anyDirty = files.some((f) => dirty(f.path));
+  const ruleText = texts[INITIAL_PATH] ?? '';
   const activeFile = files.find((f) => f.path === active);
 
+  const paletteItems: PaletteItem[] = [
+    ...files.map((f) => ({
+      id: `file:${f.path}`,
+      group: 'Files',
+      label: displayName(f.path, texts[f.path]),
+      detail: f.path,
+      icon: kindOf(f.path).icon,
+      run: () => open(f.path),
+    })),
+    ...SCENARIOS.map((sc) => ({
+      id: `scenario:${sc.id}`,
+      group: 'Scenarios',
+      label: `${isApplied(sc, ruleText) ? 'Undo: ' : ''}${sc.label}`,
+      detail: sc.shows,
+      icon: SCENARIO_ICON[sc.id] ?? Bug,
+      run: () => toggle(sc),
+    })),
+    { id: 'share', group: 'Workspace', label: 'Copy a share link', detail: 'your edits, in the URL fragment', icon: Link2, run: () => void share() },
+    { id: 'reset', group: 'Workspace', label: 'Reset every file', detail: 'back to the demo repository', icon: RotateCcw, run: resetAll },
+  ];
+
   return (
-    <div className="landing-playground flex flex-col lg:h-full">
+    <div className="landing-playground relative flex flex-col lg:h-full">
       <div className="flex flex-col bg-[var(--landing-surface)] lg:min-h-0 lg:flex-1">
-        {/* Title bar: the repository, the guided edits, the engine */}
-        <div className="flex min-w-0 items-center gap-3 overflow-hidden border-y border-[var(--landing-border)] bg-[var(--landing-panel)] px-3 py-1.5">
-          <span className="flex shrink-0 items-center gap-2 font-mono text-xs text-[var(--landing-subtle)]">
-            <Folder className="size-3.5 shrink-0 text-[var(--landing-accent)]" aria-hidden />
-            <span className="hidden text-[var(--landing-ink)] sm:inline">detection-repo</span>
-            <span className="hidden xl:inline">· feat/lsass-credential-access</span>
+        {/* Toolbar: the repository, the scenarios, sharing, opentide */}
+        <div className="flex min-w-0 items-center gap-2 border-y border-[var(--landing-border)] bg-[var(--landing-panel)] px-2.5 py-1.5">
+          <span className="hidden shrink-0 items-center gap-2 pl-1 pr-1 font-mono text-xs text-[var(--landing-subtle)] md:flex">
+            <GitBranch className="size-3.5 text-[var(--landing-accent)]" aria-hidden />
+            <span className="text-[var(--landing-ink)]">detection-repo</span>
+            <span className="hidden 2xl:inline">feat/lsass-credential-access</span>
           </span>
-          <span aria-hidden className="hidden h-4 w-px bg-[var(--landing-border)] md:block" />
-          <div className="landing-playground-scroll flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto">
-            <span className="shrink-0 font-mono text-[11px] text-[var(--landing-subtle)]">try</span>
-            {TRIES.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => tryEdit(t)}
-                className="shrink-0 rounded-full border border-[var(--landing-border)] px-2.5 py-1 text-[11.5px] font-medium text-[var(--landing-muted)] transition hover:border-[var(--landing-accent)] hover:text-[var(--landing-accent)]"
-              >
-                {t.label}
-              </button>
-            ))}
-            {anyDirty && (
-              <button
-                type="button"
-                onClick={resetAll}
-                className="inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[11.5px] font-medium text-[var(--landing-subtle)] transition hover:bg-[var(--landing-hover)] hover:text-[var(--landing-ink)]"
-              >
-                <RotateCcw className="size-3" aria-hidden />
-                Reset
-              </button>
-            )}
+          <span aria-hidden className="hidden h-5 w-px bg-[var(--landing-border)] md:block" />
+          <div role="group" aria-label="Scenarios" className="landing-playground-scroll flex min-w-0 flex-1 items-center gap-1 overflow-x-auto">
+            {SCENARIOS.map((sc) => {
+              const on = isApplied(sc, ruleText);
+              const Icon = SCENARIO_ICON[sc.id] ?? Bug;
+              return (
+                <button
+                  key={sc.id}
+                  type="button"
+                  aria-pressed={on}
+                  title={on ? `Undo: ${sc.label}` : `Shows ${sc.shows}`}
+                  onClick={() => toggle(sc)}
+                  className="group inline-flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12px] font-medium text-[var(--landing-muted)] transition hover:bg-[var(--landing-hover)] hover:text-[var(--landing-ink)] aria-pressed:bg-[color-mix(in_srgb,var(--landing-accent)_13%,transparent)] aria-pressed:text-[var(--landing-accent)]"
+                >
+                  {on ? <Check className="size-3.5" aria-hidden /> : <Icon className="size-3.5 opacity-70 group-hover:opacity-100" aria-hidden />}
+                  {sc.label}
+                </button>
+              );
+            })}
           </div>
-          <span className="shrink-0">
-            <EngineBadge status={status} />
-          </span>
+          <div className="flex shrink-0 items-center gap-1">
+            {anyDirty && (
+              <ToolButton label="Reset every file" onClick={resetAll}>
+                <RotateCcw className="size-3.5" aria-hidden />
+              </ToolButton>
+            )}
+            <ToolButton label="Copy a share link" onClick={() => void share()}>
+              <Link2 className="size-3.5" aria-hidden />
+              <span className="hidden xl:inline">Share</span>
+            </ToolButton>
+            <ToolButton label="Go to file or command (Ctrl/⌘ P)" onClick={() => setPaletteOpen(true)}>
+              <Search className="size-3.5" aria-hidden />
+              <kbd className="hidden items-center gap-0.5 font-mono text-[10.5px] text-[var(--landing-subtle)] xl:inline-flex">
+                <Command className="size-2.5" aria-hidden />P
+              </kbd>
+            </ToolButton>
+            <span className="ml-1 hidden sm:block">
+              <EngineBadge status={status} />
+            </span>
+          </div>
         </div>
 
-        <div className="grid grid-cols-[minmax(0,1fr)] lg:min-h-0 lg:flex-1 lg:grid-cols-[210px_minmax(0,1fr)_360px] xl:grid-cols-[230px_minmax(0,1fr)_390px]">
-          {/* Explorer */}
-          <nav aria-label="Files" className="landing-playground-scroll hidden min-h-0 overflow-y-auto border-r border-[var(--landing-border)] bg-[var(--landing-panel)] py-2 lg:block">
-            <p className="px-3 pb-1 pt-1 font-mono text-[10.5px] text-[var(--landing-subtle)]">explorer</p>
-            {tree(files.map((f) => f.path)).map(([dir, paths]) => (
-              <div key={dir} className="mt-1">
-                <p className="flex items-center gap-1 truncate px-3 py-1 font-mono text-[11px] text-[var(--landing-subtle)]" title={dir}>
-                  <ChevronDown className="size-3 shrink-0" aria-hidden />
-                  {dir}
-                </p>
-                <ul>
-                  {paths.map((path) => (
-                    <li key={path}>
-                      <button
-                        type="button"
-                        onClick={() => open(path)}
-                        aria-current={path === active ? 'true' : undefined}
-                        className="flex w-full items-center gap-2 py-1 pl-7 pr-3 text-left text-[12.5px] text-[var(--landing-muted)] transition hover:bg-[var(--landing-hover)] aria-[current]:bg-[color-mix(in_srgb,var(--landing-accent)_11%,transparent)] aria-[current]:text-[var(--landing-ink)]"
-                      >
-                        {fileIcon(path)}
-                        <span className="min-w-0 flex-1 truncate">{baseName(path)}</span>
-                        <FileBadge counts={perFile[path]} dirty={dirty(path)} />
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+        <div className="grid grid-cols-[minmax(0,1fr)] lg:min-h-0 lg:flex-1 lg:grid-cols-[236px_minmax(0,1fr)_360px] xl:grid-cols-[256px_minmax(0,1fr)_400px]">
+          {/* Explorer: the workspace by object kind */}
+          <nav aria-label="Workspace" className="landing-playground-scroll hidden min-h-0 overflow-y-auto border-r border-[var(--landing-border)] bg-[var(--landing-panel)] pb-3 lg:block">
+            {KINDS.map((k) => {
+              const paths = files.map((f) => f.path).filter((path) => kindOf(path).kind === k.kind);
+              if (!paths.length) return null;
+              return (
+                <section key={k.kind} className="pt-3">
+                  <h2 className="flex items-center justify-between px-4 pb-1 font-mono text-[10.5px] text-[var(--landing-subtle)]">
+                    <span>{k.label.toLowerCase()}</span>
+                    <span>{paths.length}</span>
+                  </h2>
+                  <ul className="px-1.5">
+                    {paths.map((path) => (
+                      <li key={path}>
+                        <button
+                          type="button"
+                          onClick={() => open(path)}
+                          aria-current={path === active ? 'true' : undefined}
+                          title={path}
+                          className="group flex w-full items-start gap-2.5 rounded-lg px-2.5 py-1.5 text-left transition hover:bg-[var(--landing-hover)] aria-[current]:bg-[color-mix(in_srgb,var(--landing-accent)_11%,transparent)]"
+                        >
+                          <FileIcon path={path} className="mt-[3px] text-[var(--landing-subtle)] group-aria-[current]:text-[var(--landing-accent)]" />
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-[12.5px] leading-5 text-[var(--landing-muted)] group-aria-[current]:font-medium group-aria-[current]:text-[var(--landing-ink)]">
+                              {displayName(path, texts[path])}
+                            </span>
+                            <span className="block truncate font-mono text-[10.5px] leading-4 text-[var(--landing-subtle)]">{baseName(path)}</span>
+                          </span>
+                          <span className="mt-1">
+                            <FileBadge counts={perFile[path]} dirty={dirty(path)} />
+                          </span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              );
+            })}
           </nav>
 
           {/* Editor column */}
           <div className="flex min-h-0 min-w-0 flex-col">
-            {/* Tabs */}
             <div className="flex items-stretch border-b border-[var(--landing-border)] bg-[var(--landing-panel)]">
               <div role="tablist" aria-label="Open files" className="landing-playground-scroll flex min-w-0 flex-1 overflow-x-auto">
-                {tabs.map((path) => (
-                  <div
-                    key={path}
-                    role="tab"
-                    aria-selected={path === active}
-                    className="group relative flex shrink-0 items-center border-r border-[var(--landing-border)] text-[12.5px] text-[var(--landing-subtle)] aria-selected:bg-[var(--pg-code-bg)] aria-selected:text-[var(--pg-ink)]"
-                  >
-                    {path === active && <span aria-hidden className="absolute inset-x-0 top-0 h-0.5 bg-[var(--pg-yellow)]" />}
-                    <button type="button" onClick={() => open(path)} className="flex items-center gap-2 py-2 pl-3 pr-1.5">
-                      {fileIcon(path)}
-                      {baseName(path)}
-                      {dirty(path) && <span className="size-1.5 rounded-full bg-current opacity-70" aria-label="modified" />}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => closeTab(path)}
-                      aria-label={`Close ${baseName(path)}`}
-                      className="mr-1.5 rounded p-0.5 opacity-0 transition hover:bg-white/10 group-hover:opacity-100 group-aria-selected:opacity-60"
+                {tabs.map((path) => {
+                  const selected = path === active;
+                  return (
+                    <div
+                      key={path}
+                      data-selected={selected ? '' : undefined}
+                      className="group relative flex shrink-0 items-center border-r border-[var(--landing-border)] text-[12.5px] text-[var(--landing-subtle)] transition-colors hover:text-[var(--landing-ink)] data-[selected]:bg-[var(--pg-code-bg)] data-[selected]:text-[var(--pg-ink)]"
                     >
-                      <X className="size-3" aria-hidden />
-                    </button>
-                  </div>
-                ))}
+                      {selected && <span aria-hidden className="absolute inset-x-0 top-0 h-0.5 bg-[var(--pg-yellow)]" />}
+                      <button type="button" role="tab" aria-selected={selected} onClick={() => open(path)} className="flex items-center gap-2 py-2.5 pl-3.5 pr-1.5">
+                        <FileIcon path={path} className={selected ? 'text-[var(--pg-yellow)]' : ''} />
+                        {baseName(path)}
+                        {dirty(path) && <span className="size-1.5 rounded-full bg-current opacity-70" aria-label="modified" />}
+                      </button>
+                      {tabs.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => closeTab(path)}
+                          aria-label={`Close ${baseName(path)}`}
+                          className="mr-2 rounded p-0.5 opacity-0 transition hover:bg-white/10 focus-visible:opacity-100 group-hover:opacity-100 group-data-[selected]:opacity-60"
+                        >
+                          <X className="size-3" aria-hidden />
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
               {/* Below lg the explorer is a menu. */}
               <label className="relative flex items-center border-l border-[var(--landing-border)] px-2 lg:hidden">
@@ -386,7 +509,7 @@ export function Playground() {
                 >
                   {files.map((f) => (
                     <option key={f.path} value={f.path}>
-                      {f.path}
+                      {displayName(f.path, texts[f.path])}
                     </option>
                   ))}
                 </select>
@@ -420,62 +543,90 @@ export function Playground() {
             </div>
 
             {/* Bottom panel */}
-            <div className="flex h-[200px] min-h-0 flex-col border-t border-[var(--landing-border)] bg-[var(--landing-panel)] lg:h-[190px]">
-              <div role="tablist" aria-label="Panels" className="flex items-center gap-1 border-b border-[var(--landing-border)] px-2">
-                <PanelTab selected={panel === 'problems'} onClick={() => setPanel('problems')}>
+            <div className={`flex min-h-0 flex-col border-t border-[var(--landing-border)] bg-[var(--landing-panel)] ${panelOpen ? 'h-[200px] lg:h-[196px]' : ''}`}>
+              <div role="tablist" aria-label="Panels" className="flex items-center gap-1 px-2">
+                <PanelTab
+                  selected={panelOpen && panel === 'problems'}
+                  onClick={() => {
+                    setPanel('problems');
+                    setPanelOpen(true);
+                  }}
+                >
                   problems
-                  <span className="rounded-full bg-[var(--landing-hover)] px-1.5 text-[10px]">{problems.length}</span>
+                  <ProblemCount errors={counts[1]} warnings={counts[2]} />
                 </PanelTab>
-                <PanelTab selected={panel === 'output'} onClick={() => setPanel('output')}>
+                <PanelTab
+                  selected={panelOpen && panel === 'output'}
+                  onClick={() => {
+                    setPanel('output');
+                    setPanelOpen(true);
+                  }}
+                >
                   output
                   {log.length > 0 && <span className="size-1.5 rounded-full bg-[var(--landing-accent)]" />}
                 </PanelTab>
+                <button
+                  type="button"
+                  onClick={() => setPanelOpen((o) => !o)}
+                  aria-expanded={panelOpen}
+                  aria-label={panelOpen ? 'Collapse the panel' : 'Expand the panel'}
+                  className="ml-auto rounded-md p-1 text-[var(--landing-subtle)] transition hover:bg-[var(--landing-hover)] hover:text-[var(--landing-ink)]"
+                >
+                  {panelOpen ? <ChevronDown className="size-3.5" aria-hidden /> : <ChevronUp className="size-3.5" aria-hidden />}
+                </button>
               </div>
-              <div className="landing-playground-scroll min-h-0 flex-1 overflow-y-auto">
-                {panel === 'problems' ? (
-                  problems.length ? (
-                    <ul className="py-1">
-                      {problems.map((p, i) => (
-                        <li key={i}>
-                          <button
-                            type="button"
-                            onClick={() => reveal(p)}
-                            className="flex w-full items-start gap-2 px-3 py-1 text-left text-xs transition hover:bg-[var(--landing-hover)]"
-                          >
-                            <span className="mt-px">{SEVERITY_ICON[p.severity]}</span>
-                            <span className="min-w-0 flex-1">
-                              <span className="text-[var(--landing-ink)]">{p.message}</span>{' '}
-                              {p.code && <span className="font-mono text-[10.5px] text-[var(--landing-subtle)]">{p.code}</span>}
+              {panelOpen && (
+                <div className="landing-playground-scroll min-h-0 flex-1 overflow-y-auto border-t border-[var(--landing-border)]">
+                  {panel === 'problems' ? (
+                    problems.length ? (
+                      <ul className="py-1">
+                        {problems.map((p, i) => (
+                          <li key={i}>
+                            <button
+                              type="button"
+                              onClick={() => reveal(p)}
+                              className="flex w-full items-start gap-2.5 px-3 py-1.5 text-left text-xs transition hover:bg-[var(--landing-hover)]"
+                            >
+                              <span className="mt-px">{SEVERITY_ICON[p.severity]}</span>
+                              <span className="min-w-0 flex-1 text-[var(--landing-ink)]">{p.message}</span>
+                              {p.code && <span className="hidden shrink-0 font-mono text-[10.5px] text-[var(--landing-subtle)] md:inline">{p.code}</span>}
+                              <span className="shrink-0 rounded bg-[var(--landing-hover)] px-1.5 font-mono text-[10.5px] text-[var(--landing-subtle)]">
+                                {baseName(p.path)}:{p.line}
+                              </span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <div className="flex h-full items-center gap-3 px-4 text-xs text-[var(--landing-subtle)]">
+                        {status.state === 'ready' ? (
+                          <>
+                            <Check className="size-4 text-[var(--landing-accent)]" aria-hidden />
+                            <span>
+                              No problems in the workspace. Pick a scenario above, or type your own mistake.
                             </span>
-                            <span className="shrink-0 font-mono text-[10.5px] text-[var(--landing-subtle)]">
-                              {baseName(p.path)}:{p.line}:{p.col}
-                            </span>
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="px-3 py-3 text-xs text-[var(--landing-subtle)]">
-                      {status.state === 'ready'
-                        ? 'No problems in the workspace. Try one of the edits above, or type your own.'
-                        : status.state === 'missing' || status.state === 'failed'
-                          ? 'opentide could not be loaded, so nothing is checked.'
-                          : 'Problems appear once opentide has loaded.'}
-                    </p>
-                  )
-                ) : log.length ? (
-                  <pre className="m-0 whitespace-pre-wrap break-all px-3 py-2 font-mono text-[11.5px] leading-relaxed">
-                    {log.map((l, i) => (
-                      <div key={i} className={LOG_TONE[l.kind]}>
-                        {l.kind === 'cmd' ? <span className="text-[var(--landing-accent)]">$ </span> : null}
-                        {l.text}
+                          </>
+                        ) : status.state === 'missing' || status.state === 'failed' ? (
+                          'opentide could not be loaded, so nothing is checked.'
+                        ) : (
+                          'Problems appear once opentide has loaded.'
+                        )}
                       </div>
-                    ))}
-                  </pre>
-                ) : (
-                  <p className="px-3 py-3 text-xs text-[var(--landing-subtle)]">Deploy writes its log here.</p>
-                )}
-              </div>
+                    )
+                  ) : log.length ? (
+                    <pre className="m-0 whitespace-pre-wrap break-all px-3 py-2 font-mono text-[11.5px] leading-relaxed">
+                      {log.map((l, i) => (
+                        <div key={i} className={LOG_TONE[l.kind]}>
+                          {l.kind === 'cmd' ? <span className="text-[var(--landing-accent)]">$ </span> : null}
+                          {l.text}
+                        </div>
+                      ))}
+                    </pre>
+                  ) : (
+                    <p className="px-4 py-3 text-xs text-[var(--landing-subtle)]">Deploy writes its log here.</p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
@@ -488,12 +639,16 @@ export function Playground() {
               errors={problems.filter((p) => p.severity === 1)}
               warnings={counts[2]}
               engineReady={status.state === 'ready'}
-              onShowProblems={() => setPanel('problems')}
+              onShowProblems={() => {
+                setPanel('problems');
+                setPanelOpen(true);
+              }}
               onLog={(lines) => {
                 if (lines === 'clear') setLog([]);
                 else {
                   setLog((l) => [...l, ...lines]);
                   setPanel('output');
+                  setPanelOpen(true);
                 }
               }}
             />
@@ -502,7 +657,14 @@ export function Playground() {
 
         {/* Status bar */}
         <div className="flex items-center gap-4 overflow-hidden border-t border-[var(--landing-border)] bg-[var(--landing-panel)] px-3 py-1.5 font-mono text-[11px] text-[var(--landing-subtle)]">
-          <button type="button" onClick={() => setPanel('problems')} className="flex shrink-0 items-center gap-2 hover:text-[var(--landing-ink)]">
+          <button
+            type="button"
+            onClick={() => {
+              setPanel('problems');
+              setPanelOpen(true);
+            }}
+            className="flex shrink-0 items-center gap-2.5 hover:text-[var(--landing-ink)]"
+          >
             <span className="flex items-center gap-1">
               <CircleX className="size-3" aria-hidden />
               {counts[1]}
@@ -515,16 +677,148 @@ export function Playground() {
           <span className="hidden shrink-0 sm:inline">
             {status.state === 'ready' ? `opentide ${status.version} · WebAssembly · started in ${status.ms} ms` : 'opentide · WebAssembly'}
           </span>
-          <span className="ml-auto hidden shrink-0 xl:inline">Ctrl Space complete · F12 or ⌘/Ctrl click definition · F2 rename · Shift Alt F format</span>
-          <span className="shrink-0 max-xl:ml-auto">
+          <span className="ml-auto hidden shrink-0 2xl:inline">Ctrl Space complete · F12 or ⌘/Ctrl click definition · F2 rename · Shift Alt F format</span>
+          <span className="shrink-0 max-2xl:ml-auto">
             Ln {cursor.line}, Col {cursor.col}
           </span>
           <span className="shrink-0">{activeFile?.language === 'toml' ? 'TOML' : 'Tide YAML'}</span>
         </div>
       </div>
+
+      {paletteOpen && <Palette items={paletteItems} onClose={() => setPaletteOpen(false)} />}
+      {toast && (
+        <div role="status" className="landing-playground-in pointer-events-none fixed inset-x-0 bottom-10 z-50 flex justify-center px-4">
+          <p className="rounded-full bg-[var(--landing-ink)] px-4 py-2 text-[13px] font-medium text-[var(--landing-bg)] shadow-lg">{toast}</p>
+        </div>
+      )}
     </div>
   );
+}
 
+type PaletteItem = { id: string; group: string; label: string; detail: string; icon: LucideIcon; run: () => void };
+
+/** Letters of the query in order, anywhere in the text. */
+function fuzzy(query: string, text: string) {
+  let at = 0;
+  const t = text.toLowerCase();
+  for (const c of query.toLowerCase().replace(/\s+/g, '')) {
+    at = t.indexOf(c, at);
+    if (at < 0) return false;
+    at++;
+  }
+  return true;
+}
+
+/** Go to a file or run a command: Ctrl/⌘ P or K. */
+function Palette({ items, onClose }: { items: PaletteItem[]; onClose: () => void }) {
+  const [query, setQuery] = useState('');
+  const [index, setIndex] = useState(0);
+  const listRef = useRef<HTMLUListElement>(null);
+  const shown = items.filter((item) => fuzzy(query, `${item.label} ${item.detail}`));
+  const current = Math.min(index, Math.max(shown.length - 1, 0));
+
+  useEffect(() => {
+    listRef.current?.querySelector('[aria-selected="true"]')?.scrollIntoView({ block: 'nearest' });
+  }, [current]);
+
+  const run = (item: PaletteItem | undefined) => {
+    if (!item) return;
+    onClose();
+    item.run();
+  };
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-start justify-center bg-black/40 px-4 pt-[12vh] backdrop-blur-[2px]" onMouseDown={onClose}>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Go to file or command"
+        onMouseDown={(e) => e.stopPropagation()}
+        className="landing-playground-in w-full max-w-xl overflow-hidden rounded-2xl border border-[var(--landing-border)] bg-[var(--landing-panel)] shadow-[0_30px_80px_-20px_rgb(0_0_0/0.6)]"
+      >
+        <div className="flex items-center gap-3 border-b border-[var(--landing-border)] px-4">
+          <Search className="size-4 text-[var(--landing-subtle)]" aria-hidden />
+          <input
+            autoFocus
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setIndex(0);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                setIndex((current + 1) % Math.max(shown.length, 1));
+              } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                setIndex((current - 1 + shown.length) % Math.max(shown.length, 1));
+              } else if (e.key === 'Enter') {
+                e.preventDefault();
+                run(shown[current]);
+              } else if (e.key === 'Escape') {
+                e.preventDefault();
+                onClose();
+              }
+            }}
+            placeholder="Go to a file, or run a scenario…"
+            aria-controls="playground-palette"
+            className="h-12 flex-1 bg-transparent text-[15px] text-[var(--landing-ink)] outline-none placeholder:text-[var(--landing-subtle)]"
+          />
+          <kbd className="rounded border border-[var(--landing-border)] px-1.5 py-0.5 font-mono text-[10px] text-[var(--landing-subtle)]">esc</kbd>
+        </div>
+        <ul id="playground-palette" ref={listRef} role="listbox" className="landing-playground-scroll max-h-[50vh] overflow-y-auto p-1.5">
+          {shown.map((item, i) => {
+            const Icon = item.icon;
+            const header = i === 0 || shown[i - 1].group !== item.group;
+            return (
+              <li key={item.id} role="presentation">
+                {header && <p className="px-3 pb-1 pt-2.5 font-mono text-[10.5px] text-[var(--landing-subtle)]">{item.group.toLowerCase()}</p>}
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={i === current}
+                  onMouseEnter={() => setIndex(i)}
+                  onClick={() => run(item)}
+                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left aria-selected:bg-[color-mix(in_srgb,var(--landing-accent)_12%,transparent)]"
+                >
+                  <Icon className="size-4 shrink-0 text-[var(--landing-subtle)]" aria-hidden />
+                  <span className="min-w-0 flex-1 truncate text-[13.5px] text-[var(--landing-ink)]">{item.label}</span>
+                  <span className="hidden max-w-[45%] truncate font-mono text-[11px] text-[var(--landing-subtle)] sm:block">{item.detail}</span>
+                </button>
+              </li>
+            );
+          })}
+          {!shown.length && <li className="px-3 py-6 text-center text-sm text-[var(--landing-subtle)]">Nothing matches “{query}”.</li>}
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+function ToolButton({ label, onClick, children }: { label: string; onClick: () => void; children: ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={label}
+      aria-label={label}
+      className="inline-flex h-8 items-center gap-1.5 rounded-lg px-2 text-[12px] font-medium text-[var(--landing-muted)] transition hover:bg-[var(--landing-hover)] hover:text-[var(--landing-ink)]"
+    >
+      {children}
+    </button>
+  );
+}
+
+function ProblemCount({ errors, warnings }: { errors: number; warnings: number }) {
+  if (!errors && !warnings) return <span className="rounded-full bg-[var(--landing-hover)] px-1.5 text-[10px]">0</span>;
+  return (
+    <span className="flex items-center gap-1">
+      {errors > 0 && <span className="rounded-full bg-[#ff6b6b]/15 px-1.5 text-[10px] text-[#e5484d] dark:text-[#ff8a8a]">{errors}</span>}
+      {warnings > 0 && (
+        <span className="rounded-full bg-[color-mix(in_srgb,var(--landing-accent)_14%,transparent)] px-1.5 text-[10px] text-[var(--landing-accent)]">{warnings}</span>
+      )}
+    </span>
+  );
 }
 
 const LOG_TONE: Record<LogLine['kind'], string> = {

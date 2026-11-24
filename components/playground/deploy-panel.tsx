@@ -1,6 +1,6 @@
 'use client';
 
-import { Check, ChevronRight, Copy, Loader2, Play, RotateCcw, Rocket, TriangleAlert, X } from 'lucide-react';
+import { Braces, Check, ChevronRight, Copy, Loader2, Play, RotateCcw, Rocket, TriangleAlert, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Tag } from '@/components/landing/ui';
 import { usePrefersReducedMotion } from '@/lib/hooks/use-prefers-reduced-motion';
@@ -106,6 +106,19 @@ export function DeployPanel({
   const [deployed, setDeployed] = useState<Deployed>({});
   const [outcome, setOutcome] = useState<{ ok: boolean; message: string; at: number } | null>(null);
   const [view, setView] = useState<string | null>(null);
+  const [mode, setMode] = useState<'deploy' | 'payload'>('deploy');
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const consoleRef = useRef<HTMLElement>(null);
+  // A finished deploy brings its platform console into view.
+  useEffect(() => {
+    if (!outcome?.ok) return;
+    const frame = requestAnimationFrame(() => {
+      const box = scrollRef.current;
+      const target = consoleRef.current;
+      if (box && target) box.scrollTo({ top: target.offsetTop - 12, behavior: reduced ? 'auto' : 'smooth' });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [outcome, reduced]);
   const cancelled = useRef(false);
   // Read after the validate pause: diagnostics for an edit made just before Deploy land meanwhile.
   const latest = useRef({ errors, warnings, engineReady });
@@ -258,25 +271,41 @@ export function DeployPanel({
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="flex items-center justify-between gap-2 border-b border-[var(--landing-border)] px-4 py-2.5">
-        <p className="flex items-center gap-2 font-mono text-xs text-[var(--landing-subtle)]">
-          <Rocket className="size-3.5 text-[var(--landing-accent)]" aria-hidden />
-          deploy
+      <div className="flex items-center justify-between gap-2 border-b border-[var(--landing-border)] px-3 py-2">
+        <div role="tablist" aria-label="Deploy views" className="flex items-center gap-0.5 rounded-lg bg-[var(--landing-hover)] p-0.5">
+          {(['deploy', 'payload'] as const).map((m) => (
+            <button
+              key={m}
+              type="button"
+              role="tab"
+              aria-selected={mode === m}
+              onClick={() => setMode(m)}
+              className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[12px] font-medium text-[var(--landing-subtle)] transition hover:text-[var(--landing-ink)] aria-selected:bg-[var(--landing-panel)] aria-selected:text-[var(--landing-ink)] aria-selected:shadow-sm"
+            >
+              {m === 'deploy' ? <Rocket className="size-3.5" aria-hidden /> : <Braces className="size-3.5" aria-hidden />}
+              {m === 'deploy' ? 'Deploy' : 'Payload'}
+            </button>
+          ))}
+        </div>
+        <div className="flex items-center gap-1.5">
+          {deployedKeys.length > 0 && !running && (
+            <button
+              type="button"
+              onClick={reset}
+              className="inline-flex items-center gap-1 rounded-full px-2 py-1 font-mono text-[11px] text-[var(--landing-subtle)] transition hover:bg-[var(--landing-hover)] hover:text-[var(--landing-ink)]"
+            >
+              <RotateCcw className="size-3" aria-hidden />
+              tear down
+            </button>
+          )}
           <Tag tone="dashed">simulated</Tag>
-        </p>
-        {deployedKeys.length > 0 && !running && (
-          <button
-            type="button"
-            onClick={reset}
-            className="inline-flex items-center gap-1 rounded-full px-2 py-1 font-mono text-[11px] text-[var(--landing-subtle)] transition hover:bg-[var(--landing-hover)] hover:text-[var(--landing-ink)]"
-          >
-            <RotateCcw className="size-3" aria-hidden />
-            tear down
-          </button>
-        )}
+        </div>
       </div>
 
-      <div className="landing-playground-scroll min-h-0 flex-1 overflow-y-auto">
+      {mode === 'payload' ? (
+        <PayloadView compiled={compiled} />
+      ) : (
+      <div ref={scrollRef} className="landing-playground-scroll relative min-h-0 flex-1 overflow-y-auto">
         {/* What will deploy */}
         <section className="px-4 pt-4">
           {compiled?.error && !compiled.targets.length ? (
@@ -336,7 +365,7 @@ export function DeployPanel({
 
         {/* Simulated consoles */}
         {selected && deployed[selected] && (
-          <section className="landing-playground-in px-4 pb-5 pt-5">
+          <section ref={consoleRef} className="landing-playground-in px-4 pb-5 pt-5">
             {deployedKeys.length > 1 && (
               <div role="tablist" aria-label="Platforms" className="mb-3 flex gap-1 rounded-full bg-[var(--landing-hover)] p-1">
                 {deployedKeys.map((key) => (
@@ -358,11 +387,15 @@ export function DeployPanel({
           </section>
         )}
       </div>
+      )}
 
       <div className="border-t border-[var(--landing-border)] p-3">
         <button
           type="button"
-          onClick={run}
+          onClick={() => {
+            setMode('deploy');
+            void run();
+          }}
           disabled={running || !compiled || Boolean(compiled.error && !compiled.targets.length)}
           className="landing-btn-primary w-full justify-center rounded-xl py-2.5 text-sm disabled:cursor-not-allowed disabled:opacity-50"
         >
@@ -582,9 +615,120 @@ function Artefact({ label, children }: { label: string; children: string }): Rea
           {copied ? 'copied' : 'copy'}
         </button>
         <pre className="landing-playground-scroll m-0 max-h-72 overflow-auto px-3.5 py-3 font-mono text-[11px] leading-relaxed text-[var(--pg-ink)]">
-          <code>{children}</code>
+          <code>
+            <Highlighted text={children} language={label.endsWith('.conf') ? 'conf' : 'json'} />
+          </code>
         </pre>
       </div>
     </details>
+  );
+}
+
+/** JSON and `savedsearches.conf` coloured in the editor's palette. */
+function Highlighted({ text, language }: { text: string; language: 'json' | 'conf' }) {
+  const parts: ReactNode[] = [];
+  if (language === 'conf') {
+    text.split('\n').forEach((line, i) => {
+      if (i) parts.push('\n');
+      const stanza = /^\[.*\]$/.test(line);
+      const eq = line.indexOf(' = ');
+      if (stanza) parts.push(<span key={i} className="text-[var(--pg-yellow)]">{line}</span>);
+      else if (eq > 0)
+        parts.push(
+          <span key={i}>
+            <span className="text-[var(--pg-foam)]">{line.slice(0, eq)}</span>
+            <span className="text-[var(--pg-dim)]"> = </span>
+            <span className="text-[var(--pg-string)]">{line.slice(eq + 3)}</span>
+          </span>,
+        );
+      else parts.push(<span key={i} className="text-[var(--pg-string)]">{line}</span>);
+    });
+    return <>{parts}</>;
+  }
+  const token = /("(?:\\.|[^"\\])*")(\s*:)?|\b(true|false|null)\b|(-?\d+(?:\.\d+)?)/g;
+  let last = 0;
+  for (const m of text.matchAll(token)) {
+    if (m.index > last) parts.push(<span key={`p${last}`} className="text-[var(--pg-dim)]">{text.slice(last, m.index)}</span>);
+    const [whole, str, colon, keyword, number] = m;
+    if (str && colon) parts.push(<span key={m.index} className="text-[var(--pg-foam)]">{str}<span className="text-[var(--pg-dim)]">{colon}</span></span>);
+    else if (str) parts.push(<span key={m.index} className="text-[var(--pg-string)]">{str}</span>);
+    else if (keyword) parts.push(<span key={m.index} className="text-[var(--pg-number)]">{keyword}</span>);
+    else if (number) parts.push(<span key={m.index} className="text-[var(--pg-number)]">{number}</span>);
+    last = m.index + whole.length;
+  }
+  if (last < text.length) parts.push(<span key="end" className="text-[var(--pg-dim)]">{text.slice(last)}</span>);
+  return <>{parts}</>;
+}
+
+/** What each platform would receive, compiled live from the rule as it is typed. */
+function PayloadView({ compiled }: { compiled: CompiledRule | null }) {
+  const targets = (compiled?.targets ?? []).filter((t) => t.action !== 'skip');
+  const [picked, setPicked] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const target = targets.find((t) => t.key === picked) ?? targets[0];
+
+  if (!compiled || (compiled.error && !compiled.targets.length) || !target) {
+    return (
+      <div className="flex min-h-0 flex-1 items-center justify-center p-6">
+        <p className="max-w-xs text-center text-sm text-[var(--landing-muted)]">{compiled?.error ?? 'This rule has no enabled configurations block, so there is nothing to send.'}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex flex-wrap items-center gap-1.5 px-3 pt-3">
+        {targets.map((t) => (
+          <button
+            key={t.key}
+            type="button"
+            aria-pressed={t.key === target.key}
+            onClick={() => setPicked(t.key)}
+            className="inline-flex items-center gap-1.5 rounded-full border border-[var(--landing-border)] px-2.5 py-1 text-[12px] font-medium text-[var(--landing-muted)] transition hover:text-[var(--landing-ink)] aria-pressed:border-transparent aria-pressed:bg-[var(--landing-ink)] aria-pressed:text-[var(--landing-bg)]"
+          >
+            <PlatformLogo platform={t.key} size={14} />
+            {shortName(t.key)}
+          </button>
+        ))}
+      </div>
+      <div className="px-3 pt-3">
+        <p className="text-[13px] font-medium leading-snug">
+          <TitleWithModifier title={target.title} />
+        </p>
+        <p className="mt-1 font-mono text-[11px] text-[var(--landing-subtle)]">
+          {target.status} → {target.strategy.toLowerCase()} → {target.tenants.join(', ') || 'no tenant'}
+          {target.modifiers.length > 0 && <> · {target.modifiers.join(', ')}</>}
+        </p>
+        {target.warnings.map((w) => (
+          <p key={w} className="mt-2 flex items-start gap-1.5 text-xs text-[var(--landing-ink)]">
+            <TriangleAlert className="mt-px size-3.5 shrink-0 text-[var(--landing-accent)]" aria-hidden />
+            {w}
+          </p>
+        ))}
+      </div>
+      <div className="relative mx-3 mb-3 mt-3 flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl bg-[var(--pg-code-bg)] ring-1 ring-[var(--landing-border)]">
+        <div className="flex items-center justify-between border-b border-white/10 px-3 py-1.5 font-mono text-[10.5px] text-[var(--pg-dim)]">
+          <span className="truncate">{target.artefact.label}</span>
+          <button
+            type="button"
+            onClick={() => {
+              void navigator.clipboard?.writeText(target.artefact.text).then(() => {
+                setCopied(true);
+                setTimeout(() => setCopied(false), 1400);
+              });
+            }}
+            className="inline-flex shrink-0 items-center gap-1 rounded px-1.5 py-0.5 transition hover:bg-white/10 hover:text-white"
+          >
+            {copied ? <Check className="size-3" aria-hidden /> : <Copy className="size-3" aria-hidden />}
+            {copied ? 'copied' : 'copy'}
+          </button>
+        </div>
+        <pre className="landing-playground-scroll m-0 min-h-[220px] flex-1 overflow-auto px-3 py-2.5 font-mono text-[11px] leading-relaxed lg:min-h-0">
+          <code>
+            <Highlighted text={target.artefact.text} language={target.artefact.language} />
+          </code>
+        </pre>
+      </div>
+    </div>
   );
 }
