@@ -31,15 +31,15 @@ export const INTEGRATIONS: Integration[] = [
     ],
   },
   {
-    key: 'defender_for_endpoint',
-    name: 'Defender for Endpoint',
+    key: 'microsoft_defender',
+    name: 'Microsoft Defender',
     deploys: 'KQL custom detection',
     src: '/icons/platforms/defender.svg',
     kind: 'color',
     block: [
       'query: DeviceProcessEvents | where FileName =~ "cmd.exe"',
-      'scheduling: 1H',
-      'alert: { category: Execution, severity: High }',
+      'schedule: { frequency: 1H, lookback: 4H }',
+      'alert: { severity: High, techniques: [T1059.001] }',
     ],
   },
   {

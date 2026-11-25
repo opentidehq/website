@@ -11,7 +11,7 @@ import { SeaRenderer, type Rgb } from '@/components/landing/sea/renderer';
  * a run of it, so the near rows read as query, and neighbouring rows rarely share a language.
  */
 const SOURCE = [
-  // Microsoft Sentinel and Defender for Endpoint: KQL
+  // Microsoft Sentinel and Microsoft Defender: KQL
   'DeviceProcessEvents | where FileName =~ "lsass.exe" | project Timestamp, DeviceName',
   // Splunk Enterprise Security: SPL
   '`sysmon` EventCode=10 TargetImage="*\\lsass.exe" | stats count by host, SourceImage, GrantedAccess',
