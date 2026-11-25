@@ -54,7 +54,8 @@ export type EcosystemItem = {
 export const ecosystemLinks: EcosystemItem[] = [
   {
     name: 'opentide',
-    description: 'The CLI, Python SDK and MCP server, in one package on PyPI.',
+    description:
+      'The CLI, MCP server, language server and SDKs for Python, Rust and Node.js, on one Rust core, at one version on PyPI, crates.io and npm.',
     href: 'https://github.com/opentidehq/opentide',
     status: 'live',
     tag: 'Toolchain',
@@ -86,13 +87,6 @@ export const ecosystemLinks: EcosystemItem[] = [
     href: 'https://github.com/opentidehq/skills',
     status: 'live',
     tag: 'Agents',
-  },
-  {
-    name: 'language-server',
-    description: 'Native language server for KQL, SPL, ES|QL, EQL, Kibana KQL, Lucene, Falco and Tide YAML, on crates.io and in pip install opentide.',
-    href: 'https://github.com/opentidehq/language-server',
-    status: 'live',
-    tag: 'Editor',
   },
   {
     name: 'vscode-extension',

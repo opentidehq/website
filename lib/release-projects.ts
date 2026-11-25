@@ -1,5 +1,9 @@
 /** The projects the Releases page covers. Order is the switcher's order. */
-export type ProjectId = 'opentide' | 'language-server' | 'vscode-extension' | 'explorer';
+/**
+ * The language server is not a project here: it ships inside opentide from 1.0.0 (`opentide lsp
+ * start`, the `opentide-lsp` crate), at opentide's version. /releases/language-server/ says so.
+ */
+export type ProjectId = 'opentide' | 'vscode-extension' | 'explorer';
 
 export type ReleaseProject = {
   id: ProjectId;
@@ -38,9 +42,9 @@ export const PROJECTS: readonly ReleaseProject[] = [
     id: 'opentide',
     name: 'opentide',
     shortName: 'opentide',
-    tagline: 'CLI · SDK · MCP server',
+    tagline: 'CLI · SDKs · MCP · LSP',
     description:
-      'The opentide package: validate, generate, and deploy detection objects. Install the latest, or pin the version your pipeline should keep.',
+      'The opentide package: validate, generate, and deploy detection objects, with its MCP server, language server and SDKs at the same version. Install the latest, or pin the version your pipeline should keep.',
     href: '/releases/',
     repository: 'https://github.com/opentidehq/opentide',
     gettingStarted: { label: 'installation', href: '/docs/usage/installation/' },
@@ -52,28 +56,6 @@ export const PROJECTS: readonly ReleaseProject[] = [
       versionUrl: (version) => `https://pypi.org/project/opentide/${version}/`,
     },
     install: (version) => `pip install opentide==${version}`,
-  },
-  {
-    id: 'language-server',
-    name: 'Language server',
-    shortName: 'LSP',
-    tagline: 'KQL · SPL · ES|QL · Tide YAML',
-    description:
-      'Diagnostics, hover, completion, and highlighting for detection queries and Tide objects, in any editor that speaks LSP.',
-    href: '/releases/language-server/',
-    // Ships inside opentide since 1.0.0 (`opentide lsp start`, the `opentide-lsp` crate and
-    // binaries of opentide's GitHub Release); its notes are opentide's crates/CHANGELOG.md.
-    repository: 'https://github.com/opentidehq/opentide',
-    gettingStarted: { label: 'opentide lsp', href: '/docs/cli/lsp/' },
-    changelogUrl: 'https://github.com/opentidehq/opentide/blob/development/crates/CHANGELOG.md',
-    changelog: 'language-server.md',
-    firstPublished: '0.5.0',
-    registry: {
-      label: 'crates.io',
-      url: 'https://crates.io/crates/opentide-lsp',
-      versionUrl: (version) => `https://crates.io/crates/opentide-lsp/${version}`,
-    },
-    install: (version) => `cargo install opentide-lsp --version ${version}`,
   },
   {
     id: 'vscode-extension',
@@ -124,7 +106,7 @@ export const PROJECTS: readonly ReleaseProject[] = [
   },
 ];
 
-/** The project's name inside a sentence: "the language server", "the VS Code extension". */
+/** The project's name inside a sentence: "the VS Code extension", "the explorer". */
 export function nameInSentence(project: ReleaseProject): string {
   const [first = '', ...rest] = project.name.split(' ');
   // An acronym keeps its capitals; any other first word is lowercased.

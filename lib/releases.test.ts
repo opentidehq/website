@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { PROJECTS, nameInSentence, releaseProject } from './release-projects.ts';
+import { PROJECTS, nameInSentence, releaseProject, type ReleaseProject } from './release-projects.ts';
 import {
   breakingEntry,
   categoryAnchor,
@@ -124,7 +124,21 @@ test('published release notes parse into a version log', () => {
   assert.ok(six.sections.some((section) => section.items.length > 0));
 });
 
-const changelogProject = PROJECTS.find((project) => project.id === 'language-server')!;
+/** A crates.io project published from 0.5.0, as a fixture; the switcher has no such project. */
+const changelogProject: ReleaseProject = {
+  ...PROJECTS.find((project) => project.id === 'explorer')!,
+  name: 'Crate',
+  repository: 'https://github.com/opentidehq/opentide',
+  firstPublished: '0.5.0',
+  registry: {
+    label: 'crates.io',
+    url: 'https://crates.io/crates/opentide-lsp',
+    versionUrl: (version) => `https://crates.io/crates/opentide-lsp/${version}`,
+  },
+  mirrors: undefined,
+  prerelease: undefined,
+  install: (version) => `cargo install opentide-lsp --version ${version}`,
+};
 
 const changelogFixture = `# Changelog
 
@@ -386,7 +400,7 @@ test('a SemVer prerelease is a pre-release in any project', () => {
 test('project names read inside a sentence', () => {
   assert.deepEqual(
     PROJECTS.map((project) => nameInSentence(project)),
-    ['opentide', 'language server', 'VS Code extension', 'explorer'],
+    ['opentide', 'VS Code extension', 'explorer'],
   );
 });
 

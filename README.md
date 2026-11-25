@@ -15,7 +15,7 @@ Built with [Next.js](https://nextjs.org/) and [Fumadocs](https://fumadocs.dev/),
 | Usage, CLI, MCP, SDK | [opentide](https://github.com/opentidehq/opentide) `docs/` | `/docs/{usage,cli,mcp,sdk}` |
 | Blog | This repo `content/blog/` | `/blog/` |
 | Playground | This repo, on opentide's WebAssembly build (`pnpm fetch:engine`) | `/playground/` |
-| Releases | opentide's release notes, and the `CHANGELOG.md` of language-server, vscode-extension and explorer synced into `content/releases/` | `/releases/`, `/releases/<project>/` |
+| Releases | opentide's release notes, and the `CHANGELOG.md` of vscode-extension and explorer synced into `content/releases/`. The language server ships with opentide from 1.0.0; `/releases/language-server/` says so | `/releases/`, `/releases/<project>/` |
 
 Documentation prose is synced from the opentide and specifications repos via `pnpm sync:content` and **committed** under `content/docs/` as `.mdx` so Fumadocs can compile JSX and private-repo CI can build without cross-repository access. `content/docs/.sync-stamp.json` records the vendor SHAs; `pnpm check:docs` fails if those gitlinks moved without a refresh. A GitHub Actions workflow (`sync-docs.yml`) does this on a schedule and on `repository_dispatch`, then deploys — you do not need to run sync by hand after a package release.
 
@@ -76,9 +76,9 @@ Environment overrides (first match wins):
 ## Release notes
 
 `/releases/` reads each project's notes in one shape, the release-notes standard every project's
-repository carries as its `release-notes` skill (opentide: `.agents/skills/release-notes/`,
-language-server: `skills/release-notes/`, vscode-extension and explorer:
-`.agents/skills/release-notes/`). `lib/releases.ts` parses it:
+repository carries as its `release-notes` skill (opentide: `.agents/skills/release-notes/` and,
+for the engine crates and language server, `.agents/skills/engine-release-notes/`;
+vscode-extension and explorer: `.agents/skills/release-notes/`). `lib/releases.ts` parses it:
 
 | In the notes | On the page |
 |--------------|-------------|

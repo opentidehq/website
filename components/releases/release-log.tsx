@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import {
   ArrowUpRight,
-  Braces,
   ChevronRight,
   Network,
   SquareCode,
@@ -26,7 +25,6 @@ import {
 
 const ICONS: Record<ProjectId, LucideIcon> = {
   opentide: Waves,
-  'language-server': Braces,
   'vscode-extension': SquareCode,
   explorer: Network,
 };
@@ -54,7 +52,7 @@ function shortDate(release: ReleaseNote): string {
 function ProjectSwitcher({ projects, current }: { projects: ProjectSummary[]; current: ProjectId }) {
   return (
     <nav aria-label="Projects" className="mt-10">
-      <ul className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-4">
+      <ul className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3">
         {projects.map(({ project, latest }) => {
           const active = project.id === current;
           const Icon = ICONS[project.id];
