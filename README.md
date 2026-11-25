@@ -66,6 +66,7 @@ Environment overrides (first match wins):
 | `pnpm fetch:engine` | Download the pinned `opentide-wasm-web` zip from opentide's release into `public/playground/engine/` (gitignored); bump `ENGINE_VERSION` and `ENGINE_SHA256` in `scripts/fetch-engine.mjs` together, with the VS Code extension's `pins.json` |
 | `pnpm sync:content` | Copy opentide + specifications docs into `content/docs/` as `.mdx` |
 | `pnpm check:docs` | Fail if `content/docs` does not match the pinned vendor gitlinks |
+| `pnpm check:upstream` | Every check the site runs on the upstream trees in `vendor/` (sync, test, types, `next build`, docs freshness, built docs): what the hourly sync and the source repositories' PR guards run. See `AGENTS.md` |
 | `pnpm test` | Unit tests for sync, freshness, and GitHub source URLs |
 | `pnpm verify:demos` | Run the landing demo objects through `opentide validate --strict`, `lint --strict` and a dry-run deploy (needs `pip install opentide`) |
 | `pnpm build` | Snapshot PyPI + sync docs + static export to `out/` |
@@ -129,11 +130,13 @@ The landing page reads the current `opentide` version from the PyPI JSON API in 
 
 Docs, changelog pages, specs, and RFCs **do** need a rebuild. `.github/workflows/sync-docs.yml` handles that without a human. RFC pages are not a separate publish step: `pnpm sync:content` rebuilds `/docs/specifications/rfcs/` from `specifications/rfcs/` (including reserved numbers that only exist in the README) every time the specifications pin moves.
 
-1. Hourly (and on `repository_dispatch` / `workflow_dispatch`) bump `vendor/opentide` + `vendor/specifications`
-2. Run `pnpm sync:content` and commit `content/docs/` (including `.sync-stamp.json`)
-3. Lint, test, typecheck, and build
-4. Fail if the stamp does not match the new gitlinks, or if built HTML still contains escaped `<Tabs>`
-5. Push the verified commit to `main` and dispatch GitHub Pages deploy
+1. Hourly (and on `repository_dispatch` / `workflow_dispatch`) fetch the tips of `vendor/opentide` + `vendor/specifications`, and sync the project changelogs
+2. Run `pnpm check:upstream` on both new trees; if it fails, on each new tree alone with the other source at its last good commit (`scripts/sync-upstream.mjs`)
+3. Commit what passed: the gitlinks, `content/docs/` (including `.sync-stamp.json`), `content/releases/` and the derived vocabularies. A tree that failed keeps its last good gitlink and content
+4. Push the commit to `main` and dispatch GitHub Pages deploy
+5. If a tree was held back, fail the run after the deploy, so the `sync-docs-failure` issue says which tree and which check
+
+An upstream tree can delay its own pages, never the site: see `AGENTS.md`, "Upstream checks".
 
 A new or updated RFC in the specifications repository shows up on the site on the next hourly run. An opentide release dispatch refreshes both pins immediately. Nothing in this repository has to be edited by hand.
 

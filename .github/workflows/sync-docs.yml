@@ -35,7 +35,8 @@ permissions:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    # Up to three candidate builds when both sources move and one is broken.
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
         with:
@@ -97,7 +98,10 @@ jobs:
           set -euo pipefail
           git config submodule.vendor/opentide.url git@github.com-opentide:opentidehq/opentide.git
           git config submodule.vendor/specifications.url git@github.com-specifications:opentidehq/specifications.git
-          git submodule update --init --remote --merge vendor/opentide vendor/specifications
+          # Check out the last good commits first, so both stay at hand for a fallback, then
+          # each branch tip. `--checkout`, not `--merge`: a gitlink must be a commit upstream has.
+          git submodule update --init vendor/opentide vendor/specifications
+          git submodule update --remote --checkout vendor/opentide vendor/specifications
 
       - name: Remove submodule SSH keys
         if: always()
@@ -117,11 +121,17 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - name: Sync published docs
-        run: pnpm sync:content
-
       - name: Sync project changelogs
         run: pnpm sync:changelogs
+
+      # An upstream tree can never stop the site. `pnpm check:upstream` (the same checks the
+      # source repositories' PR guards run) decides which trees the site takes: both new tips,
+      # else each new tip with the other source at its last good commit, else neither. What
+      # passed is left in the working tree; a tree that failed is reported below, after the
+      # deploy. See AGENTS.md, "Upstream checks".
+      - name: Check upstream trees and keep the last good ones
+        id: upstream
+        run: node scripts/sync-upstream.mjs
 
       - name: Commit documentation changes
         id: commit
@@ -154,18 +164,6 @@ jobs:
           echo "changed=true" >> "$GITHUB_OUTPUT"
           echo "pypi_version=${pypi_version}" >> "$GITHUB_OUTPUT"
 
-      - name: Verify the synced site builds
-        if: steps.commit.outputs.changed == 'true'
-        run: |
-          pnpm lint
-          pnpm test
-          pnpm types:check
-          pnpm build
-          pnpm check:docs
-          pnpm verify:docs
-        env:
-          SKIP_SYNC: '1'
-
       - name: Push to main and deploy
         if: steps.commit.outputs.changed == 'true'
         env:
@@ -175,7 +173,7 @@ jobs:
           set -euo pipefail
           # GITHUB_TOKEN cannot create pull requests unless the repository
           # setting "Allow GitHub Actions to create and approve pull requests"
-          # is enabled. The commit is already linted/typechecked/built, so
+          # is enabled. The commit already passed `pnpm check:upstream`, so
           # land it on main and dispatch Pages (token pushes do not fire
           # on: push workflows).
           #
@@ -190,8 +188,8 @@ jobs:
           else
             git checkout --force -B sync-push origin/main
             git rm -r --quiet --ignore-unmatch -- content/docs
-            git checkout "$SYNC_COMMIT" -- vendor/opentide vendor/specifications content/docs content/releases
-            git add -- vendor/opentide vendor/specifications content/docs content/releases
+            git checkout "$SYNC_COMMIT" -- vendor/opentide vendor/specifications content/docs content/releases lib/generated/vocabularies.ts
+            git add -- vendor/opentide vendor/specifications content/docs content/releases lib/generated/vocabularies.ts
             if git diff --cached --quiet; then
               echo "main already has this documentation"
             else
@@ -201,6 +199,15 @@ jobs:
           fi
           echo "Dispatching GitHub Pages deploy"
           gh workflow run deploy.yml --ref main
+
+      # After the deploy: the site has published what passed, and the run goes red so the
+      # sync-docs-failure issue names the held-back tree and the check it fails.
+      - name: Report upstream held back
+        if: steps.upstream.outputs.held_back == 'true'
+        run: |
+          cat "$RUNNER_TEMP/upstream-held-back.md" >> "$GITHUB_STEP_SUMMARY"
+          cat "$RUNNER_TEMP/upstream-held-back.annotations"
+          exit 1
 
       # Keep this the last step so it sees the outcome of everything above. Alerts use only
       # the workflow GITHUB_TOKEN: failure -> job summary + one `sync-docs-failure` issue

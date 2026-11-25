@@ -9,6 +9,7 @@
     "sync:changelogs": "node --experimental-strip-types --no-warnings scripts/sync-changelogs.mjs",
     "check:docs": "node scripts/check-docs-freshness.mjs",
     "verify:docs": "node scripts/verify-built-docs.mjs",
+    "check:upstream": "node scripts/check-upstream.mjs",
     "verify:demos": "node --experimental-strip-types --no-warnings scripts/verify-demo-objects.mjs",
     "prebuild": "pnpm fetch:pypi && pnpm fetch:engine && pnpm sync:changelogs && pnpm sync:content",
     "build": "next build && touch out/.nojekyll",
