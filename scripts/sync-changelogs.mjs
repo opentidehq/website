@@ -6,10 +6,10 @@
  *
  * A failed fetch, or a file the Releases page's own parser rejects, keeps the committed
  * copy: an upstream changelog can never break the hourly sync or the deploy. A local
- * checkout can stand in for GitHub: LANGUAGE_SERVER_CHANGELOG=../opentide/crates/CHANGELOG.md.
+ * checkout can stand in for GitHub: EXPLORER_CHANGELOG=../explorer/CHANGELOG.md.
  *
- * The language server ships inside opentide since 1.0.0 (one version, one tag): its notes are
- * opentide's crates/CHANGELOG.md on development, not the archived opentidehq/language-server.
+ * The language server is not synced on its own: it ships inside opentide from 1.0.0, at
+ * opentide's version, and /releases/language-server/ points at its pre-1.0 history.
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -22,14 +22,6 @@ const OUT_DIR = join(ROOT, 'content', 'releases');
 const FETCH_TIMEOUT_MS = 8_000;
 const MAX_BYTES = 512 * 1024;
 const SOURCES = [
-  {
-    id: 'language-server',
-    file: 'language-server.md',
-    repo: 'opentidehq/opentide',
-    ref: 'development',
-    path: 'crates/CHANGELOG.md',
-    env: 'LANGUAGE_SERVER_CHANGELOG',
-  },
   {
     id: 'vscode-extension',
     file: 'vscode-extension.md',
