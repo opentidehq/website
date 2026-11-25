@@ -119,3 +119,101 @@ export function releaseProject(id: ProjectId): ReleaseProject {
   if (!project) throw new Error(`Unknown release project: ${id}`);
   return project;
 }
+
+/**
+ * The engine crates' and language server's notes: opentide's `crates/CHANGELOG.md`, synced into
+ * `content/releases/` by `pnpm sync:changelogs`. From `since` they are cut at opentide's version
+ * (one version, one tag), and each opentide release folds in the section of its own version.
+ * Before it, the language server had versions of its own (0.x up to 0.16.1), which this page
+ * does not mix in.
+ */
+export const OPENTIDE_CRATES_NOTES = {
+  file: 'opentide-crates.md',
+  since: '1.0.0',
+  changelogUrl: 'https://github.com/opentidehq/opentide/blob/development/crates/CHANGELOG.md',
+  /** For `parseChangelog`: links are per crate on the page, so the version links none. */
+  project: {
+    id: 'opentide',
+    name: 'opentide crates',
+    shortName: 'crates',
+    tagline: '',
+    description: '',
+    href: '/releases/',
+    repository: 'https://github.com/opentidehq/opentide',
+    changelogUrl: 'https://github.com/opentidehq/opentide/blob/development/crates/CHANGELOG.md',
+    gettingStarted: { label: 'opentide lsp', href: '/docs/cli/lsp/' },
+    changelog: 'opentide-crates.md',
+    registry: {
+      label: 'crates.io',
+      url: 'https://crates.io/crates/opentide',
+      versionUrl: (version: string) => `https://crates.io/crates/opentide/${version}`,
+    },
+    install: (version: string) => `cargo install opentide --features cli --version ${version}`,
+  } satisfies ReleaseProject,
+} as const;
+
+/**
+ * Every crate a release publishes on crates.io, at opentide's version, each with what it is.
+ * The facade and the language server first, then the layers under them, then the query
+ * languages. `lib/releases.test.ts` checks the list against `vendor/opentide/crates/` when the
+ * checkout has it.
+ */
+export const OPENTIDE_CRATES: readonly { name: string; role: string }[] = [
+  { name: 'opentide', role: 'Rust SDK (facade); `--features cli` installs the CLI' },
+  { name: 'opentide-lsp', role: 'Language server' },
+  { name: 'opentide-cli', role: 'The `opentide` command' },
+  { name: 'opentide-workspace', role: 'Workspace: load, validate, lint' },
+  { name: 'opentide-schema', role: 'Tide object and configuration models' },
+  { name: 'opentide-schema-derive', role: 'Derive macros for the models' },
+  { name: 'opentide-compile', role: 'Compile rules into platform requests' },
+  { name: 'opentide-connectors', role: 'Platform connectors: deploy and query' },
+  { name: 'opentide-analysis', role: 'Query analysis, hover and completion' },
+  { name: 'opentide-tide', role: 'Tide YAML: index, references' },
+  { name: 'opentide-core', role: 'Shared types: nodes, diagnostics, JSON' },
+  { name: 'opentide-parse', role: 'Parser toolkit' },
+  { name: 'opentide-highlight', role: 'Highlighting spec and grammars' },
+  { name: 'opentide-dataset', role: 'Vendor catalogs: tables, fields' },
+  { name: 'opentide-ecs', role: 'Elastic Common Schema' },
+  { name: 'opentide-kql', role: 'KQL' },
+  { name: 'opentide-spl', role: 'SPL' },
+  { name: 'opentide-esql', role: 'ES|QL' },
+  { name: 'opentide-eql', role: 'EQL' },
+  { name: 'opentide-kuery', role: 'Kibana KQL' },
+  { name: 'opentide-lucene', role: 'Lucene' },
+  { name: 'opentide-cql', role: 'CrowdStrike CQL' },
+  { name: 'opentide-falco', role: 'Falco rules' },
+  { name: 'opentide-yara', role: 'YARA' },
+  { name: 'opentide-yaral', role: 'YARA-L' },
+  { name: 'opentide-exabeam', role: 'Exabeam Query Language' },
+];
+
+export function crateVersionUrl(name: string, version: string): string {
+  return `https://crates.io/crates/${name}/${version}`;
+}
+
+/** What one opentide version publishes, by what people install, with a registry page at that version. */
+export function opentideArtifacts(version: string): { name: string; what: string; links: { label: string; href: string }[] }[] {
+  const pypi = { label: 'PyPI', href: `https://pypi.org/project/opentide/${version}/` };
+  return [
+    { name: 'Python package and CLI', what: '`pip install opentide`: the `opentide` command and the Python SDK', links: [pypi] },
+    { name: 'MCP server', what: '`opentide mcp start`, in the package', links: [pypi] },
+    {
+      name: 'Rust SDK',
+      what: 'the `opentide` crate',
+      links: [{ label: 'crates.io', href: crateVersionUrl('opentide', version) }],
+    },
+    {
+      name: 'Node.js SDK',
+      what: '`@opentide/opentide`',
+      links: [{ label: 'npm', href: `https://www.npmjs.com/package/@opentide/opentide/v/${version}` }],
+    },
+    {
+      name: 'Language server',
+      what: '`opentide lsp start`, or the `opentide-lsp` crate and binary',
+      links: [
+        { label: 'crates.io', href: crateVersionUrl('opentide-lsp', version) },
+        { label: 'binaries', href: `https://github.com/opentidehq/opentide/releases/tag/v${version}` },
+      ],
+    },
+  ];
+}

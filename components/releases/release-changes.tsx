@@ -11,12 +11,14 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { Tag } from '@/components/landing/ui';
+import { crateVersionUrl } from '@/lib/release-projects';
 import { RichText } from '@/components/releases/rich-text';
 import {
   breakingEntry,
   categoryAnchor,
   categoryBlocks,
   changeCounts,
+  crateOfGroup,
   otherSections,
   otherChangeCount,
   type ChangeCategory,
@@ -55,10 +57,13 @@ export function ChangeCounts({
   release,
   linked = false,
   inline = false,
+  scope,
 }: {
   release: ReleaseNote;
   linked?: boolean;
   inline?: boolean;
+  /** The lists' anchor scope, as given to `ReleaseChanges`. */
+  scope?: string;
 }) {
   const steps = release.upgrade ? Math.max(release.upgrade.items.length, 1) : 0;
   const categories = changeCounts(release);
@@ -101,7 +106,7 @@ export function ChangeCounts({
           <Icon className="size-4 shrink-0 text-[var(--landing-accent)]" aria-hidden />
           {linked && anchored && part !== 'other' ? (
             <a
-              href={`#${categoryAnchor(release.version, part)}`}
+              href={`#${categoryAnchor(release.version, part, scope)}`}
               className="underline-offset-2 hover:text-[var(--landing-ink)] hover:underline"
             >
               {text}
@@ -175,13 +180,13 @@ function Paragraphs({ paragraphs }: { paragraphs: readonly string[] }) {
 }
 
 /** What a user does after installing: a numbered list in a tinted panel, ahead of the changes. */
-function UpgradeSteps({ release, level }: { release: ReleaseNote; level: HeadingLevel }) {
+function UpgradeSteps({ release, level, scope }: { release: ReleaseNote; level: HeadingLevel; scope?: string }) {
   const upgrade = release.upgrade;
   if (!upgrade) return null;
   const Heading = level;
   return (
     <section
-      id={categoryAnchor(release.version, 'upgrade')}
+      id={categoryAnchor(release.version, 'upgrade', scope)}
       aria-label={`Upgrade to ${release.version}`}
       className="scroll-mt-24 rounded-xl border border-[color-mix(in_srgb,var(--landing-accent)_30%,transparent)] bg-[color-mix(in_srgb,var(--landing-accent)_6%,transparent)] p-4 md:p-5"
     >
@@ -231,11 +236,36 @@ function CategoryHeading({
   );
 }
 
+/** A group's heading; a group that is a published crate links the crate at this version. */
+function GroupTitle({ group, version }: { group: string; version: string }) {
+  const crate = crateOfGroup(group);
+  if (!crate) return <>{group.toLowerCase()}</>;
+  return (
+    <a
+      href={crateVersionUrl(crate, version)}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-[var(--landing-accent)] underline-offset-2 hover:underline"
+    >
+      {crate}
+    </a>
+  );
+}
+
 /**
  * A release's changes: notes, the upgrade steps, then each category under its heading, in the
- * same order on every project's page. Headings are one level below the version's.
+ * same order on every project's page. Headings are one level below the version's. `scope`
+ * prefixes the anchors when a second set of lists shares the release (opentide's engine notes).
  */
-export function ReleaseChanges({ release, level }: { release: ReleaseNote; level: HeadingLevel }) {
+export function ReleaseChanges({
+  release,
+  level,
+  scope,
+}: {
+  release: ReleaseNote;
+  level: HeadingLevel;
+  scope?: string;
+}) {
   const blocks = categoryBlocks(release);
   const others = otherSections(release);
   return (
@@ -250,11 +280,11 @@ export function ReleaseChanges({ release, level }: { release: ReleaseNote; level
           ))}
         </div>
       ) : null}
-      <UpgradeSteps release={release} level={level} />
+      <UpgradeSteps release={release} level={level} scope={scope} />
       {blocks.map((block) => (
         <section
           key={block.category}
-          id={categoryAnchor(release.version, block.category)}
+          id={categoryAnchor(release.version, block.category, scope)}
           className="scroll-mt-24"
         >
           <CategoryHeading category={block.category} label={block.label} count={block.count} level={level} />
@@ -265,7 +295,7 @@ export function ReleaseChanges({ release, level }: { release: ReleaseNote; level
                 <div key={index} className={group.group ? 'mt-5 first:mt-4' : undefined}>
                   {group.group ? (
                     <GroupHeading className="font-mono text-xs text-[var(--landing-subtle)]">
-                      {group.group.toLowerCase()}
+                      <GroupTitle group={group.group} version={release.version} />
                     </GroupHeading>
                   ) : null}
                   <Paragraphs paragraphs={group.paragraphs} />

@@ -1,6 +1,13 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { PROJECTS, type ProjectId, type ReleaseProject } from './release-projects.ts';
+import { existsSync } from 'node:fs';
+import {
+  OPENTIDE_CRATES,
+  OPENTIDE_CRATES_NOTES,
+  PROJECTS,
+  type ProjectId,
+  type ReleaseProject,
+} from './release-projects.ts';
 
 /** Synced from the engine repo. The product page renders this file; do not hand-copy versions. */
 export const RELEASE_NOTES_PATH = join(process.cwd(), 'content/docs/usage/releases.mdx');
@@ -61,6 +68,11 @@ export type ReleaseNote = {
   links: ReleaseLink[];
   /** Null for a version tagged after the fact, which no registry carries. */
   installCommand: string | null;
+  /**
+   * opentide only, from 1.0.0: the same version's section of `crates/CHANGELOG.md`, the engine
+   * crates' and language server's notes. Absent before 1.0.0 and when the section is missing.
+   */
+  engine?: ReleaseNote;
 };
 
 /** The minor series a version belongs to, newest first: `0.17` holds 0.17.0 to 0.17.2. */
@@ -207,9 +219,12 @@ export function releaseAnchor(version: string): string {
   return `v${version.replaceAll('.', '-')}`;
 }
 
-/** The anchor of a release's upgrade steps, or of one category's list, inside the release. */
-export function categoryAnchor(version: string, part: ChangeCategory | 'upgrade'): string {
-  return `${releaseAnchor(version)}-${part}`;
+/**
+ * The anchor of a release's upgrade steps, or of one category's list, inside the release.
+ * `scope` keeps a second set of lists in the same release apart (`engine`).
+ */
+export function categoryAnchor(version: string, part: ChangeCategory | 'upgrade', scope?: string): string {
+  return `${releaseAnchor(version)}-${scope ? `${scope}-` : ''}${part}`;
 }
 
 export function kindLabel(kind: ReleaseKind): string {
@@ -717,9 +732,61 @@ export function groupBySeries(releases: readonly ReleaseNote[]): ReleaseSeries[]
   return groups;
 }
 
+const CRATE_NAMES = new Set(OPENTIDE_CRATES.map((crate) => crate.name));
+
+/**
+ * The crate a `####` group names, when its heading is exactly a published crate's name, in
+ * backticks or not (`#### \`opentide-lsp\``). Any other group ("Problems") names none: a crate
+ * is never guessed from the entries' words.
+ */
+export function crateOfGroup(group: string | null): string | null {
+  const name = group?.trim().replace(/^`([^`]+)`$/, '$1');
+  return name && CRATE_NAMES.has(name) ? name : null;
+}
+
+export type CrateChanges = { crate: string; count: number };
+
+/**
+ * Entries per crate, for notes whose groups are crates, in the order of `OPENTIDE_CRATES`.
+ * Empty when no group names a crate.
+ */
+export function crateIndex(release: Pick<ReleaseNote, 'sections' | 'upgrade'>): CrateChanges[] {
+  const counts = new Map<string, number>();
+  for (const section of release.sections) {
+    const crate = crateOfGroup(section.group);
+    if (crate) counts.set(crate, (counts.get(crate) ?? 0) + entries(section));
+  }
+  return OPENTIDE_CRATES.flatMap(({ name }) => {
+    const count = counts.get(name);
+    return count ? [{ crate: name, count }] : [];
+  });
+}
+
+/**
+ * Each opentide release from `since` with its version's section of the crates' changelog.
+ * A version the crates' changelog does not have (yet) keeps its notes alone; versions only the
+ * crates' changelog has are not releases of opentide and are left out.
+ */
+export function withEngineNotes(
+  releases: readonly ReleaseNote[],
+  engine: readonly ReleaseNote[],
+  since: string = OPENTIDE_CRATES_NOTES.since,
+): ReleaseNote[] {
+  const byVersion = new Map(engine.map((release) => [release.version, release]));
+  return releases.map((release) => {
+    const notes = compareVersions(release.version, since) >= 0 ? byVersion.get(release.version) : undefined;
+    return notes ? { ...release, engine: notes } : release;
+  });
+}
+
 export async function loadReleaseNotes(): Promise<ReleaseNote[]> {
   const markdown = await readFile(RELEASE_NOTES_PATH, 'utf8');
-  return parseReleaseNotes(markdown);
+  const releases = parseReleaseNotes(markdown);
+  const cratesPath = join(CHANGELOG_DIR, OPENTIDE_CRATES_NOTES.file);
+  if (!existsSync(cratesPath)) return releases;
+  // Committed only after `parseChangelog` accepted it (scripts/sync-changelogs.mjs).
+  const engine = parseChangelog(await readFile(cratesPath, 'utf8'), OPENTIDE_CRATES_NOTES.project);
+  return withEngineNotes(releases, engine);
 }
 
 /** One project's releases, newest first. */
