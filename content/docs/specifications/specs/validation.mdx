@@ -2,7 +2,7 @@
 title: Validation
 description: "opentide validates detection content through a structured pipeline: ID uniqueness, UUID format, Pydantic schema validation, vocabulary conformance, deprecated field warnings, and cross-object reference checks. Optional checks include CVE scanning and per-platform query validation."
 spec: validation
-version: "1.15"
+version: "1.16"
 schema_id: null
 status: normative
 supersedes: null
@@ -95,8 +95,9 @@ A platform spec MAY list advisories: conditions that validation SHOULD report as
 | `google_secops_rule_id_literal` | warning | Google SecOps: `events` or `condition` compares `detection.detection.rule_id` with a literal `ru_…` id, which differs per tenant |
 | `google_secops_live_frequency_unavailable` | warning | Google SecOps: `run_frequency: LIVE` on a rule with two or more event variables, which deploy refuses (`LIVE` is for single-event rules) |
 | `harfanglab_yara_context` | warning | HarfangLab: a YARA rule's meta `context` is not a comma-joined list of `file`, `memory`, `file.pe`, `file.elf`, `file.macho` |
+| `microsoft_defender_no_entities` | warning | Microsoft Defender: the block maps no entity |
 
-The conditions and their reasons are in [elastic-1.0](/docs/specifications/specs/platforms/elastic-1.0/#advisories), [sysdig-1.0](/docs/specifications/specs/platforms/sysdig-1.0/#advisories), [bitdefender-1.0](/docs/specifications/specs/platforms/bitdefender-1.0/#advisories), [graylog-1.0](/docs/specifications/specs/platforms/graylog-1.0/#advisories), [google-secops-1.0](/docs/specifications/specs/platforms/google-secops-1.0/#advisories), and [harfanglab-1.0](/docs/specifications/specs/platforms/harfanglab-1.0/#yara-profile).
+The conditions and their reasons are in [elastic-1.0](/docs/specifications/specs/platforms/elastic-1.0/#advisories), [sysdig-1.0](/docs/specifications/specs/platforms/sysdig-1.0/#advisories), [bitdefender-1.0](/docs/specifications/specs/platforms/bitdefender-1.0/#advisories), [graylog-1.0](/docs/specifications/specs/platforms/graylog-1.0/#advisories), [google-secops-1.0](/docs/specifications/specs/platforms/google-secops-1.0/#advisories), [microsoft-defender-1.0](/docs/specifications/specs/platforms/microsoft-defender-1.0/#advisories), and [harfanglab-1.0](/docs/specifications/specs/platforms/harfanglab-1.0/#yara-profile).
 
 ### Language diagnostics
 
@@ -113,7 +114,7 @@ Commands: `opentide validate query` (offline, the default) and `opentide validat
 | Platform | Supported |
 |----------|-----------|
 | `sentinel` | yes |
-| `defender_for_endpoint` | yes |
+| `microsoft_defender` | yes |
 | `splunk` | yes |
 | `sentinel_one` | yes |
 | `carbon_black_cloud` | yes |
@@ -182,6 +183,10 @@ This repository’s CI (`scripts/object_fixtures.py`) is **not** `opentide valid
 | [fixtures/invalid/rule-google-secops-missing-condition.yaml](https://github.com/opentidehq/specifications/blob/main/fixtures/invalid/rule-google-secops-missing-condition.yaml) | `yaral_section_missing` |
 | [fixtures/invalid/rule-google-secops-hourly.yaml](https://github.com/opentidehq/specifications/blob/main/fixtures/invalid/rule-google-secops-hourly.yaml) | `google_secops_run_frequency` (also `google_secops_schedule`) |
 | [fixtures/invalid/rule-google-secops-meta-reserved.yaml](https://github.com/opentidehq/specifications/blob/main/fixtures/invalid/rule-google-secops-meta-reserved.yaml) | `google_secops_meta_key` |
+| [fixtures/invalid/rule-microsoft-defender-lookback-nrt.yaml](https://github.com/opentidehq/specifications/blob/main/fixtures/invalid/rule-microsoft-defender-lookback-nrt.yaml) | `microsoft_defender_lookback` |
+| [fixtures/invalid/rule-microsoft-defender-entity-field.yaml](https://github.com/opentidehq/specifications/blob/main/fixtures/invalid/rule-microsoft-defender-entity-field.yaml) | `microsoft_defender_entity_mapping` |
+| [fixtures/invalid/rule-microsoft-defender-action-target.yaml](https://github.com/opentidehq/specifications/blob/main/fixtures/invalid/rule-microsoft-defender-action-target.yaml) | `microsoft_defender_action_target` |
+| [fixtures/invalid/rule-microsoft-defender-unknown-key.yaml](https://github.com/opentidehq/specifications/blob/main/fixtures/invalid/rule-microsoft-defender-unknown-key.yaml) | `unknown_field` |
 | [fixtures/sharing/invalid/unknown-distribution.toml](https://github.com/opentidehq/specifications/blob/main/fixtures/sharing/invalid/unknown-distribution.toml) | `unknown_key` |
 | [fixtures/sharing/invalid/legacy-targets-table.toml](https://github.com/opentidehq/specifications/blob/main/fixtures/sharing/invalid/legacy-targets-table.toml) | `unknown_key` |
 | [fixtures/sharing/invalid/duplicate-name.toml](https://github.com/opentidehq/specifications/blob/main/fixtures/sharing/invalid/duplicate-name.toml) | `duplicate_name` |
@@ -195,7 +200,7 @@ This repository’s CI (`scripts/object_fixtures.py`) is **not** `opentide valid
 | [fixtures/deployment/invalid/uuid-mismatch.json](https://github.com/opentidehq/specifications/blob/main/fixtures/deployment/invalid/uuid-mismatch.json) | `deployment_state_uuid_mismatch` |
 | [fixtures/deployment/invalid/noncanonical-uuid.json](https://github.com/opentidehq/specifications/blob/main/fixtures/deployment/invalid/noncanonical-uuid.json) | `deployment_state_uuid_mismatch` |
 | [fixtures/deployment/invalid/numeric-id.json](https://github.com/opentidehq/specifications/blob/main/fixtures/deployment/invalid/numeric-id.json) | `deployment_state_shape` |
-| [fixtures/deployment/invalid/leading-zero-defender-id.json](https://github.com/opentidehq/specifications/blob/main/fixtures/deployment/invalid/leading-zero-defender-id.json) | `deployment_state_shape` |
+| [fixtures/deployment/invalid/leading-zero-sentinel-one-id.json](https://github.com/opentidehq/specifications/blob/main/fixtures/deployment/invalid/leading-zero-sentinel-one-id.json) | `deployment_state_shape` |
 | [fixtures/deployment/invalid/empty-id.json](https://github.com/opentidehq/specifications/blob/main/fixtures/deployment/invalid/empty-id.json) | `deployment_state_shape` |
 | [fixtures/deployment/invalid/whitespace-tenant.json](https://github.com/opentidehq/specifications/blob/main/fixtures/deployment/invalid/whitespace-tenant.json) | `deployment_state_shape` |
 | [fixtures/deployment/invalid/unsupported-platform.json](https://github.com/opentidehq/specifications/blob/main/fixtures/deployment/invalid/unsupported-platform.json) | `deployment_state_platform` |
@@ -226,6 +231,8 @@ On a rule's `configurations.exabeam` block the checker applies every [Exabeam co
 On a rule's `configurations.google_secops` block the checker applies the [Google SecOps constraint codes](/docs/specifications/specs/platforms/google-secops-1.0/#constraints) that need no YARA-L parser: `google_secops_rule_name`, `google_secops_severity`, `google_secops_run_frequency`, `google_secops_schedule`, and `google_secops_meta_key`. On its sections it applies the [YARA-L codes](/docs/specifications/specs/languages/yara-l-1.0/#diagnostics) that need no parser: `yaral_section_alias`, `yaral_section_empty`, `yaral_section_header`, `yaral_section_missing`, `yaral_match_shape`, `yaral_match_window`, and `yaral_option`. The workspace check `google_secops_name_duplicate` and the other YARA-L codes are left to opentide and the analysis engine.
 
 On a rule's `configurations.harfanglab` block the checker applies `harfanglab_rule_kind`, `harfanglab_yara_form`, and `harfanglab_yara_section_header`. On any `yara.signature` it applies the [YARA codes](/docs/specifications/specs/languages/yara-1.0/#diagnostics) that need no YARA parser: `yara_signature_alias`, `yara_include`, `yara_empty_signature`, `yara_duplicate_rule`, and `yara_unknown_module` (an `import` of a module outside the [language's modules](/docs/specifications/specs/languages/yara-1.0/#modules)). The other YARA codes are left to the analysis engine.
+
+On a rule's `configurations.microsoft_defender` block the checker applies every [Microsoft Defender constraint code](/docs/specifications/specs/platforms/microsoft-defender-1.0/#constraints) and reports an unknown key (as `unknown_field`) at the key's own path.
 
 On a rule's `response.procedure.searches[]` the checker reports `search_language` when `language` is set with a `system` other than `elastic`, or with a value other than `kuery`, `lucene`, `eql`, or `esql` ([rule-1.1](/docs/specifications/specs/objects/rule-1.1/#searches-responsesearch)).
 
@@ -279,6 +286,7 @@ Validation uses merged configuration for vocabulary and status enums. No separat
 
 | Version | Date | Notes |
 |---------|------|-------|
+| 1.16 | 2026-11-25 | `microsoft_defender` replaces `defender_for_endpoint` in the `--live` allowlist; advisory `microsoft_defender_no_entities` ([microsoft-defender-1.0](/docs/specifications/specs/platforms/microsoft-defender-1.0/), [RFC 0021](/docs/specifications/rfcs/0021-defender-graph-beta-detection-rules/)). The fixture checker applies the Microsoft Defender constraint codes. |
 | 1.15 | 2026-11-16 | YARA is YARA-X 1.x ([yara-1.0](/docs/specifications/specs/languages/yara-1.0/) 1.6, [RFC 0020](/docs/specifications/rfcs/0020-yara-x-reference-language/)): `yara_x_only_syntax` joins the YARA errors and `yara_x_incompatible` leaves the warnings, retired. The fixture checker applies `yara_unknown_module` to `yara.signature`. |
 | 1.14 | 2026-11-13 | `exabeam_unknown_value` joins the Exabeam Query Language warnings ([exabeam-1.0](/docs/specifications/specs/languages/exabeam-1.0/#diagnostics), version 1.1). |
 | 1.13 | 2026-11-12 | `google_secops` joins the `--live` allowlist: `verifyRuleText` compiles the assembled rule without creating it ([google-secops-1.0](/docs/specifications/specs/platforms/google-secops-1.0/), [RFC 0019](/docs/specifications/rfcs/0019-google-secops-yara-l/)). YARA-L (`.yaral`) is checked offline ([yara-l-1.0](/docs/specifications/specs/languages/yara-l-1.0/)); its codes join [language diagnostics](#language-diagnostics). Advisories `google_secops_risk_score_missing`, `google_secops_rule_id_literal`, and `google_secops_live_frequency_unavailable`. The fixture checker applies five Google SecOps constraint codes and seven YARA-L codes on the block's sections. |
