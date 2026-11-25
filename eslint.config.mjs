@@ -3,7 +3,7 @@ import nextVitals from 'eslint-config-next/core-web-vitals';
 
 const eslintConfig = defineConfig([
   ...nextVitals,
-  globalIgnores(['.source/**', 'out/**', 'content/docs/**', 'public/playground/engine/**']),
+  globalIgnores(['.source/**', 'out/**', 'content/docs/**', 'public/playground/engine/**', 'vendor/**']),
 ]);
 
 export default eslintConfig;

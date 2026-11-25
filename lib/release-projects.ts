@@ -61,9 +61,11 @@ export const PROJECTS: readonly ReleaseProject[] = [
     description:
       'Diagnostics, hover, completion, and highlighting for detection queries and Tide objects, in any editor that speaks LSP.',
     href: '/releases/language-server/',
-    repository: 'https://github.com/opentidehq/language-server',
-    gettingStarted: { label: 'the README', href: 'https://github.com/opentidehq/language-server#install' },
-    changelogUrl: 'https://github.com/opentidehq/language-server/blob/main/CHANGELOG.md',
+    // Ships inside opentide since 1.0.0 (`opentide lsp start`, the `opentide-lsp` crate and
+    // binaries of opentide's GitHub Release); its notes are opentide's crates/CHANGELOG.md.
+    repository: 'https://github.com/opentidehq/opentide',
+    gettingStarted: { label: 'opentide lsp', href: '/docs/cli/lsp/' },
+    changelogUrl: 'https://github.com/opentidehq/opentide/blob/development/crates/CHANGELOG.md',
     changelog: 'language-server.md',
     firstPublished: '0.5.0',
     registry: {
