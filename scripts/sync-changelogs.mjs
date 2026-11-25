@@ -6,7 +6,10 @@
  *
  * A failed fetch, or a file the Releases page's own parser rejects, keeps the committed
  * copy: an upstream changelog can never break the hourly sync or the deploy. A local
- * checkout can stand in for GitHub: LANGUAGE_SERVER_CHANGELOG=../language-server/CHANGELOG.md.
+ * checkout can stand in for GitHub: LANGUAGE_SERVER_CHANGELOG=../opentide/crates/CHANGELOG.md.
+ *
+ * The language server ships inside opentide since 1.0.0 (one version, one tag): its notes are
+ * opentide's crates/CHANGELOG.md on development, not the archived opentidehq/language-server.
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -19,7 +22,14 @@ const OUT_DIR = join(ROOT, 'content', 'releases');
 const FETCH_TIMEOUT_MS = 8_000;
 const MAX_BYTES = 512 * 1024;
 const SOURCES = [
-  { id: 'language-server', file: 'language-server.md', repo: 'opentidehq/language-server', env: 'LANGUAGE_SERVER_CHANGELOG' },
+  {
+    id: 'language-server',
+    file: 'language-server.md',
+    repo: 'opentidehq/opentide',
+    ref: 'development',
+    path: 'crates/CHANGELOG.md',
+    env: 'LANGUAGE_SERVER_CHANGELOG',
+  },
   {
     id: 'vscode-extension',
     file: 'vscode-extension.md',
@@ -29,12 +39,12 @@ const SOURCES = [
   { id: 'explorer', file: 'explorer.md', repo: 'opentidehq/explorer', env: 'EXPLORER_CHANGELOG' },
 ];
 
-/** @param {string} repo */
-async function fetchChangelog(repo) {
+/** @param {{ repo: string, ref?: string, path?: string }} source */
+async function fetchChangelog({ repo, ref = 'main', path = 'CHANGELOG.md' }) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
   try {
-    const response = await fetch(`https://raw.githubusercontent.com/${repo}/main/CHANGELOG.md`, {
+    const response = await fetch(`https://raw.githubusercontent.com/${repo}/${ref}/${path}`, {
       signal: controller.signal,
       headers: { 'User-Agent': 'opentide.org (https://github.com/opentidehq/website)' },
       cache: 'no-store',
@@ -54,7 +64,7 @@ async function main() {
   for (const source of SOURCES) {
     const local = process.env[source.env];
     try {
-      const text = local ? readFileSync(local, 'utf8') : await fetchChangelog(source.repo);
+      const text = local ? readFileSync(local, 'utf8') : await fetchChangelog(source);
       if (text.length > MAX_BYTES) throw new Error(`larger than ${MAX_BYTES} bytes`);
       // Throws on anything the page could not render, with the reason.
       parseChangelog(text, releaseProject(/** @type {any} */ (source.id)));
