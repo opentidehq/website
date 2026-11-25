@@ -7,8 +7,40 @@ pre-releases odd ones.
 
 ## [Unreleased]
 
+### Fixed
+
+- **A panel that opens blank loads again on its own.** After you closed the graph while it was still
+  loading, the next one could stay empty. A panel whose page has not loaded after 10 seconds on
+  screen is now opened again in its place, once.
+- **The language server starts again after a crash on Windows.** When it ended abruptly, VS Code
+  could report the connection as broken before it closed, and the server then stayed stopped until
+  **opentide: Restart Server**. It now restarts as it does elsewhere.
+- **Faster startup on Windows.** Looking for `opentide`, `python` and `uv` on your PATH no longer
+  holds up other extensions, and each is looked up once. A program you install while VS Code is
+  open is found after **opentide: Restart Server**.
+- **The opentide status keeps saying why the engine serves the editor.** When the language server
+  keeps crashing and the opentide engine (WASM) takes over, the status tooltip and the output
+  said why, until the window got the focus back. Now they keep saying it.
+- **opentide tasks and commands stay available after you switch runtimes.** A command cut short by
+  the switch now runs on the opentide you switched to, and a failed read of opentide's commands is
+  tried again instead of leaving tasks empty until the next restart.
+
+## [0.4.1] - 2026-11-24
+
+Tenant queries no longer hold up the editor, and panels come back after a reload. Runs on opentide 1.0.0-rc.5.
+
+### Added
+
+- **The graph and the ATT&CK coverage panel come back after you reload the window.** They reopen where they
+  were, with the choices you had made in them, and show a loading state until opentide has answered.
+
 ### Changed
 
+- **The bundled opentide (WASI) and the opentide engine (WASM) are 1.0.0-rc.5.** Editor features with no
+  opentide installed, and in Restricted Mode, come from this release
+  ([opentide 1.0.0-rc.5](https://github.com/opentidehq/opentide/releases/tag/v1.0.0-rc.5)).
+- **Most query languages are coloured more fully as soon as a file opens.** The grammars colour fields,
+  functions and constants before the language server answers, so less of a query changes colour once it does.
 - **Closing a window stops the language server and `opentide serve` together.** A slow stop of one no
   longer uses up the time VS Code gives the other, so neither is left running behind a closed window.
 - **Windows that never need the language server start faster.** The extension loads its language client the
