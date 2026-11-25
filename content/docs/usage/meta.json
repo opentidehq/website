@@ -26,6 +26,7 @@
     "workflows/agentic-setup",
     "---Operate---",
     "troubleshooting",
+    "migration/language-server",
     "!releases"
   ]
 }
