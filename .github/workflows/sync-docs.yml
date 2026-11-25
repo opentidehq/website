@@ -30,6 +30,7 @@ concurrency:
 permissions:
   contents: write
   actions: write
+  issues: write
 
 jobs:
   sync:
@@ -200,3 +201,18 @@ jobs:
           fi
           echo "Dispatching GitHub Pages deploy"
           gh workflow run deploy.yml --ref main
+
+      # Keep this the last step so it sees the outcome of everything above. Alerts use only
+      # the workflow GITHUB_TOKEN: failure -> job summary + one `sync-docs-failure` issue
+      # (a comment per failing run); success -> close that issue.
+      - name: Report sync failure
+        if: failure()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/sync-failure-alert.mjs failure
+
+      - name: Close sync failure issue
+        if: success()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/sync-failure-alert.mjs success
