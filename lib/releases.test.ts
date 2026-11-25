@@ -1,9 +1,17 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { PROJECTS, nameInSentence, releaseProject, type ReleaseProject } from './release-projects.ts';
+import {
+  OPENTIDE_CRATES,
+  OPENTIDE_CRATES_NOTES,
+  PROJECTS,
+  nameInSentence,
+  opentideArtifacts,
+  releaseProject,
+  type ReleaseProject,
+} from './release-projects.ts';
 import {
   breakingEntry,
   categoryAnchor,
@@ -11,6 +19,8 @@ import {
   changeCounts,
   classifyHeading,
   compareVersions,
+  crateIndex,
+  crateOfGroup,
   formatIsoDate,
   groupBySeries,
   kindLabel,
@@ -22,6 +32,7 @@ import {
   publicLinks,
   releaseAnchor,
   totalChanges,
+  withEngineNotes,
   type ReleaseNote,
 } from './releases.ts';
 
@@ -686,4 +697,146 @@ test('a bold summary that starts like a part is still the summary', () => {
     release?.sections.map((section) => [section.category, section.items]),
     [['security', ['**A fix.**']]],
   );
+});
+
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+
+const cratesFixture = `# Changelog
+
+## [Unreleased]
+
+## [1.1.0] - 2026-12-10
+
+Faster hover.
+
+### Added
+
+#### \`opentide-lsp\`
+
+- **Hover shows the field's vocabulary.** One line.
+- **Completion for platform keys.** One line.
+
+#### opentide-kql
+
+- **\`mv-expand\` parses.** One line.
+
+#### Problems
+
+- **Not a crate.** One line.
+
+### Fixed
+
+#### \`opentide-lsp\`
+
+- **A crash on an empty file.** One line.
+
+## [1.0.0] - 2026-11-25
+
+From 1.0.0 the language server and engine ship in lockstep with opentide.
+
+### Breaking
+
+- **\`opentide-syntax\` is gone.** Drop it.
+
+## [0.16.1] - 2026-11-01
+
+The language server's own last version.
+
+### Fixed
+
+- **Something.** One line.
+`;
+
+test('a group names a crate only when its heading is exactly a published crate', () => {
+  assert.equal(crateOfGroup('`opentide-lsp`'), 'opentide-lsp');
+  assert.equal(crateOfGroup('opentide-kql'), 'opentide-kql');
+  assert.equal(crateOfGroup(' `opentide` '), 'opentide');
+  // Never guessed from words: a crate inside a longer heading, an unpublished crate, no group.
+  assert.equal(crateOfGroup('Changes to opentide-lsp'), null);
+  assert.equal(crateOfGroup('`opentide-wasm`'), null);
+  assert.equal(crateOfGroup('opentide_lsp'), null);
+  assert.equal(crateOfGroup('Problems'), null);
+  assert.equal(crateOfGroup(null), null);
+});
+
+test('crate groups count per crate, across categories, in the crates list order', () => {
+  const [latest, first] = parseChangelog(cratesFixture, OPENTIDE_CRATES_NOTES.project);
+  assert.equal(latest?.version, '1.1.0');
+  assert.deepEqual(crateIndex(latest!), [
+    { crate: 'opentide-lsp', count: 3 },
+    { crate: 'opentide-kql', count: 1 },
+  ]);
+  // Notes without crate groups have no index: the page shows the categories alone.
+  assert.deepEqual(crateIndex(first!), []);
+});
+
+test('an opentide release folds in the crates notes of its own version, from 1.0.0 only', () => {
+  const engine = parseChangelog(cratesFixture, OPENTIDE_CRATES_NOTES.project);
+  const opentide = ['1.0.0', '0.28.1'].map(
+    (version) => parseReleaseNotes(`## ${version} — 25 November 2026\n\nSummary.\n`)[0]!,
+  );
+  const [one, old] = withEngineNotes([...opentide, parseReleaseNotes('## 0.16.1 — 1 November 2026\n\nSummary.\n')[0]!], engine);
+  assert.equal(one?.engine?.version, '1.0.0');
+  assert.match(one?.engine?.summary ?? '', /lockstep/);
+  assert.equal(one?.engine?.breaking, true);
+  assert.equal(old?.engine, undefined);
+  // 0.16.1 is a language server version, not opentide's: never folded in, though both have it.
+  assert.equal(withEngineNotes(opentide, engine).some((release) => release.version === '1.1.0'), false);
+  assert.equal(
+    withEngineNotes(parseReleaseNotes('## 0.16.1 — 1 November 2026\n\nSummary.\n'), engine)[0]?.engine,
+    undefined,
+  );
+  // A version the crates' changelog does not have yet keeps its notes alone.
+  const ahead = withEngineNotes(parseReleaseNotes('## 1.0.1 — 26 November 2026\n\nSummary.\n'), engine);
+  assert.equal(ahead[0]?.engine, undefined);
+});
+
+test('engine lists get anchors of their own beside the package lists', () => {
+  assert.equal(categoryAnchor('1.0.0', 'added'), 'v1-0-0-added');
+  assert.equal(categoryAnchor('1.0.0', 'added', 'engine'), 'v1-0-0-engine-added');
+});
+
+test('a crates changelog with a broken heading still fails loudly', () => {
+  assert.throws(
+    () => parseChangelog('## [1.0.0] - 2026-13-45\n\nSummary.\n', OPENTIDE_CRATES_NOTES.project),
+    /not a version and date/,
+  );
+});
+
+test('the synced crates changelog folds into the published opentide 1.0.0', async () => {
+  const releases = await loadProjectReleases('opentide');
+  const one = releases.find((release) => release.version === '1.0.0');
+  assert.ok(one?.engine, 'opentide 1.0.0 carries the crates notes');
+  assert.ok(totalChanges(one.engine) > 0);
+  // Earlier opentide versions predate the lockstep.
+  assert.equal(releases.filter((release) => release.engine).every((release) => compareVersions(release.version, '1.0.0') >= 0), true);
+});
+
+test('every artifact links its registry at the version', () => {
+  const artifacts = opentideArtifacts('1.0.0');
+  assert.deepEqual(
+    artifacts.map((artifact) => artifact.name),
+    ['Python package and CLI', 'MCP server', 'Rust SDK', 'Node.js SDK', 'Language server'],
+  );
+  for (const artifact of artifacts) {
+    for (const link of artifact.links) assert.match(link.href, /1\.0\.0/, `${artifact.name}: ${link.href}`);
+  }
+});
+
+test('the crates list is every crate opentide publishes', (t) => {
+  const crates = join(ROOT, 'vendor/opentide/crates');
+  if (!existsSync(crates)) {
+    t.skip('vendor/opentide/crates is not checked out');
+    return;
+  }
+  const published = readdirSync(crates, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && existsSync(join(crates, entry.name, 'Cargo.toml')))
+    .flatMap((entry) => {
+      const manifest = readFileSync(join(crates, entry.name, 'Cargo.toml'), 'utf8');
+      if (/^publish\s*=\s*false/m.test(manifest)) return [];
+      const name = /^\[package\][\s\S]*?^name\s*=\s*"([^"]+)"/m.exec(manifest)?.[1];
+      return name ? [name] : [];
+    })
+    .sort();
+  assert.deepEqual(OPENTIDE_CRATES.map((crate) => crate.name).sort(), published);
 });

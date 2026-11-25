@@ -6,15 +6,16 @@
  *
  * A failed fetch, or a file the Releases page's own parser rejects, keeps the committed
  * copy: an upstream changelog can never break the hourly sync or the deploy. A local
- * checkout can stand in for GitHub: EXPLORER_CHANGELOG=../explorer/CHANGELOG.md.
+ * checkout can stand in for GitHub: OPENTIDE_CRATES_CHANGELOG=../opentide/crates/CHANGELOG.md.
  *
- * The language server is not synced on its own: it ships inside opentide from 1.0.0, at
- * opentide's version, and /releases/language-server/ points at its pre-1.0 history.
+ * The language server is not a project of its own: it ships inside opentide from 1.0.0, at
+ * opentide's version. opentide's crates/CHANGELOG.md (the engine crates and language server)
+ * is synced as opentide-crates.md, and each opentide release folds in its version's section.
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { releaseProject } from '../lib/release-projects.ts';
+import { OPENTIDE_CRATES_NOTES, releaseProject } from '../lib/release-projects.ts';
 import { parseChangelog } from '../lib/releases.ts';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -22,6 +23,15 @@ const OUT_DIR = join(ROOT, 'content', 'releases');
 const FETCH_TIMEOUT_MS = 8_000;
 const MAX_BYTES = 512 * 1024;
 const SOURCES = [
+  {
+    id: 'opentide-crates',
+    file: OPENTIDE_CRATES_NOTES.file,
+    repo: 'opentidehq/opentide',
+    ref: 'development',
+    path: 'crates/CHANGELOG.md',
+    env: 'OPENTIDE_CRATES_CHANGELOG',
+    project: OPENTIDE_CRATES_NOTES.project,
+  },
   {
     id: 'vscode-extension',
     file: 'vscode-extension.md',
@@ -59,7 +69,7 @@ async function main() {
       const text = local ? readFileSync(local, 'utf8') : await fetchChangelog(source);
       if (text.length > MAX_BYTES) throw new Error(`larger than ${MAX_BYTES} bytes`);
       // Throws on anything the page could not render, with the reason.
-      parseChangelog(text, releaseProject(/** @type {any} */ (source.id)));
+      parseChangelog(text, source.project ?? releaseProject(/** @type {any} */ (source.id)));
       writeFileSync(join(OUT_DIR, source.file), text.endsWith('\n') ? text : `${text}\n`);
       console.log(`sync-changelogs: ${source.file} from ${local ?? source.repo}`);
     } catch (error) {

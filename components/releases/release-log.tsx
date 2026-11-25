@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { Tag } from '@/components/landing/ui';
 import { InstallCommand } from '@/components/releases/install-command';
+import { OpentideArtifacts } from '@/components/releases/opentide-artifacts';
 import { ChangeCounts, ReleaseChanges } from '@/components/releases/release-changes';
 import { RichText, focusRing } from '@/components/releases/rich-text';
 import { nameInSentence, type ProjectId, type ReleaseProject } from '@/lib/release-projects';
@@ -248,8 +249,9 @@ function LatestRelease({
       </div>
       <div className="grid border-t border-[var(--landing-border)] md:grid-cols-[minmax(0,1fr)_18rem]">
         {/* Below md the install panel comes first, ahead of a long change list. */}
-        <div className="min-w-0 p-6 md:p-8">
+        <div className="min-w-0 space-y-8 p-6 md:p-8">
           <ReleaseChanges release={release} level="h4" />
+          <OpentideArtifacts release={release} level="h4" />
         </div>
         <div className="order-first min-w-0 border-b border-[var(--landing-border)] bg-[var(--landing-band)] p-6 md:order-none md:border-b-0 md:border-l md:p-8">
           {/* Beside a long change list the install command and links stay in view. */}
@@ -315,6 +317,11 @@ function EarlierRelease({ release, level }: { release: ReleaseNote; level: 'h3' 
           </summary>
           <div className="mt-4 rounded-xl border border-[var(--landing-border)] p-5 md:p-6">
             <ReleaseChanges release={release} level={level === 'h3' ? 'h4' : 'h5'} />
+            {release.engine ? (
+              <div className="mt-8">
+                <OpentideArtifacts release={release} level={level === 'h3' ? 'h4' : 'h5'} />
+              </div>
+            ) : null}
             <div className="mt-6 space-y-4 border-t border-[var(--landing-border-subtle)] pt-5">
               {release.installCommand ? (
                 <InstallCommand command={release.installCommand} caption={`pin ${release.version}`} />
