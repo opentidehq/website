@@ -15,12 +15,12 @@ import { dirname, join, normalize, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { inflateRawSync } from 'node:zlib';
 
-export const ENGINE_VERSION = '1.0.0-rc.4';
-const ENGINE_SHA256 = '48e9155f021e50d206e1a549895f46d59f5e878b2479b72ee3e8ed63d2c067ae';
+export const ENGINE_VERSION = '1.0.0';
+const ENGINE_SHA256 = 'e4c6d59889a1a218642367f0dd513bbbfe5ccf951b30a9f3542c2afa0724b8e3';
 const ENGINE_URL = `https://github.com/opentidehq/opentide/releases/download/v${ENGINE_VERSION}/opentide-wasm-web-v${ENGINE_VERSION}.zip`;
 /** The licences of every crate the module links, an asset of the same release. */
 const LICENSES_URL = `https://github.com/opentidehq/opentide/releases/download/v${ENGINE_VERSION}/THIRD-PARTY-LICENSES.html`;
-const LICENSES_SHA256 = '16f4b87fc153f4366407cfb3e4fa55b69e3a2b78236f281e696a37673a8ac3bd';
+const LICENSES_SHA256 = 'b36b00ba4ac4f13e52d45ed67bbfe4f0fe7099c4a2935df9913bd61bc3ae3c12';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = join(ROOT, 'public', 'playground', 'engine');

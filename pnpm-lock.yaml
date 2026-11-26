@@ -45,8 +45,8 @@ importers:
         specifier: ^1.2.5
         version: 1.2.5
       '@opentide/lsp-worker':
-        specifier: 1.0.0-rc.4
-        version: 1.0.0-rc.4
+        specifier: 1.0.0
+        version: 1.0.0
       '@orama/orama':
         specifier: ^3.1.18
         version: 3.1.18
@@ -920,8 +920,8 @@ packages:
     resolution: {integrity: sha512-nn5ozdjYQpUCZlWGuxcJY/KpxkWQs4DcbMCmKojjyrYDEAGy4Ce19NN4v5MduafTwJlbKc99UA8YhSVqq9yPZA==}
     engines: {node: '>=12.4.0'}
 
-  '@opentide/lsp-worker@1.0.0-rc.4':
-    resolution: {integrity: sha512-TOC9nIVBwCXcHcglU2HMcnw5Sj+rE/KqvYqMSQmyh9T0cEWOzTehP4Gr6YPwHl3r2+ow0cUXpQah05E5i+QMNw==}
+  '@opentide/lsp-worker@1.0.0':
+    resolution: {integrity: sha512-dQyPx8x33+6Ph4GSHYdSfrPyvFgSZCuWG0XsK6jDCvb543VCSnq3vg1Tj0iuIxyejpl7qaFmWzkZfI+HMLWfDQ==}
 
   '@orama/orama@3.1.18':
     resolution: {integrity: sha512-a61ljmRVVyG5MC/698C8/FfFDw5a8LOIvyOLW5fztgUXqUpc1jOfQzOitSCbge657OgXXThmY3Tk8fpiDb4UcA==}
@@ -5741,7 +5741,7 @@ snapshots:
 
   '@nolyfill/is-core-module@1.0.39': {}
 
-  '@opentide/lsp-worker@1.0.0-rc.4': {}
+  '@opentide/lsp-worker@1.0.0': {}
 
   '@orama/orama@3.1.18': {}
 

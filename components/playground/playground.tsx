@@ -4,14 +4,12 @@ import type { LSPClient } from '@codemirror/lsp-client';
 import {
   Bug,
   Check,
-  ChevronDown,
   ChevronUp,
   CircleAlert,
   CircleX,
   Command,
   Cpu,
   Crosshair,
-  GitBranch,
   Info,
   Link2,
   RotateCcw,
@@ -23,11 +21,10 @@ import {
   Target,
   TriangleAlert,
   Unlink,
-  X,
   type LucideIcon,
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { DeployPanel, type LogLine } from '@/components/playground/deploy-panel';
+import { DeployPanel } from '@/components/playground/deploy-panel';
 import { createClient, createFileEditor, PlaygroundWorkspace, type FileEditor, type LspDiagnostic } from '@/components/playground/editor';
 import { startEngine, type Engine, type EngineStatus } from '@/components/playground/engine';
 import { compileRule } from '@/lib/playground/compile';
@@ -63,6 +60,8 @@ const KINDS: { kind: Kind; label: string; icon: LucideIcon; match: RegExp }[] = 
   { kind: 'config', label: 'Configuration', icon: SlidersHorizontal, match: /^\.opentide\// },
 ];
 
+const KIND_ORDER: Kind[] = ['rule', 'objective', 'threat', 'config'];
+
 const kindOf = (path: string) => KINDS.find((k) => k.match.test(path)) ?? KINDS[3];
 
 function FileIcon({ path, className = '' }: { path: string; className?: string }) {
@@ -86,12 +85,9 @@ export function Playground() {
   const original = useMemo(() => Object.fromEntries(files.map((f) => [f.path, f.text])), [files]);
   const [texts, setTexts] = useState<Record<string, string>>(original);
   const [active, setActive] = useState<string>(INITIAL_PATH);
-  const [tabs, setTabs] = useState<string[]>([INITIAL_PATH, 'objects/objectives/credential-access-via-lsass.yaml']);
   const [status, setStatus] = useState<EngineStatus>({ state: 'idle' });
   const [diagnostics, setDiagnostics] = useState<Record<string, LspDiagnostic[]>>({});
-  const [cursor, setCursor] = useState({ line: 1, col: 1 });
-  const [panel, setPanel] = useState<'problems' | 'output'>('problems');
-  const [log, setLog] = useState<LogLine[]>([]);
+  const [problemsOpen, setProblemsOpen] = useState(false);
   const [lastRule, setLastRule] = useState<string>(INITIAL_PATH);
 
   const hosts = useRef<Record<string, HTMLDivElement | null>>({});
@@ -99,21 +95,17 @@ export function Playground() {
   const clientRef = useRef<LSPClient | null>(null);
   const engineRef = useRef<Engine | null>(null);
   const [engineLoaded, setEngineLoaded] = useState(false);
-  const activeRef = useRef(active);
   useEffect(() => {
-    activeRef.current = active;
-    // The status bar follows the file in front.
-    const state = editors.current[active]?.view.state;
-    if (state) {
-      const head = state.selection.main.head;
-      const line = state.doc.lineAt(head);
-      setCursor({ line: line.number, col: head - line.from + 1 });
+    // Horizontally only: the page itself must not move.
+    const pill = document.querySelector<HTMLElement>(`[data-pill-path="${CSS.escape(active)}"]`);
+    const strip = pill?.parentElement;
+    if (pill && strip && (pill.offsetLeft < strip.scrollLeft || pill.offsetLeft + pill.offsetWidth > strip.scrollLeft + strip.clientWidth)) {
+      strip.scrollTo({ left: pill.offsetLeft - 8, behavior: 'smooth' });
     }
   }, [active]);
 
   const open = useCallback((path: string) => {
     if (!files.some((f) => f.path === path)) return;
-    setTabs((t) => (t.includes(path) ? t : [...t, path]));
     setActive(path);
     if (/^objects\/rules\//.test(path)) setLastRule(path);
   }, [files]);
@@ -137,9 +129,7 @@ export function Playground() {
             setTexts((t) => ({ ...t, ...batch }));
           }, 160);
         },
-        onCursor: (line, col) => {
-          if (activeRef.current === file.path) setCursor({ line, col });
-        },
+        onCursor: () => {},
         onOpen: (uri) => open(pathOf(uri)),
       });
     }
@@ -303,13 +293,6 @@ export function Playground() {
     if (window.location.hash) history.replaceState(null, '', window.location.pathname);
   };
 
-  const closeTab = (path: string) => {
-    if (tabs.length === 1) return;
-    const next = tabs.filter((p) => p !== path);
-    setTabs(next);
-    if (path === active) setActive(next[Math.max(0, tabs.indexOf(path) - 1)]);
-  };
-
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef(0);
   const flash = (message: string) => {
@@ -336,7 +319,6 @@ export function Playground() {
   };
 
   const [paletteOpen, setPaletteOpen] = useState(false);
-  const [panelOpen, setPanelOpen] = useState(true);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey && (e.key === 'p' || e.key === 'k')) {
@@ -364,7 +346,7 @@ export function Playground() {
     })),
     ...SCENARIOS.map((sc) => ({
       id: `scenario:${sc.id}`,
-      group: 'Scenarios',
+      group: 'Try',
       label: `${isApplied(sc, ruleText) ? 'Undo: ' : ''}${sc.label}`,
       detail: sc.shows,
       icon: SCENARIO_ICON[sc.id] ?? Bug,
@@ -374,18 +356,17 @@ export function Playground() {
     { id: 'reset', group: 'Workspace', label: 'Reset every file', detail: 'back to the demo repository', icon: RotateCcw, run: resetAll },
   ];
 
+  const activeProblems = problems.filter((p) => p.path === active);
+  // The pills read in the order a rule is built from: the rule, its objective, the threats, then configuration.
+  const orderedFiles = [...files].sort((a, b) => KIND_ORDER.indexOf(kindOf(a.path).kind) - KIND_ORDER.indexOf(kindOf(b.path).kind));
+  const showProblems = () => setProblemsOpen(true);
+
   return (
-    <div className="landing-playground relative flex flex-col lg:h-full">
-      <div className="flex flex-col bg-[var(--landing-surface)] lg:min-h-0 lg:flex-1">
-        {/* Toolbar: the repository, the scenarios, sharing, opentide */}
-        <div className="flex min-w-0 items-center gap-2 border-y border-[var(--landing-border)] bg-[var(--landing-panel)] px-2.5 py-1.5">
-          <span className="hidden shrink-0 items-center gap-2 pl-1 pr-1 font-mono text-xs text-[var(--landing-subtle)] md:flex">
-            <GitBranch className="size-3.5 text-[var(--landing-accent)]" aria-hidden />
-            <span className="text-[var(--landing-ink)]">detection-repo</span>
-            <span className="hidden 2xl:inline">feat/lsass-credential-access</span>
-          </span>
-          <span aria-hidden className="hidden h-5 w-px bg-[var(--landing-border)] md:block" />
-          <div role="group" aria-label="Scenarios" className="landing-playground-scroll flex min-w-0 flex-1 items-center gap-1 overflow-x-auto">
+    <div className="landing-playground relative lg:h-full">
+      <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-4 px-4 pb-6 pt-4 md:px-6 lg:h-full lg:pb-6">
+        {/* Try: the scenarios, and sharing — on the page, no frame */}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+          <div role="group" aria-label="Try" className="landing-playground-scroll -mx-1 flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto px-1 py-0.5">
             {SCENARIOS.map((sc) => {
               const on = isApplied(sc, ruleText);
               const Icon = SCENARIO_ICON[sc.id] ?? Bug;
@@ -396,139 +377,76 @@ export function Playground() {
                   aria-pressed={on}
                   title={on ? `Undo: ${sc.label}` : `Shows ${sc.shows}`}
                   onClick={() => toggle(sc)}
-                  className="group inline-flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12px] font-medium text-[var(--landing-muted)] transition hover:bg-[var(--landing-hover)] hover:text-[var(--landing-ink)] aria-pressed:bg-[color-mix(in_srgb,var(--landing-accent)_13%,transparent)] aria-pressed:text-[var(--landing-accent)]"
+                  className="group inline-flex shrink-0 items-center gap-2 rounded-full bg-[var(--landing-hover)] px-3.5 py-2 text-[13px] font-medium text-[var(--landing-muted)] transition hover:text-[var(--landing-ink)] aria-pressed:bg-[var(--landing-accent)] aria-pressed:text-[var(--brand-accent-foreground)]"
                 >
-                  {on ? <Check className="size-3.5" aria-hidden /> : <Icon className="size-3.5 opacity-70 group-hover:opacity-100" aria-hidden />}
+                  {on ? <Check className="size-3.5" aria-hidden /> : <Icon className="size-3.5 opacity-70 transition group-hover:opacity-100" aria-hidden />}
                   {sc.label}
                 </button>
               );
             })}
           </div>
-          <div className="flex shrink-0 items-center gap-1">
+          <div className="flex shrink-0 items-center gap-0.5">
             {anyDirty && (
               <ToolButton label="Reset every file" onClick={resetAll}>
-                <RotateCcw className="size-3.5" aria-hidden />
+                <RotateCcw className="size-4" aria-hidden />
               </ToolButton>
             )}
             <ToolButton label="Copy a share link" onClick={() => void share()}>
-              <Link2 className="size-3.5" aria-hidden />
-              <span className="hidden xl:inline">Share</span>
+              <Link2 className="size-4" aria-hidden />
+              <span className="hidden sm:inline">Share</span>
             </ToolButton>
-            <ToolButton label="Go to file or command (Ctrl/⌘ P)" onClick={() => setPaletteOpen(true)}>
-              <Search className="size-3.5" aria-hidden />
-              <kbd className="hidden items-center gap-0.5 font-mono text-[10.5px] text-[var(--landing-subtle)] xl:inline-flex">
-                <Command className="size-2.5" aria-hidden />P
+            <ToolButton label="Go to a file or command (Ctrl/⌘ K)" onClick={() => setPaletteOpen(true)}>
+              <Search className="size-4" aria-hidden />
+              <kbd className="hidden items-center font-mono text-[11px] text-[var(--landing-subtle)] sm:inline-flex">
+                <Command className="size-3" aria-hidden />K
               </kbd>
             </ToolButton>
-            <span className="ml-1 hidden sm:block">
-              <EngineBadge status={status} />
-            </span>
           </div>
         </div>
 
-        <div className="grid grid-cols-[minmax(0,1fr)] lg:min-h-0 lg:flex-1 lg:grid-cols-[236px_minmax(0,1fr)_360px] xl:grid-cols-[256px_minmax(0,1fr)_400px]">
-          {/* Explorer: the workspace by object kind */}
-          <nav aria-label="Workspace" className="landing-playground-scroll hidden min-h-0 overflow-y-auto border-r border-[var(--landing-border)] bg-[var(--landing-panel)] pb-3 lg:block">
-            {KINDS.map((k) => {
-              const paths = files.map((f) => f.path).filter((path) => kindOf(path).kind === k.kind);
-              if (!paths.length) return null;
-              return (
-                <section key={k.kind} className="pt-3">
-                  <h2 className="flex items-center justify-between px-4 pb-1 font-mono text-[10.5px] text-[var(--landing-subtle)]">
-                    <span>{k.label.toLowerCase()}</span>
-                    <span>{paths.length}</span>
-                  </h2>
-                  <ul className="px-1.5">
-                    {paths.map((path) => (
-                      <li key={path}>
-                        <button
-                          type="button"
-                          onClick={() => open(path)}
-                          aria-current={path === active ? 'true' : undefined}
-                          title={path}
-                          className="group flex w-full items-start gap-2.5 rounded-lg px-2.5 py-1.5 text-left transition hover:bg-[var(--landing-hover)] aria-[current]:bg-[color-mix(in_srgb,var(--landing-accent)_11%,transparent)]"
-                        >
-                          <FileIcon path={path} className="mt-[3px] text-[var(--landing-subtle)] group-aria-[current]:text-[var(--landing-accent)]" />
-                          <span className="min-w-0 flex-1">
-                            <span className="block truncate text-[12.5px] leading-5 text-[var(--landing-muted)] group-aria-[current]:font-medium group-aria-[current]:text-[var(--landing-ink)]">
-                              {displayName(path, texts[path])}
-                            </span>
-                            <span className="block truncate font-mono text-[10.5px] leading-4 text-[var(--landing-subtle)]">{baseName(path)}</span>
-                          </span>
-                          <span className="mt-1">
-                            <FileBadge counts={perFile[path]} dirty={dirty(path)} />
-                          </span>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              );
-            })}
-          </nav>
-
-          {/* Editor column */}
-          <div className="flex min-h-0 min-w-0 flex-col">
-            <div className="flex items-stretch border-b border-[var(--landing-border)] bg-[var(--landing-panel)]">
-              <div role="tablist" aria-label="Open files" className="landing-playground-scroll flex min-w-0 flex-1 overflow-x-auto">
-                {tabs.map((path) => {
-                  const selected = path === active;
+        <div className="grid gap-8 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(0,1fr)_380px] xl:grid-cols-[minmax(0,1fr)_420px] xl:gap-12">
+          {/* The editor: one navy card, the files across its top, problems at its foot */}
+          <section
+            aria-label="Editor"
+            className="flex h-[70svh] min-h-[460px] min-w-0 flex-col overflow-hidden rounded-3xl bg-[var(--pg-code-bg)] text-[var(--pg-ink)] shadow-[0_40px_90px_-45px_rgb(0_20_137/0.55)] ring-1 ring-black/5 dark:shadow-[0_40px_90px_-45px_rgb(0_0_0/0.95)] dark:ring-white/10 lg:h-auto lg:min-h-0"
+          >
+            <div className="flex items-center gap-3 px-3 pt-3">
+              <div role="tablist" aria-label="Files" className="landing-playground-scroll relative flex min-w-0 flex-1 gap-1 overflow-x-auto pr-6 [mask-image:linear-gradient(to_right,black_calc(100%-40px),transparent)]">
+                {orderedFiles.map((f) => {
+                  const selected = f.path === active;
+                  const counts = perFile[f.path];
+                  const config = kindOf(f.path).kind === 'config';
                   return (
-                    <div
-                      key={path}
-                      data-selected={selected ? '' : undefined}
-                      className="group relative flex shrink-0 items-center border-r border-[var(--landing-border)] text-[12.5px] text-[var(--landing-subtle)] transition-colors hover:text-[var(--landing-ink)] data-[selected]:bg-[var(--pg-code-bg)] data-[selected]:text-[var(--pg-ink)]"
+                    <button
+                      key={f.path}
+                      type="button"
+                      role="tab"
+                      aria-selected={selected}
+                      title={f.path}
+                      onClick={() => open(f.path)}
+                      aria-label={config ? shortLabel(f.path, texts[f.path]) : undefined}
+                      data-pill-path={f.path}
+                      className="group relative inline-flex shrink-0 items-center gap-2 rounded-xl px-3 py-1.5 text-[12.5px] text-[var(--pg-dim)] transition hover:bg-white/[0.06] hover:text-[var(--pg-ink)] aria-selected:bg-white/[0.09] aria-selected:text-white"
                     >
-                      {selected && <span aria-hidden className="absolute inset-x-0 top-0 h-0.5 bg-[var(--pg-yellow)]" />}
-                      <button type="button" role="tab" aria-selected={selected} onClick={() => open(path)} className="flex items-center gap-2 py-2.5 pl-3.5 pr-1.5">
-                        <FileIcon path={path} className={selected ? 'text-[var(--pg-yellow)]' : ''} />
-                        {baseName(path)}
-                        {dirty(path) && <span className="size-1.5 rounded-full bg-current opacity-70" aria-label="modified" />}
-                      </button>
-                      {tabs.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => closeTab(path)}
-                          aria-label={`Close ${baseName(path)}`}
-                          className="mr-2 rounded p-0.5 opacity-0 transition hover:bg-white/10 focus-visible:opacity-100 group-hover:opacity-100 group-data-[selected]:opacity-60"
-                        >
-                          <X className="size-3" aria-hidden />
-                        </button>
-                      )}
-                    </div>
+                      <FileIcon path={f.path} className={selected ? 'text-[var(--pg-yellow)]' : 'opacity-70'} />
+                      {(!config || selected) && <span className="max-w-[10rem] truncate">{shortLabel(f.path, texts[f.path])}</span>}
+                      {counts?.e ? (
+                        <span className="size-1.5 rounded-full bg-[var(--pg-error)]" aria-label={`${counts.e} errors`} />
+                      ) : counts?.w ? (
+                        <span className="size-1.5 rounded-full bg-[var(--pg-yellow)]" aria-label={`${counts.w} warnings`} />
+                      ) : dirty(f.path) ? (
+                        <span className="size-1.5 rounded-full bg-[var(--pg-dim)]" aria-label="modified" />
+                      ) : null}
+                    </button>
                   );
                 })}
               </div>
-              {/* Below lg the explorer is a menu. */}
-              <label className="relative flex items-center border-l border-[var(--landing-border)] px-2 lg:hidden">
-                <span className="sr-only">Open a file</span>
-                <select
-                  value={active}
-                  onChange={(e) => open(e.target.value)}
-                  className="max-w-[9rem] cursor-pointer appearance-none bg-transparent pr-5 font-mono text-[11px] text-[var(--landing-muted)] outline-none"
-                >
-                  {files.map((f) => (
-                    <option key={f.path} value={f.path}>
-                      {displayName(f.path, texts[f.path])}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="pointer-events-none absolute right-2 size-3 text-[var(--landing-subtle)]" aria-hidden />
-              </label>
+              <EngineStatusLabel status={status} />
             </div>
-
-            {/* Breadcrumb */}
-            <div className="flex items-center gap-1 truncate bg-[var(--pg-code-bg)] px-4 pt-2 font-mono text-[11px] text-[var(--pg-dim)]">
-              {active.split('/').map((part, i, all) => (
-                <span key={i} className={i === all.length - 1 ? 'text-[var(--pg-ink)]' : ''}>
-                  {part}
-                  {i < all.length - 1 && <span className="px-1 opacity-50">›</span>}
-                </span>
-              ))}
-            </div>
+            <p className="truncate px-6 pb-1 pt-2 font-mono text-[11px] text-[var(--pg-dim)] opacity-80">{active}</p>
 
             {/* Editors: one per file, only the active one shown */}
-            <div className="relative h-[58svh] min-h-[360px] bg-[var(--pg-code-bg)] lg:h-auto lg:min-h-0 lg:flex-1">
+            <div className="relative min-h-0 flex-1">
               {files.map((f) => (
                 <div
                   key={f.path}
@@ -542,96 +460,67 @@ export function Playground() {
               {status.state === 'loading' && <LoadingVeil status={status} />}
             </div>
 
-            {/* Bottom panel */}
-            <div className={`flex min-h-0 flex-col border-t border-[var(--landing-border)] bg-[var(--landing-panel)] ${panelOpen ? 'h-[200px] lg:h-[196px]' : ''}`}>
-              <div role="tablist" aria-label="Panels" className="flex items-center gap-1 px-2">
-                <PanelTab
-                  selected={panelOpen && panel === 'problems'}
-                  onClick={() => {
-                    setPanel('problems');
-                    setPanelOpen(true);
-                  }}
-                >
-                  problems
-                  <ProblemCount errors={counts[1]} warnings={counts[2]} />
-                </PanelTab>
-                <PanelTab
-                  selected={panelOpen && panel === 'output'}
-                  onClick={() => {
-                    setPanel('output');
-                    setPanelOpen(true);
-                  }}
-                >
-                  output
-                  {log.length > 0 && <span className="size-1.5 rounded-full bg-[var(--landing-accent)]" />}
-                </PanelTab>
-                <button
-                  type="button"
-                  onClick={() => setPanelOpen((o) => !o)}
-                  aria-expanded={panelOpen}
-                  aria-label={panelOpen ? 'Collapse the panel' : 'Expand the panel'}
-                  className="ml-auto rounded-md p-1 text-[var(--landing-subtle)] transition hover:bg-[var(--landing-hover)] hover:text-[var(--landing-ink)]"
-                >
-                  {panelOpen ? <ChevronDown className="size-3.5" aria-hidden /> : <ChevronUp className="size-3.5" aria-hidden />}
-                </button>
-              </div>
-              {panelOpen && (
-                <div className="landing-playground-scroll min-h-0 flex-1 overflow-y-auto border-t border-[var(--landing-border)]">
-                  {panel === 'problems' ? (
-                    problems.length ? (
-                      <ul className="py-1">
-                        {problems.map((p, i) => (
-                          <li key={i}>
-                            <button
-                              type="button"
-                              onClick={() => reveal(p)}
-                              className="flex w-full items-start gap-2.5 px-3 py-1.5 text-left text-xs transition hover:bg-[var(--landing-hover)]"
-                            >
-                              <span className="mt-px">{SEVERITY_ICON[p.severity]}</span>
-                              <span className="min-w-0 flex-1 text-[var(--landing-ink)]">{p.message}</span>
-                              {p.code && <span className="hidden shrink-0 font-mono text-[10.5px] text-[var(--landing-subtle)] md:inline">{p.code}</span>}
-                              <span className="shrink-0 rounded bg-[var(--landing-hover)] px-1.5 font-mono text-[10.5px] text-[var(--landing-subtle)]">
-                                {baseName(p.path)}:{p.line}
-                              </span>
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <div className="flex h-full items-center gap-3 px-4 text-xs text-[var(--landing-subtle)]">
-                        {status.state === 'ready' ? (
-                          <>
-                            <Check className="size-4 text-[var(--landing-accent)]" aria-hidden />
-                            <span>
-                              No problems in the workspace. Pick a scenario above, or type your own mistake.
-                            </span>
-                          </>
-                        ) : status.state === 'missing' || status.state === 'failed' ? (
-                          'opentide could not be loaded, so nothing is checked.'
-                        ) : (
-                          'Problems appear once opentide has loaded.'
-                        )}
-                      </div>
-                    )
-                  ) : log.length ? (
-                    <pre className="m-0 whitespace-pre-wrap break-all px-3 py-2 font-mono text-[11.5px] leading-relaxed">
-                      {log.map((l, i) => (
-                        <div key={i} className={LOG_TONE[l.kind]}>
-                          {l.kind === 'cmd' ? <span className="text-[var(--landing-accent)]">$ </span> : null}
-                          {l.text}
-                        </div>
-                      ))}
-                    </pre>
-                  ) : (
-                    <p className="px-4 py-3 text-xs text-[var(--landing-subtle)]">Deploy writes its log here.</p>
-                  )}
-                </div>
-              )}
+            {/* Problems: a slim bar that opens into the list */}
+            {problemsOpen && problems.length > 0 && (
+              <ul className="landing-playground-scroll max-h-[38%] shrink-0 overflow-y-auto border-t border-white/[0.07] px-2 py-1.5">
+                {problems.map((p, i) => (
+                  <li key={i}>
+                    <button
+                      type="button"
+                      onClick={() => reveal(p)}
+                      className="flex w-full items-start gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[12.5px] transition hover:bg-white/[0.06]"
+                    >
+                      <span className="mt-px">{SEVERITY_ICON[p.severity]}</span>
+                      <span className="min-w-0 flex-1 text-[var(--pg-ink)]">{p.message}</span>
+                      <span className="shrink-0 font-mono text-[10.5px] text-[var(--pg-dim)]">
+                        {baseName(p.path)}:{p.line}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <div className="flex shrink-0 items-center gap-4 border-t border-white/[0.07] px-5 py-2.5 text-[12px] text-[var(--pg-dim)]">
+              <button
+                type="button"
+                onClick={() => setProblemsOpen((o) => !o)}
+                disabled={!problems.length}
+                aria-expanded={problemsOpen && problems.length > 0}
+                className="inline-flex items-center gap-2 transition enabled:hover:text-white disabled:cursor-default"
+              >
+                {status.state !== 'ready' ? (
+                  <span>{status.state === 'missing' || status.state === 'failed' ? 'opentide could not be loaded' : 'Checks start once opentide loads'}</span>
+                ) : problems.length ? (
+                  <>
+                    {counts[1] > 0 && (
+                      <span className="inline-flex items-center gap-1.5 text-[var(--pg-ink)]">
+                        <CircleX className="size-3.5 text-[var(--pg-error)]" aria-hidden />
+                        {counts[1]} error{counts[1] === 1 ? '' : 's'}
+                      </span>
+                    )}
+                    {counts[2] > 0 && (
+                      <span className="inline-flex items-center gap-1.5 text-[var(--pg-ink)]">
+                        <CircleAlert className="size-3.5 text-[var(--pg-yellow)]" aria-hidden />
+                        {counts[2]} warning{counts[2] === 1 ? '' : 's'}
+                      </span>
+                    )}
+                    {counts[3] > 0 && <span>{counts[3]} note{counts[3] === 1 ? '' : 's'}</span>}
+                    <ChevronUp className={`size-3.5 transition-transform ${problemsOpen ? '' : 'rotate-180'}`} aria-hidden />
+                    {activeProblems.length === 0 && <span className="hidden sm:inline">· in other files</span>}
+                  </>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5">
+                    <Check className="size-3.5 text-[var(--pg-yellow)]" aria-hidden />
+                    No problems
+                  </span>
+                )}
+              </button>
+              <span className="ml-auto hidden truncate xl:inline">Ctrl Space to complete · F12 or ⌘/Ctrl click to follow a link · F2 to rename</span>
             </div>
-          </div>
+          </section>
 
-          {/* Deploy */}
-          <aside aria-label="Deploy" className="min-h-0 border-t border-[var(--landing-border)] bg-[var(--landing-surface)] lg:border-l lg:border-t-0">
+          {/* Deploy: on the page, beside the editor */}
+          <aside aria-label="Deploy" className="flex min-h-0 flex-col lg:pt-2.5">
             <DeployPanel
               compiled={compiled}
               compileNow={compileNow}
@@ -639,60 +528,58 @@ export function Playground() {
               errors={problems.filter((p) => p.severity === 1)}
               warnings={counts[2]}
               engineReady={status.state === 'ready'}
-              onShowProblems={() => {
-                setPanel('problems');
-                setPanelOpen(true);
-              }}
-              onLog={(lines) => {
-                if (lines === 'clear') setLog([]);
-                else {
-                  setLog((l) => [...l, ...lines]);
-                  setPanel('output');
-                  setPanelOpen(true);
-                }
-              }}
+              onShowProblems={showProblems}
             />
           </aside>
-        </div>
-
-        {/* Status bar */}
-        <div className="flex items-center gap-4 overflow-hidden border-t border-[var(--landing-border)] bg-[var(--landing-panel)] px-3 py-1.5 font-mono text-[11px] text-[var(--landing-subtle)]">
-          <button
-            type="button"
-            onClick={() => {
-              setPanel('problems');
-              setPanelOpen(true);
-            }}
-            className="flex shrink-0 items-center gap-2.5 hover:text-[var(--landing-ink)]"
-          >
-            <span className="flex items-center gap-1">
-              <CircleX className="size-3" aria-hidden />
-              {counts[1]}
-            </span>
-            <span className="flex items-center gap-1">
-              <CircleAlert className="size-3" aria-hidden />
-              {counts[2]}
-            </span>
-          </button>
-          <span className="hidden shrink-0 sm:inline">
-            {status.state === 'ready' ? `opentide ${status.version} · WebAssembly · started in ${status.ms} ms` : 'opentide · WebAssembly'}
-          </span>
-          <span className="ml-auto hidden shrink-0 2xl:inline">Ctrl Space complete · F12 or ⌘/Ctrl click definition · F2 rename · Shift Alt F format</span>
-          <span className="shrink-0 max-2xl:ml-auto">
-            Ln {cursor.line}, Col {cursor.col}
-          </span>
-          <span className="shrink-0">{activeFile?.language === 'toml' ? 'TOML' : 'Tide YAML'}</span>
         </div>
       </div>
 
       {paletteOpen && <Palette items={paletteItems} onClose={() => setPaletteOpen(false)} />}
       {toast && (
-        <div role="status" className="landing-playground-in pointer-events-none fixed inset-x-0 bottom-10 z-50 flex justify-center px-4">
+        <div role="status" className="landing-playground-in pointer-events-none fixed inset-x-0 bottom-8 z-50 flex justify-center px-4">
           <p className="rounded-full bg-[var(--landing-ink)] px-4 py-2 text-[13px] font-medium text-[var(--landing-bg)] shadow-lg">{toast}</p>
         </div>
       )}
     </div>
   );
+}
+
+/** The pill label: an object's name, or the platform a platform file configures. */
+function shortLabel(path: string, text: string | undefined) {
+  const name = displayName(path, text);
+  return name.replace(/^Microsoft /, '').replace(/ Enterprise Security$/, '');
+}
+
+/** opentide's state, quietly, in the editor's corner. */
+function EngineStatusLabel({ status }: { status: EngineStatus }) {
+  const base = 'hidden shrink-0 items-center gap-2 pr-2 font-mono text-[11px] text-[var(--pg-dim)] sm:inline-flex';
+  if (status.state === 'ready') {
+    return (
+      <span className={base} title={`started in ${status.ms} ms, in your browser`}>
+        <span className="relative flex size-1.5">
+          <span className="absolute inline-flex size-full animate-ping rounded-full bg-[var(--pg-yellow)] opacity-60 motion-reduce:hidden" />
+          <span className="relative inline-flex size-1.5 rounded-full bg-[var(--pg-yellow)]" />
+        </span>
+        opentide {status.version}
+      </span>
+    );
+  }
+  if (status.state === 'loading') {
+    return (
+      <span className={base}>
+        <Cpu className="size-3" aria-hidden />
+        {status.compiling ? 'starting…' : `${Math.round((status.received / Math.max(status.total, 1)) * 100)}%`}
+      </span>
+    );
+  }
+  if (status.state === 'missing' || status.state === 'failed') {
+    return (
+      <span className={base} title={status.state === 'failed' ? status.reason : undefined}>
+        opentide unavailable
+      </span>
+    );
+  }
+  return <span className={base}>starting…</span>;
 }
 
 type PaletteItem = { id: string; group: string; label: string; detail: string; icon: LucideIcon; run: () => void };
@@ -802,92 +689,17 @@ function ToolButton({ label, onClick, children }: { label: string; onClick: () =
       onClick={onClick}
       title={label}
       aria-label={label}
-      className="inline-flex h-8 items-center gap-1.5 rounded-lg px-2 text-[12px] font-medium text-[var(--landing-muted)] transition hover:bg-[var(--landing-hover)] hover:text-[var(--landing-ink)]"
+      className="inline-flex h-9 items-center gap-2 rounded-full px-3 text-[13px] font-medium text-[var(--landing-muted)] transition hover:bg-[var(--landing-hover)] hover:text-[var(--landing-ink)]"
     >
       {children}
     </button>
   );
 }
 
-function ProblemCount({ errors, warnings }: { errors: number; warnings: number }) {
-  if (!errors && !warnings) return <span className="rounded-full bg-[var(--landing-hover)] px-1.5 text-[10px]">0</span>;
-  return (
-    <span className="flex items-center gap-1">
-      {errors > 0 && <span className="rounded-full bg-[#ff6b6b]/15 px-1.5 text-[10px] text-[#e5484d] dark:text-[#ff8a8a]">{errors}</span>}
-      {warnings > 0 && (
-        <span className="rounded-full bg-[color-mix(in_srgb,var(--landing-accent)_14%,transparent)] px-1.5 text-[10px] text-[var(--landing-accent)]">{warnings}</span>
-      )}
-    </span>
-  );
-}
 
-const LOG_TONE: Record<LogLine['kind'], string> = {
-  cmd: 'text-[var(--landing-ink)]',
-  ok: 'text-[var(--landing-accent)]',
-  info: 'text-[var(--landing-muted)]',
-  warn: 'text-[var(--landing-ink)] opacity-90',
-  err: 'text-[var(--landing-ink)] font-semibold',
-  dim: 'text-[var(--landing-subtle)]',
-  http: 'text-[var(--landing-subtle)]',
-};
 
-function PanelTab({ selected, onClick, children }: { selected: boolean; onClick: () => void; children: ReactNode }) {
-  return (
-    <button
-      type="button"
-      role="tab"
-      aria-selected={selected}
-      onClick={onClick}
-      className="relative flex items-center gap-1.5 px-2 py-2 font-mono text-[11px] text-[var(--landing-subtle)] transition hover:text-[var(--landing-ink)] aria-selected:text-[var(--landing-ink)]"
-    >
-      {children}
-      {selected && <span aria-hidden className="absolute inset-x-2 bottom-0 h-0.5 rounded-full bg-[var(--landing-accent)]" />}
-    </button>
-  );
-}
 
-function FileBadge({ counts, dirty }: { counts?: { e: number; w: number }; dirty: boolean }) {
-  if (counts?.e) return <span className="rounded-full bg-[#ff6b6b]/15 px-1.5 font-mono text-[10px] text-[#e5484d] dark:text-[#ff8a8a]">{counts.e}</span>;
-  if (counts?.w)
-    return (
-      <span className="rounded-full bg-[color-mix(in_srgb,var(--landing-accent)_14%,transparent)] px-1.5 font-mono text-[10px] text-[var(--landing-accent)]">
-        {counts.w}
-      </span>
-    );
-  if (dirty) return <span className="size-1.5 rounded-full bg-[var(--landing-subtle)]" aria-label="modified" />;
-  return null;
-}
 
-function EngineBadge({ status }: { status: EngineStatus }) {
-  const base = 'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-mono text-[11px]';
-  if (status.state === 'ready') {
-    return (
-      <span className={`${base} bg-[color-mix(in_srgb,var(--landing-accent)_12%,transparent)] text-[var(--landing-accent)]`}>
-        <span className="relative flex size-1.5">
-          <span className="absolute inline-flex size-full animate-ping rounded-full bg-current opacity-60 motion-reduce:hidden" />
-          <span className="relative inline-flex size-1.5 rounded-full bg-current" />
-        </span>
-        opentide {status.version}<span className="hidden sm:inline"> · in your browser</span>
-      </span>
-    );
-  }
-  if (status.state === 'loading') {
-    return (
-      <span className={`${base} text-[var(--landing-subtle)]`}>
-        <Cpu className="size-3" aria-hidden />
-        {status.compiling ? 'compiling opentide…' : `loading opentide ${Math.round((status.received / Math.max(status.total, 1)) * 100)}%`}
-      </span>
-    );
-  }
-  if (status.state === 'missing' || status.state === 'failed') {
-    return (
-      <span className={`${base} border border-dashed border-[var(--landing-border)] text-[var(--landing-subtle)]`} title={status.state === 'failed' ? status.reason : undefined}>
-        opentide unavailable
-      </span>
-    );
-  }
-  return <span className={`${base} text-[var(--landing-subtle)]`}>starting…</span>;
-}
 
 function LoadingVeil({ status }: { status: Extract<EngineStatus, { state: 'loading' }> }) {
   const pct = Math.round((status.received / Math.max(status.total, 1)) * 100);
